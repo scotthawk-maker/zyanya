@@ -13,9 +13,21 @@ use zyanya_rpc_core::RpcHash;
     about = "Simple non-interactive CLI for querying Zyanya node via gRPC"
 )]
 struct Cli {
-    /// RPC server address (e.g. 127.0.0.1:18610 or grpc://127.0.0.1:18610)
-    #[arg(short, long, default_value = "127.0.0.1:18610")]
-    rpcserver: String,
+    /// RPC server address (e.g. 127.0.0.1:18110 or grpc://127.0.0.1:18110)
+    #[arg(short, long)]
+    rpcserver: Option<String>,
+
+    /// Use mainnet network (default RPC port: 18110)
+    #[arg(long, default_value_t = false)]
+    mainnet: bool,
+
+    /// Use devnet network (default RPC port: 18610)
+    #[arg(long, default_value_t = false)]
+    devnet: bool,
+
+    /// Use testnet network (default RPC port: 18210)
+    #[arg(long, default_value_t = false)]
+    testnet: bool,
 
     #[command(subcommand)]
     command: Commands,
@@ -415,7 +427,8 @@ async fn main() -> ExitCode {
         }
     }
 
-    let mut rpc_url = cli.rpcserver.clone();
+    let default_port = if cli.devnet { 18610 } else if cli.testnet { 18210 } else { 18110 };
+    let mut rpc_url = cli.rpcserver.unwrap_or_else(|| format!("127.0.0.1:{}", default_port));
     if !rpc_url.starts_with("grpc://") && !rpc_url.starts_with("http://") {
         rpc_url = format!("grpc://{}", rpc_url);
     }

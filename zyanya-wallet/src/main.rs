@@ -21,9 +21,21 @@ use wallet_ops::WalletOps;
     about = "Zyanya TUI Wallet — manage ZYAN, custom tokens (GHOST), and DEX swaps"
 )]
 struct Cli {
-    /// RPC server address (e.g. 127.0.0.1:18610 or grpc://127.0.0.1:18610)
-    #[arg(short = 's', long, default_value = "127.0.0.1:18610")]
-    rpcserver: String,
+    /// RPC server address (e.g. 127.0.0.1:18110 or grpc://127.0.0.1:18110)
+    #[arg(short = 's', long)]
+    rpcserver: Option<String>,
+
+    /// Use mainnet network (default RPC port: 18110)
+    #[arg(long, default_value_t = false)]
+    mainnet: bool,
+
+    /// Use devnet network (default RPC port: 18610)
+    #[arg(long, default_value_t = false)]
+    devnet: bool,
+
+    /// Use testnet network (default RPC port: 18210)
+    #[arg(long, default_value_t = false)]
+    testnet: bool,
 
     /// Path to private key file (~/.zyanya/wallet.key by default)
     #[arg(short = 'k', long)]
@@ -176,7 +188,9 @@ async fn main() -> ExitCode {
         }
     };
 
-    let mut ops = WalletOps::new(keypair, cli.rpcserver.clone());
+    let default_port = if cli.devnet { 18610 } else if cli.testnet { 18210 } else { 18110 };
+    let rpc_server = cli.rpcserver.unwrap_or_else(|| format!("127.0.0.1:{}", default_port));
+    let mut ops = WalletOps::new(keypair, rpc_server);
 
     // If standalone --import-mnemonic command (without action flags)
     if cli.import_mnemonic.is_some() && !cli.balance && !cli.send_zyan && !cli.swap_dex && !cli.demo {

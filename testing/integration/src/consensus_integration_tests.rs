@@ -853,6 +853,7 @@ impl ZyanyadGoParams {
             pruning_proof_m: self.PruningProofM,
             payload_activation: ForkActivation::never(),
             runtime_sig_op_counting: ForkActivation::never(),
+            net_magic: [0x5A, 0x59, 0x41, 0x4E],
         }
     }
 }

@@ -1,7 +1,7 @@
 pub use super::{
     bps::{Bps, Testnet11Bps},
     constants::consensus::*,
-    genesis::{GenesisBlock, DEVNET_GENESIS, GENESIS, SIMNET_GENESIS, TESTNET11_GENESIS, TESTNET_GENESIS},
+    genesis::{GenesisBlock, DEVNET_GENESIS, GENESIS, MAINNET_GENESIS, SIMNET_GENESIS, TESTNET11_GENESIS, TESTNET_GENESIS},
 };
 use crate::{
     constants::STORAGE_MASS_PARAMETER,
@@ -134,6 +134,9 @@ pub struct Params {
     /// Activation rules for when to enable using the payload field in transactions
     pub payload_activation: ForkActivation,
     pub runtime_sig_op_counting: ForkActivation,
+
+    /// Unique 4-byte network magic to isolate network p2p communication
+    pub net_magic: [u8; 4],
 }
 
 fn unix_now() -> u64 {
@@ -338,7 +341,7 @@ pub const MAINNET_PARAMS: Params = Params {
         "mainnet-dnsseed-3.zyanya-network.xyz",
     ],
     net: NetworkId::new(NetworkType::Mainnet),
-    genesis: GENESIS,
+    genesis: MAINNET_GENESIS,
     ghostdag_k: LEGACY_DEFAULT_GHOSTDAG_K,
     legacy_timestamp_deviation_tolerance: LEGACY_TIMESTAMP_DEVIATION_TOLERANCE,
     new_timestamp_deviation_tolerance: NEW_TIMESTAMP_DEVIATION_TOLERANCE,
@@ -378,11 +381,10 @@ pub const MAINNET_PARAMS: Params = Params {
     storage_mass_activation: ForkActivation::never(),
     kip10_activation: ForkActivation::never(),
 
-    // deflationary_phase_daa_score is the DAA score after which the pre-deflationary period
-    // switches to the deflationary period. This number is calculated as follows:
-    // We define a year as 365.25 days
-    // One week in seconds = 7 * 24 * 60 * 60 = 604800
-    deflationary_phase_daa_score: 604800,
+    // Zyanya Mainnet Deflationary Phase: 1-year phase (604,800 * 52 = 31,449,600 DAA score).
+    // Base subsidy: 50 ZYAN/block (5,000,000,000 sompi).
+    // Total max supply calibrated to ~28.7B ZYAN via Kaspa-style smooth geometric decay.
+    deflationary_phase_daa_score: 31_449_600,
     pre_deflationary_phase_base_subsidy: 5_000_000_000,
     coinbase_maturity: 100,
     skip_proof_of_work: false,
@@ -391,6 +393,7 @@ pub const MAINNET_PARAMS: Params = Params {
 
     payload_activation: ForkActivation::never(),
     runtime_sig_op_counting: ForkActivation::never(),
+    net_magic: [0x5A, 0x59, 0x41, 0x4E], // ASCII: "ZYAN"
 };
 
 pub const TESTNET_PARAMS: Params = Params {
@@ -454,6 +457,7 @@ pub const TESTNET_PARAMS: Params = Params {
 
     payload_activation: ForkActivation::never(),
     runtime_sig_op_counting: ForkActivation::never(),
+    net_magic: [0x54, 0x45, 0x53, 0x54], // ASCII: "TEST"
 };
 
 pub const TESTNET11_PARAMS: Params = Params {
@@ -515,6 +519,7 @@ pub const TESTNET11_PARAMS: Params = Params {
     max_block_level: 250,
 
     runtime_sig_op_counting: ForkActivation::never(),
+    net_magic: [0x54, 0x31, 0x31, 0x4E], // ASCII: "T11N"
 };
 
 pub const SIMNET_PARAMS: Params = Params {
@@ -572,6 +577,7 @@ pub const SIMNET_PARAMS: Params = Params {
 
     payload_activation: ForkActivation::never(),
     runtime_sig_op_counting: ForkActivation::never(),
+    net_magic: [0x53, 0x49, 0x4D, 0x4E], // ASCII: "SIMN"
 };
 
 pub const DEVNET_PARAMS: Params = Params {
@@ -630,4 +636,39 @@ pub const DEVNET_PARAMS: Params = Params {
 
     payload_activation: ForkActivation::never(),
     runtime_sig_op_counting: ForkActivation::never(),
+    net_magic: [0x44, 0x45, 0x56, 0x4E], // ASCII: "DEVN"
 };
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::network::NetworkType;
+
+    #[test]
+    fn test_mainnet_params_and_zero_premine_genesis() {
+        let params = MAINNET_PARAMS;
+
+        // 1. Network identification & magic
+        assert_eq!(params.net.network_type, NetworkType::Mainnet);
+        assert_eq!(params.net_magic, [0x5A, 0x59, 0x41, 0x4E], "Mainnet magic must be 'ZYAN'");
+        assert_ne!(params.net_magic, DEVNET_PARAMS.net_magic, "Mainnet magic must be isolated from devnet");
+
+        // 2. Ports
+        assert_eq!(params.net.default_p2p_port(), 18111);
+        assert_eq!(params.net.default_rpc_port(), 18110);
+        assert_eq!(params.net.default_borsh_rpc_port(), 19110);
+        assert_eq!(params.net.default_json_rpc_port(), 20110);
+
+        // 3. Consensus params
+        assert_eq!(params.ghostdag_k, 18, "GhostDAG K must be 18");
+        assert_eq!(params.bps(), 1, "BPS must be 1 at launch");
+        assert_eq!(params.deflationary_phase_daa_score, 31_449_600, "Deflationary phase must be 1 year (31,449,600 DAA score)");
+        assert_eq!(params.pre_deflationary_phase_base_subsidy, 5_000_000_000, "Base subsidy must be 50 ZYAN (5,000,000,000 sompi)");
+
+        // 4. Genesis verification (zero premine fair start)
+        let genesis_txs = params.genesis.build_genesis_transactions();
+        assert_eq!(genesis_txs.len(), 1);
+        assert!(genesis_txs[0].outputs.is_empty(), "Genesis transaction must have ZERO outputs (zero premine)");
+        assert!(params.genesis.coinbase_payload.ends_with(b"ZYAN-MAINNET"), "Genesis payload must contain mainnet magic");
+    }
+}

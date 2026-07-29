@@ -748,6 +748,14 @@ async fn sanity_test() {
                     rpc_client.stop_notify(id, PruningPointUtxoSetOverrideScope {}.into()).await.unwrap();
                 })
             }
+            ZyanyadPayloadOps::DeployContract
+            | ZyanyadPayloadOps::InvokeContract
+            | ZyanyadPayloadOps::GetContractState
+            | ZyanyadPayloadOps::GetContractCode
+            | ZyanyadPayloadOps::CallContract => {
+                let _rpc_client = client.clone();
+                tst!(op, {})
+            }
         };
         tasks.push(task);
     }

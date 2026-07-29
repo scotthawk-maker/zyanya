@@ -1456,7 +1456,7 @@ mod tests {
             OpCode::Return,
         ];
         let bytecode = OpCode::serialize_slice(&opcodes);
-        let hex_str = faster_hex::hex_string(&bytecode);
+        let hex_str = zyanya_utils::hex::ToHex::to_hex(&bytecode);
         assert_eq!(hex_str, "022a0000000000000002640000000000000002c8000000000000001051f0");
 
         let decoded = OpCode::deserialize_slice(&bytecode).unwrap();

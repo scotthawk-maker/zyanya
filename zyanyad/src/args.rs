@@ -63,6 +63,7 @@ pub struct Args {
     pub max_tracked_addresses: usize,
     pub enable_unsynced_mining: bool,
     pub enable_mainnet_mining: bool,
+    pub mainnet: bool,
     pub testnet: bool,
     #[serde(rename = "netsuffix")]
     pub testnet_suffix: u32,
@@ -109,6 +110,7 @@ impl Default for Args {
             max_tracked_addresses: 0,
             enable_unsynced_mining: false,
             enable_mainnet_mining: true,
+            mainnet: true,
             testnet: false,
             testnet_suffix: 10,
             devnet: false,
@@ -181,11 +183,12 @@ impl Args {
     }
 
     pub fn network(&self) -> NetworkId {
-        match (self.testnet, self.devnet, self.simnet) {
-            (false, false, false) => NetworkId::new(NetworkType::Mainnet),
-            (true, false, false) => NetworkId::with_suffix(NetworkType::Testnet, self.testnet_suffix),
-            (false, true, false) => NetworkId::new(NetworkType::Devnet),
-            (false, false, true) => NetworkId::new(NetworkType::Simnet),
+        match (self.mainnet, self.testnet, self.devnet, self.simnet) {
+            (true, false, false, false) => NetworkId::new(NetworkType::Mainnet),
+            (false, true, false, false) => NetworkId::with_suffix(NetworkType::Testnet, self.testnet_suffix),
+            (false, false, true, false) => NetworkId::new(NetworkType::Devnet),
+            (false, false, false, true) => NetworkId::new(NetworkType::Simnet),
+            (false, false, false, false) => NetworkId::new(NetworkType::Mainnet),
             _ => panic!("only a single net should be activated"),
         }
     }
@@ -320,6 +323,7 @@ pub fn cli() -> Command {
 Setting to 0 prevents the preallocation and sets the maximum to {}, leading to 0 memory footprint as long as unused but to sub-optimal footprint if used.", 
 0, Tracker::MAX_ADDRESS_UPPER_BOUND, Tracker::DEFAULT_MAX_ADDRESSES)),
         )
+        .arg(arg!(--mainnet "Use the mainnet production network"))
         .arg(arg!(--testnet "Use the test network"))
         .arg(
             Arg::new("netsuffix")
@@ -431,6 +435,7 @@ impl Args {
             enable_unsynced_mining: arg_match_unwrap_or::<bool>(&m, "enable-unsynced-mining", defaults.enable_unsynced_mining),
             enable_mainnet_mining: arg_match_unwrap_or::<bool>(&m, "enable-mainnet-mining", defaults.enable_mainnet_mining),
             utxoindex: arg_match_unwrap_or::<bool>(&m, "utxoindex", defaults.utxoindex),
+            mainnet: arg_match_unwrap_or::<bool>(&m, "mainnet", defaults.mainnet),
             testnet: arg_match_unwrap_or::<bool>(&m, "testnet", defaults.testnet),
             testnet_suffix: arg_match_unwrap_or::<u32>(&m, "netsuffix", defaults.testnet_suffix),
             devnet: arg_match_unwrap_or::<bool>(&m, "devnet", defaults.devnet),

@@ -81,10 +81,22 @@ impl CoinbaseManager {
         let bps = 1000 / target_time_per_block;
         let blocks_per_month = SECONDS_PER_MONTH * bps;
 
-        // Precomputed subsidy by month table for the actual block per second rate
-        // Here values are rounded up so that we keep the same number of rewarding months as in the original 1 BPS table.
-        // In a 10 BPS network, the induced increase in total rewards is 51 ZYAN (see tests::calc_high_bps_total_rewards_delta())
-        let subsidy_by_month_table: SubsidyByMonthTable = core::array::from_fn(|i| SUBSIDY_BY_MONTH_TABLE[i].div_ceil(bps));
+        // Precomputed subsidy by month table for the actual block per second rate.
+        // If deflationary_phase_daa_score == 31_449_600 (Mainnet), we use the Kaspa-style smooth geometric decay
+        // calibrated for ~28.7B ZYAN cap: initial reward = 50 ZYAN/block (5,000,000,000 sompi),
+        // monthly decay rate = 0.004847033515 (0.4847033515%).
+        let subsidy_by_month_table: SubsidyByMonthTable = if deflationary_phase_daa_score == 31_449_600 {
+            core::array::from_fn(|i| {
+                let m = i as f64;
+                let decay_rate = 0.004847033515f64;
+                let initial = 5_000_000_000f64;
+                let month_subsidy = (initial * (1.0 - decay_rate).powf(m)).round() as u64;
+                month_subsidy.div_ceil(bps)
+            })
+        } else {
+            core::array::from_fn(|i| SUBSIDY_BY_MONTH_TABLE[i].div_ceil(bps))
+        };
+
         Self {
             coinbase_payload_script_public_key_max_len,
             max_coinbase_payload_len,
@@ -374,6 +386,9 @@ mod tests {
         });
 
         for network_id in NetworkId::iter() {
+            if network_id.is_mainnet() {
+                continue;
+            }
             let cbm = create_manager(&network_id.into());
             cbm.subsidy_by_month_table.iter().enumerate().for_each(|(i, x)| {
                 assert_eq!(
@@ -394,6 +409,9 @@ mod tests {
         const SECONDS_PER_HALVING: u64 = SECONDS_PER_MONTH * 24;
 
         for network_id in NetworkId::iter() {
+            if network_id.is_mainnet() {
+                continue;
+            }
             let params = &network_id.into();
             let cbm = create_manager(params);
 
@@ -463,6 +481,24 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn mainnet_smooth_decay_subsidy_test() {
+        let cbm = create_manager(&MAINNET_PARAMS);
+        assert_eq!(cbm.calc_block_subsidy(1), 5_000_000_000, "Year 1 pre-deflationary subsidy should be 50 ZYAN");
+        assert_eq!(cbm.calc_block_subsidy(MAINNET_PARAMS.deflationary_phase_daa_score - 1), 5_000_000_000);
+        assert_eq!(cbm.calc_block_subsidy(MAINNET_PARAMS.deflationary_phase_daa_score), 5_000_000_000);
+
+        let month_1_daa = MAINNET_PARAMS.deflationary_phase_daa_score + cbm.blocks_per_month;
+        assert_eq!(cbm.calc_block_subsidy(month_1_daa), 4_975_764_832);
+
+        let pre_deflationary_total = MAINNET_PARAMS.deflationary_phase_daa_score * 5_000_000_000;
+        let deflationary_monthly_sum: u64 = cbm.subsidy_by_month_table.iter().map(|&s| s * cbm.blocks_per_month).sum();
+        let total_supply_sompi = pre_deflationary_total + deflationary_monthly_sum;
+        let total_supply_zyan = total_supply_sompi / SOMPI_PER_ZYANYA;
+        println!("Mainnet Total Supply (727 months table sum): {} ZYAN", total_supply_zyan);
+        assert!(total_supply_zyan >= 27_500_000_000 && total_supply_zyan <= 28_700_000_000, "Mainnet total supply must approach ~28.7B ZYAN");
     }
 
     #[test]
