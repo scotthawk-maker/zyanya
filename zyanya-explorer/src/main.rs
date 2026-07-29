@@ -2,7 +2,7 @@ mod api;
 mod client;
 mod web;
 
-use axum::{routing::get, Router};
+use axum::{routing::{get, post}, Router};
 use clap::Parser;
 use socket2::{Domain, Protocol, Socket, Type};
 use std::net::SocketAddr;
@@ -79,6 +79,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new()
         .route("/", get(landing_handler))
         .route("/explorer", get(explorer_handler))
+        .route("/tools", get(tools_handler))
+        .route("/webmcp.js", get(webmcp_js_handler))
         .route("/brand/:asset", get(brand_asset_handler))
         .route("/api/info", get(api_info_handler))
         .route("/api/blocks", get(api_blocks_handler))
@@ -86,6 +88,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/contract/:address/code", get(api_contract_code_handler))
         .route("/api/contract/:address/state", get(api_contract_state_handler))
         .route("/api/dag", get(api_dag_handler))
+        .route("/api/token-balance", get(api_token_balance_handler).post(api_token_balance_post_handler))
+        .route("/api/dex-reserves", get(api_dex_reserves_handler).post(api_dex_reserves_post_handler))
+        .route("/api/deploy-contract", post(api_deploy_contract_handler))
+        .route("/api/invoke-contract", post(api_invoke_contract_handler))
+        .route("/api/call-contract", post(api_call_contract_handler))
+        .route("/api/deploy-token", post(api_deploy_token_handler))
+        .route("/api/token-transfer", post(api_token_transfer_handler))
+        .route("/api/swap-on-dex", post(api_swap_on_dex_handler))
+        .route("/api/compile-contract", post(api_compile_contract_handler))
         .with_state(client_mgr);
 
     println!(" [*] Server running at http://{}/", cli.listen);

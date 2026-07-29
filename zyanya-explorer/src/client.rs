@@ -422,4 +422,164 @@ impl RpcClientManager {
             sink: dag_info.sink.to_string(),
         })
     }
+
+    pub async fn deploy_contract(&self, bytecode_hex: &str, gas: u64) -> Result<serde_json::Value, String> {
+        use zyanya_utils::hex::FromHex;
+        let client = self.ensure_connected().await?;
+        let bytes = <Vec<u8>>::from_hex(bytecode_hex.trim_start_matches("0x"))
+            .map_err(|e| format!("Invalid bytecode hex: {}", e))?;
+        let res = client.deploy_contract(bytes, gas, 1, 0).await.map_err(|e| e.to_string())?;
+        Ok(serde_json::json!({
+            "contractAddress": res.contract_address,
+            "transactionId": res.transaction_id,
+            "gasUsed": res.gas_used,
+            "success": res.success
+        }))
+    }
+
+    pub async fn invoke_contract(&self, address: &str, entry_point: u16, calldata: &str, gas: u64) -> Result<serde_json::Value, String> {
+        use zyanya_utils::hex::FromHex;
+        let client = self.ensure_connected().await?;
+        let contract_address = RpcHash::from_str(address).map_err(|e| format!("Invalid contract address: {}", e))?;
+        let parameters = if calldata.is_empty() {
+            vec![]
+        } else if let Ok(val) = calldata.parse::<u64>() {
+            vec![val]
+        } else {
+            let bytes = <Vec<u8>>::from_hex(calldata.trim_start_matches("0x"))
+                .map_err(|e| format!("Invalid calldata hex: {}", e))?;
+            bytes.iter().map(|&b| b as u64).collect()
+        };
+        let res = client.invoke_contract(contract_address, entry_point, parameters, gas, 1, 0).await.map_err(|e| e.to_string())?;
+        Ok(serde_json::json!({
+            "returnValue": res.return_value,
+            "transactionId": res.transaction_id,
+            "gasUsed": res.gas_used,
+            "success": res.success
+        }))
+    }
+
+    pub async fn call_contract(&self, address: &str, calldata: &str, entry_point: u16, gas: u64) -> Result<serde_json::Value, String> {
+        use zyanya_utils::hex::FromHex;
+        let client = self.ensure_connected().await?;
+        let contract_address = RpcHash::from_str(address).map_err(|e| format!("Invalid contract address: {}", e))?;
+        let mut bytes = if calldata.is_empty() {
+            vec![]
+        } else if let Ok(val) = calldata.parse::<u64>() {
+            val.to_le_bytes().to_vec()
+        } else {
+            <Vec<u8>>::from_hex(calldata.trim_start_matches("0x"))
+                .map_err(|e| format!("Invalid calldata hex: {}", e))?
+        };
+        bytes.extend_from_slice(&(entry_point as u64).to_le_bytes());
+        let res = client.call_contract(contract_address, bytes, gas).await.map_err(|e| e.to_string())?;
+        Ok(serde_json::json!({
+            "returnValue": res.return_value,
+            "executionSuccess": res.success,
+            "gasUsed": res.gas_used
+        }))
+    }
+
+    pub async fn deploy_token(&self, name: &str, supply: u64, owner: &str, gas: u64) -> Result<serde_json::Value, String> {
+        let client = self.ensure_connected().await?;
+        let owner_u64 = parse_u64_key(owner)?;
+        let bytecode = zyanya_vm::token_contract_bytecode(supply, owner_u64).map_err(|e| e.to_string())?;
+        let res = client.deploy_contract(bytecode, gas, 1, 0).await.map_err(|e| e.to_string())?;
+        Ok(serde_json::json!({
+            "contractAddress": res.contract_address,
+            "transactionId": res.transaction_id,
+            "gasUsed": res.gas_used,
+            "success": res.success,
+            "name": name,
+            "supply": supply,
+            "owner": owner_u64
+        }))
+    }
+
+    pub async fn get_token_balance(&self, token: &str, holder: &str) -> Result<serde_json::Value, String> {
+        let client = self.ensure_connected().await?;
+        let contract_address = RpcHash::from_str(token).map_err(|e| format!("Invalid token address: {}", e))?;
+        let holder_u64 = parse_u64_key(holder)?;
+        let state_res = client.get_contract_state(contract_address, holder_u64).await.map_err(|e| e.to_string())?;
+        Ok(serde_json::json!({
+            "token": token,
+            "holder": holder_u64,
+            "balance": state_res.value
+        }))
+    }
+
+    pub async fn token_transfer(&self, token: &str, from: &str, to: &str, amount: u64, gas: u64) -> Result<serde_json::Value, String> {
+        let client = self.ensure_connected().await?;
+        let contract_address = RpcHash::from_str(token).map_err(|e| format!("Invalid token address: {}", e))?;
+        let from_u64 = parse_u64_key(from)?;
+        let to_u64 = parse_u64_key(to)?;
+        let parameters = vec![from_u64, to_u64, amount];
+        let res = client.invoke_contract(contract_address, 0, parameters, gas, 1, 0).await.map_err(|e| e.to_string())?;
+        Ok(serde_json::json!({
+            "token": token,
+            "from": from_u64,
+            "to": to_u64,
+            "amount": amount,
+            "transactionId": res.transaction_id,
+            "gasUsed": res.gas_used,
+            "success": res.success,
+            "returnValue": res.return_value
+        }))
+    }
+
+    pub async fn swap_on_dex(&self, dex: &str, token_in: &str, amount_in: u64, gas: u64) -> Result<serde_json::Value, String> {
+        let client = self.ensure_connected().await?;
+        let contract_address = RpcHash::from_str(dex).map_err(|e| format!("Invalid DEX address: {}", e))?;
+        let token_in_val: u64 = match token_in.to_lowercase().as_str() {
+            "a" | "0" | "zyan" => 0,
+            "b" | "1" | "ghost" => 1,
+            _ => token_in.parse::<u64>().unwrap_or(0),
+        };
+        let parameters = vec![token_in_val, amount_in];
+        let res = client.invoke_contract(contract_address, 2, parameters, gas, 1, 0).await.map_err(|e| e.to_string())?;
+        Ok(serde_json::json!({
+            "dex": dex,
+            "tokenIn": token_in,
+            "tokenInValue": token_in_val,
+            "amountIn": amount_in,
+            "amountOut": res.return_value,
+            "transactionId": res.transaction_id,
+            "gasUsed": res.gas_used,
+            "success": res.success
+        }))
+    }
+
+    pub async fn get_dex_reserves(&self, dex: &str) -> Result<serde_json::Value, String> {
+        let client = self.ensure_connected().await?;
+        let contract_address = RpcHash::from_str(dex).map_err(|e| format!("Invalid DEX address: {}", e))?;
+        let res_a = client.get_contract_state(contract_address, 0).await.map_err(|e| e.to_string())?;
+        let res_b = client.get_contract_state(contract_address, 1).await.map_err(|e| e.to_string())?;
+        let total_lp = client.get_contract_state(contract_address, 2).await.map_err(|e| e.to_string())?;
+        Ok(serde_json::json!({
+            "dex": dex,
+            "reserveA": res_a.value,
+            "reserveB": res_b.value,
+            "totalLPSupply": total_lp.value
+        }))
+    }
+
+    pub fn compile_contract(&self, source: &str) -> Result<serde_json::Value, String> {
+        use zyanya_utils::hex::ToHex;
+        let bytecode = zyanya_vm::Compiler::compile(source).map_err(|e| e.to_string())?;
+        let hex_str = bytecode.to_hex();
+        Ok(serde_json::json!({
+            "bytecode": hex_str,
+            "size_bytes": bytecode.len()
+        }))
+    }
 }
+
+fn parse_u64_key(s: &str) -> Result<u64, String> {
+    let clean = s.trim();
+    if let Some(stripped) = clean.strip_prefix("0x").or_else(|| clean.strip_prefix("0X")) {
+        u64::from_str_radix(stripped, 16).map_err(|e| format!("Invalid hex key: {}", e))
+    } else {
+        clean.parse::<u64>().map_err(|e| format!("Invalid numeric key: {}", e))
+    }
+}
+
