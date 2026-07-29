@@ -1,7 +1,7 @@
 use async_channel::Receiver;
-use spectre_grpc_client::GrpcClient;
-use spectre_notify::{connection::ChannelType, events::EventType, listener::ListenerId, scope::Scope, subscription::Command};
-use spectre_rpc_core::{api::rpc::RpcApi, notify::connection::ChannelConnection, Notification, RpcResult};
+use zyanya_grpc_client::GrpcClient;
+use zyanya_notify::{connection::ChannelType, events::EventType, listener::ListenerId, scope::Scope, subscription::Command};
+use zyanya_rpc_core::{api::rpc::RpcApi, notify::connection::ChannelConnection, Notification, RpcResult};
 
 /// An event type bound notification listener
 #[derive(Clone)]

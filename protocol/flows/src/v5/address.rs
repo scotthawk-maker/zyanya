@@ -1,20 +1,20 @@
 use crate::{flow_context::FlowContext, flow_trait::Flow};
 use itertools::Itertools;
 use rand::seq::SliceRandom;
-use spectre_addressmanager::NetAddress;
-use spectre_p2p_lib::{
+use zyanya_addressmanager::NetAddress;
+use zyanya_p2p_lib::{
     common::ProtocolError,
     dequeue, dequeue_with_timeout, make_message,
-    pb::{spectred_message::Payload, AddressesMessage, RequestAddressesMessage},
+    pb::{zyanyad_message::Payload, AddressesMessage, RequestAddressesMessage},
     IncomingRoute, Router,
 };
-use spectre_utils::networking::IpAddress;
+use zyanya_utils::networking::IpAddress;
 use std::sync::Arc;
 
-/// The maximum number of addresses that are sent in a single spectre Addresses message.
+/// The maximum number of addresses that are sent in a single zyanya Addresses message.
 const MAX_ADDRESSES_SEND: usize = 1000;
 
-/// The maximum number of addresses that can be received in a single spectre Addresses response.
+/// The maximum number of addresses that can be received in a single zyanya Addresses response.
 /// If a peer exceeds this value we consider it a protocol error.
 const MAX_ADDRESSES_RECEIVE: usize = 2500;
 

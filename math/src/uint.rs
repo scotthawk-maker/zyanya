@@ -443,26 +443,26 @@ macro_rules! construct_uint {
 
         }
 
-        impl spectre_utils::mem_size::MemSizeEstimator for $name {
+        impl zyanya_utils::mem_size::MemSizeEstimator for $name {
             fn estimate_mem_units(&self) -> usize {
                 1
 
             }
         }
 
-        impl spectre_utils::hex::ToHex for $name {
+        impl zyanya_utils::hex::ToHex for $name {
             fn to_hex(&self) -> String {
                 self.to_be_bytes().as_slice().to_hex()
             }
         }
 
-        impl spectre_utils::hex::ToHex for &$name {
+        impl zyanya_utils::hex::ToHex for &$name {
             fn to_hex(&self) -> String {
                 self.to_be_bytes().as_slice().to_hex()
             }
         }
 
-        impl spectre_utils::hex::FromHex for $name {
+        impl zyanya_utils::hex::FromHex for $name {
             type Error = $crate::Error;
             fn from_hex(hex: &str) -> Result<$name, Self::Error> {
                 Ok($name::from_hex(hex)?)

@@ -2,10 +2,10 @@ use crate::imports::*;
 use crate::result::Result;
 use crate::tx::{IPaymentOutputArray, PaymentOutputs};
 use crate::wasm::tx::generator::*;
-use spectre_consensus_client::*;
-use spectre_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
-use spectre_wallet_macros::declare_typescript_wasm_interface as declare;
-use spectre_wasm_core::types::BinaryT;
+use zyanya_consensus_client::*;
+use zyanya_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
+use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
+use zyanya_wasm_core::types::BinaryT;
 use workflow_core::runtime::is_web;
 
 /// Create a basic transaction without any mass limit checks.

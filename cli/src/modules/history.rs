@@ -1,7 +1,7 @@
 use crate::imports::*;
-use spectre_consensus_core::tx::TransactionId;
-use spectre_wallet_core::error::Error as WalletError;
-use spectre_wallet_core::storage::Binding;
+use zyanya_consensus_core::tx::TransactionId;
+use zyanya_wallet_core::error::Error as WalletError;
+use zyanya_wallet_core::storage::Binding;
 
 #[derive(Default, Handler)]
 #[help("Display transaction history")]
@@ -9,7 +9,7 @@ pub struct History;
 
 impl History {
     async fn main(self: Arc<Self>, ctx: &Arc<dyn Context>, mut argv: Vec<String>, _cmd: &str) -> Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
 
         let guard = ctx.wallet().guard();
         let guard = guard.lock().await;
@@ -135,7 +135,7 @@ impl History {
         Ok(())
     }
 
-    async fn display_help(self: Arc<Self>, ctx: Arc<SpectreCli>, _argv: Vec<String>) -> Result<()> {
+    async fn display_help(self: Arc<Self>, ctx: Arc<ZyanyaCli>, _argv: Vec<String>) -> Result<()> {
         ctx.term().help(
             &[
                 ("list [<last N transactions>]", "List the last N transactions"),

@@ -1,8 +1,8 @@
 use crate::{hashing, BlueWorkType};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use spectre_hashes::Hash;
-use spectre_utils::mem_size::MemSizeEstimator;
+use zyanya_hashes::Hash;
+use zyanya_utils::mem_size::MemSizeEstimator;
 
 /// @category Consensus
 #[derive(Clone, Debug, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
@@ -109,7 +109,7 @@ impl MemSizeEstimator for Header {
 mod tests {
     use super::*;
     use serde_json::Value;
-    use spectre_math::Uint192;
+    use zyanya_math::Uint192;
 
     #[test]
     fn test_header_ser() {

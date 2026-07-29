@@ -5,16 +5,16 @@
         <script type="module">
             import { log, stringify, currentNetwork } from './resources/utils.js';
 
-            import * as spectre from '../../web/spectre-core/spectre.js';
-            let { Resolver, RpcClient, Encoding, UtxoProcessor, UtxoContext } = spectre;
+            import * as zyanya from '../../web/zyanya-core/zyanya.js';
+            let { Resolver, RpcClient, Encoding, UtxoProcessor, UtxoContext } = zyanya;
 
             window.monitor = {};
 
             (async () => {
-                await spectre.default('../../web/spectre-core/spectre_bg.wasm');
+                await zyanya.default('../../web/zyanya-core/zyanya_bg.wasm');
 
                 let network = currentNetwork();
-                log(`Connecting to Spectre network...`);
+                log(`Connecting to Zyanya network...`);
                 log(`Selected network is ${network.class("network")}...`);
                 
                 const resolver = new Resolver();
@@ -41,8 +41,8 @@
                     events += 1;
                 });
 
-                // spectre:qpamkvhgh0kzx50gwvvp5xs8ktmqutcy3dfs9dc3w7lm9rq0zs76vf959mmrp
-                // spectre:qzeln8eue9nnrz85kn7x47smxhfqudyz6urv2wpquuvslq7ck4umys8gkt5x8
+                // zyanya:qpamkvhgh0kzx50gwvvp5xs8ktmqutcy3dfs9dc3w7lm9rq0zs76vf959mmrp
+                // zyanya:qzeln8eue9nnrz85kn7x47smxhfqudyz6urv2wpquuvslq7ck4umys8gkt5x8
 
                 log("");
                 log("Please note that some addresses may have thousands of UTXOs which makes it");

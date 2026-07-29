@@ -1,14 +1,14 @@
 use crate::matrix::Matrix;
 use js_sys::BigInt;
 use num::Float;
-use spectre_consensus_client::Header;
-use spectre_consensus_client::HeaderT;
-use spectre_consensus_core::hashing;
-use spectre_hashes::Hash;
-use spectre_hashes::PowHash;
-use spectre_math::Uint256;
-use spectre_utils::hex::FromHex;
-use spectre_utils::hex::ToHex;
+use zyanya_consensus_client::Header;
+use zyanya_consensus_client::HeaderT;
+use zyanya_consensus_core::hashing;
+use zyanya_hashes::Hash;
+use zyanya_hashes::PowHash;
+use zyanya_math::Uint256;
+use zyanya_utils::hex::FromHex;
+use zyanya_utils::hex::ToHex;
 use wasm_bindgen::prelude::*;
 use workflow_wasm::convert::TryCastFromJs;
 use workflow_wasm::error::Error;
@@ -20,7 +20,7 @@ extern "C" {
     pub type WorkT;
 }
 
-/// Represents a Spectre header PoW manager
+/// Represents a Zyanya header PoW manager
 /// @category Mining
 #[wasm_bindgen(inspectable)]
 pub struct PoW {

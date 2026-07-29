@@ -6,11 +6,11 @@ use crate::mempool::{
     },
     Mempool,
 };
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     api::ConsensusApi,
     tx::{Transaction, TransactionId},
 };
-use spectre_core::time::Stopwatch;
+use zyanya_core::time::Stopwatch;
 use std::{collections::HashSet, sync::atomic::Ordering};
 
 impl Mempool {

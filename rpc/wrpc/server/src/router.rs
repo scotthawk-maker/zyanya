@@ -1,7 +1,7 @@
 use crate::{connection::*, server::*};
-use spectre_notify::scope::Scope;
-use spectre_rpc_core::{api::ops::RpcApiOps, prelude::*};
-use spectre_rpc_macros::build_wrpc_server_interface;
+use zyanya_notify::scope::Scope;
+use zyanya_rpc_core::{api::ops::RpcApiOps, prelude::*};
+use zyanya_rpc_macros::build_wrpc_server_interface;
 use std::sync::Arc;
 use workflow_rpc::server::prelude::*;
 use workflow_serializer::prelude::*;
@@ -9,7 +9,7 @@ use workflow_serializer::prelude::*;
 /// A wrapper that creates an [`Interface`] instance and initializes
 /// RPC methods and notifications against this interface. The interface
 /// is later given to the RpcServer.  This wrapper exists to allow
-/// a single initialization location for both the Spectred Server and
+/// a single initialization location for both the Zyanyad Server and
 /// the GRPC Proxy.
 pub struct Router {
     pub interface: Arc<Interface<Server, Connection, RpcApiOps>>,

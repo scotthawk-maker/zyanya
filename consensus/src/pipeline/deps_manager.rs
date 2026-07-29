@@ -1,7 +1,7 @@
 use crate::errors::BlockProcessResult;
 use parking_lot::{Condvar, Mutex};
-use spectre_consensus_core::{block::Block, blockstatus::BlockStatus};
-use spectre_hashes::Hash;
+use zyanya_consensus_core::{block::Block, blockstatus::BlockStatus};
+use zyanya_hashes::Hash;
 use std::collections::{
     hash_map::Entry::{Occupied, Vacant},
     HashMap, VecDeque,

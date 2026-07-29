@@ -8,12 +8,12 @@ use crate::mempool::{
     },
     tx::Priority,
 };
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     tx::MutableTransaction,
     tx::{TransactionId, TransactionOutpoint},
 };
-use spectre_core::{debug, warn};
-use spectre_utils::iter::IterExtensions;
+use zyanya_core::{debug, warn};
+use zyanya_utils::iter::IterExtensions;
 use std::sync::Arc;
 
 /// Pool of orphan transactions depending on some missing utxo entries

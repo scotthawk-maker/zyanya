@@ -2,18 +2,18 @@
 //! Logical stream abstractions used throughout the IBD negotiation protocols
 //!
 
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     errors::consensus::ConsensusError,
     header::Header,
     tx::{TransactionOutpoint, UtxoEntry},
 };
-use spectre_core::{debug, info};
-use spectre_p2p_lib::{
+use zyanya_core::{debug, info};
+use zyanya_p2p_lib::{
     common::{ProtocolError, DEFAULT_TIMEOUT},
     convert::model::trusted::TrustedDataEntry,
     make_message,
     pb::{
-        spectred_message::Payload, RequestNextHeadersMessage, RequestNextPruningPointAndItsAnticoneBlocksMessage,
+        zyanyad_message::Payload, RequestNextHeadersMessage, RequestNextPruningPointAndItsAnticoneBlocksMessage,
         RequestNextPruningPointUtxoSetChunkMessage,
     },
     IncomingRoute, Router,

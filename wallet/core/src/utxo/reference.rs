@@ -3,7 +3,7 @@
 //!
 
 use crate::imports::*;
-pub use spectre_consensus_client::{TryIntoUtxoEntryReferences, UtxoEntryReference};
+pub use zyanya_consensus_client::{TryIntoUtxoEntryReferences, UtxoEntryReference};
 
 pub enum Maturity {
     /// Coinbase UTXO that has not reached stasis period.

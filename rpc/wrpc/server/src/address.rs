@@ -1,7 +1,7 @@
 use crate::service::WrpcEncoding;
 use serde::Deserialize;
-use spectre_consensus_core::network::NetworkType;
-use spectre_utils::networking::ContextualNetAddress;
+use zyanya_consensus_core::network::NetworkType;
+use zyanya_utils::networking::ContextualNetAddress;
 use std::{net::AddrParseError, str::FromStr};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -76,7 +76,7 @@ impl TryFrom<String> for WrpcNetAddress {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use spectre_utils::networking::IpAddress;
+    use zyanya_utils::networking::IpAddress;
 
     #[test]
     fn test_wrpc_net_address_from_str() {

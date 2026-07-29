@@ -8,14 +8,14 @@ pub use client_pool::ClientPool;
 use connection_event::ConnectionEvent;
 use futures::{future::FutureExt, pin_mut, select};
 use regex::Regex;
-use spectre_core::{debug, error, trace};
-use spectre_grpc_core::{
+use zyanya_core::{debug, error, trace};
+use zyanya_grpc_core::{
     channel::NotificationChannel,
-    ops::SpectredPayloadOps,
-    protowire::{rpc_client::RpcClient, spectred_request, GetInfoRequestMessage, SpectredRequest, SpectredResponse},
+    ops::ZyanyadPayloadOps,
+    protowire::{rpc_client::RpcClient, zyanyad_request, GetInfoRequestMessage, ZyanyadRequest, ZyanyadResponse},
     RPC_MAX_MESSAGE_SIZE,
 };
-use spectre_notify::{
+use zyanya_notify::{
     collector::{Collector, CollectorFrom},
     error::{Error as NotifyError, Result as NotifyResult},
     events::{EventArray, EventType, EVENT_TYPE_ARRAY},
@@ -28,7 +28,7 @@ use spectre_notify::{
         UtxosChangedMutationPolicy,
     },
 };
-use spectre_rpc_core::{
+use zyanya_rpc_core::{
     api::rpc::RpcApi,
     error::RpcError,
     error::RpcResult,
@@ -36,8 +36,8 @@ use spectre_rpc_core::{
     notify::{collector::RpcCoreConverter, connection::ChannelConnection, mode::NotificationMode},
     Notification,
 };
-use spectre_utils::{channel::Channel, triggers::DuplexTrigger};
-use spectre_utils_tower::{
+use zyanya_utils::{channel::Channel, triggers::DuplexTrigger};
+use zyanya_utils_tower::{
     counters::TowerConnectionCounters,
     middleware::{BodyExt, CountBytesBody, MapRequestBodyLayer, MapResponseBodyLayer, ServiceBuilder},
 };
@@ -233,7 +233,7 @@ impl GrpcClient {
 impl RpcApi for GrpcClient {
     // this example illustrates the body of the function created by the route!() macro
     // async fn submit_block_call(&self, request: SubmitBlockRequest) -> RpcResult<SubmitBlockResponse> {
-    //     self.inner.call(SpectredPayloadOps::SubmitBlock, request).await?.as_ref().try_into()
+    //     self.inner.call(ZyanyadPayloadOps::SubmitBlock, request).await?.as_ref().try_into()
     // }
 
     route!(ping_call, Ping);
@@ -277,6 +277,11 @@ impl RpcApi for GrpcClient {
     route!(get_fee_estimate_experimental_call, GetFeeEstimateExperimental);
     route!(get_current_block_color_call, GetCurrentBlockColor);
     route!(get_utxo_return_address_call, GetUtxoReturnAddress);
+    route!(deploy_contract_call, DeployContract);
+    route!(invoke_contract_call, InvokeContract);
+    route!(get_contract_state_call, GetContractState);
+    route!(get_contract_code_call, GetContractCode);
+    route!(call_contract_call, CallContract);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Notification API
@@ -358,8 +363,8 @@ pub const REQUEST_TIMEOUT_DURATION: u64 = 5_000;
 pub const TIMEOUT_MONITORING_INTERVAL: u64 = 10_000;
 pub const RECONNECT_INTERVAL: u64 = 2_000;
 
-type SpectredRequestSender = async_channel::Sender<SpectredRequest>;
-type SpectredRequestReceiver = async_channel::Receiver<SpectredRequest>;
+type ZyanyadRequestSender = async_channel::Sender<ZyanyadRequest>;
+type ZyanyadRequestReceiver = async_channel::Receiver<ZyanyadRequest>;
 
 #[derive(Debug, Default)]
 struct ServerFeatures {
@@ -373,7 +378,7 @@ struct ServerFeatures {
 ///
 /// Data flow:
 /// ```
-/// //   SpectredRequest -> request_send -> stream -> SpectredResponse
+/// //   ZyanyadRequest -> request_send -> stream -> ZyanyadResponse
 /// ```
 ///
 /// Execution flow:
@@ -410,8 +415,8 @@ struct Inner {
     notification_channel: NotificationChannel,
 
     // Sending to server
-    request_sender: SpectredRequestSender,
-    request_receiver: SpectredRequestReceiver,
+    request_sender: ZyanyadRequestSender,
+    request_receiver: ZyanyadRequestReceiver,
 
     // Receiving from server
     receiver_is_running: AtomicBool,
@@ -445,8 +450,8 @@ impl Inner {
     fn new(
         url: String,
         server_features: ServerFeatures,
-        request_sender: SpectredRequestSender,
-        request_receiver: SpectredRequestReceiver,
+        request_sender: ZyanyadRequestSender,
+        request_receiver: ZyanyadRequestReceiver,
         connection_event_sender: Option<Sender<ConnectionEvent>>,
         override_handle_stop_notify: bool,
         timeout_duration: u64,
@@ -520,11 +525,11 @@ impl Inner {
     #[allow(unused_variables)]
     async fn try_connect(
         url: String,
-        request_sender: SpectredRequestSender,
-        request_receiver: SpectredRequestReceiver,
+        request_sender: ZyanyadRequestSender,
+        request_receiver: ZyanyadRequestReceiver,
         request_timeout: u64,
         counters: Arc<TowerConnectionCounters>,
-    ) -> Result<(Streaming<SpectredResponse>, ServerFeatures)> {
+    ) -> Result<(Streaming<ZyanyadResponse>, ServerFeatures)> {
         // gRPC endpoint
         #[cfg(not(feature = "heap"))]
         let channel =
@@ -572,8 +577,8 @@ impl Inner {
             }
         };
 
-        // Actual SpectredRequest to SpectredResponse stream
-        let mut stream: Streaming<SpectredResponse> = client.message_stream(request_stream).await?.into_inner();
+        // Actual ZyanyadRequest to ZyanyadResponse stream
+        let mut stream: Streaming<ZyanyadResponse> = client.message_stream(request_stream).await?.into_inner();
 
         // Collect server capabilities as stated in GetInfoResponse
         let mut server_features = ServerFeatures::default();
@@ -681,11 +686,11 @@ impl Inner {
         self.resolver.clone()
     }
 
-    async fn call(&self, op: SpectredPayloadOps, request: impl Into<SpectredRequest>) -> Result<SpectredResponse> {
+    async fn call(&self, op: ZyanyadPayloadOps, request: impl Into<ZyanyadRequest>) -> Result<ZyanyadResponse> {
         // Calls are only allowed if the client is connected to the server
         if self.is_connected() {
             let id = u64::from_le_bytes(rand::random::<[u8; 8]>());
-            let mut request: SpectredRequest = request.into();
+            let mut request: ZyanyadRequest = request.into();
             request.id = id;
 
             trace!("GRPC client: resolver call: {:?}", request);
@@ -739,7 +744,7 @@ impl Inner {
     }
 
     /// Launch a task receiving and handling response messages sent by the server.
-    fn spawn_response_receiver_task(self: Arc<Self>, mut stream: Streaming<SpectredResponse>) {
+    fn spawn_response_receiver_task(self: Arc<Self>, mut stream: Streaming<ZyanyadResponse>) {
         // Note: self is a cloned Arc here so that it can be used in the spawned task.
 
         // The task can only be spawned once
@@ -855,7 +860,7 @@ impl Inner {
         });
     }
 
-    fn handle_response(&self, response: SpectredResponse) {
+    fn handle_response(&self, response: ZyanyadResponse) {
         if response.is_notification() {
             trace!("GRPC client: handle_response received a notification");
             match Notification::try_from(&response) {
@@ -915,7 +920,7 @@ impl Inner {
 
     /// Start sending notifications of some type to the client.
     async fn start_notify_to_client(&self, scope: Scope) -> RpcResult<()> {
-        let request = spectred_request::Payload::from_notification_type(&scope, Command::Start);
+        let request = zyanyad_request::Payload::from_notification_type(&scope, Command::Start);
         self.call((&request).into(), request).await?;
         Ok(())
     }
@@ -923,7 +928,7 @@ impl Inner {
     /// Stop sending notifications of some type to the client.
     async fn stop_notify_to_client(&self, scope: Scope) -> RpcResult<()> {
         if self.handle_stop_notify() {
-            let request = spectred_request::Payload::from_notification_type(&scope, Command::Stop);
+            let request = zyanyad_request::Payload::from_notification_type(&scope, Command::Stop);
             self.call((&request).into(), request).await?;
         }
         Ok(())

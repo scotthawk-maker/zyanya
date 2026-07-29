@@ -3,7 +3,7 @@ use crate::{
     subnets::SUBNETWORK_ID_SIZE,
     tx::{Transaction, TransactionInput, TransactionOutput, VerifiableTransaction},
 };
-use spectre_hashes::HASH_SIZE;
+use zyanya_hashes::HASH_SIZE;
 
 // transaction_estimated_serialized_size is the estimated size of a transaction in some
 // serialization. This has to be deterministic, but not necessarily accurate, since
@@ -59,7 +59,7 @@ pub fn transaction_output_estimated_serialized_size(output: &TransactionOutput) 
 
 // Note: consensus mass calculator operates on signed transactions.
 // To calculate mass for unsigned transactions, please use
-// `spectre_wallet_core::tx::mass::MassCalculator`
+// `zyanya_wallet_core::tx::mass::MassCalculator`
 #[derive(Clone)]
 pub struct MassCalculator {
     mass_per_tx_byte: u64,
@@ -194,7 +194,7 @@ pub fn calc_storage_mass(
 mod tests {
     use super::*;
     use crate::{
-        constants::{SOMPI_PER_SPECTRE, STORAGE_MASS_PARAMETER},
+        constants::{SOMPI_PER_ZYANYA, STORAGE_MASS_PARAMETER},
         subnets::SubnetworkId,
         tx::*,
     };
@@ -220,14 +220,14 @@ mod tests {
         assert_eq!(storage_mass, storage_mass_parameter / 50 + storage_mass_parameter / 550 - 3 * (storage_mass_parameter / 200));
 
         // Create a tx with more outs than ins
-        let base_value = 10_000 * SOMPI_PER_SPECTRE;
+        let base_value = 10_000 * SOMPI_PER_ZYANYA;
         let mut tx = generate_tx_from_amounts(&[base_value, base_value, base_value * 2], &[base_value; 4]);
         let storage_mass_parameter = STORAGE_MASS_PARAMETER;
         let storage_mass = MassCalculator::new(0, 0, 0, storage_mass_parameter).calc_tx_storage_mass(&tx.as_verifiable()).unwrap();
         assert_eq!(storage_mass, 4); // Inputs are above C so they don't contribute negative mass, 4 outputs exactly equal C each charge 1
 
         let mut tx2 = tx.clone();
-        tx2.tx.outputs[0].value = 10 * SOMPI_PER_SPECTRE;
+        tx2.tx.outputs[0].value = 10 * SOMPI_PER_ZYANYA;
         let storage_mass = MassCalculator::new(0, 0, 0, storage_mass_parameter).calc_tx_storage_mass(&tx2.as_verifiable()).unwrap();
         assert_eq!(storage_mass, 1003);
 

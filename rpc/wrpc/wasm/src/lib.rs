@@ -1,5 +1,5 @@
 //!
-//! WASM bindings for the [Rusty Spectre p2p Node wRPC Client](spectre-wrpc-client)
+//! WASM bindings for the [Rusty Zyanya p2p Node wRPC Client](zyanya-wrpc-client)
 //!
 
 #![allow(unused_imports)]

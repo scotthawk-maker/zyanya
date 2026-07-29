@@ -2,13 +2,13 @@ use std::str::FromStr;
 
 use crate::protowire;
 use crate::{from, try_from};
-use spectre_rpc_core::{RpcError, RpcNodeId, RpcPeerAddress};
+use zyanya_rpc_core::{RpcError, RpcNodeId, RpcPeerAddress};
 
 // ----------------------------------------------------------------------------
 // rpc_core to protowire
 // ----------------------------------------------------------------------------
 
-from!(item: &spectre_rpc_core::RpcPeerInfo, protowire::GetConnectedPeerInfoMessage, {
+from!(item: &zyanya_rpc_core::RpcPeerInfo, protowire::GetConnectedPeerInfoMessage, {
     Self {
         id: item.id.to_string(),
         address: item.address.to_string(),
@@ -22,14 +22,14 @@ from!(item: &spectre_rpc_core::RpcPeerInfo, protowire::GetConnectedPeerInfoMessa
     }
 });
 
-from!(item: &spectre_rpc_core::RpcPeerAddress, protowire::GetPeerAddressesKnownAddressMessage, { Self { addr: item.to_string() } });
-from!(item: &spectre_rpc_core::RpcIpAddress, protowire::GetPeerAddressesKnownAddressMessage, { Self { addr: item.to_string() } });
+from!(item: &zyanya_rpc_core::RpcPeerAddress, protowire::GetPeerAddressesKnownAddressMessage, { Self { addr: item.to_string() } });
+from!(item: &zyanya_rpc_core::RpcIpAddress, protowire::GetPeerAddressesKnownAddressMessage, { Self { addr: item.to_string() } });
 
 // ----------------------------------------------------------------------------
 // protowire to rpc_core
 // ----------------------------------------------------------------------------
 
-try_from!(item: &protowire::GetConnectedPeerInfoMessage, spectre_rpc_core::RpcPeerInfo, {
+try_from!(item: &protowire::GetConnectedPeerInfoMessage, zyanya_rpc_core::RpcPeerInfo, {
     Self {
         id: RpcNodeId::from_str(&item.id)?,
         address: RpcPeerAddress::from_str(&item.address)?,
@@ -43,5 +43,5 @@ try_from!(item: &protowire::GetConnectedPeerInfoMessage, spectre_rpc_core::RpcPe
     }
 });
 
-try_from!(item: &protowire::GetPeerAddressesKnownAddressMessage, spectre_rpc_core::RpcPeerAddress, { Self::from_str(&item.addr)? });
-try_from!(item: &protowire::GetPeerAddressesKnownAddressMessage, spectre_rpc_core::RpcIpAddress, { Self::from_str(&item.addr)? });
+try_from!(item: &protowire::GetPeerAddressesKnownAddressMessage, zyanya_rpc_core::RpcPeerAddress, { Self::from_str(&item.addr)? });
+try_from!(item: &protowire::GetPeerAddressesKnownAddressMessage, zyanya_rpc_core::RpcIpAddress, { Self::from_str(&item.addr)? });

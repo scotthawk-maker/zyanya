@@ -8,8 +8,8 @@ use crate::u3072::U3072;
 use rand_chacha::rand_core::{RngCore, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
-use spectre_hashes::{Hash, Hasher, HasherBase, MuHashElementHash, MuHashFinalizeHash};
-use spectre_math::Uint3072;
+use zyanya_hashes::{Hash, Hasher, HasherBase, MuHashElementHash, MuHashFinalizeHash};
+use zyanya_math::Uint3072;
 use std::error::Error;
 use std::fmt::Display;
 
@@ -189,7 +189,7 @@ mod tests {
     use crate::{MuHash, EMPTY_MUHASH, U3072};
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha8Rng;
-    use spectre_hashes::Hash;
+    use zyanya_hashes::Hash;
 
     struct TestVector {
         data: &'static [u8],

@@ -1,8 +1,8 @@
 use crate::result::Result;
 use crate::tx::{mass, MAXIMUM_STANDARD_TRANSACTION_MASS};
-use spectre_consensus_client::*;
-use spectre_consensus_core::config::params::Params;
-use spectre_consensus_core::network::{NetworkId, NetworkIdT};
+use zyanya_consensus_client::*;
+use zyanya_consensus_core::config::params::Params;
+use zyanya_consensus_core::network::{NetworkId, NetworkIdT};
 use wasm_bindgen::prelude::*;
 use workflow_wasm::convert::*;
 

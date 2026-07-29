@@ -3,73 +3,73 @@
 //!
 
 use async_channel::unbounded;
-use spectre_alloc::init_allocator_with_default_settings;
-use spectre_consensus::config::genesis::GENESIS;
-use spectre_consensus::config::{Config, ConfigBuilder};
-use spectre_consensus::consensus::factory::Factory as ConsensusFactory;
-use spectre_consensus::consensus::test_consensus::{TestConsensus, TestConsensusFactory};
-use spectre_consensus::model::stores::block_transactions::{
+use zyanya_alloc::init_allocator_with_default_settings;
+use zyanya_consensus::config::genesis::GENESIS;
+use zyanya_consensus::config::{Config, ConfigBuilder};
+use zyanya_consensus::consensus::factory::Factory as ConsensusFactory;
+use zyanya_consensus::consensus::test_consensus::{TestConsensus, TestConsensusFactory};
+use zyanya_consensus::model::stores::block_transactions::{
     BlockTransactionsStore, BlockTransactionsStoreReader, DbBlockTransactionsStore,
 };
-use spectre_consensus::model::stores::ghostdag::{GhostdagStoreReader, KType as GhostdagKType};
-use spectre_consensus::model::stores::headers::HeaderStoreReader;
-use spectre_consensus::model::stores::reachability::DbReachabilityStore;
-use spectre_consensus::model::stores::relations::DbRelationsStore;
-use spectre_consensus::model::stores::selected_chain::SelectedChainStoreReader;
-use spectre_consensus::params::{
+use zyanya_consensus::model::stores::ghostdag::{GhostdagStoreReader, KType as GhostdagKType};
+use zyanya_consensus::model::stores::headers::HeaderStoreReader;
+use zyanya_consensus::model::stores::reachability::DbReachabilityStore;
+use zyanya_consensus::model::stores::relations::DbRelationsStore;
+use zyanya_consensus::model::stores::selected_chain::SelectedChainStoreReader;
+use zyanya_consensus::params::{
     ForkActivation, Params, DEVNET_PARAMS, MAINNET_PARAMS, MAX_DIFFICULTY_TARGET, MAX_DIFFICULTY_TARGET_AS_F64,
 };
-use spectre_consensus::pipeline::monitor::ConsensusMonitor;
-use spectre_consensus::pipeline::ProcessingCounters;
-use spectre_consensus::processes::reachability::tests::{DagBlock, DagBuilder, StoreValidationExtensions};
-use spectre_consensus::processes::window::{WindowManager, WindowType};
-use spectre_consensus_core::api::{BlockValidationFutures, ConsensusApi};
-use spectre_consensus_core::block::Block;
-use spectre_consensus_core::blockhash::new_unique;
-use spectre_consensus_core::blockstatus::BlockStatus;
-use spectre_consensus_core::constants::{BLOCK_VERSION, SOMPI_PER_SPECTRE, STORAGE_MASS_PARAMETER};
-use spectre_consensus_core::errors::block::{BlockProcessResult, RuleError};
-use spectre_consensus_core::errors::tx::TxRuleError;
-use spectre_consensus_core::hashing::sighash::calc_schnorr_signature_hash;
-use spectre_consensus_core::header::Header;
-use spectre_consensus_core::network::{NetworkId, NetworkType::Mainnet};
-use spectre_consensus_core::subnets::SubnetworkId;
-use spectre_consensus_core::trusted::{ExternalGhostdagData, TrustedBlock};
-use spectre_consensus_core::tx::{
+use zyanya_consensus::pipeline::monitor::ConsensusMonitor;
+use zyanya_consensus::pipeline::ProcessingCounters;
+use zyanya_consensus::processes::reachability::tests::{DagBlock, DagBuilder, StoreValidationExtensions};
+use zyanya_consensus::processes::window::{WindowManager, WindowType};
+use zyanya_consensus_core::api::{BlockValidationFutures, ConsensusApi};
+use zyanya_consensus_core::block::Block;
+use zyanya_consensus_core::blockhash::new_unique;
+use zyanya_consensus_core::blockstatus::BlockStatus;
+use zyanya_consensus_core::constants::{BLOCK_VERSION, SOMPI_PER_ZYANYA, STORAGE_MASS_PARAMETER};
+use zyanya_consensus_core::errors::block::{BlockProcessResult, RuleError};
+use zyanya_consensus_core::errors::tx::TxRuleError;
+use zyanya_consensus_core::hashing::sighash::calc_schnorr_signature_hash;
+use zyanya_consensus_core::header::Header;
+use zyanya_consensus_core::network::{NetworkId, NetworkType::Mainnet};
+use zyanya_consensus_core::subnets::SubnetworkId;
+use zyanya_consensus_core::trusted::{ExternalGhostdagData, TrustedBlock};
+use zyanya_consensus_core::tx::{
     MutableTransaction, ScriptPublicKey, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput, UtxoEntry,
 };
-use spectre_consensus_core::{blockhash, hashing, BlockHashMap, BlueWorkType};
-use spectre_consensus_notify::root::ConsensusNotificationRoot;
-use spectre_consensus_notify::service::NotifyService;
-use spectre_consensusmanager::ConsensusManager;
-use spectre_core::task::tick::TickService;
-use spectre_core::time::unix_now;
-use spectre_database::utils::get_spectre_tempdir;
-use spectre_hashes::Hash;
+use zyanya_consensus_core::{blockhash, hashing, BlockHashMap, BlueWorkType};
+use zyanya_consensus_notify::root::ConsensusNotificationRoot;
+use zyanya_consensus_notify::service::NotifyService;
+use zyanya_consensusmanager::ConsensusManager;
+use zyanya_core::task::tick::TickService;
+use zyanya_core::time::unix_now;
+use zyanya_database::utils::get_zyanya_tempdir;
+use zyanya_hashes::Hash;
 
 use crate::common;
 use flate2::read::GzDecoder;
 use futures_util::future::try_join_all;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use spectre_consensus_core::coinbase::MinerData;
-use spectre_consensus_core::merkle::calc_hash_merkle_root;
-use spectre_consensus_core::muhash::MuHashExtensions;
-use spectre_core::core::Core;
-use spectre_core::signals::Shutdown;
-use spectre_core::task::runtime::AsyncRuntime;
-use spectre_core::{assert_match, info};
-use spectre_database::create_temp_db;
-use spectre_database::prelude::{CachePolicy, ConnBuilder};
-use spectre_index_processor::service::IndexService;
-use spectre_math::Uint256;
-use spectre_muhash::MuHash;
-use spectre_notify::subscription::context::SubscriptionContext;
-use spectre_txscript::caches::TxScriptCacheCounters;
-use spectre_txscript::opcodes::codes::OpTrue;
-use spectre_txscript::script_builder::ScriptBuilderResult;
-use spectre_utxoindex::api::{UtxoIndexApi, UtxoIndexProxy};
-use spectre_utxoindex::UtxoIndex;
+use zyanya_consensus_core::coinbase::MinerData;
+use zyanya_consensus_core::merkle::calc_hash_merkle_root;
+use zyanya_consensus_core::muhash::MuHashExtensions;
+use zyanya_core::core::Core;
+use zyanya_core::signals::Shutdown;
+use zyanya_core::task::runtime::AsyncRuntime;
+use zyanya_core::{assert_match, info};
+use zyanya_database::create_temp_db;
+use zyanya_database::prelude::{CachePolicy, ConnBuilder};
+use zyanya_index_processor::service::IndexService;
+use zyanya_math::Uint256;
+use zyanya_muhash::MuHash;
+use zyanya_notify::subscription::context::SubscriptionContext;
+use zyanya_txscript::caches::TxScriptCacheCounters;
+use zyanya_txscript::opcodes::codes::OpTrue;
+use zyanya_txscript::script_builder::ScriptBuilderResult;
+use zyanya_utxoindex::api::{UtxoIndexApi, UtxoIndexProxy};
+use zyanya_utxoindex::UtxoIndex;
 use std::cmp::{max, Ordering};
 use std::collections::HashSet;
 use std::path::Path;
@@ -785,7 +785,7 @@ struct RPCUTXOEntry {
 
 #[allow(non_snake_case)]
 #[derive(Deserialize, Debug)]
-struct SpectredGoParams {
+struct ZyanyadGoParams {
     K: GhostdagKType,
     TimestampDeviationTolerance: u64,
     TargetTimePerBlock: u64,
@@ -807,7 +807,7 @@ struct SpectredGoParams {
     PruningProofM: u64,
 }
 
-impl SpectredGoParams {
+impl ZyanyadGoParams {
     fn into_params(self) -> Params {
         let finality_depth = self.FinalityDuration / self.TargetTimePerBlock;
         Params {
@@ -857,35 +857,35 @@ impl SpectredGoParams {
     }
 }
 
-// TODO: Add data from Spectre
+// TODO: Add data from Zyanya
 #[tokio::test]
 async fn goref_custom_pruning_depth_test() {
     init_allocator_with_default_settings();
     json_test("testdata/dags_for_json_tests/goref_custom_pruning_depth", false).await
 }
 
-// TODO: Add data from Spectre
+// TODO: Add data from Zyanya
 #[tokio::test]
 async fn goref_notx_test() {
     init_allocator_with_default_settings();
     json_test("testdata/dags_for_json_tests/goref-notx-5000-blocks", false).await
 }
 
-// TODO: We will fix the test a bit later in Spectre
+// TODO: We will fix the test a bit later in Zyanya
 //#[tokio::test]
 //async fn goref_notx_concurrent_test() {
 //    init_allocator_with_default_settings();
 //    json_test("testdata/dags_for_json_tests/goref-notx-5000-blocks", true).await
 //}
 
-// TODO: Add data from Spectre
+// TODO: Add data from Zyanya
 #[tokio::test]
 async fn goref_tx_small_test() {
     init_allocator_with_default_settings();
     json_test("testdata/dags_for_json_tests/goref-905-tx-265-blocks", false).await
 }
 
-// TODO: We will fix the test a bit later in Spectre
+// TODO: We will fix the test a bit later in Zyanya
 //#[tokio::test]
 //async fn goref_tx_small_concurrent_test() {
 //    init_allocator_with_default_settings();
@@ -929,13 +929,13 @@ fn gzip_file_lines(path: &Path) -> impl Iterator<Item = String> {
 }
 
 async fn json_test(file_path: &str, concurrency: bool) {
-    spectre_core::log::try_init_logger("info");
+    zyanya_core::log::try_init_logger("info");
     let main_path = Path::new(file_path);
     let proof_exists = common::file_exists(&main_path.join("proof.json.gz"));
 
     let mut lines = gzip_file_lines(&main_path.join("blocks.json.gz"));
     let first_line = lines.next().unwrap();
-    let go_params_res: Result<SpectredGoParams, _> = serde_json::from_str(&first_line);
+    let go_params_res: Result<ZyanyadGoParams, _> = serde_json::from_str(&first_line);
     let params = if let Ok(go_params) = go_params_res {
         let mut params = go_params.into_params();
         if !proof_exists {
@@ -1534,7 +1534,7 @@ async fn difficulty_test() {
         },
     ];
 
-    spectre_core::log::try_init_logger("info");
+    zyanya_core::log::try_init_logger("info");
     for test in tests.iter().filter(|x| x.enabled) {
         let consensus = TestConsensus::new(&test.config);
         let wait_handles = consensus.init();
@@ -1750,7 +1750,7 @@ async fn difficulty_test() {
 #[tokio::test]
 async fn selected_chain_test() {
     init_allocator_with_default_settings();
-    spectre_core::log::try_init_logger("info");
+    zyanya_core::log::try_init_logger("info");
 
     let config = ConfigBuilder::new(MAINNET_PARAMS)
         .skip_proof_of_work()
@@ -1821,12 +1821,12 @@ async fn staging_consensus_test() {
     init_allocator_with_default_settings();
     let config = ConfigBuilder::new(MAINNET_PARAMS).build();
 
-    let db_tempdir = get_spectre_tempdir();
+    let db_tempdir = get_zyanya_tempdir();
     let db_path = db_tempdir.path().to_owned();
     let consensus_db_dir = db_path.join("consensus");
     let meta_db_dir = db_path.join("meta");
 
-    let meta_db = spectre_database::prelude::ConnBuilder::default().with_db_path(meta_db_dir).with_files_limit(5).build().unwrap();
+    let meta_db = zyanya_database::prelude::ConnBuilder::default().with_db_path(meta_db_dir).with_files_limit(5).build().unwrap();
 
     let (notification_send, _notification_recv) = unbounded();
     let notification_root = Arc::new(ConsensusNotificationRoot::new(notification_send));
@@ -1862,10 +1862,10 @@ async fn staging_consensus_test() {
 /// Uses OpInputSpk opcode as an example
 #[tokio::test]
 async fn run_kip10_activation_test() {
-    use spectre_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
-    use spectre_txscript::opcodes::codes::{Op0, OpTxInputSpk};
-    use spectre_txscript::pay_to_script_hash_script;
-    use spectre_txscript::script_builder::ScriptBuilder;
+    use zyanya_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
+    use zyanya_txscript::opcodes::codes::{Op0, OpTxInputSpk};
+    use zyanya_txscript::pay_to_script_hash_script;
+    use zyanya_txscript::script_builder::ScriptBuilder;
 
     // KIP-10 activates at DAA score 3 in this test
     const KIP10_ACTIVATION_DAA_SCORE: u64 = 3;
@@ -1883,7 +1883,7 @@ async fn run_kip10_activation_test() {
     // Set up initial UTXO with our test script
     let initial_utxo_collection = [(
         TransactionOutpoint::new(1.into(), 0),
-        UtxoEntry { amount: SOMPI_PER_SPECTRE, script_public_key: spk.clone(), block_daa_score: 0, is_coinbase: false },
+        UtxoEntry { amount: SOMPI_PER_ZYANYA, script_public_key: spk.clone(), block_daa_score: 0, is_coinbase: false },
     )];
 
     // Initialize consensus with KIP-10 activation point
@@ -1999,7 +1999,7 @@ async fn payload_test() {
 
 #[tokio::test]
 async fn payload_activation_test() {
-    use spectre_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
+    use zyanya_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
 
     // Set payload activation at DAA score 3 for this test
     const PAYLOAD_ACTIVATION_DAA_SCORE: u64 = 3;
@@ -2010,7 +2010,7 @@ async fn payload_activation_test() {
     let initial_utxo_collection = [(
         TransactionOutpoint::new(1.into(), 0),
         UtxoEntry {
-            amount: SOMPI_PER_SPECTRE,
+            amount: SOMPI_PER_ZYANYA,
             script_public_key: ScriptPublicKey::from_vec(0, vec![OpTrue]),
             block_daa_score: 0,
             is_coinbase: false,
@@ -2100,10 +2100,10 @@ async fn payload_activation_test() {
 
 #[tokio::test]
 async fn runtime_sig_op_counting_test() {
-    use spectre_consensus_core::{
+    use zyanya_consensus_core::{
         hashing::sighash::SigHashReusedValuesUnsync, hashing::sighash_type::SIG_HASH_ALL, subnets::SUBNETWORK_ID_NATIVE,
     };
-    use spectre_txscript::{opcodes::codes::*, script_builder::ScriptBuilder};
+    use zyanya_txscript::{opcodes::codes::*, script_builder::ScriptBuilder};
 
     // Runtime sig op counting activates at DAA score 3
     const RUNTIME_SIGOP_ACTIVATION_DAA_SCORE: u64 = 3;
@@ -2134,12 +2134,12 @@ async fn runtime_sig_op_counting_test() {
     }()
     .unwrap();
 
-    let script_pub_key = spectre_txscript::pay_to_script_hash_script(&redeem_script);
+    let script_pub_key = zyanya_txscript::pay_to_script_hash_script(&redeem_script);
 
     // Set up initial UTXO with P2SH script
     let initial_utxo_collection = [(
         TransactionOutpoint::new(1.into(), 0),
-        UtxoEntry { amount: SOMPI_PER_SPECTRE, script_public_key: script_pub_key.clone(), block_daa_score: 0, is_coinbase: false },
+        UtxoEntry { amount: SOMPI_PER_ZYANYA, script_public_key: script_pub_key.clone(), block_daa_score: 0, is_coinbase: false },
     )];
 
     let config = ConfigBuilder::new(DEVNET_PARAMS)

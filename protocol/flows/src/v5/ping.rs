@@ -1,10 +1,10 @@
 use crate::{flow_context::FlowContext, flow_trait::Flow};
 use rand::Rng;
-use spectre_core::{debug, task::tick::TickReason};
-use spectre_p2p_lib::{
+use zyanya_core::{debug, task::tick::TickReason};
+use zyanya_p2p_lib::{
     common::ProtocolError,
     dequeue, dequeue_with_timeout, make_message,
-    pb::{spectred_message::Payload, PingMessage, PongMessage},
+    pb::{zyanyad_message::Payload, PingMessage, PongMessage},
     IncomingRoute, Router,
 };
 use std::{

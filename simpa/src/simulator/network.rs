@@ -1,23 +1,23 @@
 use async_channel::unbounded;
-use spectre_consensus_notify::root::ConsensusNotificationRoot;
-use spectre_core::time::unix_now;
+use zyanya_consensus_notify::root::ConsensusNotificationRoot;
+use zyanya_core::time::unix_now;
 use std::sync::Arc;
 use std::thread::JoinHandle;
 
 use super::miner::Miner;
 
-use spectre_consensus::config::Config;
-use spectre_consensus::consensus::Consensus;
-use spectre_consensus_core::block::Block;
-use spectre_database::prelude::ConnBuilder;
-use spectre_database::utils::DbLifetime;
-use spectre_database::{create_permanent_db, create_temp_db};
-use spectre_utils::fd_budget;
-use spectre_utils::sim::Simulation;
+use zyanya_consensus::config::Config;
+use zyanya_consensus::consensus::Consensus;
+use zyanya_consensus_core::block::Block;
+use zyanya_database::prelude::ConnBuilder;
+use zyanya_database::utils::DbLifetime;
+use zyanya_database::{create_permanent_db, create_temp_db};
+use zyanya_utils::fd_budget;
+use zyanya_utils::sim::Simulation;
 
 type ConsensusWrapper = (Arc<Consensus>, Vec<JoinHandle<()>>, DbLifetime);
 
-pub struct SpectreNetworkSimulator {
+pub struct ZyanyaNetworkSimulator {
     // Internal simulation env
     pub(super) simulation: Simulation<Block>,
 
@@ -30,7 +30,7 @@ pub struct SpectreNetworkSimulator {
     output_dir: Option<String>, // Possible permanent output directory
 }
 
-impl SpectreNetworkSimulator {
+impl ZyanyaNetworkSimulator {
     pub fn new(delay: f64, bps: f64, target_blocks: Option<u64>, config: Arc<Config>, output_dir: Option<String>) -> Self {
         Self {
             simulation: Simulation::with_start_time((delay * 1000.0) as u64, config.genesis.timestamp),

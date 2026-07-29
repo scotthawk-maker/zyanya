@@ -2,12 +2,12 @@ use crate::imports::*;
 use crate::result::Result;
 use crate::tx::generator as native;
 use crate::wasm::PrivateKeyArrayT;
-use spectre_consensus_client::{numeric, string};
-use spectre_consensus_client::{Transaction, TransactionT};
-use spectre_consensus_core::hashing::wasm::SighashType;
-use spectre_wallet_keys::privatekey::PrivateKey;
-use spectre_wasm_core::types::{BinaryT, HexString};
-use spectre_wrpc_wasm::RpcClient;
+use zyanya_consensus_client::{numeric, string};
+use zyanya_consensus_client::{Transaction, TransactionT};
+use zyanya_consensus_core::hashing::wasm::SighashType;
+use zyanya_wallet_keys::privatekey::PrivateKey;
+use zyanya_wasm_core::types::{BinaryT, HexString};
+use zyanya_wrpc_wasm::RpcClient;
 
 /// @category Wallet SDK
 #[wasm_bindgen(inspectable)]
@@ -132,7 +132,7 @@ impl PendingTransaction {
             let keys = keys
                 .iter()
                 .map(PrivateKey::try_owned_from)
-                .collect::<std::result::Result<Vec<_>, spectre_wallet_keys::error::Error>>()?;
+                .collect::<std::result::Result<Vec<_>, zyanya_wallet_keys::error::Error>>()?;
             let mut keys = keys.iter().map(|key| key.secret_bytes()).collect::<Vec<_>>();
             self.inner.try_sign_with_keys(&keys, check_fully_signed)?;
             keys.zeroize();

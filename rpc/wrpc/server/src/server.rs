@@ -4,8 +4,8 @@ use crate::{
     result::Result,
     service::Options,
 };
-use spectre_grpc_client::GrpcClient;
-use spectre_notify::{
+use zyanya_grpc_client::GrpcClient;
+use zyanya_notify::{
     connection::ChannelType,
     events::EVENT_TYPE_ARRAY,
     listener::ListenerLifespan,
@@ -14,12 +14,12 @@ use spectre_notify::{
     subscriber::Subscriber,
     subscription::{MutationPolicies, UtxosChangedMutationPolicy},
 };
-use spectre_rpc_core::{
+use zyanya_rpc_core::{
     api::rpc::{DynRpcService, RpcApi},
     notify::{channel::NotificationChannel, connection::ChannelConnection, mode::NotificationMode},
     Notification, RpcResult,
 };
-use spectre_rpc_service::service::RpcCoreService;
+use zyanya_rpc_service::service::RpcCoreService;
 use std::{
     collections::HashMap,
     sync::{

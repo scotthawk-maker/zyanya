@@ -1,15 +1,15 @@
 //!
 //! In v6 of the P2P protocol we dropped the filling of DAA and GHOSTDAG indices for each trusted entry
-//! since the syncee no longer uses them in the rusty-spectre design where the full sub-DAG is sent
+//! since the syncee no longer uses them in the rusty-zyanya design where the full sub-DAG is sent
 //!
 
 use itertools::Itertools;
 use log::debug;
-use spectre_p2p_lib::{
+use zyanya_p2p_lib::{
     common::ProtocolError,
     dequeue, dequeue_with_request_id, make_response,
     pb::{
-        self, spectred_message::Payload, BlockWithTrustedDataV4Message, DoneBlocksWithTrustedDataMessage, PruningPointsMessage,
+        self, zyanyad_message::Payload, BlockWithTrustedDataV4Message, DoneBlocksWithTrustedDataMessage, PruningPointsMessage,
         TrustedDataMessage,
     },
     IncomingRoute, Router,

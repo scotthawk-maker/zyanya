@@ -1,8 +1,8 @@
 //!
-//! PSST is a crate for working with Partially Signed Spectre Transactions (PSSTs).
+//! PSST is a crate for working with Partially Signed Zyanya Transactions (PSSTs).
 //! This crate provides following primitives: `PSST`, `PSSTBuilder` and `Bundle`.
 //! The `Bundle` struct is used for PSST exchange payload serialization and carries
-//! multiple `PSST` instances allowing for exchange of Spectre sweep transactions.
+//! multiple `PSST` instances allowing for exchange of Zyanya sweep transactions.
 //!
 
 pub mod bundle;

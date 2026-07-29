@@ -1,6 +1,6 @@
 [package]
-name = "spectre-rpc-core"
-description = "Spectre RPC core"
+name = "zyanya-rpc-core"
+description = "Zyanya RPC core"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -11,25 +11,25 @@ repository.workspace = true
 
 [features]
 wasm32-sdk = [
-    "spectre-consensus-client/wasm32-sdk",
-    "spectre-consensus-wasm/wasm32-sdk"
+    "zyanya-consensus-client/wasm32-sdk",
+    "zyanya-consensus-wasm/wasm32-sdk"
 ]
 
 [dependencies]
-spectre-addresses.workspace = true
-spectre-consensus-core.workspace = true
-spectre-consensus-client.workspace = true
-spectre-consensus-notify.workspace = true
-spectre-consensus-wasm.workspace = true
-spectre-core.workspace = true
-spectre-hashes.workspace = true
-spectre-index-core.workspace = true
-spectre-math.workspace = true
-spectre-mining-errors.workspace = true
-spectre-notify.workspace = true
-spectre-txscript.workspace = true
-spectre-utils.workspace = true
-spectre-rpc-macros.workspace = true
+zyanya-addresses.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-client.workspace = true
+zyanya-consensus-notify.workspace = true
+zyanya-consensus-wasm.workspace = true
+zyanya-core.workspace = true
+zyanya-hashes.workspace = true
+zyanya-index-core.workspace = true
+zyanya-math.workspace = true
+zyanya-mining-errors.workspace = true
+zyanya-notify.workspace = true
+zyanya-txscript.workspace = true
+zyanya-utils.workspace = true
+zyanya-rpc-macros.workspace = true
 
 async-channel.workspace = true
 async-trait.workspace = true

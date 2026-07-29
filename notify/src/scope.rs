@@ -2,7 +2,7 @@ use super::events::EventType;
 use borsh::{BorshDeserialize, BorshSerialize};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
-use spectre_addresses::Address;
+use zyanya_addresses::Address;
 use workflow_serializer::prelude::*;
 
 macro_rules! scope_enum {
@@ -18,7 +18,7 @@ macro_rules! scope_enum {
             impl std::convert::From<EventType> for $name {
                 fn from(value: EventType) -> Self {
                     match value {
-                        $(EventType::$variant_name => $name::$variant_name(spectre_notify::scope::[<$variant_name Scope>]::default())),*
+                        $(EventType::$variant_name => $name::$variant_name(zyanya_notify::scope::[<$variant_name Scope>]::default())),*
                     }
                 }
             }

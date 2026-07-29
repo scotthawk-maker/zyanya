@@ -13,7 +13,7 @@ use crate::model::{
     },
 };
 use parking_lot::RwLock;
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 
 #[derive(Clone)]
 pub struct PruningPointManager<

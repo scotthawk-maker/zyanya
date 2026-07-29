@@ -7,8 +7,8 @@ use crate::{
 };
 use async_trait::async_trait;
 use itertools::chain;
-use spectre_consensus_core::tx::Transaction;
-use spectre_utils::triggers::SingleTrigger;
+use zyanya_consensus_core::tx::Transaction;
+use zyanya_utils::triggers::SingleTrigger;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 

@@ -1,6 +1,6 @@
 [package]
-name = "spectre-database"
-description = "Spectre database"
+name = "zyanya-database"
+description = "Zyanya database"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -15,8 +15,8 @@ enum-primitive-derive.workspace = true
 faster-hex.workspace = true
 indexmap.workspace = true
 itertools.workspace = true
-spectre-hashes.workspace = true
-spectre-utils.workspace = true
+zyanya-hashes.workspace = true
+zyanya-utils.workspace = true
 num_cpus.workspace = true
 num-traits.workspace = true
 parking_lot.workspace = true

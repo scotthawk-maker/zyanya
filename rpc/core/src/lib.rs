@@ -1,13 +1,13 @@
 //! # RPC Core
 //!
-//! This crate provides foundational primitives used in Rusty Spectre node RPC subsystem.
+//! This crate provides foundational primitives used in Rusty Zyanya node RPC subsystem.
 //! These include the main [`RpcApi`](api::rpc::RpcApi) trait, [`RpcApiOps`](crate::api::ops::RpcApiOps)
 //! enum used in RPC method dispatching, and various data structures used in RPC method arguments.
 //!
-//! This crate acts as a foundation for [`spectre_grpc_client`](https://docs.rs/spectre_grpc_client) and
-//! [`spectre_wrpc_client`](https://docs.rs/spectre_wrpc_client) crates, which provide gRPC and WebSocket
+//! This crate acts as a foundation for [`zyanya_grpc_client`](https://docs.rs/zyanya_grpc_client) and
+//! [`zyanya_wrpc_client`](https://docs.rs/zyanya_wrpc_client) crates, which provide gRPC and WebSocket
 //! RPC client implementations. This crate is also used by WASM bindings to provide [WASM RpcClient
-//! implementation](https://docs.rs/spectre-wrpc-client/latest/spectre_wrpc_client/wasm/struct.RpcClient.html)
+//! implementation](https://docs.rs/zyanya-wrpc-client/latest/zyanya_wrpc_client/wasm/struct.RpcClient.html)
 //! (based on wRPC).
 //!
 

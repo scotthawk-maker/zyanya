@@ -7,8 +7,8 @@ use crate::imports::*;
 use borsh::{BorshDeserialize, BorshSerialize};
 use convert_case::{Case, Casing};
 use serde::{Deserialize, Serialize};
-use spectre_addresses::Address;
-use spectre_wallet_macros::declare_typescript_wasm_interface as declare;
+use zyanya_addresses::Address;
+use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
 use std::collections::BTreeMap;
 
 ///

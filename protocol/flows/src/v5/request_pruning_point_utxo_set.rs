@@ -1,13 +1,13 @@
 use crate::{flow_context::FlowContext, flow_trait::Flow, v5::ibd::IBD_BATCH_SIZE};
 use itertools::Itertools;
-use spectre_consensus_core::errors::consensus::ConsensusError;
-use spectre_core::debug;
-use spectre_hashes::Hash;
-use spectre_p2p_lib::{
+use zyanya_consensus_core::errors::consensus::ConsensusError;
+use zyanya_core::debug;
+use zyanya_hashes::Hash;
+use zyanya_p2p_lib::{
     common::ProtocolError,
     dequeue, make_message,
     pb::{
-        spectred_message::Payload, DonePruningPointUtxoSetChunksMessage, PruningPointUtxoSetChunkMessage,
+        zyanyad_message::Payload, DonePruningPointUtxoSetChunksMessage, PruningPointUtxoSetChunkMessage,
         UnexpectedPruningPointMessage,
     },
     IncomingRoute, Router,

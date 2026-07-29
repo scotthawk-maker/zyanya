@@ -1,6 +1,6 @@
 use rand::Rng;
-use spectre_database::prelude::CachePolicy;
-use spectre_utils::mem_size::MemMode;
+use zyanya_database::prelude::CachePolicy;
+use zyanya_utils::mem_size::MemMode;
 
 /// Adds stochastic noise to cache sizes to avoid predictable and equal sizes across all network nodes
 fn noise(size: usize, magnitude: usize) -> usize {

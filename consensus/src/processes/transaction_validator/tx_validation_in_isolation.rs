@@ -1,5 +1,5 @@
 use crate::constants::{MAX_SOMPI, TX_VERSION};
-use spectre_consensus_core::tx::Transaction;
+use zyanya_consensus_core::tx::Transaction;
 use std::collections::HashSet;
 
 use super::{
@@ -22,6 +22,7 @@ impl TransactionValidator {
         check_duplicate_transaction_inputs(tx)?;
         check_gas(tx)?;
         check_transaction_subnetwork(tx)?;
+        check_contract_payload_in_isolation(tx)?;
         check_transaction_version(tx)
     }
 
@@ -35,14 +36,14 @@ impl TransactionValidator {
         self.check_transaction_script_public_keys(tx)
     }
 
-    fn check_coinbase_in_isolation(&self, tx: &spectre_consensus_core::tx::Transaction) -> TxResult<()> {
+    fn check_coinbase_in_isolation(&self, tx: &zyanya_consensus_core::tx::Transaction) -> TxResult<()> {
         if !tx.is_coinbase() {
             return Ok(());
         }
         if !tx.inputs.is_empty() {
             return Err(TxRuleError::CoinbaseHasInputs(tx.inputs.len()));
         }
-        let outputs_limit = self.ghostdag_k as u64 + 2;
+        let outputs_limit = (self.ghostdag_k as u64 + 2) * 13;
         if tx.outputs.len() as u64 > outputs_limit {
             return Err(TxRuleError::CoinbaseTooManyOutputs(tx.outputs.len(), outputs_limit));
         }
@@ -104,7 +105,9 @@ fn check_duplicate_transaction_inputs(tx: &Transaction) -> TxResult<()> {
 }
 
 fn check_gas(tx: &Transaction) -> TxResult<()> {
-    // This should be revised if subnetworks are activated (along with other validations that weren't copied from spectred)
+    if tx.subnetwork_id.is_smart_contract() {
+        return Ok(());
+    }
     if tx.gas > 0 {
         return Err(TxRuleError::TxHasGas);
     }
@@ -144,20 +147,59 @@ fn check_transaction_output_value_ranges(tx: &Transaction) -> TxResult<()> {
 }
 
 fn check_transaction_subnetwork(tx: &Transaction) -> TxResult<()> {
-    if tx.is_coinbase() || tx.subnetwork_id.is_native() {
+    if tx.is_coinbase() || tx.subnetwork_id.is_native() || tx.subnetwork_id.is_smart_contract() {
         Ok(())
     } else {
         Err(TxRuleError::SubnetworksDisabled(tx.subnetwork_id.clone()))
     }
 }
 
+fn check_contract_payload_in_isolation(tx: &Transaction) -> TxResult<()> {
+    if !tx.subnetwork_id.is_smart_contract() {
+        return Ok(());
+    }
+
+    let payload = zyanya_consensus_core::tx::ContractPayload::from_slice(&tx.payload)
+        .map_err(|e| TxRuleError::InvalidContractPayload(e.to_string()))?;
+
+    match payload {
+        zyanya_consensus_core::tx::ContractPayload::Deploy(deploy) => {
+            if deploy.bytecode.is_empty() {
+                return Err(TxRuleError::InvalidContractPayload("empty bytecode".to_string()));
+            }
+            if deploy.max_gas == 0 {
+                return Err(TxRuleError::InvalidContractPayload("zero max gas".to_string()));
+            }
+            if deploy.gas_price == 0 {
+                return Err(TxRuleError::InvalidContractPayload("zero gas price".to_string()));
+            }
+            if tx.gas != deploy.max_gas {
+                return Err(TxRuleError::InvalidContractPayload("tx gas does not match deploy max gas".to_string()));
+            }
+        }
+        zyanya_consensus_core::tx::ContractPayload::Invoke(invoke) => {
+            if invoke.max_gas == 0 {
+                return Err(TxRuleError::InvalidContractPayload("zero max gas".to_string()));
+            }
+            if invoke.gas_price == 0 {
+                return Err(TxRuleError::InvalidContractPayload("zero gas price".to_string()));
+            }
+            if tx.gas != invoke.max_gas {
+                return Err(TxRuleError::InvalidContractPayload("tx gas does not match invoke max gas".to_string()));
+            }
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
-    use spectre_consensus_core::{
+    use zyanya_consensus_core::{
         subnets::{SubnetworkId, SUBNETWORK_ID_COINBASE, SUBNETWORK_ID_NATIVE},
         tx::{scriptvec, ScriptPublicKey, Transaction, TransactionId, TransactionInput, TransactionOutpoint, TransactionOutput},
     };
-    use spectre_core::assert_match;
+    use zyanya_core::assert_match;
 
     use crate::{
         constants::TX_VERSION,
@@ -267,8 +309,23 @@ mod tests {
         tv.validate_tx_in_isolation(&valid_tx).unwrap();
 
         let mut tx: Transaction = valid_tx.clone();
-        tx.subnetwork_id = SubnetworkId::from_byte(3);
+        tx.subnetwork_id = SubnetworkId::from_byte(99);
         assert_match!(tv.validate_tx_in_isolation(&tx), Err(TxRuleError::SubnetworksDisabled(_)));
+
+        let mut sc_tx = valid_tx.clone();
+        sc_tx.subnetwork_id = zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT;
+        sc_tx.gas = 5000;
+        sc_tx.payload = zyanya_consensus_core::tx::ContractPayload::Deploy(
+            zyanya_consensus_core::tx::DeployContractPayload {
+                bytecode: vec![0x01],
+                max_gas: 5000,
+                gas_price: 1,
+                deposit_amount: 0,
+            },
+        )
+        .to_bytes()
+        .unwrap();
+        tv.validate_tx_in_isolation(&sc_tx).unwrap();
 
         let mut tx = valid_tx.clone();
         tx.inputs = vec![];

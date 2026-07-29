@@ -1,17 +1,17 @@
 use std::sync::Arc;
 
 use rocksdb::WriteBatch;
-use spectre_consensus_core::BlockHashSet;
-use spectre_consensus_core::BlockHasher;
-use spectre_database::prelude::CachedDbSetItem;
-use spectre_database::prelude::DbWriter;
-use spectre_database::prelude::ReadLock;
-use spectre_database::prelude::StoreResult;
-use spectre_database::prelude::StoreResultExtensions;
-use spectre_database::prelude::DB;
-use spectre_database::prelude::{BatchDbWriter, DirectDbWriter};
-use spectre_database::registry::DatabaseStorePrefixes;
-use spectre_hashes::Hash;
+use zyanya_consensus_core::BlockHashSet;
+use zyanya_consensus_core::BlockHasher;
+use zyanya_database::prelude::CachedDbSetItem;
+use zyanya_database::prelude::DbWriter;
+use zyanya_database::prelude::ReadLock;
+use zyanya_database::prelude::StoreResult;
+use zyanya_database::prelude::StoreResultExtensions;
+use zyanya_database::prelude::DB;
+use zyanya_database::prelude::{BatchDbWriter, DirectDbWriter};
+use zyanya_database::registry::DatabaseStorePrefixes;
+use zyanya_hashes::Hash;
 
 /// Reader API for `TipsStore`.
 pub trait TipsStoreReader {
@@ -99,7 +99,7 @@ impl TipsStore for DbTipsStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use spectre_database::{create_temp_db, prelude::ConnBuilder};
+    use zyanya_database::{create_temp_db, prelude::ConnBuilder};
 
     #[test]
     fn test_update_tips() {

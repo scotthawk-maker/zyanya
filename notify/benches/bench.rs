@@ -1,11 +1,11 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use spectre_addresses::{Address, Prefix};
-use spectre_math::Uint256;
-use spectre_notify::{address::tracker::Indexes, subscription::context::SubscriptionContext};
+use zyanya_addresses::{Address, Prefix};
+use zyanya_math::Uint256;
+use zyanya_notify::{address::tracker::Indexes, subscription::context::SubscriptionContext};
 
 fn create_addresses(count: usize) -> Vec<Address> {
     (0..count)
-        .map(|i| Address::new(Prefix::Mainnet, spectre_addresses::Version::PubKey, &Uint256::from_u64(i as u64).to_le_bytes()))
+        .map(|i| Address::new(Prefix::Mainnet, zyanya_addresses::Version::PubKey, &Uint256::from_u64(i as u64).to_le_bytes()))
         .collect()
 }
 
@@ -25,6 +25,6 @@ pub fn bench_subscription_context(c: &mut Criterion) {
     });
 }
 
-// `cargo bench --package spectre-notify --bench bench`
+// `cargo bench --package zyanya-notify --bench bench`
 criterion_group!(benches, bench_subscription_context);
 criterion_main!(benches);

@@ -1,5 +1,5 @@
 //!
-//! Derivation utilities used by the integrated Spectre Wallet API.
+//! Derivation utilities used by the integrated Zyanya Wallet API.
 //!
 
 pub mod gen0;

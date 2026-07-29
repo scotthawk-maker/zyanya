@@ -44,13 +44,13 @@ impl Handler for Theme {
     }
 
     async fn handle(self: Arc<Self>, ctx: &Arc<dyn Context>, argv: Vec<String>, cmd: &str) -> cli::Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
         self.main(ctx, argv, cmd).await.map_err(|e| e.into())
     }
 }
 
 impl Theme {
-    async fn main(self: Arc<Self>, ctx: Arc<SpectreCli>, argv: Vec<String>, _cmd: &str) -> Result<()> {
+    async fn main(self: Arc<Self>, ctx: Arc<ZyanyaCli>, argv: Vec<String>, _cmd: &str) -> Result<()> {
         if argv.is_empty() {
             return self.display_help(ctx, argv).await;
         }
@@ -58,7 +58,7 @@ impl Theme {
         Ok(())
     }
 
-    async fn display_help(self: Arc<Self>, ctx: Arc<SpectreCli>, _argv: Vec<String>) -> Result<()> {
+    async fn display_help(self: Arc<Self>, ctx: Arc<ZyanyaCli>, _argv: Vec<String>) -> Result<()> {
         let help = "\n\
         \n\
         ";

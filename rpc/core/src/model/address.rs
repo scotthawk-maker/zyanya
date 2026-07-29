@@ -2,7 +2,7 @@ use crate::{RpcTransactionOutpoint, RpcUtxoEntry};
 use serde::{Deserialize, Serialize};
 use workflow_serializer::prelude::*;
 
-pub type RpcAddress = spectre_addresses::Address;
+pub type RpcAddress = zyanya_addresses::Address;
 
 /// Represents a UTXO entry of an address returned by the `GetUtxosByAddresses` RPC.
 #[derive(Clone, Debug, Serialize, Deserialize)]

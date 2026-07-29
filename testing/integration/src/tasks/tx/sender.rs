@@ -1,11 +1,11 @@
 use crate::tasks::{tx::submitter::IndexedTransaction, Stopper, Task};
 use async_channel::Sender;
 use async_trait::async_trait;
-use spectre_consensus_core::tx::Transaction;
-use spectre_core::{info, warn};
-use spectre_grpc_client::GrpcClient;
-use spectre_rpc_core::api::rpc::RpcApi;
-use spectre_utils::triggers::SingleTrigger;
+use zyanya_consensus_core::tx::Transaction;
+use zyanya_core::{info, warn};
+use zyanya_grpc_client::GrpcClient;
+use zyanya_rpc_core::api::rpc::RpcApi;
+use zyanya_utils::triggers::SingleTrigger;
 use std::{sync::Arc, time::Duration};
 use tokio::{
     task::JoinHandle,
@@ -96,7 +96,7 @@ impl Task for TransactionSenderTask {
                 match sender.send((i, tx)).await {
                     Ok(_) => {}
                     Err(err) => {
-                        spectre_core::error!("Tx sender channel returned error {err}");
+                        zyanya_core::error!("Tx sender channel returned error {err}");
                         break;
                     }
                 }
@@ -105,7 +105,7 @@ impl Task for TransactionSenderTask {
                 }
             }
 
-            spectre_core::warn!("Tx sender task, waiting for mempool to drain..");
+            zyanya_core::warn!("Tx sender task, waiting for mempool to drain..");
             let mut prev_mempool_size = u64::MAX;
             loop {
                 let mempool_size = client.get_info().await.unwrap().mempool_size;

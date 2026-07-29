@@ -2,21 +2,21 @@
 //!  Module handling bip32 address derivation (bip32+bip44 and legacy accounts)
 //!
 
-use spectre_wallet_keys::derivation::gen0::{PubkeyDerivationManagerV0, WalletDerivationManagerV0};
-use spectre_wallet_keys::derivation::gen1::{PubkeyDerivationManager, WalletDerivationManager};
+use zyanya_wallet_keys::derivation::gen0::{PubkeyDerivationManagerV0, WalletDerivationManagerV0};
+use zyanya_wallet_keys::derivation::gen1::{PubkeyDerivationManager, WalletDerivationManager};
 
-pub use spectre_wallet_keys::derivation::traits::*;
-use spectre_wallet_keys::publickey::{PublicKey, PublicKeyArrayT, PublicKeyT};
-pub use spectre_wallet_keys::types::*;
+pub use zyanya_wallet_keys::derivation::traits::*;
+use zyanya_wallet_keys::publickey::{PublicKey, PublicKeyArrayT, PublicKeyT};
+pub use zyanya_wallet_keys::types::*;
 
 use crate::account::create_private_keys;
 use crate::account::AccountKind;
 use crate::error::Error;
 use crate::imports::*;
 use crate::result::Result;
-use spectre_bip32::{AddressType, DerivationPath, ExtendedPrivateKey, ExtendedPublicKey, Language, Mnemonic, SecretKeyExt};
-use spectre_consensus_core::network::{NetworkType, NetworkTypeT};
-use spectre_txscript::{
+use zyanya_bip32::{AddressType, DerivationPath, ExtendedPrivateKey, ExtendedPublicKey, Language, Mnemonic, SecretKeyExt};
+use zyanya_consensus_core::network::{NetworkType, NetworkTypeT};
+use zyanya_txscript::{
     extract_script_pub_key_address, multisig_redeem_script, multisig_redeem_script_ecdsa, pay_to_script_hash_script,
 };
 
@@ -93,7 +93,7 @@ impl AddressManager {
         let list = self.pubkey_managers.iter().map(|m| m.current_pubkey());
 
         // let keys = join_all(list).await.into_iter().collect::<Result<Vec<_>>>()?;
-        let keys = list.into_iter().collect::<spectre_wallet_keys::result::Result<Vec<_>>>()?;
+        let keys = list.into_iter().collect::<zyanya_wallet_keys::result::Result<Vec<_>>>()?;
         let address = self.create_address(keys)?;
 
         self.update_address_to_index_map(self.index(), &[address.clone()])?;
@@ -126,7 +126,7 @@ impl AddressManager {
 
         let list = self.pubkey_managers.iter().map(|m| m.get_range(indexes.clone()));
 
-        let manager_keys = list.into_iter().collect::<spectre_wallet_keys::result::Result<Vec<_>>>()?;
+        let manager_keys = list.into_iter().collect::<zyanya_wallet_keys::result::Result<Vec<_>>>()?;
 
         let is_multisig = manager_length > 1;
 

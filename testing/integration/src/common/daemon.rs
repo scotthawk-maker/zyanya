@@ -1,18 +1,18 @@
 use parking_lot::RwLock;
-use spectre_consensus_core::network::NetworkId;
-use spectre_core::{core::Core, signals::Shutdown, task::runtime::AsyncRuntime};
-use spectre_database::utils::get_spectre_tempdir;
-use spectre_grpc_client::GrpcClient;
-use spectre_grpc_server::service::GrpcService;
-use spectre_notify::subscription::context::SubscriptionContext;
-use spectre_rpc_core::notify::mode::NotificationMode;
-use spectre_rpc_service::service::RpcCoreService;
-use spectre_utils::triggers::Listener;
-use spectred_lib::{args::Args, daemon::create_core_with_runtime};
+use zyanya_consensus_core::network::NetworkId;
+use zyanya_core::{core::Core, signals::Shutdown, task::runtime::AsyncRuntime};
+use zyanya_database::utils::get_zyanya_tempdir;
+use zyanya_grpc_client::GrpcClient;
+use zyanya_grpc_server::service::GrpcService;
+use zyanya_notify::subscription::context::SubscriptionContext;
+use zyanya_rpc_core::notify::mode::NotificationMode;
+use zyanya_rpc_service::service::RpcCoreService;
+use zyanya_utils::triggers::Listener;
+use zyanyad_lib::{args::Args, daemon::create_core_with_runtime};
 use std::{ops::Deref, sync::Arc, time::Duration};
 use tempfile::TempDir;
 
-use spectre_grpc_client::ClientPool;
+use zyanya_grpc_client::ClientPool;
 
 pub struct ClientManager {
     pub args: RwLock<Args>,
@@ -135,7 +135,7 @@ impl Daemon {
     }
 
     pub fn with_manager(client_manager: Arc<ClientManager>, fd_total_budget: i32) -> Daemon {
-        let appdir_tempdir = get_spectre_tempdir();
+        let appdir_tempdir = get_zyanya_tempdir();
         client_manager.args.write().appdir = Some(appdir_tempdir.path().to_str().unwrap().to_owned());
         let (core, _) = create_core_with_runtime(&Default::default(), &client_manager.args.read(), fd_total_budget);
         let async_service = &Arc::downcast::<AsyncRuntime>(core.find(AsyncRuntime::IDENT).unwrap().arc_any()).unwrap();

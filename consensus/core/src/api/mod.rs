@@ -1,5 +1,5 @@
 use futures_util::future::BoxFuture;
-use spectre_muhash::MuHash;
+use zyanya_muhash::MuHash;
 use std::sync::Arc;
 
 use crate::{
@@ -23,7 +23,7 @@ use crate::{
     utxo::utxo_inquirer::UtxoInquirerError,
     BlockHashSet, BlueWorkType, ChainPath,
 };
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 
 pub use self::stats::{BlockCount, ConsensusStats};
 
@@ -202,6 +202,22 @@ pub trait ConsensusApi: Send + Sync {
         unimplemented!()
     }
 
+    fn get_contract_storage(&self, _contract_address: [u8; 32], _key: u64) -> ConsensusResult<u64> {
+        Ok(0)
+    }
+
+    fn get_contract_code(&self, _contract_address: Hash) -> ConsensusResult<Vec<u8>> {
+        Ok(vec![])
+    }
+
+    fn write_contract_code(&self, _contract_address: Hash, _bytecode: Vec<u8>) -> ConsensusResult<()> {
+        Ok(())
+    }
+
+    fn write_contract_storage(&self, _contract_address: [u8; 32], _key: u64, _value: u64) -> ConsensusResult<()> {
+        Ok(())
+    }
+
     fn modify_coinbase_payload(&self, payload: Vec<u8>, miner_data: &MinerData) -> CoinbaseResult<Vec<u8>> {
         unimplemented!()
     }
@@ -339,13 +355,13 @@ pub trait ConsensusApi: Send + Sync {
         unimplemented!()
     }
 
-    // TODO: Delete this function once there's no need for go-spectred backward compatibility.
+    // TODO: Delete this function once there's no need for go-zyanyad backward compatibility.
     fn get_daa_window(&self, hash: Hash) -> ConsensusResult<Vec<Hash>> {
         unimplemented!()
     }
 
     // TODO: Think of a better name.
-    // TODO: Delete this function once there's no need for go-spectred backward compatibility.
+    // TODO: Delete this function once there's no need for go-zyanyad backward compatibility.
     fn get_trusted_block_associated_ghostdag_data_block_hashes(&self, hash: Hash) -> ConsensusResult<Vec<Hash>> {
         unimplemented!()
     }

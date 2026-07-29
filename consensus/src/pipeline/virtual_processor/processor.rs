@@ -48,7 +48,7 @@ use crate::{
     },
 };
 use once_cell::unsync::Lazy;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     acceptance_data::AcceptanceData,
     api::args::{TransactionValidationArgs, TransactionValidationBatchArgs},
     block::{BlockTemplate, MutableBlock, TemplateBuildMode, TemplateTransactionSelector},
@@ -65,19 +65,19 @@ use spectre_consensus_core::{
     },
     BlockHashSet, ChainPath,
 };
-use spectre_consensus_notify::{
+use zyanya_consensus_notify::{
     notification::{
         NewBlockTemplateNotification, Notification, SinkBlueScoreChangedNotification, UtxosChangedNotification,
         VirtualChainChangedNotification, VirtualDaaScoreChangedNotification,
     },
     root::ConsensusNotificationRoot,
 };
-use spectre_consensusmanager::SessionLock;
-use spectre_core::{debug, info, time::unix_now, trace, warn};
-use spectre_database::prelude::{StoreError, StoreResultEmptyTuple, StoreResultExtensions};
-use spectre_hashes::Hash;
-use spectre_muhash::MuHash;
-use spectre_notify::{events::EventType, notifier::Notify};
+use zyanya_consensusmanager::SessionLock;
+use zyanya_core::{debug, info, time::unix_now, trace, warn};
+use zyanya_database::prelude::{StoreError, StoreResultEmptyTuple, StoreResultExtensions};
+use zyanya_hashes::Hash;
+use zyanya_muhash::MuHash;
+use zyanya_notify::{events::EventType, notifier::Notify};
 
 use super::errors::{PruningImportError, PruningImportResult};
 use crossbeam_channel::{Receiver as CrossbeamReceiver, Sender as CrossbeamSender};
@@ -89,8 +89,8 @@ use rayon::{
     ThreadPool,
 };
 use rocksdb::WriteBatch;
-use spectre_consensus_core::tx::ValidatedTransaction;
-use spectre_utils::binary_heap::BinaryHeapExtensions;
+use zyanya_consensus_core::tx::ValidatedTransaction;
+use zyanya_utils::binary_heap::BinaryHeapExtensions;
 use std::{
     cmp::min,
     collections::{BinaryHeap, HashMap, VecDeque},
@@ -1039,7 +1039,7 @@ impl VirtualStateProcessor {
         let storage_mass_activated = self.storage_mass_activation.is_active(virtual_state.daa_score);
         let hash_merkle_root = calc_hash_merkle_root(txs.iter(), storage_mass_activated);
 
-        let accepted_id_merkle_root = spectre_merkle::calc_merkle_root(virtual_state.accepted_tx_ids.iter().copied());
+        let accepted_id_merkle_root = zyanya_merkle::calc_merkle_root(virtual_state.accepted_tx_ids.iter().copied());
         let utxo_commitment = virtual_state.multiset.clone().finalize();
         // Past median time is the exclusive lower bound for valid block time, so we increase by 1 to get the valid min
         let min_block_time = virtual_state.past_median_time + 1;

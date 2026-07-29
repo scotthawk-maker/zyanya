@@ -76,7 +76,7 @@ impl TryFrom<&JsValue> for TransactionOutpointInner {
     }
 }
 
-/// Represents a Spectre transaction outpoint.
+/// Represents a Zyanya transaction outpoint.
 /// NOTE: This struct is immutable - to create a custom outpoint
 /// use the `TransactionOutpoint::new` constructor. (in JavaScript
 /// use `new TransactionOutpoint(transactionId, index)`).
@@ -190,6 +190,6 @@ impl From<&TransactionOutpoint> for cctx::TransactionOutpoint {
 
 impl TransactionOutpoint {
     pub fn simulated() -> Self {
-        Self::new(TransactionId::from_slice(&rand::random::<[u8; spectre_hashes::HASH_SIZE]>()), 0)
+        Self::new(TransactionId::from_slice(&rand::random::<[u8; zyanya_hashes::HASH_SIZE]>()), 0)
     }
 }

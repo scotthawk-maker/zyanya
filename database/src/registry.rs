@@ -45,6 +45,12 @@ pub enum DatabaseStorePrefixes {
     TempGhostdag = 40,
     TempGhostdagCompact = 41,
 
+    // ---- Smart Contracts ----
+    ContractCode = 60,
+    ContractStorage = 61,
+    ContractBalance = 62,
+    ContractMeta = 63,
+
     // ---- Metadata ----
     MultiConsensusMetadata = 124,
     ConsensusEntries = 125,

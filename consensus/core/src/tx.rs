@@ -13,9 +13,9 @@ pub use script_public_key::{
     scriptvec, ScriptPublicKey, ScriptPublicKeyT, ScriptPublicKeyVersion, ScriptPublicKeys, ScriptVec, SCRIPT_VECTOR_SIZE,
 };
 use serde::{Deserialize, Serialize};
-use spectre_utils::hex::ToHex;
-use spectre_utils::mem_size::MemSizeEstimator;
-use spectre_utils::{serde_bytes, serde_bytes_fixed_ref};
+use zyanya_utils::hex::ToHex;
+use zyanya_utils::mem_size::MemSizeEstimator;
+use zyanya_utils::{serde_bytes, serde_bytes_fixed_ref};
 use std::collections::HashSet;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering::SeqCst;
@@ -33,8 +33,8 @@ use crate::{
 
 /// COINBASE_TRANSACTION_INDEX is the index of the coinbase transaction in every block
 pub const COINBASE_TRANSACTION_INDEX: usize = 0;
-/// A 32-byte Spectre transaction identifier.
-pub type TransactionId = spectre_hashes::Hash;
+/// A 32-byte Zyanya transaction identifier.
+pub type TransactionId = zyanya_hashes::Hash;
 
 /// Holds details about an individual transaction output in a utxo
 /// set such as whether or not it was contained in a coinbase tx, the daa
@@ -64,7 +64,7 @@ impl MemSizeEstimator for UtxoEntry {}
 
 pub type TransactionIndexType = u32;
 
-/// Represents a Spectre transaction outpoint
+/// Represents a Zyanya transaction outpoint
 #[derive(Eq, Default, Hash, PartialEq, Debug, Copy, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TransactionOutpoint {
@@ -85,7 +85,7 @@ impl Display for TransactionOutpoint {
     }
 }
 
-/// Represents a Spectre transaction input
+/// Represents a Zyanya transaction input
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TransactionInput {
@@ -117,7 +117,7 @@ impl std::fmt::Debug for TransactionInput {
     }
 }
 
-/// Represents a Spectred transaction output
+/// Represents a Zyanyad transaction output
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TransactionOutput {
@@ -128,6 +128,46 @@ pub struct TransactionOutput {
 impl TransactionOutput {
     pub fn new(value: u64, script_public_key: ScriptPublicKey) -> Self {
         Self { value, script_public_key }
+    }
+}
+
+/// Contract deployment transaction payload
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeployContractPayload {
+    pub bytecode: Vec<u8>,
+    pub max_gas: u64,
+    pub gas_price: u64,
+    pub deposit_amount: u64,
+}
+
+/// Contract invocation transaction payload
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InvokeContractPayload {
+    pub contract_address: TransactionId,
+    pub entry_point: u16,
+    pub parameters: Vec<u64>,
+    pub max_gas: u64,
+    pub gas_price: u64,
+    pub deposit_amount: u64,
+}
+
+/// Enum wrapper for contract transaction payloads
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ContractPayload {
+    Deploy(DeployContractPayload),
+    Invoke(InvokeContractPayload),
+}
+
+impl ContractPayload {
+    pub fn to_bytes(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
+
+    pub fn from_slice(bytes: &[u8]) -> Result<Self, std::io::Error> {
+        borsh::from_slice(bytes)
     }
 }
 
@@ -161,7 +201,7 @@ impl BorshSerialize for TransactionMass {
     }
 }
 
-/// Represents a Spectre transaction
+/// Represents a Zyanya transaction
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Transaction {
@@ -705,10 +745,37 @@ mod tests {
         assert_eq!(spk, spk2);
     }
 
+    #[test]
+    fn test_contract_payload_borsh() {
+        let deploy = ContractPayload::Deploy(DeployContractPayload {
+            bytecode: vec![0x02, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0],
+            max_gas: 50000,
+            gas_price: 10,
+            deposit_amount: 1000,
+        });
+
+        let bin = deploy.to_bytes().unwrap();
+        let decoded = ContractPayload::from_slice(&bin).unwrap();
+        assert_eq!(deploy, decoded);
+
+        let invoke = ContractPayload::Invoke(InvokeContractPayload {
+            contract_address: TransactionId::from_u64_word(12345),
+            entry_point: 0,
+            parameters: vec![1, 2, 3],
+            max_gas: 100000,
+            gas_price: 5,
+            deposit_amount: 500,
+        });
+
+        let bin = invoke.to_bytes().unwrap();
+        let decoded = ContractPayload::from_slice(&bin).unwrap();
+        assert_eq!(invoke, decoded);
+    }
+
     // use wasm_bindgen_test::wasm_bindgen_test;
     // #[wasm_bindgen_test]
     // pub fn test_wasm_serde_spk_constructor() {
-    //     let str = "spectre:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v";
+    //     let str = "zyanya:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v";
     //     let a = Address::constructor(str);
     //     let value = to_value(&a).unwrap();
     //
@@ -719,14 +786,14 @@ mod tests {
     //
     // #[wasm_bindgen_test]
     // pub fn test_wasm_js_serde_spk_object() {
-    //     let expected = Address::constructor("spectre:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v");
+    //     let expected = Address::constructor("zyanya:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v");
     //
     //     use web_sys::console;
     //     console::log_4(&"address: ".into(), &expected.version().into(), &expected.prefix().into(), &expected.payload().into());
     //
     //     let obj = Object::new();
     //     obj.set("version", &JsValue::from_str("PubKey")).unwrap();
-    //     obj.set("prefix", &JsValue::from_str("spectre")).unwrap();
+    //     obj.set("prefix", &JsValue::from_str("zyanya")).unwrap();
     //     obj.set("payload", &JsValue::from_str("qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v")).unwrap();
     //
     //     assert_eq!(JsValue::from_str("object"), obj.js_typeof());
@@ -740,7 +807,7 @@ mod tests {
     // pub fn test_wasm_serde_spk_object() {
     //     use wasm_bindgen::convert::IntoWasmAbi;
     //
-    //     let expected = Address::constructor("spectre:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v");
+    //     let expected = Address::constructor("zyanya:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v");
     //     let wasm_js_value: JsValue = expected.clone().into_abi().into();
     //
     //     // use web_sys::console;

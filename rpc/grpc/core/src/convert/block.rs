@@ -1,13 +1,13 @@
 use crate::protowire;
 use crate::{from, try_from};
-use spectre_rpc_core::{RpcError, RpcHash};
+use zyanya_rpc_core::{RpcError, RpcHash};
 use std::str::FromStr;
 
 // ----------------------------------------------------------------------------
 // rpc_core to protowire
 // ----------------------------------------------------------------------------
 
-from!(item: &spectre_rpc_core::RpcBlock, protowire::RpcBlock, {
+from!(item: &zyanya_rpc_core::RpcBlock, protowire::RpcBlock, {
     Self {
         header: Some(protowire::RpcBlockHeader::from(&item.header)),
         transactions: item.transactions.iter().map(protowire::RpcTransaction::from).collect(),
@@ -15,7 +15,7 @@ from!(item: &spectre_rpc_core::RpcBlock, protowire::RpcBlock, {
     }
 });
 
-from!(item: &spectre_rpc_core::RpcRawBlock, protowire::RpcBlock, {
+from!(item: &zyanya_rpc_core::RpcRawBlock, protowire::RpcBlock, {
     Self {
         header: Some(protowire::RpcBlockHeader::from(&item.header)),
         transactions: item.transactions.iter().map(protowire::RpcTransaction::from).collect(),
@@ -23,7 +23,7 @@ from!(item: &spectre_rpc_core::RpcRawBlock, protowire::RpcBlock, {
     }
 });
 
-from!(item: &spectre_rpc_core::RpcBlockVerboseData, protowire::RpcBlockVerboseData, {
+from!(item: &zyanya_rpc_core::RpcBlockVerboseData, protowire::RpcBlockVerboseData, {
     Self {
         hash: item.hash.to_string(),
         difficulty: item.difficulty,
@@ -42,30 +42,30 @@ from!(item: &spectre_rpc_core::RpcBlockVerboseData, protowire::RpcBlockVerboseDa
 // protowire to rpc_core
 // ----------------------------------------------------------------------------
 
-try_from!(item: &protowire::RpcBlock, spectre_rpc_core::RpcBlock, {
+try_from!(item: &protowire::RpcBlock, zyanya_rpc_core::RpcBlock, {
     Self {
         header: item
             .header
             .as_ref()
             .ok_or_else(|| RpcError::MissingRpcFieldError("RpcBlock".to_string(), "header".to_string()))?
             .try_into()?,
-        transactions: item.transactions.iter().map(spectre_rpc_core::RpcTransaction::try_from).collect::<Result<Vec<_>, _>>()?,
-        verbose_data: item.verbose_data.as_ref().map(spectre_rpc_core::RpcBlockVerboseData::try_from).transpose()?,
+        transactions: item.transactions.iter().map(zyanya_rpc_core::RpcTransaction::try_from).collect::<Result<Vec<_>, _>>()?,
+        verbose_data: item.verbose_data.as_ref().map(zyanya_rpc_core::RpcBlockVerboseData::try_from).transpose()?,
     }
 });
 
-try_from!(item: &protowire::RpcBlock, spectre_rpc_core::RpcRawBlock, {
+try_from!(item: &protowire::RpcBlock, zyanya_rpc_core::RpcRawBlock, {
     Self {
         header: item
             .header
             .as_ref()
             .ok_or_else(|| RpcError::MissingRpcFieldError("RpcBlock".to_string(), "header".to_string()))?
             .try_into()?,
-        transactions: item.transactions.iter().map(spectre_rpc_core::RpcTransaction::try_from).collect::<Result<Vec<_>, _>>()?,
+        transactions: item.transactions.iter().map(zyanya_rpc_core::RpcTransaction::try_from).collect::<Result<Vec<_>, _>>()?,
     }
 });
 
-try_from!(item: &protowire::RpcBlockVerboseData, spectre_rpc_core::RpcBlockVerboseData, {
+try_from!(item: &protowire::RpcBlockVerboseData, zyanya_rpc_core::RpcBlockVerboseData, {
     Self {
         hash: RpcHash::from_str(&item.hash)?,
         difficulty: item.difficulty,
@@ -74,24 +74,24 @@ try_from!(item: &protowire::RpcBlockVerboseData, spectre_rpc_core::RpcBlockVerbo
             .transaction_ids
             .iter()
             .map(|x| RpcHash::from_str(x))
-            .collect::<Result<Vec<spectre_rpc_core::RpcHash>, faster_hex::Error>>()?,
+            .collect::<Result<Vec<zyanya_rpc_core::RpcHash>, faster_hex::Error>>()?,
         is_header_only: item.is_header_only,
         blue_score: item.blue_score,
         children_hashes: item
             .children_hashes
             .iter()
             .map(|x| RpcHash::from_str(x))
-            .collect::<Result<Vec<spectre_rpc_core::RpcHash>, faster_hex::Error>>()?,
+            .collect::<Result<Vec<zyanya_rpc_core::RpcHash>, faster_hex::Error>>()?,
         merge_set_blues_hashes: item
             .merge_set_blues_hashes
             .iter()
             .map(|x| RpcHash::from_str(x))
-            .collect::<Result<Vec<spectre_rpc_core::RpcHash>, faster_hex::Error>>()?,
+            .collect::<Result<Vec<zyanya_rpc_core::RpcHash>, faster_hex::Error>>()?,
         merge_set_reds_hashes: item
             .merge_set_reds_hashes
             .iter()
             .map(|x| RpcHash::from_str(x))
-            .collect::<Result<Vec<spectre_rpc_core::RpcHash>, faster_hex::Error>>()?,
+            .collect::<Result<Vec<zyanya_rpc_core::RpcHash>, faster_hex::Error>>()?,
         is_chain_block: item.is_chain_block,
     }
 });

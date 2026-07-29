@@ -4,18 +4,18 @@
 
 use crate::imports::*;
 use crate::result::Result;
-use spectre_consensus_core::hashing::sighash::SigHashReusedValues;
-use spectre_consensus_core::hashing::*;
-use spectre_consensus_core::hashing::sighash_type::{SigHashType, SIG_HASH_ALL};
-use spectre_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
-use spectre_consensus_core::tx::{TransactionOutpoint, TransactionOutput, VerifiableTransaction};
-// use spectre_hashes::{Hash, Hasher, HasherBase, TransactionSigningHash};
+use zyanya_consensus_core::hashing::sighash::SigHashReusedValues;
+use zyanya_consensus_core::hashing::*;
+use zyanya_consensus_core::hashing::sighash_type::{SigHashType, SIG_HASH_ALL};
+use zyanya_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
+use zyanya_consensus_core::tx::{TransactionOutpoint, TransactionOutput, VerifiableTransaction};
+// use zyanya_hashes::{Hash, Hasher, HasherBase, TransactionSigningHash};
 use crate::transaction::{Transaction,ITransaction};
 use crate::input::{ITransactionInput, TransactionInput};
 use crate::utxo::{IUtxoEntry,UtxoEntryReference};
-use spectre_hashes::{Hash, Hasher, HasherBase, TransactionSigningHash, TransactionSigningHashECDSA, ZERO_HASH};
-use spectre_consensus_core::hashing::HasherExtensions;
-use spectre_consensus_core::hashing::sighash::*;
+use zyanya_hashes::{Hash, Hasher, HasherBase, TransactionSigningHash, TransactionSigningHashECDSA, ZERO_HASH};
+use zyanya_consensus_core::hashing::HasherExtensions;
+use zyanya_consensus_core::hashing::sighash::*;
 
 #[derive(Default)]
 #[wasm_bindgen]

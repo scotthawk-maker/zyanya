@@ -1,8 +1,8 @@
 use std::cmp::Ordering;
 
 use serde::{Deserialize, Serialize};
-use spectre_consensus_core::BlueWorkType;
-use spectre_hashes::Hash;
+use zyanya_consensus_core::BlueWorkType;
+use zyanya_hashes::Hash;
 
 use crate::model::{
     services::reachability::ReachabilityService,

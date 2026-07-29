@@ -5,7 +5,7 @@
 use crate::transaction::Transaction;
 use core::iter::once;
 use itertools::Itertools;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     hashing::{
         sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync},
         sighash_type::SIG_HASH_ALL,

@@ -1,6 +1,6 @@
 use crate::mempool::tx::{Priority, RbfPolicy};
-use spectre_consensus_core::tx::{MutableTransaction, Transaction, TransactionId, TransactionOutpoint};
-use spectre_mining_errors::mempool::RuleError;
+use zyanya_consensus_core::tx::{MutableTransaction, Transaction, TransactionId, TransactionOutpoint};
+use zyanya_mining_errors::mempool::RuleError;
 use std::{
     fmt::{Display, Formatter},
     sync::Arc,

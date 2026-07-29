@@ -1,5 +1,5 @@
-use spectre_consensus_core::subnets::SubnetworkId;
-use spectre_utils::networking::{IpAddress, PeerId};
+use zyanya_consensus_core::subnets::SubnetworkId;
+use zyanya_utils::networking::{IpAddress, PeerId};
 use std::{fmt::Display, net::SocketAddr, sync::Arc, time::Instant};
 
 #[derive(Debug, Clone, Default)]

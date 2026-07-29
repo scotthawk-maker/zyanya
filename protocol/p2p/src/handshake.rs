@@ -1,26 +1,26 @@
 use std::time::Duration;
 
-use crate::pb::{spectred_message::Payload, ReadyMessage, VerackMessage, VersionMessage};
+use crate::pb::{zyanyad_message::Payload, ReadyMessage, VerackMessage, VersionMessage};
 use crate::{common::ProtocolError, dequeue_with_timeout, make_message};
-use crate::{IncomingRoute, Router, SpectredMessagePayloadType};
-use spectre_core::debug;
+use crate::{IncomingRoute, Router, ZyanyadMessagePayloadType};
+use zyanya_core::debug;
 
-/// Implements the Spectre peer-to-peer handshake protocol
-pub struct SpectredHandshake<'a> {
+/// Implements the Zyanya peer-to-peer handshake protocol
+pub struct ZyanyadHandshake<'a> {
     router: &'a Router,
     version_receiver: IncomingRoute,
     verack_receiver: IncomingRoute,
     ready_receiver: IncomingRoute,
 }
 
-impl<'a> SpectredHandshake<'a> {
+impl<'a> ZyanyadHandshake<'a> {
     /// Builds the handshake object and subscribes to handshake messages
     pub fn new(router: &'a Router) -> Self {
         Self {
             router,
-            version_receiver: router.subscribe(vec![SpectredMessagePayloadType::Version]),
-            verack_receiver: router.subscribe(vec![SpectredMessagePayloadType::Verack]),
-            ready_receiver: router.subscribe(vec![SpectredMessagePayloadType::Ready]),
+            version_receiver: router.subscribe(vec![ZyanyadMessagePayloadType::Version]),
+            verack_receiver: router.subscribe(vec![ZyanyadMessagePayloadType::Verack]),
+            ready_receiver: router.subscribe(vec![ZyanyadMessagePayloadType::Ready]),
         }
     }
 

@@ -1,2 +1,2 @@
 /// Re-export errors
-pub use spectre_mining_errors::block_template::*;
+pub use zyanya_mining_errors::block_template::*;

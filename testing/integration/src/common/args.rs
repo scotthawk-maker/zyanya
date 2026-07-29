@@ -1,7 +1,7 @@
 use crate::tasks::daemon::DaemonArgs;
 #[cfg(feature = "devnet-prealloc")]
-use spectre_addresses::Address;
-use spectred_lib::args::Args;
+use zyanya_addresses::Address;
+use zyanyad_lib::args::Args;
 
 pub struct ArgsBuilder {
     args: Args,
@@ -15,7 +15,7 @@ impl ArgsBuilder {
             disable_upnp: true, // UPnP registration might take some time and is not needed for this test
             enable_unsynced_mining: true,
             num_prealloc_utxos: Some(num_prealloc_utxos),
-            prealloc_amount: prealloc_amount * spectre_consensus_core::constants::SOMPI_PER_SPECTRE,
+            prealloc_amount: prealloc_amount * zyanya_consensus_core::constants::SOMPI_PER_ZYANYA,
             block_template_cache_lifetime: Some(0),
             rpc_max_clients: 2500,
             unsafe_rpc: true,

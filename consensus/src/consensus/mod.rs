@@ -41,7 +41,7 @@ use crate::{
         window::{WindowManager, WindowType},
     },
 };
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     acceptance_data::AcceptanceData,
     api::{
         args::{TransactionValidationArgs, TransactionValidationBatchArgs},
@@ -70,19 +70,19 @@ use spectre_consensus_core::{
     utxo::utxo_inquirer::UtxoInquirerError,
     BlockHashSet, BlueWorkType, ChainPath, HashMapCustomHasher,
 };
-use spectre_consensus_notify::root::ConsensusNotificationRoot;
+use zyanya_consensus_notify::root::ConsensusNotificationRoot;
 
 use crossbeam_channel::{
     bounded as bounded_crossbeam, unbounded as unbounded_crossbeam, Receiver as CrossbeamReceiver, Sender as CrossbeamSender,
 };
 use itertools::Itertools;
-use spectre_consensusmanager::{SessionLock, SessionReadGuard};
+use zyanya_consensusmanager::{SessionLock, SessionReadGuard};
 
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-use spectre_database::prelude::StoreResultExtensions;
-use spectre_hashes::Hash;
-use spectre_muhash::MuHash;
-use spectre_txscript::caches::TxScriptCacheCounters;
+use zyanya_database::prelude::StoreResultExtensions;
+use zyanya_hashes::Hash;
+use zyanya_muhash::MuHash;
+use zyanya_txscript::caches::TxScriptCacheCounters;
 
 use std::{
     cmp::Reverse,
@@ -542,7 +542,7 @@ impl ConsensusApi for Consensus {
                 // Note: because we are doing a topological BFS up (from `hash` towards virtual), the first chain block
                 // found must also be our merging block, so hash will be either in blues or in reds, rendering this line
                 // unreachable.
-                spectre_core::warn!("DAG topology inconsistency: {decedent} is expected to be a merging block of {hash}");
+                zyanya_core::warn!("DAG topology inconsistency: {decedent} is expected to be a merging block of {hash}");
                 // TODO: we should consider the option of returning Result<Option<bool>> from this method
                 return None;
             }
@@ -562,6 +562,41 @@ impl ConsensusApi for Consensus {
 
     fn get_virtual_state_approx_id(&self) -> VirtualStateApproxId {
         self.lkg_virtual_state.load().to_virtual_state_approx_id()
+    }
+
+    fn get_contract_storage(&self, contract_address: [u8; 32], key: u64) -> ConsensusResult<u64> {
+        Ok(self.contract_store.get_storage(contract_address, key).unwrap_or(0))
+    }
+
+    fn get_contract_code(&self, contract_address: Hash) -> ConsensusResult<Vec<u8>> {
+        Ok(self.contract_store.get_code(contract_address).unwrap_or_default())
+    }
+
+    fn write_contract_code(&self, contract_address: Hash, bytecode: Vec<u8>) -> ConsensusResult<()> {
+        let mut cache = crate::model::stores::contract::ContractStateCache::new();
+        let addr_bytes: [u8; 32] = contract_address.as_bytes();
+        cache.code.insert(addr_bytes, bytecode);
+        let mut batch = rocksdb::WriteBatch::default();
+        self.contract_store.commit_cache_batch(&mut batch, &cache).map_err(|_| {
+            zyanya_consensus_core::errors::consensus::ConsensusError::General("contract store commit error")
+        })?;
+        self.db.write(batch).map_err(|_| {
+            zyanya_consensus_core::errors::consensus::ConsensusError::General("db write error")
+        })?;
+        Ok(())
+    }
+
+    fn write_contract_storage(&self, contract_address: [u8; 32], key: u64, value: u64) -> ConsensusResult<()> {
+        let mut cache = crate::model::stores::contract::ContractStateCache::new();
+        cache.storage.insert((contract_address, key), value);
+        let mut batch = rocksdb::WriteBatch::default();
+        self.contract_store.commit_cache_batch(&mut batch, &cache).map_err(|_| {
+            zyanya_consensus_core::errors::consensus::ConsensusError::General("contract store commit error")
+        })?;
+        self.db.write(batch).map_err(|_| {
+            zyanya_consensus_core::errors::consensus::ConsensusError::General("db write error")
+        })?;
+        Ok(())
     }
 
     fn get_source(&self) -> Hash {
@@ -637,8 +672,8 @@ impl ConsensusApi for Consensus {
         // Part 1: Add samples from pruning point headers:
         if self.config.net.network_type == NetworkType::Mainnet {
             // For mainnet, we add extra data (16 pp headers) from before checkpoint genesis.
-            // Source: https://github.com/spectregang/spectred-py-explorer/blob/main/src/tx_timestamp_estimation.ipynb
-            // For context see also: https://github.com/spectregang/spectred-py-explorer/blob/main/src/genesis_proof.ipynb
+            // Source: https://github.com/zyanyagang/zyanyad-py-explorer/blob/main/src/tx_timestamp_estimation.ipynb
+            // For context see also: https://github.com/zyanyagang/zyanyad-py-explorer/blob/main/src/genesis_proof.ipynb
             const POINTS: &[DaaScoreTimestamp] = &[
                 DaaScoreTimestamp { daa_score: 0, timestamp: 1636298787842 },
                 DaaScoreTimestamp { daa_score: 87133, timestamp: 1636386662010 },

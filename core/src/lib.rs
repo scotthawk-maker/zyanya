@@ -1,10 +1,10 @@
-extern crate self as spectre_core;
+extern crate self as zyanya_core;
 
 pub mod assert;
 pub mod console;
 pub mod log;
 pub mod panic;
-pub mod spectred_env;
+pub mod zyanyad_env;
 pub mod time;
 
 cfg_if::cfg_if! {

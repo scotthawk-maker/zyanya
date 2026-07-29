@@ -1,16 +1,16 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use spectre_addresses::Address;
-use spectre_consensus_core::tx::{
+use zyanya_addresses::Address;
+use zyanya_consensus_core::tx::{
     ScriptPublicKey, ScriptVec, TransactionId, TransactionIndexType, TransactionInput, TransactionOutpoint, TransactionOutput,
     UtxoEntry,
 };
-use spectre_utils::{hex::ToHex, serde_bytes_fixed_ref};
+use zyanya_utils::{hex::ToHex, serde_bytes_fixed_ref};
 use workflow_serializer::prelude::*;
 
 use crate::prelude::{RpcHash, RpcScriptClass, RpcSubnetworkId};
 
-/// Represents the ID of a Spectre transaction
+/// Represents the ID of a Zyanya transaction
 pub type RpcTransactionId = TransactionId;
 
 pub type RpcScriptVec = ScriptVec;
@@ -77,7 +77,7 @@ impl Deserializer for RpcUtxoEntry {
     }
 }
 
-/// Represents a Spectre transaction outpoint
+/// Represents a Zyanya transaction outpoint
 #[derive(Eq, Hash, PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RpcTransactionOutpoint {
@@ -98,13 +98,13 @@ impl From<RpcTransactionOutpoint> for TransactionOutpoint {
     }
 }
 
-impl From<spectre_consensus_client::TransactionOutpoint> for RpcTransactionOutpoint {
-    fn from(outpoint: spectre_consensus_client::TransactionOutpoint) -> Self {
+impl From<zyanya_consensus_client::TransactionOutpoint> for RpcTransactionOutpoint {
+    fn from(outpoint: zyanya_consensus_client::TransactionOutpoint) -> Self {
         TransactionOutpoint::from(outpoint).into()
     }
 }
 
-impl From<RpcTransactionOutpoint> for spectre_consensus_client::TransactionOutpoint {
+impl From<RpcTransactionOutpoint> for zyanya_consensus_client::TransactionOutpoint {
     fn from(outpoint: RpcTransactionOutpoint) -> Self {
         TransactionOutpoint::from(outpoint).into()
     }
@@ -130,7 +130,7 @@ impl Deserializer for RpcTransactionOutpoint {
     }
 }
 
-/// Represents a Spectre transaction input
+/// Represents a Zyanya transaction input
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RpcTransactionInput {
@@ -198,7 +198,7 @@ impl Deserializer for RpcTransactionInput {
     }
 }
 
-/// Represent Spectre transaction input verbose data
+/// Represent Zyanya transaction input verbose data
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RpcTransactionInputVerboseData {}
@@ -217,7 +217,7 @@ impl Deserializer for RpcTransactionInputVerboseData {
     }
 }
 
-/// Represents a Spectred transaction output
+/// Represents a Zyanyad transaction output
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RpcTransactionOutput {
@@ -260,7 +260,7 @@ impl Deserializer for RpcTransactionOutput {
     }
 }
 
-/// Represent Spectre transaction output verbose data
+/// Represent Zyanya transaction output verbose data
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RpcTransactionOutputVerboseData {
@@ -288,7 +288,7 @@ impl Deserializer for RpcTransactionOutputVerboseData {
     }
 }
 
-/// Represents a Spectre transaction
+/// Represents a Zyanya transaction
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RpcTransaction {
@@ -354,7 +354,7 @@ impl Deserializer for RpcTransaction {
     }
 }
 
-/// Represent Spectre transaction verbose data
+/// Represent Zyanya transaction verbose data
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RpcTransactionVerboseData {

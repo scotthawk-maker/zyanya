@@ -1,7 +1,7 @@
 use crate::constants::MAX_SOMPI;
 use crate::subnets::SubnetworkId;
 use crate::tx::TransactionOutpoint;
-use spectre_txscript_errors::TxScriptError;
+use zyanya_txscript_errors::TxScriptError;
 use thiserror::Error;
 
 #[derive(Error, Debug, Clone, PartialEq, Eq)]
@@ -100,6 +100,9 @@ pub enum TxRuleError {
     /// fee/mass RBF validation rule
     #[error("fee rate per contextual mass gram is not greater than the fee rate of the replaced transaction")]
     FeerateTooLow,
+
+    #[error("invalid contract payload: {0}")]
+    InvalidContractPayload(String),
 }
 
 pub type TxResult<T> = std::result::Result<T, TxRuleError>;

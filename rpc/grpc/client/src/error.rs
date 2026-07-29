@@ -1,5 +1,5 @@
-use spectre_notify::error::Error as NotifyError;
-use spectre_rpc_core::RpcError;
+use zyanya_notify::error::Error as NotifyError;
+use zyanya_rpc_core::RpcError;
 use thiserror::Error;
 
 pub type BoxedStdError = Box<(dyn std::error::Error + Sync + std::marker::Send + 'static)>;
@@ -23,7 +23,7 @@ pub enum Error {
     EndpointConnectionError(#[from] tonic::transport::Error),
 
     #[error("Notify error: {0}")]
-    NotifyError(#[from] spectre_notify::error::Error),
+    NotifyError(#[from] zyanya_notify::error::Error),
 
     #[error("RPC: channel receive error")]
     ChannelRecvError,

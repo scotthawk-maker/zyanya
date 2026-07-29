@@ -1,5 +1,5 @@
 use igd_next::{aio::tokio::Tokio, AddPortError};
-use spectre_core::{
+use zyanya_core::{
     debug, error, info,
     task::{
         service::{AsyncService, AsyncServiceFuture},

@@ -1,15 +1,15 @@
 //!
-//! Legacy (Spectre Desktop, Web Wallet) account implementation
+//! Legacy (Zyanya Desktop, Web Wallet) account implementation
 //!
 
 use crate::account::{AsLegacyAccount, Inner};
 use crate::derivation::{AddressDerivationManager, AddressDerivationManagerTrait};
 use crate::imports::*;
-use spectre_bip32::{ExtendedPrivateKey, Prefix, SecretKey};
+use zyanya_bip32::{ExtendedPrivateKey, Prefix, SecretKey};
 
 const CACHE_ADDRESS_OFFSET: u32 = 2048;
 
-pub const LEGACY_ACCOUNT_KIND: &str = "spectre-legacy-standard";
+pub const LEGACY_ACCOUNT_KIND: &str = "zyanya-legacy-standard";
 
 pub struct Ctor {}
 
@@ -20,7 +20,7 @@ impl Factory for Ctor {
     }
 
     fn description(&self) -> String {
-        "Spectre Legacy Account (Spectre Desktop, Web Wallet)".to_string()
+        "Zyanya Legacy Account (Zyanya Desktop, Web Wallet)".to_string()
     }
 
     async fn try_load(

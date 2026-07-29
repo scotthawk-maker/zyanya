@@ -201,7 +201,7 @@ mod tests {
         prelude::{BatchDbWriter, ConnBuilder, DirectDbWriter},
     };
     use rocksdb::WriteBatch;
-    use spectre_hashes::Hash;
+    use zyanya_hashes::Hash;
 
     #[test]
     fn test_delete_bucket() {

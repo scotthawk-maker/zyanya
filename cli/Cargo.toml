@@ -1,7 +1,7 @@
 [package]
-name = "spectre-cli"
-description = "Spectre CLI"
-keywords = ["spectre", "wallet", "cli", "rpc"]
+name = "zyanya-cli"
+description = "Zyanya CLI"
+keywords = ["zyanya", "wallet", "cli", "rpc"]
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -20,7 +20,7 @@ include = [
 default = []
 
 [lib]
-name = "spectre_cli_lib"
+name = "zyanya_cli_lib"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
@@ -34,18 +34,18 @@ faster-hex.workspace = true
 futures.workspace = true
 js-sys.workspace = true
 hex.workspace = true
-spectre-addresses.workspace = true
-spectre-bip32.workspace = true
-spectre-consensus-core.workspace = true
-spectre-core.workspace = true
-spectre-daemon.workspace = true
-spectre-metrics-core.workspace = true
-spectre-rpc-core.workspace = true
-spectre-utils.workspace = true
-spectre-wallet-core.workspace = true
-spectre-wallet-keys.workspace = true
-spectre-wallet-psst.workspace = true
-spectre-wrpc-client.workspace = true
+zyanya-addresses.workspace = true
+zyanya-bip32.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-core.workspace = true
+zyanya-daemon.workspace = true
+zyanya-metrics-core.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-utils.workspace = true
+zyanya-wallet-core.workspace = true
+zyanya-wallet-keys.workspace = true
+zyanya-wallet-psst.workspace = true
+zyanya-wrpc-client.workspace = true
 nw-sys.workspace = true
 pad.workspace = true
 regex.workspace = true

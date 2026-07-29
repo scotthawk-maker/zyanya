@@ -1,4 +1,4 @@
-use spectre_core::error;
+use zyanya_core::error;
 use std::{panic, process, thread};
 
 /// Configures the panic hook to exit the program on every panic

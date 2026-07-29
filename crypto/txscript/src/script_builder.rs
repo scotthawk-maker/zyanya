@@ -6,7 +6,7 @@ use crate::{
     MAX_SCRIPTS_SIZE, MAX_SCRIPT_ELEMENT_SIZE,
 };
 use hexplay::{HexView, HexViewBuilder};
-use spectre_txscript_errors::SerializationError;
+use zyanya_txscript_errors::SerializationError;
 use thiserror::Error;
 
 /// DEFAULT_SCRIPT_ALLOC is the default size used for the backing array
@@ -50,8 +50,8 @@ pub type ScriptBuilderResult<T> = std::result::Result<T, ScriptBuilderError>;
 /// better choice to generate the script):
 ///
 /// ```
-/// use spectre_txscript::opcodes::codes::*;
-/// use spectre_txscript::script_builder::{ScriptBuilderResult, ScriptBuilder};
+/// use zyanya_txscript::opcodes::codes::*;
+/// use zyanya_txscript::script_builder::{ScriptBuilderResult, ScriptBuilder};
 /// fn build_multisig_script(pub_key1: &[u8], pub_key2: &[u8], pub_key3: &[u8]) -> ScriptBuilderResult<Vec<u8>> {
 ///     Ok(ScriptBuilder::new()
 ///         .add_op(Op2)?

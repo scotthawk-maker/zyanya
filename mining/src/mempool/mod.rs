@@ -12,11 +12,11 @@ use self::{
     model::{accepted_transactions::AcceptedTransactions, orphan_pool::OrphanPool, pool::Pool, transactions_pool::TransactionsPool},
     tx::Priority,
 };
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     block::TemplateTransactionSelector,
     tx::{MutableTransaction, TransactionId},
 };
-use spectre_core::time::Stopwatch;
+use zyanya_core::time::Stopwatch;
 use std::sync::Arc;
 
 pub(crate) mod check_transaction_standard;

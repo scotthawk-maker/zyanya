@@ -1,18 +1,18 @@
-//! Spectre wRPC client implementation.
+//! Zyanya wRPC client implementation.
 
 use crate::imports::*;
 use crate::parse::parse_host;
 use crate::{error::Error, node::NodeDescriptor};
-use spectre_consensus_core::network::NetworkType;
-use spectre_notify::{
+use zyanya_consensus_core::network::NetworkType;
+use zyanya_notify::{
     listener::ListenerLifespan,
     subscription::{context::SubscriptionContext, MutationPolicies, UtxosChangedMutationPolicy},
 };
-use spectre_rpc_core::{
+use zyanya_rpc_core::{
     api::ctl::RpcCtl,
     notify::collector::{RpcCoreCollector, RpcCoreConverter},
 };
-pub use spectre_rpc_macros::build_wrpc_client_interface;
+pub use zyanya_rpc_macros::build_wrpc_client_interface;
 use std::fmt::Debug;
 use workflow_core::{channel::Multiplexer, runtime as application_runtime};
 use workflow_dom::utils::window;
@@ -52,7 +52,7 @@ struct Inner {
 
 impl Inner {
     pub fn new(encoding: Encoding, url: Option<&str>, resolver: Option<Resolver>, network_id: Option<NetworkId>) -> Result<Inner> {
-        // log_trace!("Spectre wRPC::{encoding} connecting to: {url}");
+        // log_trace!("Zyanya wRPC::{encoding} connecting to: {url}");
         let rpc_ctl = RpcCtl::with_descriptor(url);
         let wrpc_ctl_multiplexer = Multiplexer::<WrpcCtl>::new();
 
@@ -82,7 +82,7 @@ impl Inner {
             let notification_sender_ = notification_relay_channel.sender.clone();
             interface.notification(
                 notification_op,
-                workflow_rpc::client::Notification::new(move |notification: Serializable<spectre_rpc_core::Notification>| {
+                workflow_rpc::client::Notification::new(move |notification: Serializable<zyanya_rpc_core::Notification>| {
                     let notification_sender = notification_sender_.clone();
                     Box::pin(async move {
                         // log_info!("notification receivers: {}", notification_sender.receiver_count());
@@ -91,7 +91,7 @@ impl Inner {
                             // log_info!("notification: posting to channel: {notification:?}");
                             notification_sender.send(notification.into_inner()).await?;
                         } else {
-                            log_warn!("WARNING: Spectre RPC notification is not consumed by user: {:?}", notification.into_inner());
+                            log_warn!("WARNING: Zyanya RPC notification is not consumed by user: {:?}", notification.into_inner());
                         }
                         Ok(())
                     })
@@ -202,7 +202,7 @@ impl Inner {
 
 impl Debug for Inner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("SpectreRpcClient")
+        f.debug_struct("ZyanyaRpcClient")
             .field("rpc", &"rpc")
             // .field("notification_channel", &self.notification_channel)
             .field("encoding", &self.encoding)
@@ -248,7 +248,7 @@ impl RpcResolver for Inner {
 
 const WRPC_CLIENT: &str = "wrpc-client";
 
-/// # [`SpectreRpcClient`] connects to Spectre wRPC endpoint via binary Borsh or JSON protocols.
+/// # [`ZyanyaRpcClient`] connects to Zyanya wRPC endpoint via binary Borsh or JSON protocols.
 ///
 /// RpcClient has two ways to interface with the underlying RPC subsystem:
 /// [`Interface`] that has a [`notification()`](Interface::notification)
@@ -261,19 +261,19 @@ const WRPC_CLIENT: &str = "wrpc-client";
 /// be configured to operate against custom node clusters.
 ///
 #[derive(Clone)]
-pub struct SpectreRpcClient {
+pub struct ZyanyaRpcClient {
     inner: Arc<Inner>,
 }
 
-impl Debug for SpectreRpcClient {
+impl Debug for ZyanyaRpcClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("SpectreRpcClient").field("url", &self.url()).field("connected", &self.is_connected()).finish()
+        f.debug_struct("ZyanyaRpcClient").field("url", &self.url()).field("connected", &self.is_connected()).finish()
     }
 }
 
-impl SpectreRpcClient {
-    /// Create a new `SpectreRpcClient` with the given Encoding, and an optional url or a Resolver.
-    /// Please note that if you pass the url to the constructor, it will force the SpectreRpcClient
+impl ZyanyaRpcClient {
+    /// Create a new `ZyanyaRpcClient` with the given Encoding, and an optional url or a Resolver.
+    /// Please note that if you pass the url to the constructor, it will force the ZyanyaRpcClient
     /// to always use this url.  If you want to have the ability to switch between urls,
     /// you must pass [`Option::None`] as the `url` argument and then supply your own url to the `connect()`
     /// function each time you connect.
@@ -283,10 +283,10 @@ impl SpectreRpcClient {
         resolver: Option<Resolver>,
         network_id: Option<NetworkId>,
         subscription_context: Option<SubscriptionContext>,
-    ) -> Result<SpectreRpcClient> {
+    ) -> Result<ZyanyaRpcClient> {
         Self::new_with_args(encoding, url, resolver, network_id, subscription_context)
         // FIXME
-        // pub fn new(encoding: Encoding, url: &str, ) -> Result<SpectreRpcClient> {
+        // pub fn new(encoding: Encoding, url: &str, ) -> Result<ZyanyaRpcClient> {
         //     Self::new_with_args(encoding, NotificationMode::Direct, url, subscription_context)
     }
 
@@ -297,14 +297,14 @@ impl SpectreRpcClient {
         resolver: Option<Resolver>,
         network_id: Option<NetworkId>,
         subscription_context: Option<SubscriptionContext>,
-    ) -> Result<SpectreRpcClient> {
+    ) -> Result<ZyanyaRpcClient> {
         let inner = Arc::new(Inner::new(encoding, url, resolver, network_id)?);
         inner.build_notifier(subscription_context)?;
-        let client = SpectreRpcClient { inner };
+        let client = ZyanyaRpcClient { inner };
         //     notification_mode: NotificationMode,
         //     url: &str,
         //     subscription_context: Option<SubscriptionContext>,
-        // ) -> Result<SpectreRpcClient> {
+        // ) -> Result<ZyanyaRpcClient> {
         //     let inner = Arc::new(Inner::new(encoding, url)?);
         //     let notifier = if matches!(notification_mode, NotificationMode::MultiListeners) {
         //         let enabled_events = EVENT_TYPE_ARRAY[..].into();
@@ -325,7 +325,7 @@ impl SpectreRpcClient {
         //         None
         //     };
 
-        // let client = SpectreRpcClient { inner, notifier, notification_mode };
+        // let client = ZyanyaRpcClient { inner, notifier, notification_mode };
 
         Ok(client)
     }
@@ -555,7 +555,7 @@ impl SpectreRpcClient {
                     },
                     msg = notification_relay_channel.receiver.recv().fuse() => {
                         if let Ok(msg) = msg {
-                            // inner.rpc_ctl.notify(msg).await.expect("(SpectreRpcClient) rpc_ctl.notify() error");
+                            // inner.rpc_ctl.notify(msg).await.expect("(ZyanyaRpcClient) rpc_ctl.notify() error");
                             if let Err(err) = inner.notification_intake_channel.lock().unwrap().sender.try_send(msg) {
                                 log_error!("notification_intake_channel.sender.try_send() error: {err}");
                             }
@@ -567,10 +567,10 @@ impl SpectreRpcClient {
                         if let Ok(msg) = msg {
                             match msg {
                                 WrpcCtl::Connect => {
-                                    inner.rpc_ctl.signal_open().await.expect("(SpectreRpcClient) rpc_ctl.signal_open() error");
+                                    inner.rpc_ctl.signal_open().await.expect("(ZyanyaRpcClient) rpc_ctl.signal_open() error");
                                 }
                                 WrpcCtl::Disconnect => {
-                                    inner.rpc_ctl.signal_close().await.expect("(SpectreRpcClient) rpc_ctl.signal_close() error");
+                                    inner.rpc_ctl.signal_close().await.expect("(ZyanyaRpcClient) rpc_ctl.signal_close() error");
                                 }
                             }
                         } else {
@@ -599,7 +599,7 @@ impl SpectreRpcClient {
 }
 
 #[async_trait]
-impl RpcApi for SpectreRpcClient {
+impl RpcApi for ZyanyaRpcClient {
     //
     // The following proc-macro iterates over the array of enum variants
     // generating a function for each variant as follows:

@@ -1,1 +1,1 @@
-pub type RpcBlueWorkType = spectre_consensus_core::BlueWorkType;
+pub type RpcBlueWorkType = zyanya_consensus_core::BlueWorkType;

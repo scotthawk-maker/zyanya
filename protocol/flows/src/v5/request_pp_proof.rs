@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use log::debug;
-use spectre_p2p_lib::{
+use zyanya_p2p_lib::{
     common::ProtocolError,
     dequeue_with_request_id, make_response,
-    pb::{spectred_message::Payload, PruningPointProofMessage},
+    pb::{zyanyad_message::Payload, PruningPointProofMessage},
     IncomingRoute, Router,
 };
 

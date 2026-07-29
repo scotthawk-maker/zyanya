@@ -1,4 +1,4 @@
-use spectre_consensus_core::tx::Transaction;
+use zyanya_consensus_core::tx::Transaction;
 use std::sync::Arc;
 
 #[derive(Debug)]

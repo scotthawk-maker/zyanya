@@ -15,7 +15,7 @@ use crate::utxo::{
     UtxoEntryReferenceExtension, UtxoProcessor,
 };
 use sorted_insert::SortedInsertBinaryByKey;
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 
 static UTXO_CONTEXT_ID_SEQUENCER: AtomicU64 = AtomicU64::new(0);
 fn next_utxo_context_id() -> Hash {

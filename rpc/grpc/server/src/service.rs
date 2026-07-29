@@ -1,13 +1,13 @@
 use crate::{adaptor::Adaptor, manager::Manager};
-use spectre_consensus_core::config::Config;
-use spectre_core::{
+use zyanya_consensus_core::config::Config;
+use zyanya_core::{
     debug,
     task::service::{AsyncService, AsyncServiceFuture},
     trace, warn,
 };
-use spectre_rpc_service::service::RpcCoreService;
-use spectre_utils::{networking::NetAddress, triggers::SingleTrigger};
-use spectre_utils_tower::counters::TowerConnectionCounters;
+use zyanya_rpc_service::service::RpcCoreService;
+use zyanya_utils::{networking::NetAddress, triggers::SingleTrigger};
+use zyanya_utils_tower::counters::TowerConnectionCounters;
 use std::sync::Arc;
 use triggered::Listener;
 

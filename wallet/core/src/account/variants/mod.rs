@@ -1,5 +1,5 @@
 //!
-//! Spectre core wallet account variant implementations.
+//! Zyanya core wallet account variant implementations.
 //!
 
 pub mod bip32;

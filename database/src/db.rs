@@ -3,11 +3,11 @@ use std::ops::{Deref, DerefMut};
 use std::path::PathBuf;
 
 pub use conn_builder::ConnBuilder;
-use spectre_utils::fd_budget::FDGuard;
+use zyanya_utils::fd_budget::FDGuard;
 
 mod conn_builder;
 
-/// The DB type used for Spectred stores
+/// The DB type used for Zyanyad stores
 pub struct DB {
     inner: DBWithThreadMode<MultiThreaded>,
     _fd_guard: FDGuard,

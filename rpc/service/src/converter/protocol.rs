@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use spectre_p2p_flows::flow_context::FlowContext;
-use spectre_p2p_lib::{Peer, PeerKey};
-use spectre_rpc_core::RpcPeerInfo;
+use zyanya_p2p_flows::flow_context::FlowContext;
+use zyanya_p2p_lib::{Peer, PeerKey};
+use zyanya_rpc_core::RpcPeerInfo;
 
 pub struct ProtocolConverter {
     flow_context: Arc<FlowContext>,

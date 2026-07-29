@@ -1,14 +1,14 @@
 use itertools::Itertools;
 use rocksdb::WriteBatch;
-use spectre_consensus_core::BlockHashSet;
-use spectre_consensus_core::{blockhash::BlockHashes, BlockHashMap, BlockHasher, BlockLevel};
-use spectre_database::prelude::{BatchDbWriter, CachePolicy, DbWriter};
-use spectre_database::prelude::{CachedDbAccess, DbKey, DirectDbWriter};
-use spectre_database::prelude::{DirectWriter, MemoryWriter};
-use spectre_database::prelude::{ReadLock, StoreError};
-use spectre_database::prelude::{StoreResult, DB};
-use spectre_database::registry::{DatabaseStorePrefixes, SEPARATOR};
-use spectre_hashes::Hash;
+use zyanya_consensus_core::BlockHashSet;
+use zyanya_consensus_core::{blockhash::BlockHashes, BlockHashMap, BlockHasher, BlockLevel};
+use zyanya_database::prelude::{BatchDbWriter, CachePolicy, DbWriter};
+use zyanya_database::prelude::{CachedDbAccess, DbKey, DirectDbWriter};
+use zyanya_database::prelude::{DirectWriter, MemoryWriter};
+use zyanya_database::prelude::{ReadLock, StoreError};
+use zyanya_database::prelude::{StoreResult, DB};
+use zyanya_database::registry::{DatabaseStorePrefixes, SEPARATOR};
+use zyanya_hashes::Hash;
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::iter::once;
@@ -307,7 +307,7 @@ impl RelationsStoreReader for StagingRelationsStore<'_> {
             .parents_access
             .iterator()
             .map(|r| r.unwrap().0)
-            .map(|k| <[u8; spectre_hashes::HASH_SIZE]>::try_from(&k[..]).unwrap())
+            .map(|k| <[u8; zyanya_hashes::HASH_SIZE]>::try_from(&k[..]).unwrap())
             .map(Hash::from_bytes)
             .chain(self.parents_overrides.keys().copied())
             .collect::<BlockHashSet>()
@@ -409,8 +409,8 @@ impl RelationsStore for MemoryRelationsStore {
 mod tests {
     use super::*;
     use crate::processes::relations::RelationsStoreExtensions;
-    use spectre_database::create_temp_db;
-    use spectre_utils::mem_size::MemMode;
+    use zyanya_database::create_temp_db;
+    use zyanya_utils::mem_size::MemMode;
 
     #[test]
     fn test_memory_relations_store() {
@@ -419,7 +419,7 @@ mod tests {
 
     #[test]
     fn test_db_relations_store() {
-        let (lt, db) = create_temp_db!(spectre_database::prelude::ConnBuilder::default().with_files_limit(10));
+        let (lt, db) = create_temp_db!(zyanya_database::prelude::ConnBuilder::default().with_files_limit(10));
         test_relations_store(DbRelationsStore::new(
             db,
             0,

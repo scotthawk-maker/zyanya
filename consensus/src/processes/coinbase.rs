@@ -1,4 +1,4 @@
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     coinbase::*,
     errors::coinbase::{CoinbaseError, CoinbaseResult},
     subnets,
@@ -6,6 +6,7 @@ use spectre_consensus_core::{
     BlockHashMap, BlockHashSet,
 };
 use std::convert::TryInto;
+use zyanya_txscript::{opcodes::codes::OpCheckSequenceVerify, script_builder::ScriptBuilder};
 
 use crate::{constants, model::stores::ghostdag::GhostdagData};
 
@@ -57,6 +58,17 @@ impl<'a> PayloadParser<'a> {
     }
 }
 
+/// Helper function to attach a CSV relative timelock to a ScriptPublicKey.
+/// Prepends `<lock_blocks> OP_CHECKSEQUENCEVERIFY` to `base_spk`.
+pub fn create_csv_locked_script(base_spk: &ScriptPublicKey, lock_blocks: u64) -> ScriptPublicKey {
+    let mut builder = ScriptBuilder::new();
+    let _ = builder.add_sequence(lock_blocks);
+    let _ = builder.add_op(OpCheckSequenceVerify);
+    let mut script = builder.drain();
+    script.extend_from_slice(base_spk.script());
+    ScriptPublicKey::new(base_spk.version(), ScriptVec::from_slice(&script))
+}
+
 impl CoinbaseManager {
     pub fn new(
         coinbase_payload_script_public_key_max_len: u8,
@@ -71,7 +83,7 @@ impl CoinbaseManager {
 
         // Precomputed subsidy by month table for the actual block per second rate
         // Here values are rounded up so that we keep the same number of rewarding months as in the original 1 BPS table.
-        // In a 10 BPS network, the induced increase in total rewards is 51 SPR (see tests::calc_high_bps_total_rewards_delta())
+        // In a 10 BPS network, the induced increase in total rewards is 51 ZYAN (see tests::calc_high_bps_total_rewards_delta())
         let subsidy_by_month_table: SubsidyByMonthTable = core::array::from_fn(|i| SUBSIDY_BY_MONTH_TABLE[i].div_ceil(bps));
         Self {
             coinbase_payload_script_public_key_max_len,
@@ -98,27 +110,67 @@ impl CoinbaseManager {
         mergeset_rewards: &BlockHashMap<BlockRewardData>,
         mergeset_non_daa: &BlockHashSet,
     ) -> CoinbaseResult<CoinbaseTransactionTemplate> {
-        let mut outputs = Vec::with_capacity(ghostdag_data.mergeset_blues.len() + 1); // + 1 for possible red reward
+        let mut outputs = Vec::with_capacity((ghostdag_data.mergeset_blues.len() + 1) * 13); // + 1 for possible red reward
 
-        // Add an output for each mergeset blue block (∩ DAA window), paying to the script reported by the block.
+        // Add outputs for each mergeset blue block (∩ DAA window), paying to the script reported by the block.
         // Note that combinatorically it is nearly impossible for a blue block to be non-DAA
         for blue in ghostdag_data.mergeset_blues.iter().filter(|h| !mergeset_non_daa.contains(h)) {
             let reward_data = mergeset_rewards.get(blue).unwrap();
-            if reward_data.subsidy + reward_data.total_fees > 0 {
-                outputs
-                    .push(TransactionOutput::new(reward_data.subsidy + reward_data.total_fees, reward_data.script_public_key.clone()));
+            let total_reward = reward_data.subsidy + reward_data.total_fees;
+            if total_reward > 0 {
+                let liquid_amount = total_reward / 2;
+                let vested_amount = total_reward - liquid_amount;
+
+                // 50% Liquid output (immediate, spendable after coinbase maturity 100 blocks)
+                if liquid_amount > 0 {
+                    outputs.push(TransactionOutput::new(liquid_amount, reward_data.script_public_key.clone()));
+                }
+
+                // 50% Vested outputs (released linearly over 12 monthly periods with CSV time-locks)
+                if vested_amount > 0 {
+                    let monthly_amount = vested_amount / 12;
+                    let remainder = vested_amount - (monthly_amount * 11);
+                    for i in 0..12 {
+                        let amount = if i == 11 { remainder } else { monthly_amount };
+                        if amount > 0 {
+                            let lock_blocks = (i as u64 + 1) * self.blocks_per_month;
+                            let locked_spk = create_csv_locked_script(&reward_data.script_public_key, lock_blocks);
+                            outputs.push(TransactionOutput::new(amount, locked_spk));
+                        }
+                    }
+                }
             }
         }
 
-        // Collect all rewards from mergeset reds ∩ DAA window and create a
-        // single output rewarding all to the current block (the "merging" block)
+        // Collect all rewards from mergeset reds ∩ DAA window and create
+        // outputs rewarding all to the current block (the "merging" block)
         let mut red_reward = 0u64;
         for red in ghostdag_data.mergeset_reds.iter().filter(|h| !mergeset_non_daa.contains(h)) {
             let reward_data = mergeset_rewards.get(red).unwrap();
             red_reward += reward_data.subsidy + reward_data.total_fees;
         }
         if red_reward > 0 {
-            outputs.push(TransactionOutput::new(red_reward, miner_data.script_public_key.clone()));
+            let liquid_amount = red_reward / 2;
+            let vested_amount = red_reward - liquid_amount;
+
+            // 50% Liquid output
+            if liquid_amount > 0 {
+                outputs.push(TransactionOutput::new(liquid_amount, miner_data.script_public_key.clone()));
+            }
+
+            // 50% Vested outputs (12 monthly linear outputs with CSV time-locks)
+            if vested_amount > 0 {
+                let monthly_amount = vested_amount / 12;
+                let remainder = vested_amount - (monthly_amount * 11);
+                for i in 0..12 {
+                    let amount = if i == 11 { remainder } else { monthly_amount };
+                    if amount > 0 {
+                        let lock_blocks = (i as u64 + 1) * self.blocks_per_month;
+                        let locked_spk = create_csv_locked_script(&miner_data.script_public_key, lock_blocks);
+                        outputs.push(TransactionOutput::new(amount, locked_spk));
+                    }
+                }
+            }
         }
 
         // Build the current block's payload
@@ -242,7 +294,7 @@ impl CoinbaseManager {
 }
 
 /*
-    This table was pre-calculated by calling `calcDeflationaryPeriodBlockSubsidyFloatCalc` (in spectred-go) for all months until reaching 0 subsidy.
+    This table was pre-calculated by calling `calcDeflationaryPeriodBlockSubsidyFloatCalc` (in zyanyad-go) for all months until reaching 0 subsidy.
     To regenerate this table, run `TestBuildSubsidyTable` in coinbasemanager_test.go (note the `deflationaryPhaseBaseSubsidy` therein).
     These values apply to 1 block per second.
 */
@@ -284,9 +336,9 @@ const SUBSIDY_BY_MONTH_TABLE: [u64; 727] = [
 mod tests {
     use super::*;
     use crate::params::MAINNET_PARAMS;
-    use spectre_consensus_core::{
+    use zyanya_consensus_core::{
         config::params::{Params, TESTNET11_PARAMS},
-        constants::SOMPI_PER_SPECTRE,
+        constants::SOMPI_PER_ZYANYA,
         network::NetworkId,
         tx::scriptvec,
     };
@@ -309,9 +361,9 @@ mod tests {
 
         let delta = total_high_bps_rewards as i64 - total_rewards as i64;
 
-        println!("Total rewards: {} sompi => {} SPR", total_rewards, total_rewards / SOMPI_PER_SPECTRE);
-        println!("Total high bps rewards: {} sompi => {} SPR", total_high_bps_rewards, total_high_bps_rewards / SOMPI_PER_SPECTRE);
-        println!("Delta: {} sompi => {} SPR", delta, delta / SOMPI_PER_SPECTRE as i64);
+        println!("Total rewards: {} sompi => {} ZYAN", total_rewards, total_rewards / SOMPI_PER_ZYANYA);
+        println!("Total high bps rewards: {} sompi => {} ZYAN", total_high_bps_rewards, total_high_bps_rewards / SOMPI_PER_ZYANYA);
+        println!("Delta: {} sompi => {} ZYAN", delta, delta / SOMPI_PER_ZYANYA as i64);
     }
 
     #[test]
@@ -345,7 +397,7 @@ mod tests {
             let params = &network_id.into();
             let cbm = create_manager(params);
 
-            let pre_deflationary_phase_base_subsidy = PRE_DEFLATIONARY_PHASE_BASE_SUBSIDY / params.bps();
+            let pre_deflationary_phase_base_subsidy = cbm.calc_block_subsidy(1);
             let deflationary_phase_initial_subsidy = DEFLATIONARY_PHASE_INITIAL_SUBSIDY / params.bps();
             let blocks_per_halving = SECONDS_PER_HALVING * params.bps();
 
@@ -487,6 +539,142 @@ mod tests {
         let deserialized_data = cbm.deserialize_coinbase_payload(&payload).unwrap();
 
         assert_eq!(data2, deserialized_data);
+    }
+
+    #[test]
+    fn expected_coinbase_transaction_vesting_split_test() {
+        let cbm = create_manager(&MAINNET_PARAMS);
+        let script_data = [33u8, 255];
+        let miner_script = ScriptPublicKey::new(0, ScriptVec::from_slice(&script_data));
+        let miner_data = MinerData {
+            script_public_key: miner_script.clone(),
+            extra_data: vec![],
+        };
+
+        let blue_hash = zyanya_hashes::Hash::from_u64_word(1);
+        let mut mergeset_blues = Vec::new();
+        mergeset_blues.push(blue_hash);
+
+        let ghostdag_data = GhostdagData::new(
+            0,
+            0.into(),
+            blue_hash,
+            mergeset_blues.into(),
+            Vec::new().into(),
+            BlockHashMap::default().into(),
+        );
+
+        let total_subsidy = 5_000_000_000u64; // 50 ZYAN
+        let mut mergeset_rewards = BlockHashMap::default();
+        mergeset_rewards.insert(
+            blue_hash,
+            BlockRewardData::new(total_subsidy, 0, miner_script.clone()),
+        );
+
+        let mergeset_non_daa = BlockHashSet::default();
+
+        let template = cbm
+            .expected_coinbase_transaction(1, miner_data, &ghostdag_data, &mergeset_rewards, &mergeset_non_daa)
+            .unwrap();
+
+        // Should have 13 outputs: 1 liquid + 12 monthly vested outputs
+        assert_eq!(template.tx.outputs.len(), 13);
+
+        // Output 0 is liquid 50% = 2_500_000_000 (and has unlocked miner script)
+        assert_eq!(template.tx.outputs[0].value, 2_500_000_000);
+        assert_eq!(template.tx.outputs[0].script_public_key, miner_script);
+
+        // Outputs 1..13 sum to 2_500_000_000 (50% vested, each with CSV time-lock)
+        let vested_sum: u64 = template.tx.outputs[1..].iter().map(|o| o.value).sum();
+        assert_eq!(vested_sum, 2_500_000_000);
+
+        for i in 0..12 {
+            let expected_lock = (i as u64 + 1) * cbm.blocks_per_month;
+            let expected_spk = create_csv_locked_script(&miner_script, expected_lock);
+            assert_eq!(template.tx.outputs[i + 1].script_public_key, expected_spk);
+        }
+
+        // Total transaction output value must equal total subsidy
+        let total_sum: u64 = template.tx.outputs.iter().map(|o| o.value).sum();
+        assert_eq!(total_sum, total_subsidy);
+    }
+
+    #[test]
+    fn csv_vested_output_spending_test() {
+        use zyanya_consensus_core::{
+            hashing::sighash::SigHashReusedValuesUnsync,
+            tx::{PopulatedTransaction, TransactionInput, TransactionOutpoint, UtxoEntry},
+        };
+        use zyanya_txscript::{caches::Cache, opcodes::codes::OpTrue, SigCacheKey, TxScriptEngine};
+
+        let cbm = create_manager(&MAINNET_PARAMS);
+        let base_script = vec![OpTrue];
+        let base_spk = ScriptPublicKey::new(0, ScriptVec::from_slice(&base_script));
+
+        let lock_blocks = cbm.blocks_per_month; // month 1
+        let vested_spk = create_csv_locked_script(&base_spk, lock_blocks);
+
+        // 1. Test TxScriptEngine execution for liquid vs vested outputs
+        let input = TransactionInput {
+            previous_outpoint: TransactionOutpoint::new(zyanya_hashes::Hash::from_u64_word(1), 0),
+            signature_script: vec![],
+            sequence: lock_blocks,
+            sig_op_count: 0,
+        };
+
+        let tx = Transaction::new(1, vec![input.clone()], vec![], 0, Default::default(), 0, vec![]);
+        let utxo_entry = UtxoEntry::new(1_000_000, vested_spk.clone(), 100, true);
+        let populated_tx = PopulatedTransaction::new(&tx, vec![utxo_entry.clone()]);
+
+        let sig_cache = Cache::<SigCacheKey, bool>::new(10_000);
+        let reused_values = SigHashReusedValuesUnsync::new();
+
+        // Valid sequence (sequence == lock_blocks) should succeed
+        let mut vm = TxScriptEngine::from_transaction_input(
+            &populated_tx,
+            &input,
+            0,
+            &utxo_entry,
+            &reused_values,
+            &sig_cache,
+            false,
+            false,
+        );
+        assert!(vm.execute().is_ok());
+
+        // Invalid sequence (sequence < lock_blocks) should fail
+        let mut invalid_input = input.clone();
+        invalid_input.sequence = lock_blocks - 1;
+        let invalid_tx = Transaction::new(1, vec![invalid_input.clone()], vec![], 0, Default::default(), 0, vec![]);
+        let invalid_populated = PopulatedTransaction::new(&invalid_tx, vec![utxo_entry.clone()]);
+        let mut vm_invalid = TxScriptEngine::from_transaction_input(
+            &invalid_populated,
+            &invalid_input,
+            0,
+            &utxo_entry,
+            &reused_values,
+            &sig_cache,
+            false,
+            false,
+        );
+        assert!(vm_invalid.execute().is_err());
+
+        // Disabled sequence (sequence has bit 63 set) should fail for CSV opcode
+        let mut disabled_input = input.clone();
+        disabled_input.sequence = u64::MAX;
+        let disabled_tx = Transaction::new(1, vec![disabled_input.clone()], vec![], 0, Default::default(), 0, vec![]);
+        let disabled_populated = PopulatedTransaction::new(&disabled_tx, vec![utxo_entry.clone()]);
+        let mut vm_disabled = TxScriptEngine::from_transaction_input(
+            &disabled_populated,
+            &disabled_input,
+            0,
+            &utxo_entry,
+            &reused_values,
+            &sig_cache,
+            false,
+            false,
+        );
+        assert!(vm_disabled.execute().is_err());
     }
 
     fn create_manager(params: &Params) -> CoinbaseManager {

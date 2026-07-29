@@ -1,11 +1,11 @@
 use crate::psst::PSST as Native;
 use crate::role::*;
-use spectre_consensus_core::tx::TransactionId;
+use zyanya_consensus_core::tx::TransactionId;
 use wasm_bindgen::prelude::*;
 // use js_sys::Object;
 use crate::psst::Inner;
 use serde::{Deserialize, Serialize};
-use spectre_consensus_client::{Transaction, TransactionInput, TransactionInputT, TransactionOutput, TransactionOutputT};
+use zyanya_consensus_client::{Transaction, TransactionInput, TransactionInputT, TransactionOutput, TransactionOutputT};
 use std::sync::MutexGuard;
 use std::sync::{Arc, Mutex};
 use workflow_wasm::{

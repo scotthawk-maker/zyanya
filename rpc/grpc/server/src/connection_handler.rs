@@ -5,15 +5,15 @@ use crate::{
     request_handler::{factory::Factory, interface::Interface},
 };
 use futures::{FutureExt, Stream};
-use spectre_core::{debug, info, warn};
-use spectre_grpc_core::{
+use zyanya_core::{debug, info, warn};
+use zyanya_grpc_core::{
     protowire::{
         rpc_server::{Rpc, RpcServer},
-        SpectredRequest, SpectredResponse,
+        ZyanyadRequest, ZyanyadResponse,
     },
     RPC_MAX_MESSAGE_SIZE,
 };
-use spectre_notify::{
+use zyanya_notify::{
     connection::ChannelType,
     events::EVENT_TYPE_ARRAY,
     listener::ListenerLifespan,
@@ -21,13 +21,13 @@ use spectre_notify::{
     subscriber::Subscriber,
     subscription::{context::SubscriptionContext, MutationPolicies, UtxosChangedMutationPolicy},
 };
-use spectre_rpc_core::{
+use zyanya_rpc_core::{
     api::rpc::DynRpcService,
     notify::{channel::NotificationChannel, connection::ChannelConnection},
     Notification, RpcResult,
 };
-use spectre_utils::networking::NetAddress;
-use spectre_utils_tower::{
+use zyanya_utils::networking::NetAddress;
+use zyanya_utils_tower::{
     counters::TowerConnectionCounters,
     middleware::{BodyExt, CountBytesBody, MapRequestBodyLayer, MapResponseBodyLayer},
 };
@@ -235,12 +235,12 @@ impl Drop for ConnectionHandler {
 
 #[tonic::async_trait]
 impl Rpc for ConnectionHandler {
-    type MessageStreamStream = Pin<Box<dyn Stream<Item = Result<SpectredResponse, tonic::Status>> + Send + Sync + 'static>>;
+    type MessageStreamStream = Pin<Box<dyn Stream<Item = Result<ZyanyadResponse, tonic::Status>> + Send + Sync + 'static>>;
 
     /// Handle the new arriving client connection
     async fn message_stream(
         &self,
-        request: Request<tonic::Streaming<SpectredRequest>>,
+        request: Request<tonic::Streaming<ZyanyadRequest>>,
     ) -> Result<Response<Self::MessageStreamStream>, tonic::Status> {
         const SERVICE_IS_DOWN: &str = "The gRPC service is down";
 

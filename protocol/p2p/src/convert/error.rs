@@ -1,4 +1,4 @@
-use spectre_consensus_core::subnets::SubnetworkConversionError;
+use zyanya_consensus_core::subnets::SubnetworkConversionError;
 use thiserror::Error;
 
 #[derive(Clone, Debug, Error)]
@@ -16,7 +16,7 @@ pub enum ConversionError {
     ArrayBytesSizeError(#[from] std::array::TryFromSliceError),
 
     #[error("Bytes size mismatch error {0}")]
-    UintBytesSizeError(#[from] spectre_math::uint::TryFromSliceError),
+    UintBytesSizeError(#[from] zyanya_math::uint::TryFromSliceError),
 
     #[error("Integer parsing error: {0}")]
     IntCastingError(#[from] std::num::TryFromIntError),

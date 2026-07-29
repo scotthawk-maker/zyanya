@@ -7,37 +7,37 @@ use crate::{v5, v6};
 use async_trait::async_trait;
 use futures::future::join_all;
 use parking_lot::{Mutex, RwLock};
-use spectre_addressmanager::AddressManager;
-use spectre_connectionmanager::ConnectionManager;
-use spectre_consensus_core::api::{BlockValidationFuture, BlockValidationFutures};
-use spectre_consensus_core::block::Block;
-use spectre_consensus_core::config::Config;
-use spectre_consensus_core::errors::block::RuleError;
-use spectre_consensus_core::tx::{Transaction, TransactionId};
-use spectre_consensus_notify::{
+use zyanya_addressmanager::AddressManager;
+use zyanya_connectionmanager::ConnectionManager;
+use zyanya_consensus_core::api::{BlockValidationFuture, BlockValidationFutures};
+use zyanya_consensus_core::block::Block;
+use zyanya_consensus_core::config::Config;
+use zyanya_consensus_core::errors::block::RuleError;
+use zyanya_consensus_core::tx::{Transaction, TransactionId};
+use zyanya_consensus_notify::{
     notification::{Notification, PruningPointUtxoSetOverrideNotification},
     root::ConsensusNotificationRoot,
 };
-use spectre_consensusmanager::{BlockProcessingBatch, ConsensusInstance, ConsensusManager, ConsensusProxy};
-use spectre_core::{
+use zyanya_consensusmanager::{BlockProcessingBatch, ConsensusInstance, ConsensusManager, ConsensusProxy};
+use zyanya_core::{
     debug, info,
-    spectred_env::{name, version},
+    zyanyad_env::{name, version},
     task::tick::TickService,
 };
-use spectre_core::{time::unix_now, warn};
-use spectre_hashes::Hash;
-use spectre_mining::mempool::tx::{Orphan, Priority};
-use spectre_mining::{manager::MiningManagerProxy, mempool::tx::RbfPolicy};
-use spectre_notify::notifier::Notify;
-use spectre_p2p_lib::{
+use zyanya_core::{time::unix_now, warn};
+use zyanya_hashes::Hash;
+use zyanya_mining::mempool::tx::{Orphan, Priority};
+use zyanya_mining::{manager::MiningManagerProxy, mempool::tx::RbfPolicy};
+use zyanya_notify::notifier::Notify;
+use zyanya_p2p_lib::{
     common::ProtocolError,
     convert::model::version::Version,
     make_message,
-    pb::{spectred_message::Payload, InvRelayBlockMessage},
-    ConnectionInitializer, Hub, PeerKey, PeerProperties, Router, SpectredHandshake,
+    pb::{zyanyad_message::Payload, InvRelayBlockMessage},
+    ConnectionInitializer, Hub, PeerKey, PeerProperties, Router, ZyanyadHandshake,
 };
-use spectre_utils::iter::IterExtensions;
-use spectre_utils::networking::PeerId;
+use zyanya_utils::iter::IterExtensions;
+use zyanya_utils::networking::PeerId;
 use std::collections::HashMap;
 use std::time::Instant;
 use std::{collections::hash_map::Entry, fmt::Display};
@@ -519,7 +519,7 @@ impl FlowContext {
     /// Updates the mempool after a new block arrival, relays newly unorphaned transactions
     /// and possibly rebroadcast manually added transactions when not in IBD.
     ///
-    /// _GO-SPECTRED: OnNewBlock + broadcastTransactionsAfterBlockAdded_
+    /// _GO-ZYANYAD: OnNewBlock + broadcastTransactionsAfterBlockAdded_
     pub async fn on_new_block(
         &self,
         consensus: &ConsensusProxy,
@@ -692,7 +692,7 @@ impl FlowContext {
 impl ConnectionInitializer for FlowContext {
     async fn initialize_connection(&self, router: Arc<Router>) -> Result<(), ProtocolError> {
         // Build the handshake object and subscribe to handshake messages
-        let mut handshake = SpectredHandshake::new(&router);
+        let mut handshake = ZyanyadHandshake::new(&router);
 
         // We start the router receive loop only after we registered to handshake routes
         router.start();

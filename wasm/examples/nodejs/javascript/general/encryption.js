@@ -1,12 +1,12 @@
-const spectre = require('../../../../nodejs/spectre');
+const zyanya = require('../../../../nodejs/zyanya');
 
-spectre.initConsolePanicHook();
+zyanya.initConsolePanicHook();
 
 (async () => {
 
-    let encrypted = spectre.encryptXChaCha20Poly1305("my message", "my_password");
+    let encrypted = zyanya.encryptXChaCha20Poly1305("my message", "my_password");
     console.log("encrypted:", encrypted);
-    let decrypted = spectre.decryptXChaCha20Poly1305(encrypted, "my_password");
+    let decrypted = zyanya.decryptXChaCha20Poly1305(encrypted, "my_password");
     console.log("decrypted:", decrypted);
 
 })();

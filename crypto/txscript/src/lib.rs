@@ -22,12 +22,12 @@ use log::trace;
 use opcodes::codes::OpReturn;
 use opcodes::{codes, to_small_int, OpCond};
 use script_class::ScriptClass;
-use spectre_consensus_core::hashing::sighash::{
+use zyanya_consensus_core::hashing::sighash::{
     calc_ecdsa_signature_hash, calc_schnorr_signature_hash, SigHashReusedValues, SigHashReusedValuesUnsync,
 };
-use spectre_consensus_core::hashing::sighash_type::SigHashType;
-use spectre_consensus_core::tx::{ScriptPublicKey, TransactionInput, UtxoEntry, VerifiableTransaction};
-use spectre_txscript_errors::TxScriptError;
+use zyanya_consensus_core::hashing::sighash_type::SigHashType;
+use zyanya_consensus_core::tx::{ScriptPublicKey, TransactionInput, UtxoEntry, VerifiableTransaction};
+use zyanya_txscript_errors::TxScriptError;
 
 pub mod prelude {
     pub use super::standard::*;
@@ -316,7 +316,7 @@ impl<'a, T: VerifiableTransaction, Reused: SigHashReusedValues> TxScriptEngine<'
     }
 
     fn execute_opcode(&mut self, opcode: DynOpcodeImplementation<T, Reused>) -> Result<(), TxScriptError> {
-        // Different from spectred: Illegal and disabled opcode are checked on execute instead
+        // Different from zyanyad: Illegal and disabled opcode are checked on execute instead
         // Note that this includes OP_RESERVED which counts as a push operation.
         if !opcode.is_push_opcode() {
             self.num_ops += 1;
@@ -642,9 +642,9 @@ mod tests {
     use super::*;
     use crate::script_builder::{ScriptBuilder, ScriptBuilderResult};
     use smallvec::SmallVec;
-    use spectre_consensus_core::hashing::sighash::SigHashReusedValuesUnsync;
-    use spectre_consensus_core::hashing::sighash_type::SIG_HASH_ALL;
-    use spectre_consensus_core::tx::{
+    use zyanya_consensus_core::hashing::sighash::SigHashReusedValuesUnsync;
+    use zyanya_consensus_core::hashing::sighash_type::SIG_HASH_ALL;
+    use zyanya_consensus_core::tx::{
         MutableTransaction, PopulatedTransaction, ScriptPublicKey, Transaction, TransactionId, TransactionOutpoint, TransactionOutput,
     };
 
@@ -1310,9 +1310,9 @@ mod bitcoind_tests {
 
     use super::*;
     use crate::script_builder::ScriptBuilderError;
-    use spectre_consensus_core::constants::MAX_TX_IN_SEQUENCE_NUM;
-    use spectre_consensus_core::hashing::sighash::SigHashReusedValuesUnsync;
-    use spectre_consensus_core::tx::{
+    use zyanya_consensus_core::constants::MAX_TX_IN_SEQUENCE_NUM;
+    use zyanya_consensus_core::hashing::sighash::SigHashReusedValuesUnsync;
+    use zyanya_consensus_core::tx::{
         PopulatedTransaction, ScriptPublicKey, Transaction, TransactionId, TransactionOutpoint, TransactionOutput,
     };
 

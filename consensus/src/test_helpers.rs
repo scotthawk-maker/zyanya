@@ -1,12 +1,12 @@
 use rand::{rngs::SmallRng, seq::SliceRandom, Rng};
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     block::Block,
     header::Header,
     subnets::SubnetworkId,
     tx::{ScriptPublicKey, ScriptVec, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput, UtxoEntry},
     utxo::utxo_collection::UtxoCollection,
 };
-use spectre_hashes::{Hash, HASH_SIZE};
+use zyanya_hashes::{Hash, HASH_SIZE};
 
 pub fn header_from_precomputed_hash(hash: Hash, parents: Vec<Hash>) -> Header {
     Header::from_precomputed_hash(hash, parents)
@@ -154,4 +154,4 @@ pub fn generate_random_transaction_outpoint(rng: &mut SmallRng) -> TransactionOu
     TransactionOutpoint::new(generate_random_hash(rng), rng.gen())
 }
 
-//TODO: create `assert_eq_<spectre-sturct>!()` helper macros in `consensus::test_helpers`
+//TODO: create `assert_eq_<zyanya-sturct>!()` helper macros in `consensus::test_helpers`

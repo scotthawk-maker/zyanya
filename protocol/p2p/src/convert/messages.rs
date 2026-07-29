@@ -7,13 +7,13 @@ use super::{
     option::TryIntoOptionEx,
 };
 use crate::pb as protowire;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     header::Header,
     pruning::{PruningPointProof, PruningPointsList},
     tx::{TransactionId, TransactionOutpoint, UtxoEntry},
 };
-use spectre_hashes::Hash;
-use spectre_utils::networking::{IpAddress, PeerId};
+use zyanya_hashes::Hash;
+use zyanya_utils::networking::{IpAddress, PeerId};
 
 use std::sync::Arc;
 

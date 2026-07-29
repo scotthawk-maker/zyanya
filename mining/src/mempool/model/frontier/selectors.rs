@@ -1,5 +1,5 @@
 use crate::Policy;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     block::TemplateTransactionSelector,
     tx::{Transaction, TransactionId},
 };

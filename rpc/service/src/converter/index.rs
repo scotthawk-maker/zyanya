@@ -1,9 +1,9 @@
 use async_trait::async_trait;
-use spectre_consensus_core::config::Config;
-use spectre_index_core::indexed_utxos::UtxoSetByScriptPublicKey;
-use spectre_index_core::notification::{self as index_notify, Notification as IndexNotification};
-use spectre_notify::converter::Converter;
-use spectre_rpc_core::{utxo_set_into_rpc, Notification, RpcUtxosByAddressesEntry, UtxosChangedNotification};
+use zyanya_consensus_core::config::Config;
+use zyanya_index_core::indexed_utxos::UtxoSetByScriptPublicKey;
+use zyanya_index_core::notification::{self as index_notify, Notification as IndexNotification};
+use zyanya_notify::converter::Converter;
+use zyanya_rpc_core::{utxo_set_into_rpc, Notification, RpcUtxosByAddressesEntry, UtxosChangedNotification};
 use std::sync::Arc;
 
 /// Conversion of consensus_core to rpc_core structures

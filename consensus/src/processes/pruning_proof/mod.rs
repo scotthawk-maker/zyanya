@@ -15,7 +15,7 @@ use parking_lot::{Mutex, RwLock};
 use rayon::prelude::*;
 use rocksdb::WriteBatch;
 
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     blockhash::{self, BlockHashExtensions},
     errors::consensus::{ConsensusError, ConsensusResult},
     header::Header,
@@ -23,10 +23,10 @@ use spectre_consensus_core::{
     trusted::{TrustedGhostdagData, TrustedHeader},
     BlockHashMap, BlockHashSet, BlockLevel, HashMapCustomHasher, KType,
 };
-use spectre_core::info;
-use spectre_database::{prelude::StoreResultExtensions, utils::DbLifetime};
-use spectre_hashes::Hash;
-use spectre_pow::calc_block_level;
+use zyanya_core::info;
+use zyanya_database::{prelude::StoreResultExtensions, utils::DbLifetime};
+use zyanya_hashes::Hash;
+use zyanya_pow::calc_block_level;
 use thiserror::Error;
 
 use crate::{
@@ -298,9 +298,9 @@ impl PruningProofManager {
                     let ghostdag = self.ghostdag_store.get_data(hash).unwrap();
                     e.insert((&*ghostdag).into());
 
-                    // We fill `ghostdag_blocks` only for spectred-go legacy reasons, but the real set we
+                    // We fill `ghostdag_blocks` only for zyanyad-go legacy reasons, but the real set we
                     // send is `daa_window_blocks` which represents the full trusted sub-DAG in the antifuture
-                    // of the pruning point which spectred-rust nodes expect to get when synced with headers proof
+                    // of the pruning point which zyanyad-rust nodes expect to get when synced with headers proof
                     if let Entry::Vacant(e) = daa_window_blocks.entry(hash) {
                         e.insert(TrustedHeader {
                             header: self.headers_store.get_header(hash).unwrap(),

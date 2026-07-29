@@ -1,6 +1,6 @@
 [package]
-name = "spectre-wrpc-simple-client-example"
-description = "Spectre wRPC simple client example"
+name = "zyanya-wrpc-simple-client-example"
+description = "Zyanya wRPC simple client example"
 publish = false
 rust-version.workspace = true
 version.workspace = true
@@ -12,7 +12,7 @@ repository.workspace = true
 
 [dependencies]
 futures.workspace = true
-spectre-rpc-core.workspace = true
-spectre-wrpc-client.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-wrpc-client.workspace = true
 tokio.workspace = true
 

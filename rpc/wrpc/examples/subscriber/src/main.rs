@@ -1,4 +1,4 @@
-// Basic example of a Spectre wRPC client that connects to a node
+// Basic example of a Zyanya wRPC client that connects to a node
 // and subscribes to notifications. This example demonstrates
 // how to handle RPC connection events, perform subscriptions,
 // handle subscription notifications etc.
@@ -13,18 +13,18 @@ use workflow_core::channel::{oneshot, Channel, DuplexChannel};
 use workflow_core::task::spawn;
 use workflow_log::prelude::*;
 
-// Spectre RPC primitives
-use spectre_wrpc_client::prelude::*;
+// Zyanya RPC primitives
+use zyanya_wrpc_client::prelude::*;
 // reuse wRPC Result type for convenience
-use spectre_wrpc_client::result::Result;
+use zyanya_wrpc_client::result::Result;
 
 struct Inner {
     // task control duplex channel - a pair of channels where sender
     // is used to signal an async task termination request and receiver
     // is used to signal task termination completion.
     task_ctl: DuplexChannel<()>,
-    // Spectre wRPC client instance
-    client: Arc<SpectreRpcClient>,
+    // Zyanya wRPC client instance
+    client: Arc<ZyanyaRpcClient>,
     // our own view on the connection state
     is_connected: AtomicBool,
     // channel supplied to the notification subsystem
@@ -50,8 +50,8 @@ impl Listener {
         // obtain the public node rpc endpoint
         let (resolver, url) = if let Some(url) = url { (None, Some(url)) } else { (Some(Resolver::default()), None) };
 
-        // Create a basic Spectre RPC client instance using Borsh encoding.
-        let client = Arc::new(SpectreRpcClient::new_with_args(WrpcEncoding::Borsh, url.as_deref(), resolver, Some(network_id), None)?);
+        // Create a basic Zyanya RPC client instance using Borsh encoding.
+        let client = Arc::new(ZyanyaRpcClient::new_with_args(WrpcEncoding::Borsh, url.as_deref(), resolver, Some(network_id), None)?);
 
         let inner = Inner {
             task_ctl: DuplexChannel::oneshot(),
@@ -103,7 +103,7 @@ impl Listener {
         Ok(())
     }
 
-    pub fn client(&self) -> &Arc<SpectreRpcClient> {
+    pub fn client(&self) -> &Arc<ZyanyaRpcClient> {
         &self.inner.client
     }
 
@@ -186,7 +186,7 @@ impl Listener {
         // channels where sender acts as a trigger signaling termination
         // and the receiver is used to signal termination completion.
         // (this is a common pattern used for channel lifetime management
-        // in the rusty spectre framework)
+        // in the rusty zyanya framework)
         let task_ctl_receiver = self.inner.task_ctl.request.receiver.clone();
         let task_ctl_sender = self.inner.task_ctl.response.sender.clone();
 

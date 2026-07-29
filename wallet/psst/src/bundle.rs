@@ -3,14 +3,14 @@ use crate::prelude::*;
 use crate::psst::{Inner as PSSTInner, PSST};
 // use crate::wasm::result;
 
-use spectre_addresses::{Address, Prefix};
-// use spectre_bip32::Prefix;
-use spectre_consensus_core::network::{NetworkId, NetworkType};
-use spectre_consensus_core::tx::{ScriptPublicKey, TransactionOutpoint, UtxoEntry};
+use zyanya_addresses::{Address, Prefix};
+// use zyanya_bip32::Prefix;
+use zyanya_consensus_core::network::{NetworkId, NetworkType};
+use zyanya_consensus_core::tx::{ScriptPublicKey, TransactionOutpoint, UtxoEntry};
 
 use hex;
 use serde::{Deserialize, Serialize};
-use spectre_txscript::{extract_script_pub_key_address, pay_to_address_script, pay_to_script_hash_script};
+use zyanya_txscript::{extract_script_pub_key_address, pay_to_address_script, pay_to_script_hash_script};
 use std::ops::Deref;
 
 ///
@@ -162,7 +162,7 @@ pub fn lock_script_sig_templating(payload: String, pubkey_bytes: Option<&[u8]>) 
     Ok(payload_bytes)
 }
 
-pub fn script_sig_to_address(script_sig: &[u8], prefix: spectre_addresses::Prefix) -> Result<Address, Error> {
+pub fn script_sig_to_address(script_sig: &[u8], prefix: zyanya_addresses::Prefix) -> Result<Address, Error> {
     extract_script_pub_key_address(&pay_to_script_hash_script(script_sig), prefix).map_err(Error::P2SHExtractError)
 }
 
@@ -244,8 +244,8 @@ mod tests {
     use crate::role::*;
     use secp256k1::Secp256k1;
     use secp256k1::{rand::thread_rng, Keypair};
-    use spectre_consensus_core::tx::{TransactionId, TransactionOutpoint, UtxoEntry};
-    use spectre_txscript::{multisig_redeem_script, pay_to_script_hash_script};
+    use zyanya_consensus_core::tx::{TransactionId, TransactionOutpoint, UtxoEntry};
+    use zyanya_txscript::{multisig_redeem_script, pay_to_script_hash_script};
     use std::str::FromStr;
     use std::sync::LazyLock;
 

@@ -5,12 +5,12 @@ use crate::model::{
 };
 use itertools::Itertools;
 use rocksdb::WriteBatch;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     blockhash::{BlockHashIteratorExtensions, BlockHashes, ORIGIN},
     BlockHashSet,
 };
-use spectre_database::prelude::{BatchDbWriter, DbWriter, DirectWriter, StoreError};
-use spectre_hashes::Hash;
+use zyanya_database::prelude::{BatchDbWriter, DbWriter, DirectWriter, StoreError};
+use zyanya_hashes::Hash;
 
 /// Initializes this relations store with an `origin` root
 pub fn init<S: RelationsStore + ChildrenStore + ?Sized>(relations: &mut S) {
@@ -152,9 +152,9 @@ impl<S: RelationsStore + ChildrenStore + ?Sized> RelationsStoreExtensions for S 
 mod tests {
     use super::*;
     use crate::model::stores::relations::{DbRelationsStore, RelationsStoreReader, StagingRelationsStore};
-    use spectre_core::assert_match;
-    use spectre_database::prelude::{CachePolicy, ConnBuilder};
-    use spectre_database::{create_temp_db, prelude::MemoryWriter};
+    use zyanya_core::assert_match;
+    use zyanya_database::prelude::{CachePolicy, ConnBuilder};
+    use zyanya_database::{create_temp_db, prelude::MemoryWriter};
     use std::sync::Arc;
 
     #[test]

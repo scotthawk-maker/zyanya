@@ -1,14 +1,14 @@
 /*!
-# Rusty Spectre WASM32 bindings
+# Rusty Zyanya WASM32 bindings
 
-[<img alt="github" src="https://img.shields.io/badge/github-spectre--project/rusty--spectre-8da0cb?style=for-the-badge&labelColor=555555&color=8da0cb&logo=github" height="20">](https://github.com/spectre-project/rusty-spectre/tree/main/wasm)
-[<img alt="crates.io" src="https://img.shields.io/crates/v/spectre-wasm.svg?maxAge=2592000&style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/spectre-wasm)
-[<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-spectre--wasm-56c2a5?maxAge=2592000&style=for-the-badge&logo=docs.rs" height="20">](https://docs.rs/spectre-wasm)
-<img alt="license" src="https://img.shields.io/crates/l/spectre-wasm.svg?maxAge=2592000&color=6ac&style=for-the-badge&logoColor=fff" height="20">
+[<img alt="github" src="https://img.shields.io/badge/github-zyanya--project/rusty--zyanya-8da0cb?style=for-the-badge&labelColor=555555&color=8da0cb&logo=github" height="20">](https://github.com/zyanya-project/rusty-zyanya/tree/main/wasm)
+[<img alt="crates.io" src="https://img.shields.io/crates/v/zyanya-wasm.svg?maxAge=2592000&style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/zyanya-wasm)
+[<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-zyanya--wasm-56c2a5?maxAge=2592000&style=for-the-badge&logo=docs.rs" height="20">](https://docs.rs/zyanya-wasm)
+<img alt="license" src="https://img.shields.io/crates/l/zyanya-wasm.svg?maxAge=2592000&color=6ac&style=for-the-badge&logoColor=fff" height="20">
 
 <br>
 
-Rusty-Spectre WASM32 bindings offer direct integration of Rust code and Rusty-Spectre
+Rusty-Zyanya WASM32 bindings offer direct integration of Rust code and Rusty-Zyanya
 codebase within JavaScript environments such as Node.js and Web Browsers.
 
 ## Documentation
@@ -23,7 +23,7 @@ to the 'snake_case' convention in Rust.
 The APIs are currently separated into the following groups (this will be expanded in the future):
 
 - **Consensus Client API** — Bindings for primitives related to transactions.
-- **RPC API** — [RPC interface bindings](spectre_wrpc_wasm::client) for the Spectre node using WebSocket (wRPC) connections.
+- **RPC API** — [RPC interface bindings](zyanya_wrpc_wasm::client) for the Zyanya node using WebSocket (wRPC) connections.
 - **Wallet SDK** — API for async core wallet processing tasks.
 - **Wallet API** — A rust implementation of the fully-featured wallet usable in the native Rust, Browser or NodeJs and Bun environments.
 
@@ -32,13 +32,13 @@ The APIs are currently separated into the following groups (this will be expande
 For JavaScript / TypeScript environments, there are two
 available NPM modules:
 
-- <https://www.npmjs.com/package/spectre>
-- <https://www.npmjs.com/package/spectre-wasm>
+- <https://www.npmjs.com/package/zyanya>
+- <https://www.npmjs.com/package/zyanya-wasm>
 
-The `spectre-wasm` module is a pure WASM32 module that includes
+The `zyanya-wasm` module is a pure WASM32 module that includes
 the entire wallet framework, but does not support RPC due to an absence
 of a native WebSocket in NodeJs environment, while
-the `spectre` module includes `websocket` package dependency simulating
+the `zyanya` module includes `websocket` package dependency simulating
 the W3C WebSocket and due to this supports RPC.
 
 NOTE: for security reasons it is always recommended to build WASM SDK from source or
@@ -47,13 +47,13 @@ download pre-built redistributables from releases or development builds.
 ## Examples
 
 JavaScript examples for using this framework can be found at:
-<https://github.com/spectre-project/rusty-spectre/tree/main/wasm/nodejs>
+<https://github.com/zyanya-project/rusty-zyanya/tree/main/wasm/nodejs>
 
 ## WASM32 Binaries
 
 For pre-built browser-compatible WASM32 redistributables of this
-framework please see the releases section of the Rusty Spectre
-repository at <https://github.com/spectre-project/rusty-spectre/releases>.
+framework please see the releases section of the Rusty Zyanya
+repository at <https://github.com/zyanya-project/rusty-zyanya/releases>.
 
 ## Using RPC
 
@@ -66,7 +66,7 @@ in the NodeJS environment, you need to introduce a global W3C WebSocket
 object before loading the WASM32 library (to simulate the browser behavior).
 You can the [WebSocket](https://www.npmjs.com/package/websocket)
 module that offers W3C WebSocket compatibility and is compatible
-with Spectre RPC implementation.
+with Zyanya RPC implementation.
 
 You can use the following shims:
 
@@ -81,9 +81,9 @@ globalThis.WebSocket = require('websocket').w3cwebsocket;
 <html>
     <head>
         <script type="module">
-            import * as spectre_wasm from './spectre/spectre-wasm.js';
+            import * as zyanya_wasm from './zyanya/zyanya-wasm.js';
             (async () => {
-                const spectre = await spectre_wasm.default('./spectre/spectre-wasm_bg.wasm');
+                const zyanya = await zyanya_wasm.default('./zyanya/zyanya-wasm_bg.wasm');
                 // ...
             })();
         </script>
@@ -96,11 +96,11 @@ globalThis.WebSocket = require('websocket').w3cwebsocket;
 
 ```javascript
 // W3C WebSocket module shim
-// this is provided by NPM `spectre` module and is only needed
+// this is provided by NPM `zyanya` module and is only needed
 // if you are building WASM libraries for NodeJS from source
 // globalThis.WebSocket = require('websocket').w3cwebsocket;
 
-let {RpcClient,Encoding,initConsolePanicHook} = require('./spectre-rpc');
+let {RpcClient,Encoding,initConsolePanicHook} = require('./zyanya-rpc');
 
 // enabling console panic hooks allows WASM to print panic details to console
 // initConsolePanicHook();
@@ -139,7 +139,7 @@ For more details, please follow the integration guide.
     not(target_arch = "wasm32")
 ))]
 compile_error!(
-    "`spectre-wasm` crate for WASM32 target must be built with `--features wasm32-sdk|wasm32-rpc|wasm32-core|wasm32-keygen`"
+    "`zyanya-wasm` crate for WASM32 target must be built with `--features wasm32-sdk|wasm32-rpc|wasm32-core|wasm32-keygen`"
 );
 
 mod version;
@@ -149,73 +149,73 @@ cfg_if::cfg_if! {
 
     if #[cfg(feature = "wasm32-sdk")] {
 
-        pub use spectre_addresses::{Address, Version as AddressVersion};
-        pub use spectre_consensus_core::tx::{ScriptPublicKey, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput};
-        pub use spectre_pow::wasm::*;
-        pub use spectre_txscript::wasm::*;
+        pub use zyanya_addresses::{Address, Version as AddressVersion};
+        pub use zyanya_consensus_core::tx::{ScriptPublicKey, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput};
+        pub use zyanya_pow::wasm::*;
+        pub use zyanya_txscript::wasm::*;
 
         pub mod rpc {
-            //! Spectre RPC interface
+            //! Zyanya RPC interface
             //!
 
             pub mod messages {
-                //! Spectre RPC messages
-                pub use spectre_rpc_core::model::message::*;
+                //! Zyanya RPC messages
+                pub use zyanya_rpc_core::model::message::*;
             }
-            pub use spectre_rpc_core::api::rpc::RpcApi;
-            pub use spectre_rpc_core::wasm::message::*;
+            pub use zyanya_rpc_core::api::rpc::RpcApi;
+            pub use zyanya_rpc_core::wasm::message::*;
 
-            pub use spectre_wrpc_wasm::client::*;
-            pub use spectre_wrpc_wasm::resolver::*;
-            pub use spectre_wrpc_wasm::notify::*;
+            pub use zyanya_wrpc_wasm::client::*;
+            pub use zyanya_wrpc_wasm::resolver::*;
+            pub use zyanya_wrpc_wasm::notify::*;
         }
 
-        pub use spectre_consensus_wasm::*;
-        pub use spectre_wallet_keys::prelude::*;
-        pub use spectre_wallet_core::wasm::*;
+        pub use zyanya_consensus_wasm::*;
+        pub use zyanya_wallet_keys::prelude::*;
+        pub use zyanya_wallet_core::wasm::*;
 
     } else if #[cfg(feature = "wasm32-core")] {
 
-        pub use spectre_addresses::{Address, Version as AddressVersion};
-        pub use spectre_consensus_core::tx::{ScriptPublicKey, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput};
-        pub use spectre_pow::wasm::*;
-        pub use spectre_txscript::wasm::*;
+        pub use zyanya_addresses::{Address, Version as AddressVersion};
+        pub use zyanya_consensus_core::tx::{ScriptPublicKey, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput};
+        pub use zyanya_pow::wasm::*;
+        pub use zyanya_txscript::wasm::*;
 
         pub mod rpc {
-            //! Spectre RPC interface
+            //! Zyanya RPC interface
             //!
 
             pub mod messages {
-                //! Spectre RPC messages
-                pub use spectre_rpc_core::model::message::*;
+                //! Zyanya RPC messages
+                pub use zyanya_rpc_core::model::message::*;
             }
-            pub use spectre_rpc_core::api::rpc::RpcApi;
-            pub use spectre_rpc_core::wasm::message::*;
+            pub use zyanya_rpc_core::api::rpc::RpcApi;
+            pub use zyanya_rpc_core::wasm::message::*;
 
-            pub use spectre_wrpc_wasm::client::*;
-            pub use spectre_wrpc_wasm::resolver::*;
-            pub use spectre_wrpc_wasm::notify::*;
+            pub use zyanya_wrpc_wasm::client::*;
+            pub use zyanya_wrpc_wasm::resolver::*;
+            pub use zyanya_wrpc_wasm::notify::*;
         }
 
-        pub use spectre_consensus_wasm::*;
-        pub use spectre_wallet_keys::prelude::*;
-        pub use spectre_wallet_core::wasm::*;
+        pub use zyanya_consensus_wasm::*;
+        pub use zyanya_wallet_keys::prelude::*;
+        pub use zyanya_wallet_core::wasm::*;
 
     } else if #[cfg(feature = "wasm32-rpc")] {
 
-        pub use spectre_rpc_core::api::rpc::RpcApi;
-        pub use spectre_rpc_core::wasm::message::*;
-        pub use spectre_rpc_core::wasm::message::IPingRequest;
-        pub use spectre_wrpc_wasm::client::*;
-        pub use spectre_wrpc_wasm::resolver::*;
-        pub use spectre_wrpc_wasm::notify::*;
-        pub use spectre_wasm_core::types::*;
+        pub use zyanya_rpc_core::api::rpc::RpcApi;
+        pub use zyanya_rpc_core::wasm::message::*;
+        pub use zyanya_rpc_core::wasm::message::IPingRequest;
+        pub use zyanya_wrpc_wasm::client::*;
+        pub use zyanya_wrpc_wasm::resolver::*;
+        pub use zyanya_wrpc_wasm::notify::*;
+        pub use zyanya_wasm_core::types::*;
 
     } else if #[cfg(feature = "wasm32-keygen")] {
 
-        pub use spectre_addresses::{Address, Version as AddressVersion};
-        pub use spectre_wallet_keys::prelude::*;
-        pub use spectre_wasm_core::types::*;
+        pub use zyanya_addresses::{Address, Version as AddressVersion};
+        pub use zyanya_wallet_keys::prelude::*;
+        pub use zyanya_wasm_core::types::*;
 
     }
 }

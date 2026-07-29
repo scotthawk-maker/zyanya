@@ -18,15 +18,15 @@ use crate::{
 };
 use itertools::Itertools;
 use rand::thread_rng;
-use spectre_addresses::Address;
-use spectre_alloc::init_allocator_with_default_settings;
-use spectre_consensus::params::Params;
-use spectre_consensus_core::network::{NetworkId, NetworkType};
-use spectre_core::{info, task::tick::TickService, trace};
-use spectre_math::Uint256;
-use spectre_notify::scope::VirtualDaaScoreChangedScope;
-use spectre_rpc_core::api::rpc::RpcApi;
-use spectre_txscript::pay_to_address_script;
+use zyanya_addresses::Address;
+use zyanya_alloc::init_allocator_with_default_settings;
+use zyanya_consensus::params::Params;
+use zyanya_consensus_core::network::{NetworkId, NetworkType};
+use zyanya_core::{info, task::tick::TickService, trace};
+use zyanya_math::Uint256;
+use zyanya_notify::scope::VirtualDaaScoreChangedScope;
+use zyanya_rpc_core::api::rpc::RpcApi;
+use zyanya_txscript::pay_to_address_script;
 use std::{sync::Arc, time::Duration};
 
 // Constants
@@ -66,20 +66,20 @@ fn create_client_addresses(index: usize, network_id: &NetworkId) -> Vec<Address>
         max_address.max(WALLET_ADDRESSES) - WALLET_ADDRESSES
     };
     (min_address..max_address)
-        .map(|x| Address::new((*network_id).into(), spectre_addresses::Version::PubKey, &Uint256::from_u64(x as u64).to_le_bytes()))
+        .map(|x| Address::new((*network_id).into(), zyanya_addresses::Version::PubKey, &Uint256::from_u64(x as u64).to_le_bytes()))
         .collect_vec()
 }
 
-/// `cargo test --package spectre-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::utxos_changed_subscriptions_sanity_check --exact --nocapture --ignored`
+/// `cargo test --package zyanya-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::utxos_changed_subscriptions_sanity_check --exact --nocapture --ignored`
 #[tokio::test]
 #[ignore = "bmk"]
 async fn utxos_changed_subscriptions_sanity_check() {
     init_allocator_with_default_settings();
-    spectre_core::log::try_init_logger(
-        "INFO, spectre_core::time=debug, spectre_rpc_core=debug, spectre_grpc_client=debug, spectre_notify=info, spectre_notify::address::tracker=debug, spectre_notify::listener=debug, spectre_notify::subscription::single=debug, spectre_mining::monitor=debug, spectre_testing_integration::subscribe_benchmarks=trace",
+    zyanya_core::log::try_init_logger(
+        "INFO, zyanya_core::time=debug, zyanya_rpc_core=debug, zyanya_grpc_client=debug, zyanya_notify=info, zyanya_notify::address::tracker=debug, zyanya_notify::listener=debug, zyanya_notify::subscription::single=debug, zyanya_mining::monitor=debug, zyanya_testing_integration::subscribe_benchmarks=trace",
     );
     // As we log the panic, we want to set it up after the logger
-    spectre_core::panic::configure_panic();
+    zyanya_core::panic::configure_panic();
 
     let (prealloc_sk, _) = secp256k1::generate_keypair(&mut thread_rng());
     let args = ArgsBuilder::simnet(TX_LEVEL_WIDTH as u64 * CONTRACT_FACTOR, PREALLOC_AMOUNT)
@@ -114,17 +114,17 @@ async fn utxos_changed_subscriptions_sanity_check() {
     //
     // Fold-up
     //
-    spectre_core::info!("Signal the daemon to shutdown");
+    zyanya_core::info!("Signal the daemon to shutdown");
     client.shutdown().await.unwrap();
-    spectre_core::warn!("Disconnect the main client");
+    zyanya_core::warn!("Disconnect the main client");
     client.disconnect().await.unwrap();
     drop(client);
 
-    spectre_core::warn!("Waiting for the daemon to exit...");
+    zyanya_core::warn!("Waiting for the daemon to exit...");
     daemon_process.wait().await.expect("failed to wait for the daemon process");
 }
 
-/// `cargo test --package spectre-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::bench_utxos_changed_subscriptions_daemon --exact --nocapture --ignored -- --rpc=18610 --p2p=18611 --private-key=a2760251adb5b6e8d4514d23397f1631893e168c33f92ff8a7a24f397d355d62 --max-tracked-addresses=1000000 --utxoindex`
+/// `cargo test --package zyanya-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::bench_utxos_changed_subscriptions_daemon --exact --nocapture --ignored -- --rpc=18610 --p2p=18611 --private-key=a2760251adb5b6e8d4514d23397f1631893e168c33f92ff8a7a24f397d355d62 --max-tracked-addresses=1000000 --utxoindex`
 ///
 /// This test is designed to be run as a child process, with the parent process eventually shutting it down.
 /// Do not run it directly.
@@ -132,11 +132,11 @@ async fn utxos_changed_subscriptions_sanity_check() {
 #[ignore = "bmk"]
 async fn bench_utxos_changed_subscriptions_daemon() {
     init_allocator_with_default_settings();
-    spectre_core::log::try_init_logger(
-        "INFO, spectre_core::core=trace, spectre_core::time=debug, spectre_rpc_core=debug, spectre_grpc_client=debug, spectre_notify=info, spectre_notify::address::tracker=debug, spectre_notify::listener=debug, spectre_notify::subscription::single=debug, spectre_mining::monitor=debug, spectre_testing_integration::subscribe_benchmarks=trace",
+    zyanya_core::log::try_init_logger(
+        "INFO, zyanya_core::core=trace, zyanya_core::time=debug, zyanya_rpc_core=debug, zyanya_grpc_client=debug, zyanya_notify=info, zyanya_notify::address::tracker=debug, zyanya_notify::listener=debug, zyanya_notify::subscription::single=debug, zyanya_mining::monitor=debug, zyanya_testing_integration::subscribe_benchmarks=trace",
     );
     // As we log the panic, we want to set it up after the logger
-    spectre_core::panic::configure_panic();
+    zyanya_core::panic::configure_panic();
 
     let daemon_args = DaemonArgs::from_env_args();
     let args = ArgsBuilder::simnet(TX_LEVEL_WIDTH as u64 * CONTRACT_FACTOR, PREALLOC_AMOUNT).apply_daemon_args(&daemon_args).build();
@@ -159,11 +159,11 @@ async fn bench_utxos_changed_subscriptions_daemon() {
 
 async fn utxos_changed_subscriptions_client(address_cycle_seconds: u64, address_max_cycles: usize) {
     init_allocator_with_default_settings();
-    spectre_core::log::try_init_logger(
-        "INFO, spectre_core::time=debug, spectre_rpc_core=debug, spectre_grpc_client=debug, spectre_notify=info, spectre_notify::address::tracker=debug, spectre_notify::listener=debug, spectre_notify::subscription::single=debug, spectre_mining::monitor=debug, spectre_testing_integration::subscribe_benchmarks=trace",
+    zyanya_core::log::try_init_logger(
+        "INFO, zyanya_core::time=debug, zyanya_rpc_core=debug, zyanya_grpc_client=debug, zyanya_notify=info, zyanya_notify::address::tracker=debug, zyanya_notify::listener=debug, zyanya_notify::subscription::single=debug, zyanya_mining::monitor=debug, zyanya_testing_integration::subscribe_benchmarks=trace",
     );
     // As we log the panic, we want to set it up after the logger
-    spectre_core::panic::configure_panic();
+    zyanya_core::panic::configure_panic();
 
     assert!(address_cycle_seconds >= 60);
     if TX_COUNT < TX_LEVEL_WIDTH {
@@ -175,7 +175,7 @@ async fn utxos_changed_subscriptions_client(address_cycle_seconds: u64, address_
     //
     let (prealloc_sk, prealloc_pk) = secp256k1::generate_keypair(&mut thread_rng());
     let prealloc_address =
-        Address::new(NetworkType::Simnet.into(), spectre_addresses::Version::PubKey, &prealloc_pk.x_only_public_key().0.serialize());
+        Address::new(NetworkType::Simnet.into(), zyanya_addresses::Version::PubKey, &prealloc_pk.x_only_public_key().0.serialize());
     let schnorr_key = secp256k1::Keypair::from_secret_key(secp256k1::SECP256K1, &prealloc_sk);
     let spk = pay_to_address_script(&prealloc_address);
 
@@ -266,17 +266,17 @@ async fn utxos_changed_subscriptions_client(address_cycle_seconds: u64, address_
     //
     // Fold-up
     //
-    spectre_core::info!("Signal the daemon to shutdown");
+    zyanya_core::info!("Signal the daemon to shutdown");
     client.shutdown().await.unwrap();
-    spectre_core::warn!("Disconnect the main client");
+    zyanya_core::warn!("Disconnect the main client");
     client.disconnect().await.unwrap();
     drop(client);
 
-    spectre_core::warn!("Waiting for the daemon to exit...");
+    zyanya_core::warn!("Waiting for the daemon to exit...");
     daemon_process.wait().await.expect("failed to wait for the daemon process");
 }
 
-/// `cargo test --package spectre-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::bench_utxos_changed_subscriptions_footprint_a --exact --nocapture --ignored`
+/// `cargo test --package zyanya-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::bench_utxos_changed_subscriptions_footprint_a --exact --nocapture --ignored`
 #[tokio::test]
 #[ignore = "bmk"]
 async fn bench_utxos_changed_subscriptions_footprint_a() {
@@ -284,7 +284,7 @@ async fn bench_utxos_changed_subscriptions_footprint_a() {
     utxos_changed_subscriptions_client(1200, 0).await;
 }
 
-/// `cargo test --package spectre-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::bench_utxos_changed_subscriptions_footprint_b --exact --nocapture --ignored`
+/// `cargo test --package zyanya-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::bench_utxos_changed_subscriptions_footprint_b --exact --nocapture --ignored`
 #[tokio::test]
 #[ignore = "bmk"]
 async fn bench_utxos_changed_subscriptions_footprint_b() {
@@ -292,7 +292,7 @@ async fn bench_utxos_changed_subscriptions_footprint_b() {
     utxos_changed_subscriptions_client(60, 1).await;
 }
 
-/// `cargo test --package spectre-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::bench_utxos_changed_subscriptions_footprint_c --exact --nocapture --ignored`
+/// `cargo test --package zyanya-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::bench_utxos_changed_subscriptions_footprint_c --exact --nocapture --ignored`
 #[tokio::test]
 #[ignore = "bmk"]
 async fn bench_utxos_changed_subscriptions_footprint_c() {
@@ -300,7 +300,7 @@ async fn bench_utxos_changed_subscriptions_footprint_c() {
     utxos_changed_subscriptions_client(7200, usize::MAX).await;
 }
 
-/// `cargo test --package spectre-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::bench_utxos_changed_subscriptions_footprint_d --exact --nocapture --ignored`
+/// `cargo test --package zyanya-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::bench_utxos_changed_subscriptions_footprint_d --exact --nocapture --ignored`
 #[tokio::test]
 #[ignore = "bmk"]
 async fn bench_utxos_changed_subscriptions_footprint_d() {
@@ -308,7 +308,7 @@ async fn bench_utxos_changed_subscriptions_footprint_d() {
     utxos_changed_subscriptions_client(1800, usize::MAX).await;
 }
 
-/// `cargo test --package spectre-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::bench_utxos_changed_subscriptions_footprint_e --exact --nocapture --ignored`
+/// `cargo test --package zyanya-testing-integration --lib --features devnet-prealloc -- subscribe_benchmarks::bench_utxos_changed_subscriptions_footprint_e --exact --nocapture --ignored`
 #[tokio::test]
 #[ignore = "bmk"]
 async fn bench_utxos_changed_subscriptions_footprint_e() {

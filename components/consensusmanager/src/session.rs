@@ -2,7 +2,7 @@
 //!
 //! We use newtypes in order to simplify changing the underlying lock in the future
 
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     acceptance_data::AcceptanceData,
     api::{BlockCount, BlockValidationFutures, ConsensusApi, ConsensusStats, DynConsensus},
     block::Block,
@@ -16,7 +16,7 @@ use spectre_consensus_core::{
     utxo::utxo_inquirer::UtxoInquirerError,
     BlockHashSet, BlueWorkType, ChainPath, Hash,
 };
-use spectre_utils::sync::rwlock::*;
+use zyanya_utils::sync::rwlock::*;
 use std::{ops::Deref, sync::Arc};
 
 pub use tokio::task::spawn_blocking;
@@ -199,6 +199,22 @@ impl ConsensusSessionOwned {
     pub fn calculate_transaction_storage_mass(&self, transaction: &MutableTransaction) -> Option<u64> {
         // This method performs pure calculations so no need for an async wrapper
         self.consensus.calculate_transaction_storage_mass(transaction)
+    }
+
+    pub fn get_contract_storage(&self, contract_address: [u8; 32], key: u64) -> ConsensusResult<u64> {
+        self.consensus.get_contract_storage(contract_address, key)
+    }
+
+    pub fn get_contract_code(&self, contract_address: Hash) -> ConsensusResult<Vec<u8>> {
+        self.consensus.get_contract_code(contract_address)
+    }
+
+    pub fn write_contract_code(&self, contract_address: Hash, bytecode: Vec<u8>) -> ConsensusResult<()> {
+        self.consensus.write_contract_code(contract_address, bytecode)
+    }
+
+    pub fn write_contract_storage(&self, contract_address: [u8; 32], key: u64, value: u64) -> ConsensusResult<()> {
+        self.consensus.write_contract_storage(contract_address, key, value)
     }
 
     pub fn get_virtual_daa_score(&self) -> u64 {

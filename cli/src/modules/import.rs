@@ -6,7 +6,7 @@ pub struct Import;
 
 impl Import {
     async fn main(self: Arc<Self>, ctx: &Arc<dyn Context>, argv: Vec<String>, _cmd: &str) -> Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
         let wallet = ctx.wallet();
 
         if argv.is_empty() {
@@ -29,7 +29,7 @@ impl Import {
                 } else if application_runtime::is_web() {
                     return Err("Web wallet storage not found at this domain name".into());
                 } else {
-                    return Err("Spectre Desktop/web wallet keydata file not found".into());
+                    return Err("Zyanya Desktop/web wallet keydata file not found".into());
                 }
             }
             // todo "read-only" => {}
@@ -43,11 +43,11 @@ impl Import {
         Ok(())
     }
 
-    async fn display_help(self: Arc<Self>, ctx: Arc<SpectreCli>) -> Result<()> {
+    async fn display_help(self: Arc<Self>, ctx: Arc<ZyanyaCli>) -> Result<()> {
         ctx.term().help(
             &[
                 ("mnemonic [<type>] [<additional xpub keys>]", "Import a mnemonic (12 or 24 words). Supported types: 'bip32' (default), 'legacy', 'multisig'."),
-                ("legacy", "Import a legacy wallet (local Spectre Desktop)."),
+                ("legacy", "Import a legacy wallet (local Zyanya Desktop)."),
                 // ("purge", "Purge an account from the wallet."),
             ],
             None,

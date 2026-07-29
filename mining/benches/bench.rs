@@ -1,12 +1,12 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use itertools::Itertools;
 use rand::{thread_rng, Rng};
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     subnets::SUBNETWORK_ID_NATIVE,
     tx::{Transaction, TransactionInput, TransactionOutpoint},
 };
-use spectre_hashes::{HasherBase, TransactionID};
-use spectre_mining::{model::topological_index::TopologicalIndex, FeerateTransactionKey, Frontier, Policy};
+use zyanya_hashes::{HasherBase, TransactionID};
+use zyanya_mining::{model::topological_index::TopologicalIndex, FeerateTransactionKey, Frontier, Policy};
 use std::{
     collections::{hash_set::Iter, HashMap, HashSet},
     sync::Arc,

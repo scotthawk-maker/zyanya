@@ -26,7 +26,7 @@ use crossbeam_channel::{Receiver, Sender};
 use parking_lot::RwLock;
 use rayon::ThreadPool;
 use rocksdb::WriteBatch;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     block::Block,
     blockstatus::BlockStatus::{self, StatusHeaderOnly, StatusInvalid},
     config::{
@@ -36,13 +36,13 @@ use spectre_consensus_core::{
     mass::MassCalculator,
     tx::Transaction,
 };
-use spectre_consensus_notify::{
+use zyanya_consensus_notify::{
     notification::{BlockAddedNotification, Notification},
     root::ConsensusNotificationRoot,
 };
-use spectre_consensusmanager::SessionLock;
-use spectre_hashes::Hash;
-use spectre_notify::notifier::Notify;
+use zyanya_consensusmanager::SessionLock;
+use zyanya_hashes::Hash;
+use zyanya_notify::notifier::Notify;
 use std::sync::{atomic::Ordering, Arc};
 
 pub struct BlockBodyProcessor {

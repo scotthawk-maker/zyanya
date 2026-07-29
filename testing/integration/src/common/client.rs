@@ -1,7 +1,7 @@
 use super::{daemon::Daemon, listener::Listener};
-use spectre_grpc_client::GrpcClient;
-use spectre_notify::{events::EventType, scope::Scope, subscription::Command};
-use spectre_rpc_core::RpcResult;
+use zyanya_grpc_client::GrpcClient;
+use zyanya_notify::{events::EventType, scope::Scope, subscription::Command};
+use zyanya_rpc_core::RpcResult;
 use std::{
     collections::{hash_map::Entry, HashMap},
     ops::Deref,
@@ -14,8 +14,8 @@ pub struct ListeningClient {
 }
 
 impl ListeningClient {
-    pub async fn connect(spectred: &Daemon) -> Self {
-        let client = spectred.new_multi_listener_client().await;
+    pub async fn connect(zyanyad: &Daemon) -> Self {
+        let client = zyanyad.new_multi_listener_client().await;
         client.start(None).await;
         let listeners = Default::default();
         ListeningClient { client, listeners }

@@ -1,5 +1,5 @@
 use super::coinbase_mock::CoinbaseManagerMock;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     api::{
         args::{TransactionValidationArgs, TransactionValidationBatchArgs},
         ConsensusApi,
@@ -18,8 +18,8 @@ use spectre_consensus_core::{
     tx::{MutableTransaction, Transaction, TransactionId, TransactionOutpoint, UtxoEntry},
     utxo::utxo_collection::UtxoCollection,
 };
-use spectre_core::time::unix_now;
-use spectre_hashes::{Hash, ZERO_HASH};
+use zyanya_core::time::unix_now;
+use zyanya_hashes::{Hash, ZERO_HASH};
 
 use parking_lot::RwLock;
 use std::{collections::HashMap, sync::Arc};

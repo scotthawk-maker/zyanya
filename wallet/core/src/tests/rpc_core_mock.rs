@@ -2,15 +2,15 @@ use crate::imports::*;
 
 use async_channel::{unbounded, Receiver};
 use async_trait::async_trait;
-use spectre_notify::events::EVENT_TYPE_ARRAY;
-use spectre_notify::listener::{ListenerId, ListenerLifespan};
-use spectre_notify::notifier::{Notifier, Notify};
-use spectre_notify::scope::Scope;
-use spectre_notify::subscription::context::SubscriptionContext;
-use spectre_notify::subscription::{MutationPolicies, UtxosChangedMutationPolicy};
-use spectre_rpc_core::api::ctl::RpcCtl;
-use spectre_rpc_core::{api::connection::DynRpcConnection, api::rpc::RpcApi, *};
-use spectre_rpc_core::{notify::connection::ChannelConnection, RpcResult};
+use zyanya_notify::events::EVENT_TYPE_ARRAY;
+use zyanya_notify::listener::{ListenerId, ListenerLifespan};
+use zyanya_notify::notifier::{Notifier, Notify};
+use zyanya_notify::scope::Scope;
+use zyanya_notify::subscription::context::SubscriptionContext;
+use zyanya_notify::subscription::{MutationPolicies, UtxosChangedMutationPolicy};
+use zyanya_rpc_core::api::ctl::RpcCtl;
+use zyanya_rpc_core::{api::connection::DynRpcConnection, api::rpc::RpcApi, *};
+use zyanya_rpc_core::{notify::connection::ChannelConnection, RpcResult};
 use std::sync::Arc;
 
 pub type RpcCoreNotifier = Notifier<Notification, ChannelConnection>;
@@ -49,7 +49,7 @@ impl RpcCoreMock {
     }
 
     #[allow(dead_code)]
-    pub fn notify_new_block_template(&self) -> spectre_notify::error::Result<()> {
+    pub fn notify_new_block_template(&self) -> zyanya_notify::error::Result<()> {
         let notification = Notification::NewBlockTemplate(NewBlockTemplateNotification {});
         self.core_notifier.notify(notification)
     }

@@ -1,16 +1,16 @@
-# Spectre On Rust
+# Zyanya On Rust
 
-[![Build Status](https://github.com/spectre-project/rusty-spectre/actions/workflows/ci.yaml/badge.svg)](https://github.com/spectre-project/rusty-spectre/actions/workflows/ci.yaml)
-[![GitHub release](https://img.shields.io/github/v/release/spectre-project/rusty-spectre.svg)](https://github.com/spectre-project/rusty-spectre/releases)
-[![GitHub license](https://img.shields.io/github/license/spectre-project/rusty-spectre.svg)](https://github.com/spectre-project/rusty-spectre/blob/main/LICENSE)
-[![GitHub downloads](https://img.shields.io/github/downloads/spectre-project/rusty-spectre/total.svg)](https://github.com/spectre-project/rusty-spectre/releases)
-[![Join the Spectre Discord Server](https://img.shields.io/discord/1233113243741061240.svg?label=&logo=discord&logoColor=ffffff&color=5865F2)](https://discord.com/invite/FZPYpwszcF)
+[![Build Status](https://github.com/zyanya-project/rusty-zyanya/actions/workflows/ci.yaml/badge.svg)](https://github.com/zyanya-project/rusty-zyanya/actions/workflows/ci.yaml)
+[![GitHub release](https://img.shields.io/github/v/release/zyanya-project/rusty-zyanya.svg)](https://github.com/zyanya-project/rusty-zyanya/releases)
+[![GitHub license](https://img.shields.io/github/license/zyanya-project/rusty-zyanya.svg)](https://github.com/zyanya-project/rusty-zyanya/blob/main/LICENSE)
+[![GitHub downloads](https://img.shields.io/github/downloads/zyanya-project/rusty-zyanya/total.svg)](https://github.com/zyanya-project/rusty-zyanya/releases)
+[![Join the Zyanya Discord Server](https://img.shields.io/discord/1233113243741061240.svg?label=&logo=discord&logoColor=ffffff&color=5865F2)](https://discord.com/invite/FZPYpwszcF)
 
-Welcome to the Rust-based implementation of the Spectre full-node and
+Welcome to the Rust-based implementation of the Zyanya full-node and
 its ancillary libraries. The contained node release serves as a
-drop-in replacement to the established [Golang node](https://github.com/spectre-project/spectred)
-and to date is the recommended node software for the Spectre network,
-introducing developers to the possibilities of Rust in the Spectre
+drop-in replacement to the established [Golang node](https://github.com/zyanya-project/zyanyad)
+and to date is the recommended node software for the Zyanya network,
+introducing developers to the possibilities of Rust in the Zyanya
 network's context.
 
 We invite developers and blockchain enthusiasts to collaborate, test,
@@ -21,12 +21,12 @@ compromising on decentralization.
 
 Your feedback, contributions, and issue reports will be integral to
 evolving this codebase and continuing its maturity as a reliable node
-in the Spectre network.
+in the Zyanya network.
 
 ## Overview
 
-Spectre on Rust is a fork of [Kaspa on Rust](https://github.com/kaspanet/rusty-kaspa)
-introducing CPU-only mining algorithm [SpectreX](https://github.com/spectre-project/rusty-spectrex).
+Zyanya on Rust is a fork of [Kaspa on Rust](https://github.com/kaspanet/rusty-kaspa)
+introducing CPU-only mining algorithm [SpectreX](https://github.com/zyanya-project/rusty-spectrex).
 
 SpectreX is based on [AstroBWTv3](https://github.com/deroproject/derohe/tree/main/astrobwt/astrobwtv3)
 and proof-of-work calculation is done in the following steps:
@@ -35,18 +35,18 @@ and proof-of-work calculation is done in the following steps:
 - Step 2: AstroBWTv3
 - Step 3: HeavyHash
 
-Spectre will add full non-disclosable privacy and anonymous
+Zyanya will add full non-disclosable privacy and anonymous
 transactions in future implemented with the GhostFACE protocol
 build by a team of anonymous crypto algorithm researchers and
 engineers. Simple and plain goal:
 
-- PHANTOM Protocol + GhostDAG + GhostFACE = Spectre
+- PHANTOM Protocol + GhostDAG + GhostFACE = Zyanya
 
-Spectre will become a ghostchain; nothing more, nothing less. Design
+Zyanya will become a ghostchain; nothing more, nothing less. Design
 decisions have been made already and more details about the GhostFACE
 protocol will be released at a later stage. Sneak peak: It will use
 [Pedersen Commitments](https://github.com/dalek-cryptography/bulletproofs)
-as it allows perfect integration with the Spectre UTXO model and
+as it allows perfect integration with the Zyanya UTXO model and
 allows perfect hiding. ElGamal will be used for TX signature signing
 as it has a superior TPS (transactions per second) performance. Any PRs
 are welcome and can be made with anonymous accounts. No pre-mine, no
@@ -58,7 +58,7 @@ Why another fork? Kaspa is great but we love privacy, Monero and DERO
 are great but we love speed! So lets join the cool things from both.
 We decided to take Kaspa as codebase, quick comparison:
 
-| Feature                      | Spectre  | Kaspa      | Monero  | DERO       |
+| Feature                      | Zyanya  | Kaspa      | Monero  | DERO       |
 | ---------------------------- | -------- | ---------- | ------- | ---------- |
 | PoW Algorithm                | SpectreX | kHeavyHash | RandomX | AstroBWTv3 |
 | Balance Encryption           | Future   | No         | Yes     | Yes        |
@@ -71,7 +71,7 @@ We decided to take Kaspa as codebase, quick comparison:
 | High TPS                     | Yes      | Yes        | No      | No         |
 
 Untraceable Mining is already achieved with AstroBWTv3 and a multicore
-miner is already being shipped with Spectre, working on ARM/x86. We
+miner is already being shipped with Zyanya, working on ARM/x86. We
 leave it up to the community to build an highly optimized CPU-miner.
 
 ## Mathematics
@@ -88,7 +88,7 @@ The first released version is `0.3.14`, the famous Pi divided by 10.
 ### Binaries
 
 We provide a comprehensive range of pre-compiled binaries for the
-Spectre full-node daemon, CLI wallet application, and testing
+Zyanya full-node daemon, CLI wallet application, and testing
 utilities, all designed to promote decentralization. Here's an
 overview of the different builds:
 
@@ -166,8 +166,8 @@ the MSVC runtime EULA.
 7. Clone the repo
 
    ```bash
-   git clone https://github.com/spectre-project/rusty-spectre
-   cd rusty-spectre
+   git clone https://github.com/zyanya-project/rusty-zyanya
+   cd rusty-zyanya
    ```
 
 ### Building on Windows
@@ -214,8 +214,8 @@ the MSVC runtime EULA.
 7. Clone the repo
 
    ```bash
-   git clone https://github.com/spectre-project/rusty-spectre
-   cd rusty-spectre
+   git clone https://github.com/zyanya-project/rusty-zyanya
+   cd rusty-zyanya
    ```
 
 ### Building on Mac OS
@@ -291,8 +291,8 @@ the MSVC runtime EULA.
 6. Clone the repo
 
    ```bash
-   git clone https://github.com/spectre-project/rusty-spectre
-   cd rusty-spectre
+   git clone https://github.com/zyanya-project/rusty-zyanya
+   cd rusty-zyanya
    ```
 
 ### Building WASM32 SDK
@@ -303,7 +303,7 @@ instruction format that runs in web browsers and NodeJs. This allows
 for easy development using JavaScript and TypeScript programming
 languages while retaining the benefits of Rust.
 
-Spectre on Rust utilizes the SpectreX mining algorithm library for Rust
+Zyanya on Rust utilizes the SpectreX mining algorithm library for Rust
 and leverages `cdivsufsort` for enhanced performance. To compile the
 WASM32 SDK using `clang`, additional environment variables need to be
 configured:
@@ -333,14 +333,14 @@ significantly larger, slower and include debug symbols.
 
 #### Builds & documentation
 
-- Release builds: https://github.com/spectre-project/rusty-spectre/releases
+- Release builds: https://github.com/zyanya-project/rusty-zyanya/releases
 - Developer TypeScript documentation is available from Kaspa
 
-## Running Spectre CLI + Wallet
+## Running Zyanya CLI + Wallet
 
-`spectre-cli` crate provides cli-driven RPC interface to the node and
-a terminal interface to the Rusty Spectre Wallet runtime. These wallets
-are compatible with WASM SDK Wallet API and Spectre NG projects.
+`zyanya-cli` crate provides cli-driven RPC interface to the node and
+a terminal interface to the Rusty Zyanya Wallet runtime. These wallets
+are compatible with WASM SDK Wallet API and Zyanya NG projects.
 
 ```bash
 cd cli
@@ -368,21 +368,21 @@ The framework is compatible with all major desktop and mobile browsers.
 Start a mainnet node:
 
 ```bash
-cargo run --release --bin spectred
+cargo run --release --bin zyanyad
 ```
 
 Start a testnet node:
 
 ```bash
-cargo run --release --bin spectred -- --testnet
+cargo run --release --bin zyanyad -- --testnet
 ```
 
 Using a configuration file
 
 ```bash
-cargo run --release --bin spectred -- --configfile /path/to/configfile.toml
+cargo run --release --bin zyanyad -- --configfile /path/to/configfile.toml
 # or
-cargo run --release --bin spectred -- -C /path/to/configfile.toml
+cargo run --release --bin zyanyad -- -C /path/to/configfile.toml
 ```
 
 - The config file should be a list of \<CLI argument\> = \<value\>
@@ -409,12 +409,12 @@ addpeer = ["10.0.0.1", "1.2.3.4"]
 Pass the `--help` flag to view all possible arguments.
 
 ```bash
-cargo run --release --bin spectred -- --help
+cargo run --release --bin zyanyad -- --help
 ```
 
 ## wRPC
 
-wRPC subsystem is disabled by default in `spectred` and can be enabled via:
+wRPC subsystem is disabled by default in `zyanyad` and can be enabled via:
 
 JSON protocol:
 
@@ -430,7 +430,7 @@ Borsh protocol:
 
 ### Sidenote
 
-Rusty Spectre integrates an optional wRPC subsystem. wRPC is a
+Rusty Zyanya integrates an optional wRPC subsystem. wRPC is a
 high-performance, platform-neutral, Rust-centric, WebSocket-framed
 RPC implementation that can use [Borsh](https://borsh.io/) and JSON
 protocol encoding.
@@ -442,11 +442,11 @@ the specification due to server-side notifications.
 communication. When using [Borsh](https://borsh.io/) both client and
 server should be built from the same codebase.
 
-JSON protocol is based on Spectre data structures and is
+JSON protocol is based on Zyanya data structures and is
 data-structure-version agnostic. You can connect to the JSON endpoint
 using any WebSocket library. Built-in RPC clients for JavaScript and
 TypeScript capable of running in web browsers and Node.js are
-available as a part of the Spectre WASM framework.
+available as a part of the Zyanya WASM framework.
 
 **wRPC to gRPC Proxy is deprecated and no longer supported.**
 
@@ -454,11 +454,11 @@ available as a part of the Spectre WASM framework.
 
 Mining is currently supported on all networks, so once you've setup a
 node, follow these instructions. Download and unzip the latest miner
-binaries from [spectre-project/spectre-miner](https://github.com/spectre-project/spectre-miner/releases).
+binaries from [zyanya-project/zyanya-miner](https://github.com/zyanya-project/zyanya-miner/releases).
 In a separate terminal run the miner:
 
 ```
-./spectre-miner --mining-address spectre:qrxf48dgrdkjxllxczek3uweuldtan9nanzjsavk0ak9ynwn0zsayjjh7upez
+./zyanya-miner --mining-address zyanya:qrxf48dgrdkjxllxczek3uweuldtan9nanzjsavk0ak9ynwn0zsayjjh7upez
 ```
 
 You can replace the above mining address with your own address by

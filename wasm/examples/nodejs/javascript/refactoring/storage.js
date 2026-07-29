@@ -1,13 +1,13 @@
 globalThis.WebSocket = require('websocket').w3cwebsocket; // W3C WebSocket module shim
 
-const spectre = require('../spectre/spectre_wasm');
+const zyanya = require('../zyanya/zyanya_wasm');
 const {parseArgs} = require("../utils");
-spectre.init_console_panic_hook();
+zyanya.init_console_panic_hook();
 
 (async () => {
     const {networkType} = parseArgs();
 
-    const wallet = new spectre.Wallet({
+    const wallet = new zyanya.Wallet({
         resident: true,
         networkType: networkType,
     });
@@ -32,7 +32,7 @@ spectre.init_console_panic_hook();
     console.log("keydata:", keyData);
 
     const account = await wallet.createAccount(keyData.id, {
-        accountKind: spectre.AccountKind.Bip32,
+        accountKind: zyanya.AccountKind.Bip32,
         walletSecret
     });
 

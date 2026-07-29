@@ -1,16 +1,16 @@
-use spectre_grpc_core::protowire::{spectred_request, spectred_response, SpectredRequest, SpectredResponse};
+use zyanya_grpc_core::protowire::{zyanyad_request, zyanyad_response, ZyanyadRequest, ZyanyadResponse};
 
 pub(crate) trait Matcher<T> {
     fn is_matching(&self, response: T) -> bool;
 }
 
-impl Matcher<&spectred_response::Payload> for spectred_request::Payload {
-    fn is_matching(&self, response: &spectred_response::Payload) -> bool {
-        use spectred_request::Payload;
+impl Matcher<&zyanyad_response::Payload> for zyanyad_request::Payload {
+    fn is_matching(&self, response: &zyanyad_response::Payload) -> bool {
+        use zyanyad_request::Payload;
         match self {
             // TODO: implement for each payload variant supporting request/response pairing
             Payload::GetBlockRequest(ref request) => {
-                if let spectred_response::Payload::GetBlockResponse(ref response) = response {
+                if let zyanyad_response::Payload::GetBlockResponse(ref response) = response {
                     if let Some(block) = response.block.as_ref() {
                         if let Some(verbose_data) = block.verbose_data.as_ref() {
                             return verbose_data.hash == request.hash;
@@ -29,8 +29,8 @@ impl Matcher<&spectred_response::Payload> for spectred_request::Payload {
     }
 }
 
-impl Matcher<&SpectredResponse> for SpectredRequest {
-    fn is_matching(&self, response: &SpectredResponse) -> bool {
+impl Matcher<&ZyanyadResponse> for ZyanyadRequest {
+    fn is_matching(&self, response: &ZyanyadResponse) -> bool {
         if let Some(ref response) = response.payload {
             if let Some(ref request) = self.payload {
                 return request.is_matching(response);

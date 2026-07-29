@@ -1,6 +1,6 @@
 use super::MiningCounters;
 use crate::manager::MiningManagerProxy;
-use spectre_core::{
+use zyanya_core::{
     debug, info,
     task::{
         service::{AsyncService, AsyncServiceFuture},
@@ -8,7 +8,7 @@ use spectre_core::{
     },
     trace,
 };
-use spectre_txscript::caches::TxScriptCacheCounters;
+use zyanya_txscript::caches::TxScriptCacheCounters;
 use std::{sync::Arc, time::Duration};
 
 const MONITOR: &str = "mempool-monitor";

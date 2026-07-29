@@ -1,10 +1,10 @@
 use super::{error::ConversionError, option::TryIntoOptionEx};
 use crate::pb as protowire;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     trusted::{ExternalGhostdagData, TrustedGhostdagData, TrustedHeader},
     BlockHashMap, BlueWorkType, HashMapCustomHasher, KType,
 };
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 use std::sync::Arc;
 
 // ----------------------------------------------------------------------------

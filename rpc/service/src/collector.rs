@@ -1,5 +1,5 @@
 use crate::converter::{consensus::ConsensusConverter, index::IndexConverter};
-use spectre_notify::collector::CollectorFrom;
+use zyanya_notify::collector::CollectorFrom;
 
 pub(crate) type CollectorFromConsensus = CollectorFrom<ConsensusConverter>;
 

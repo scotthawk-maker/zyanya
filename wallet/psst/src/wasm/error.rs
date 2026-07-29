@@ -29,7 +29,7 @@ pub enum Error {
     NotInitialized,
 
     #[error(transparent)]
-    ConsensusClient(#[from] spectre_consensus_client::error::Error),
+    ConsensusClient(#[from] zyanya_consensus_client::error::Error),
 
     #[error(transparent)]
     Psst(#[from] crate::error::Error),

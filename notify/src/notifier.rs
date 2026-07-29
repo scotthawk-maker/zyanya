@@ -22,7 +22,7 @@ use core::fmt::Debug;
 use futures::future::join_all;
 use itertools::Itertools;
 use parking_lot::Mutex;
-use spectre_core::{debug, trace};
+use zyanya_core::{debug, trace};
 use std::{
     collections::{hash_map::Entry, HashMap},
     sync::{
@@ -986,21 +986,21 @@ mod tests {
 
     #[tokio::test]
     async fn test_overall() {
-        spectre_core::log::try_init_logger("trace,spectre_notify=trace");
+        zyanya_core::log::try_init_logger("trace,zyanya_notify=trace");
         let test = Test::new("BlockAdded broadcast (OverallSubscription type)", 2, overall_test_steps(SUBSCRIPTION_MANAGER_ID));
         test.run().await;
     }
 
     #[tokio::test]
     async fn test_virtual_chain_changed() {
-        spectre_core::log::try_init_logger("trace,spectre_notify=trace");
+        zyanya_core::log::try_init_logger("trace,zyanya_notify=trace");
         let test = Test::new("VirtualChainChanged broadcast", 2, virtual_chain_changed_test_steps(SUBSCRIPTION_MANAGER_ID));
         test.run().await;
     }
 
     #[tokio::test]
     async fn test_utxos_changed() {
-        spectre_core::log::try_init_logger("trace,spectre_notify=trace");
+        zyanya_core::log::try_init_logger("trace,zyanya_notify=trace");
         let test = Test::new("UtxosChanged broadcast", 3, utxos_changed_test_steps(SUBSCRIPTION_MANAGER_ID));
         test.run().await;
     }

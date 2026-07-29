@@ -1,12 +1,12 @@
 use std::{cmp, sync::Arc};
 
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     acceptance_data::AcceptanceData,
     tx::{SignableTransaction, Transaction, UtxoEntry},
     utxo::{utxo_diff::ImmutableUtxoDiff, utxo_inquirer::UtxoInquirerError},
 };
-use spectre_core::{trace, warn};
-use spectre_hashes::Hash;
+use zyanya_core::{trace, warn};
+use zyanya_hashes::Hash;
 
 use crate::model::stores::{
     acceptance_data::AcceptanceDataStoreReader, block_transactions::BlockTransactionsStoreReader, headers::HeaderStoreReader,

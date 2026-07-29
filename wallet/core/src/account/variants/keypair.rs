@@ -5,9 +5,9 @@
 use crate::account::Inner;
 use crate::imports::*;
 use secp256k1::PublicKey;
-use spectre_addresses::Version;
+use zyanya_addresses::Version;
 
-pub const KEYPAIR_ACCOUNT_KIND: &str = "spectre-keypair-standard";
+pub const KEYPAIR_ACCOUNT_KIND: &str = "zyanya-keypair-standard";
 
 pub struct Ctor {}
 

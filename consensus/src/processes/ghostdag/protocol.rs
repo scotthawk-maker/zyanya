@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     blockhash::{self, BlockHashExtensions, BlockHashes},
     BlockHashMap, BlockLevel, BlueWorkType, HashMapCustomHasher,
 };
-use spectre_hashes::Hash;
-use spectre_utils::refs::Refs;
+use zyanya_hashes::Hash;
+use zyanya_utils::refs::Refs;
 
 use crate::{
     model::{

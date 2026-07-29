@@ -4,7 +4,7 @@ pub mod consensus {
     //!
 
     use crate::KType;
-    use spectre_math::Uint256;
+    use zyanya_math::Uint256;
 
     //
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Network & Ghostdag ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,7 +42,7 @@ pub mod consensus {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Max difficulty target ~~~~~~~~~~~~~~~~~~~~~~~~~
     //
 
-    /// Highest proof of work difficulty target a Spectre block can have for all networks.
+    /// Highest proof of work difficulty target a Zyanya block can have for all networks.
     /// This value is: 2^255 - 1.
     ///
     /// Computed value: `Uint256::from_u64(1).wrapping_shl(255) - 1.into()`
@@ -174,7 +174,7 @@ pub mod perf {
 #[cfg(test)]
 mod tests {
     use super::consensus::{MAX_DIFFICULTY_TARGET, MAX_DIFFICULTY_TARGET_AS_F64};
-    use spectre_math::Uint256;
+    use zyanya_math::Uint256;
 
     #[test]
     fn test_difficulty_max_consts() {

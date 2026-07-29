@@ -1,7 +1,7 @@
 //!
-//! Spectre [`Address`] implementation.
+//! Zyanya [`Address`] implementation.
 //!
-//! In it's string form, the Spectre [`Address`] is represented by a `bech32`-encoded
+//! In it's string form, the Zyanya [`Address`] is represented by a `bech32`-encoded
 //! address string combined with a network type.  The `bech32` string encoding is
 //! comprised of a public key, the public key version and the resulting checksum.
 //!
@@ -62,17 +62,17 @@ impl From<workflow_wasm::error::Error> for AddressError {
     }
 }
 
-/// Address prefix identifying the network type this address belongs to (such as `spectre`, `spectretest`, `spectresim`, `spectredev`).
+/// Address prefix identifying the network type this address belongs to (such as `zyanya`, `zyanyatest`, `zyanyasim`, `zyanyadev`).
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[borsh(use_discriminant = true)]
 pub enum Prefix {
-    #[serde(rename = "spectre")]
+    #[serde(rename = "zyanya")]
     Mainnet,
-    #[serde(rename = "spectretest")]
+    #[serde(rename = "zyanyatest")]
     Testnet,
-    #[serde(rename = "spectresim")]
+    #[serde(rename = "zyanyasim")]
     Simnet,
-    #[serde(rename = "spectredev")]
+    #[serde(rename = "zyanyadev")]
     Devnet,
     #[cfg(test)]
     A,
@@ -83,10 +83,10 @@ pub enum Prefix {
 impl Prefix {
     fn as_str(&self) -> &'static str {
         match self {
-            Prefix::Mainnet => "spectre",
-            Prefix::Testnet => "spectretest",
-            Prefix::Simnet => "spectresim",
-            Prefix::Devnet => "spectredev",
+            Prefix::Mainnet => "zyanya",
+            Prefix::Testnet => "zyanyatest",
+            Prefix::Simnet => "zyanyasim",
+            Prefix::Devnet => "zyanyadev",
             #[cfg(test)]
             Prefix::A => "a",
             #[cfg(test)]
@@ -114,10 +114,10 @@ impl TryFrom<&str> for Prefix {
 
     fn try_from(prefix: &str) -> Result<Self, Self::Error> {
         match prefix {
-            "spectre" => Ok(Prefix::Mainnet),
-            "spectretest" => Ok(Prefix::Testnet),
-            "spectresim" => Ok(Prefix::Simnet),
-            "spectredev" => Ok(Prefix::Devnet),
+            "zyanya" => Ok(Prefix::Mainnet),
+            "zyanyatest" => Ok(Prefix::Testnet),
+            "zyanyasim" => Ok(Prefix::Simnet),
+            "zyanyadev" => Ok(Prefix::Devnet),
             #[cfg(test)]
             "a" => Ok(Prefix::A),
             #[cfg(test)]
@@ -128,7 +128,7 @@ impl TryFrom<&str> for Prefix {
 }
 
 ///
-///  Spectre `Address` version (`PubKey`, `PubKey ECDSA`, `ScriptHash`)
+///  Zyanya `Address` version (`PubKey`, `PubKey ECDSA`, `ScriptHash`)
 ///
 /// @category Address
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Hash, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
@@ -199,7 +199,7 @@ pub const PAYLOAD_VECTOR_SIZE: usize = 36;
 /// Used as the underlying type for address payload, optimized for the largest version length (33).
 pub type PayloadVec = SmallVec<[u8; PAYLOAD_VECTOR_SIZE]>;
 
-/// Spectre [`Address`] struct that serializes to and from an address format string: `spectre:qz0s...t8cv`.
+/// Zyanya [`Address`] struct that serializes to and from an address format string: `zyanya:qz0s...t8cv`.
 ///
 /// @category Address
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Hash, CastFromJs)]
@@ -578,13 +578,20 @@ mod tests {
             (Address::new(Prefix::B, Version::ScriptHash, b"1234598760"), "b:pqcnyve5x5unsdekxqeusxeyu2"),
             (Address::new(Prefix::B, Version::ScriptHash, b"abcdefghijklmnopqrstuvwxyz"), "b:ppskycmyv4nxw6rfdf4kcmtwdac8zunnw36hvamc09aqtpppz8lk"),
             (Address::new(Prefix::B, Version::ScriptHash, b"000000000000000000000000000000000000000000"), "b:pqcrqvpsxqcrqvpsxqcrqvpsxqcrqvpsxqcrqvpsxqcrqvpsxqcrqvpsxqcrqvpsxqcrq7ag684l3"),
-            (Address::new(Prefix::Testnet, Version::PubKey, &[0u8; 32]),      "spectretest:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnlud64ry"),
-            (Address::new(Prefix::Testnet, Version::PubKeyECDSA, &[0u8; 33]), "spectretest:qyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhwq0vkav"),
-            (Address::new(Prefix::Testnet, Version::PubKeyECDSA, b"\xba\x01\xfc\x5f\x4e\x9d\x98\x79\x59\x9c\x69\xa3\xda\xfd\xb8\x35\xa7\x25\x5e\x5f\x2e\x93\x4e\x93\x22\xec\xd3\xaf\x19\x0a\xb0\xf6\x0e"), "spectretest:qxaqrlzlf6wes72en3568khahq66wf27tuhfxn5nytkd8tcep2c0vrsed0nf9p3"),
-            (Address::new(Prefix::Mainnet, Version::PubKey, &[0u8; 32]),      "spectre:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnkpnum8"),
-            (Address::new(Prefix::Mainnet, Version::PubKey, b"\x5f\xff\x3c\x4d\xa1\x8f\x45\xad\xcd\xd4\x99\xe4\x46\x11\xe9\xff\xf1\x48\xba\x69\xdb\x3c\x4e\xa2\xdd\xd9\x55\xfc\x46\xa5\x95\x22"), "spectre:qp0l70zd5x85ttwd6jv7g3s3a8llzj96d8dncn4zmhv4tlzx5k2jykzdnmx8v"),
+            (Address::new(Prefix::Testnet, Version::PubKey, &[0u8; 32]),      "zyanyatest:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnlud64ry"),
+            (Address::new(Prefix::Testnet, Version::PubKeyECDSA, &[0u8; 33]), "zyanyatest:qyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhwq0vkav"),
+            (Address::new(Prefix::Testnet, Version::PubKeyECDSA, b"\xba\x01\xfc\x5f\x4e\x9d\x98\x79\x59\x9c\x69\xa3\xda\xfd\xb8\x35\xa7\x25\x5e\x5f\x2e\x93\x4e\x93\x22\xec\xd3\xaf\x19\x0a\xb0\xf6\x0e"), "zyanyatest:qxaqrlzlf6wes72en3568khahq66wf27tuhfxn5nytkd8tcep2c0vrsed0nf9p3"),
+            (Address::new(Prefix::Mainnet, Version::PubKey, &[0u8; 32]),      "zyanya:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnkpnum8"),
+            (Address::new(Prefix::Mainnet, Version::PubKey, b"\x5f\xff\x3c\x4d\xa1\x8f\x45\xad\xcd\xd4\x99\xe4\x46\x11\xe9\xff\xf1\x48\xba\x69\xdb\x3c\x4e\xa2\xdd\xd9\x55\xfc\x46\xa5\x95\x22"), "zyanya:qp0l70zd5x85ttwd6jv7g3s3a8llzj96d8dncn4zmhv4tlzx5k2jykzdnmx8v"),
         ]
         // cspell:enable
+    }
+
+    #[test]
+    fn test_gen_devnet_address() {
+        let addr = Address::new(Prefix::Devnet, Version::PubKey, &[0x42; 32]);
+        let s: String = (&addr).into();
+        println!("GENERATED_DEVNET_ADDRESS: {}", s);
     }
 
     #[test]
@@ -606,33 +613,33 @@ mod tests {
     #[test]
     fn test_errors() {
         // cspell:disable
-        let address_str: String = "spectre:qqqqqqqqqqqqq1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e".to_string();
+        let address_str: String = "zyanya:qqqqqqqqqqqqq1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e".to_string();
         let address: Result<Address, AddressError> = address_str.try_into();
         assert_eq!(Err(AddressError::DecodingError('1')), address);
 
         let invalid_char = 124u8 as char;
-        let address_str: String = format!("spectre:qqqqqqqqqqqqq{invalid_char}qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e");
+        let address_str: String = format!("zyanya:qqqqqqqqqqqqq{invalid_char}qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e");
         let address: Result<Address, AddressError> = address_str.try_into();
         assert_eq!(Err(AddressError::DecodingError(invalid_char)), address);
 
         let invalid_char = 129u8 as char;
-        let address_str: String = format!("spectre:qqqqqqqqqqqqq{invalid_char}qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e");
+        let address_str: String = format!("zyanya:qqqqqqqqqqqqq{invalid_char}qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e");
         let address: Result<Address, AddressError> = address_str.try_into();
         assert!(matches!(address, Err(AddressError::DecodingError(_))));
 
-        let address_str: String = "spectre1:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e".to_string();
+        let address_str: String = "zyanya1:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e".to_string();
         let address: Result<Address, AddressError> = address_str.try_into();
-        assert_eq!(Err(AddressError::InvalidPrefix("spectre1".into())), address);
+        assert_eq!(Err(AddressError::InvalidPrefix("zyanya1".into())), address);
 
-        let address_str: String = "spectreqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e".to_string();
+        let address_str: String = "zyanyaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e".to_string();
         let address: Result<Address, AddressError> = address_str.try_into();
         assert_eq!(Err(AddressError::MissingPrefix), address);
 
-        let address_str: String = "spectre:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4l".to_string();
+        let address_str: String = "zyanya:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4l".to_string();
         let address: Result<Address, AddressError> = address_str.try_into();
         assert_eq!(Err(AddressError::BadChecksum), address);
 
-        let address_str: String = "spectre:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e".to_string();
+        let address_str: String = "zyanya:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e".to_string();
         let address: Result<Address, AddressError> = address_str.try_into();
         assert_eq!(Err(AddressError::BadChecksum), address);
         // cspell:enable
@@ -650,7 +657,7 @@ mod tests {
     #[cfg(target_arch = "wasm32")]
     #[wasm_bindgen_test]
     pub fn test_wasm_serde_constructor() {
-        let str = "spectre:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v";
+        let str = "zyanya:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v";
         let a = Address::constructor(str);
         let value = to_value(&a).unwrap();
 
@@ -662,7 +669,7 @@ mod tests {
     #[cfg(target_arch = "wasm32")]
     #[wasm_bindgen_test]
     pub fn test_wasm_js_serde_object() {
-        let expected = Address::constructor("spectre:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v");
+        let expected = Address::constructor("zyanya:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v");
 
         use web_sys::console;
         console::log_4(
@@ -674,7 +681,7 @@ mod tests {
 
         let obj = Object::new();
         obj.set("version", &JsValue::from_str("PubKey")).unwrap();
-        obj.set("prefix", &JsValue::from_str("spectre")).unwrap();
+        obj.set("prefix", &JsValue::from_str("zyanya")).unwrap();
         obj.set("payload", &JsValue::from_str("qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v")).unwrap();
 
         assert_eq!(JsValue::from_str("object"), obj.js_typeof());
@@ -689,7 +696,7 @@ mod tests {
     pub fn test_wasm_serde_object() {
         use wasm_bindgen::convert::IntoWasmAbi;
 
-        let expected = Address::constructor("spectre:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v");
+        let expected = Address::constructor("zyanya:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v");
         let wasm_js_value: JsValue = expected.clone().into_abi().into();
 
         let actual = from_value(wasm_js_value).unwrap();

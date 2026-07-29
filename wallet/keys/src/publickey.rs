@@ -21,7 +21,7 @@ use crate::imports::*;
 
 use ripemd::{Digest, Ripemd160};
 use sha2::Sha256;
-use spectre_consensus_core::network::NetworkType;
+use zyanya_consensus_core::network::NetworkType;
 
 /// Data structure that envelopes a PublicKey.
 /// Only supports Schnorr-based addresses.

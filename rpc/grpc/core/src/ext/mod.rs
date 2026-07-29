@@ -1,1 +1,1 @@
-pub mod spectred;
+pub mod zyanyad;

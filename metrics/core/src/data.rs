@@ -3,7 +3,7 @@ use crate::result::Result;
 use borsh::{BorshDeserialize, BorshSerialize};
 use separator::{separated_float, separated_int, separated_uint_with_output, Separatable};
 use serde::{Deserialize, Serialize};
-use spectre_rpc_core::GetMetricsResponse;
+use zyanya_rpc_core::GetMetricsResponse;
 use workflow_core::enums::Describe;
 
 #[derive(Describe, Debug, Clone, Copy, Eq, PartialEq, Hash, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]

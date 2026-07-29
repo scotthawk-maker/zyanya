@@ -1,6 +1,6 @@
 [package]
-name = "spectre-grpc-server"
-description = "Spectre gRPC server"
+name = "zyanya-grpc-server"
+description = "Zyanya gRPC server"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -10,15 +10,15 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-spectre-consensus-core.workspace = true
-spectre-core.workspace = true
-spectre-grpc-core.workspace = true
-spectre-notify.workspace = true
-spectre-rpc-core.workspace = true
-spectre-rpc-macros.workspace = true
-spectre-rpc-service.workspace = true
-spectre-utils-tower.workspace = true
-spectre-utils.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-core.workspace = true
+zyanya-grpc-core.workspace = true
+zyanya-notify.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-rpc-macros.workspace = true
+zyanya-rpc-service.workspace = true
+zyanya-utils-tower.workspace = true
+zyanya-utils.workspace = true
 
 async-channel.workspace = true
 async-stream.workspace = true
@@ -42,4 +42,4 @@ uuid.workspace = true
 rustls.workspace = true
 
 [dev-dependencies]
-spectre-grpc-client.workspace = true
+zyanya-grpc-client.workspace = true

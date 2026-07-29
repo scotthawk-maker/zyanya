@@ -5,10 +5,10 @@
 use crate::imports::{AccountId, AccountKind, AssocPrvKeyDataIds, PrvKeyDataId};
 use base64::DecodeError;
 use downcast::DowncastError;
-use spectre_bip32::Error as BIP32Error;
-use spectre_consensus_core::sign::Error as CoreSignError;
-use spectre_rpc_core::RpcError as SpectreRpcError;
-use spectre_wrpc_client::error::Error as SpectreWorkflowRpcError;
+use zyanya_bip32::Error as BIP32Error;
+use zyanya_consensus_core::sign::Error as CoreSignError;
+use zyanya_rpc_core::RpcError as ZyanyaRpcError;
+use zyanya_wrpc_client::error::Error as ZyanyaWorkflowRpcError;
 use std::sync::PoisonError;
 use thiserror::Error;
 use wasm_bindgen::JsValue;
@@ -26,19 +26,19 @@ pub enum Error {
     Custom(String),
 
     #[error(transparent)]
-    WalletKeys(#[from] spectre_wallet_keys::error::Error),
+    WalletKeys(#[from] zyanya_wallet_keys::error::Error),
 
     #[error("please select an account")]
     AccountSelection,
 
     #[error("{0}")]
-    SpectreRpcClientResult(#[from] SpectreRpcError),
+    ZyanyaRpcClientResult(#[from] ZyanyaRpcError),
 
     #[error("wRPC -> {0}")]
     RpcError(#[from] RpcError),
 
     #[error("Wallet wRPC -> {0}")]
-    SpectreWorkflowRpcError(#[from] SpectreWorkflowRpcError),
+    ZyanyaWorkflowRpcError(#[from] ZyanyaWorkflowRpcError),
 
     #[error("The wallet RPC client is not wRPC")]
     NotWrpcClient,
@@ -101,10 +101,10 @@ pub enum Error {
     NetworkTypeConnected,
 
     #[error("{0}")]
-    NetworkType(#[from] spectre_consensus_core::network::NetworkTypeError),
+    NetworkType(#[from] zyanya_consensus_core::network::NetworkTypeError),
 
     #[error("{0}")]
-    NetworkId(#[from] spectre_consensus_core::network::NetworkIdError),
+    NetworkId(#[from] zyanya_consensus_core::network::NetworkIdError),
 
     #[error("The server UTXO index is not enabled")]
     MissingUtxoIndex,
@@ -128,7 +128,7 @@ pub enum Error {
     WorkflowStore(#[from] workflow_store::error::Error),
 
     #[error(transparent)]
-    Address(#[from] spectre_addresses::AddressError),
+    Address(#[from] zyanya_addresses::AddressError),
 
     #[error("Serde WASM bindgen -> {0}")]
     SerdeWasmBindgen(Sendable<Printable>),
@@ -149,7 +149,7 @@ pub enum Error {
     FromUtf8Error(#[from] std::string::FromUtf8Error),
 
     #[error(transparent)]
-    ScriptBuilderError(#[from] spectre_txscript::script_builder::ScriptBuilderError),
+    ScriptBuilderError(#[from] zyanya_txscript::script_builder::ScriptBuilderError),
 
     #[error("argon2 -> {0}")]
     Argon2(argon2::Error),
@@ -248,10 +248,10 @@ pub enum Error {
     DowncastError(String),
 
     #[error(transparent)]
-    ConsensusClient(#[from] spectre_consensus_client::error::Error),
+    ConsensusClient(#[from] zyanya_consensus_client::error::Error),
 
     #[error(transparent)]
-    ConsensusWasm(#[from] spectre_consensus_wasm::error::Error),
+    ConsensusWasm(#[from] zyanya_consensus_wasm::error::Error),
 
     #[error("Fees::SenderPays or Fees::ReceiverPays are not allowed in sweep transactions")]
     GeneratorFeesInSweepTransaction,
@@ -284,10 +284,10 @@ pub enum Error {
     InvalidRange(u64, u64),
 
     #[error(transparent)]
-    MultisigCreateError(#[from] spectre_txscript::MultisigCreateError),
+    MultisigCreateError(#[from] zyanya_txscript::MultisigCreateError),
 
     #[error(transparent)]
-    TxScriptError(#[from] spectre_txscript_errors::TxScriptError),
+    TxScriptError(#[from] zyanya_txscript_errors::TxScriptError),
 
     #[error("Legacy account is not initialized")]
     LegacyAccountNotInitialized,
@@ -332,12 +332,12 @@ pub enum Error {
     InvalidPublicKeyLength,
 
     #[error(transparent)]
-    Metrics(#[from] spectre_metrics_core::error::Error),
+    Metrics(#[from] zyanya_metrics_core::error::Error),
 
     #[error("Connected node is not synced")]
     NotSynced,
     #[error(transparent)]
-    Psst(#[from] spectre_wallet_psst::error::Error),
+    Psst(#[from] zyanya_wallet_psst::error::Error),
 
     #[error("Error generating pending transaction from PSST: {0}")]
     PendingTransactionFromPSSTError(String),

@@ -2,8 +2,8 @@ use crate::account as native;
 use crate::imports::*;
 use crate::tx::PaymentOutputs;
 use crate::wasm::utxo::UtxoContext;
-use spectre_consensus_core::network::NetworkTypeT;
-use spectre_wallet_keys::keypair::Keypair;
+use zyanya_consensus_core::network::NetworkTypeT;
+use zyanya_wallet_keys::keypair::Keypair;
 use workflow_core::abortable::Abortable;
 
 ///

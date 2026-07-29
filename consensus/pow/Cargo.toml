@@ -1,6 +1,6 @@
 [package]
-name = "spectre-pow"
-description = "Spectre proof-of-work"
+name = "zyanya-pow"
+description = "Zyanya proof-of-work"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -14,11 +14,11 @@ wasm32-sdk = []
 
 [dependencies]
 js-sys.workspace = true
-spectre-consensus-core.workspace = true
-spectre-consensus-client.workspace = true
-spectre-hashes.workspace = true
-spectre-math.workspace = true
-spectre-utils.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-client.workspace = true
+zyanya-hashes.workspace = true
+zyanya-math.workspace = true
+zyanya-utils.workspace = true
 spectrex.workspace = true
 wasm-bindgen.workspace = true
 workflow-wasm.workspace = true

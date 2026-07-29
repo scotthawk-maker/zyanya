@@ -1,6 +1,6 @@
 [package]
-name = "spectre-wrpc-example-subscriber"
-description = "Spectre wRPC subscription example"
+name = "zyanya-wrpc-example-subscriber"
+description = "Zyanya wRPC subscription example"
 publish = false
 rust-version.workspace = true
 version.workspace = true
@@ -12,10 +12,10 @@ repository.workspace = true
 
 [dependencies]
 futures.workspace = true
-spectre-consensus-core.workspace = true
-spectre-rpc-core.workspace = true
-spectre-wrpc-client.workspace = true
-spectre-notify.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-wrpc-client.workspace = true
+zyanya-notify.workspace = true
 tokio.workspace = true
 workflow-core.workspace = true
 workflow-log.workspace = true

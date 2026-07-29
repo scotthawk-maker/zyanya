@@ -1,5 +1,5 @@
 /// Re-export errors
-pub use spectre_mining_errors::mempool::*;
+pub use zyanya_mining_errors::mempool::*;
 
 use crate::model::topological_index::TopologicalIndexError;
 

@@ -4,7 +4,7 @@
 
 use crate::imports::*;
 use crate::storage::{AddressBookEntry, PrvKeyData, PrvKeyDataId};
-use spectre_bip32::Mnemonic;
+use zyanya_bip32::Mnemonic;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]

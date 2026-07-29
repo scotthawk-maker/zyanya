@@ -8,10 +8,10 @@ use crate::error::Error;
 use js_sys::{Array, Object};
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::*;
-use spectre_consensus_core::hashing;
-use spectre_consensus_core::header as native;
-use spectre_hashes::Hash;
-use spectre_utils::hex::ToHex;
+use zyanya_consensus_core::hashing;
+use zyanya_consensus_core::header as native;
+use zyanya_hashes::Hash;
+use zyanya_utils::hex::ToHex;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::prelude::{JsError, JsValue};
 use workflow_wasm::prelude::*;
@@ -72,7 +72,7 @@ extern "C" {
     pub type HeaderT;
 }
 
-/// Spectre Block Header
+/// Zyanya Block Header
 ///
 /// @category Consensus
 #[derive(Clone, Debug, Serialize, Deserialize, CastFromJs)]

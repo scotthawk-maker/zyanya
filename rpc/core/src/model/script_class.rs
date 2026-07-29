@@ -1,3 +1,3 @@
-use spectre_txscript::script_class::ScriptClass;
+use zyanya_txscript::script_class::ScriptClass;
 
 pub type RpcScriptClass = ScriptClass;

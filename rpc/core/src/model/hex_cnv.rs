@@ -1,8 +1,8 @@
 use smallvec::{smallvec, SmallVec};
-use spectre_consensus_core::BlueWorkType;
+use zyanya_consensus_core::BlueWorkType;
 use std::str;
 
-// TODO combine this with spectre-utils::hex
+// TODO combine this with zyanya-utils::hex
 
 pub trait ToRpcHex {
     fn to_rpc_hex(&self) -> String;

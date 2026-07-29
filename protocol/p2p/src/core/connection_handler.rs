@@ -1,13 +1,13 @@
 use crate::common::ProtocolError;
 use crate::core::hub::HubEvent;
 use crate::pb::{
-    p2p_client::P2pClient as ProtoP2pClient, p2p_server::P2p as ProtoP2p, p2p_server::P2pServer as ProtoP2pServer, SpectredMessage,
+    p2p_client::P2pClient as ProtoP2pClient, p2p_server::P2p as ProtoP2p, p2p_server::P2pServer as ProtoP2pServer, ZyanyadMessage,
 };
 use crate::{ConnectionInitializer, Router};
 use futures::FutureExt;
-use spectre_core::{debug, info};
-use spectre_utils::networking::NetAddress;
-use spectre_utils_tower::{
+use zyanya_core::{debug, info};
+use zyanya_utils::networking::NetAddress;
+use zyanya_utils_tower::{
     counters::TowerConnectionCounters,
     middleware::{BodyExt, CountBytesBody, MapRequestBodyLayer, MapResponseBodyLayer, ServiceBuilder},
 };
@@ -177,7 +177,7 @@ impl ConnectionHandler {
 
     // TODO: revisit the below constants
     fn outgoing_network_channel_size() -> usize {
-        // TODO: this number is taken from go-spectred and should be re-evaluated
+        // TODO: this number is taken from go-zyanyad and should be re-evaluated
         (1 << 17) + 256
     }
 
@@ -196,12 +196,12 @@ impl ConnectionHandler {
 
 #[tonic::async_trait]
 impl ProtoP2p for ConnectionHandler {
-    type MessageStreamStream = Pin<Box<dyn futures::Stream<Item = Result<SpectredMessage, TonicStatus>> + Send + 'static>>;
+    type MessageStreamStream = Pin<Box<dyn futures::Stream<Item = Result<ZyanyadMessage, TonicStatus>> + Send + 'static>>;
 
     /// Handle the new arriving **server** connections
     async fn message_stream(
         &self,
-        request: Request<Streaming<SpectredMessage>>,
+        request: Request<Streaming<ZyanyadMessage>>,
     ) -> Result<Response<Self::MessageStreamStream>, TonicStatus> {
         let Some(remote_address) = request.remote_addr() else {
             return Err(TonicStatus::new(tonic::Code::InvalidArgument, "Incoming connection opening request has no remote address"));

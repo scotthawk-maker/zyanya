@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 extern crate derive_more;
-use spectre_core::debug;
+use zyanya_core::debug;
 
 use crate::{
     error::Result,

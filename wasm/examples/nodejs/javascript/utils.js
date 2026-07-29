@@ -8,7 +8,7 @@ const {
     Encoding,
     NetworkId,
     Mnemonic,
-} = require('../../../nodejs/spectre');
+} = require('../../../nodejs/zyanya');
 
 /**
  * Helper function to parse command line arguments for running the scripts
@@ -60,7 +60,7 @@ function parseArgs(options = {
         process.exit(0);
     }
 
-    const addressRegex = new RegExp(/(spectre|spectretest):\S+/i);
+    const addressRegex = new RegExp(/(zyanya|zyanyatest):\S+/i);
     const addressArg = values.address ?? positionals.find((positional) => addressRegex.test(positional)) ?? null;
     const address = addressArg === null ? null : new Address(addressArg);
 

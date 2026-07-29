@@ -4,13 +4,13 @@ use crate::psst::{KeySource, Version};
 use crate::utils::combine_if_no_conflicts;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-use spectre_consensus_core::tx::TransactionId;
+use zyanya_consensus_core::tx::TransactionId;
 use std::{
     collections::{btree_map, BTreeMap},
     ops::Add,
 };
 
-type Xpub = spectre_bip32::ExtendedPublicKey<secp256k1::PublicKey>;
+type Xpub = zyanya_bip32::ExtendedPublicKey<secp256k1::PublicKey>;
 
 #[derive(Debug, Clone, Builder, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -112,7 +112,7 @@ impl Default for Global {
     fn default() -> Self {
         Global {
             version: Version::Zero,
-            tx_version: spectre_consensus_core::constants::TX_VERSION,
+            tx_version: zyanya_consensus_core::constants::TX_VERSION,
             fallback_lock_time: None,
             inputs_modifiable: false,
             outputs_modifiable: false,

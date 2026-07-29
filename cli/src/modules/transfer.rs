@@ -6,7 +6,7 @@ pub struct Transfer;
 
 impl Transfer {
     async fn main(self: Arc<Self>, ctx: &Arc<dyn Context>, argv: Vec<String>, _cmd: &str) -> Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
 
         let account = ctx.wallet().account()?;
 
@@ -21,8 +21,8 @@ impl Transfer {
             return Err("Cannot transfer to the same account".into());
         }
 
-        let amount_sompi = try_parse_required_nonzero_spectre_as_sompi_u64(argv.get(1))?;
-        let priority_fee_sompi = try_parse_optional_spectre_as_sompi_i64(argv.get(2))?.unwrap_or(0);
+        let amount_sompi = try_parse_required_nonzero_zyanya_as_sompi_u64(argv.get(1))?;
+        let priority_fee_sompi = try_parse_optional_zyanya_as_sompi_i64(argv.get(2))?.unwrap_or(0);
         let target_address = target_account.receive_address()?;
         let (wallet_secret, payment_secret) = ctx.ask_wallet_secret(Some(&account)).await?;
 

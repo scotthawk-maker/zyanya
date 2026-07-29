@@ -1,6 +1,6 @@
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     coinbase::{CoinbaseData, CoinbaseTransactionTemplate, MinerData},
-    constants::{SOMPI_PER_SPECTRE, TX_VERSION},
+    constants::{SOMPI_PER_ZYANYA, TX_VERSION},
     subnets::SUBNETWORK_ID_COINBASE,
     tx::{Transaction, TransactionOutput},
 };
@@ -16,7 +16,7 @@ impl CoinbaseManagerMock {
     }
 
     pub(super) fn expected_coinbase_transaction(&self, miner_data: MinerData) -> CoinbaseTransactionTemplate {
-        const SUBSIDY: u64 = 500 * SOMPI_PER_SPECTRE;
+        const SUBSIDY: u64 = 500 * SOMPI_PER_ZYANYA;
         let output = TransactionOutput::new(SUBSIDY, miner_data.script_public_key.clone());
 
         let payload = self.serialize_coinbase_payload(&CoinbaseData { blue_score: 1, subsidy: SUBSIDY, miner_data });

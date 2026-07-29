@@ -4,7 +4,7 @@ document.body.innerHTML =
 //<div class="banner">
 //    <img src="resources/ferris.svg" height="44px" />
 //    <img src="resources/wasm.svg" height="44px" />
-//    <img src="resources/spectre.svg" height="44px" />
+//    <img src="resources/zyanya.svg" height="44px" />
 //</div>
 + document.body.innerHTML;
 

@@ -1,10 +1,10 @@
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     tx::{TransactionOutpoint, UtxoEntry},
     utxo::utxo_diff::UtxoDiff,
     BlockHashSet, HashMapCustomHasher,
 };
-use spectre_hashes::Hash;
-use spectre_utils::hashmap::NestedHashMapExtensions;
+use zyanya_hashes::Hash;
+use zyanya_utils::hashmap::NestedHashMapExtensions;
 
 use crate::model::{CirculatingSupplyDiff, CompactUtxoEntry, UtxoChanges, UtxoSetByScriptPublicKey};
 

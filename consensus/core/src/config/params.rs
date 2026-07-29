@@ -8,8 +8,8 @@ use crate::{
     network::{NetworkId, NetworkType},
     BlockLevel, KType,
 };
-use spectre_addresses::Prefix;
-use spectre_math::Uint256;
+use zyanya_addresses::Prefix;
+use zyanya_math::Uint256;
 use std::{
     cmp::min,
     time::{SystemTime, UNIX_EPOCH},
@@ -104,7 +104,7 @@ pub struct Params {
     pub mass_per_sig_op: u64,
     pub max_block_mass: u64,
 
-    /// The parameter for scaling inverse SPR value to mass units (unpublished KIP-0009)
+    /// The parameter for scaling inverse ZYAN value to mass units (unpublished KIP-0009)
     pub storage_mass_parameter: u64,
 
     /// DAA score from which storage mass calculation and transaction mass field are activated as a consensus rule
@@ -333,9 +333,9 @@ impl From<NetworkId> for Params {
 pub const MAINNET_PARAMS: Params = Params {
     dns_seeders: &[
         // Official DNS seeders.
-        "mainnet-dnsseed-1.spectre-network.org",
-        "mainnet-dnsseed-2.spectre-network.org",
-        "mainnet-dnsseed-3.spectre-network.xyz",
+        "mainnet-dnsseed-1.zyanya-network.org",
+        "mainnet-dnsseed-2.zyanya-network.org",
+        "mainnet-dnsseed-3.zyanya-network.xyz",
     ],
     net: NetworkId::new(NetworkType::Mainnet),
     genesis: GENESIS,
@@ -360,7 +360,7 @@ pub const MAINNET_PARAMS: Params = Params {
     coinbase_payload_script_public_key_max_len: 150,
     max_coinbase_payload_len: 204,
 
-    // This is technically a soft fork from the Go implementation since spectred's consensus doesn't
+    // This is technically a soft fork from the Go implementation since zyanyad's consensus doesn't
     // check these rules, but in practice it's enforced by the network layer that limits the message
     // size to 1 GB.
     // These values should be lowered to more reasonable amounts on the next planned HF/SF.
@@ -383,7 +383,7 @@ pub const MAINNET_PARAMS: Params = Params {
     // We define a year as 365.25 days
     // One week in seconds = 7 * 24 * 60 * 60 = 604800
     deflationary_phase_daa_score: 604800,
-    pre_deflationary_phase_base_subsidy: 1500000000,
+    pre_deflationary_phase_base_subsidy: 5_000_000_000,
     coinbase_maturity: 100,
     skip_proof_of_work: false,
     max_block_level: 225,
@@ -396,9 +396,9 @@ pub const MAINNET_PARAMS: Params = Params {
 pub const TESTNET_PARAMS: Params = Params {
     dns_seeders: &[
         // Official DNS seeders.
-        "testnet-dnsseed-1.spectre-network.org",
-        "testnet-dnsseed-2.spectre-network.org",
-        "testnet-dnsseed-3.spectre-network.xyz",
+        "testnet-dnsseed-1.zyanya-network.org",
+        "testnet-dnsseed-2.zyanya-network.org",
+        "testnet-dnsseed-3.zyanya-network.xyz",
     ],
     net: NetworkId::with_suffix(NetworkType::Testnet, 10),
     genesis: TESTNET_GENESIS,
@@ -423,7 +423,7 @@ pub const TESTNET_PARAMS: Params = Params {
     coinbase_payload_script_public_key_max_len: 150,
     max_coinbase_payload_len: 204,
 
-    // This is technically a soft fork from the Go implementation since spectred's consensus doesn't
+    // This is technically a soft fork from the Go implementation since zyanyad's consensus doesn't
     // check these rules, but in practice it's enforced by the network layer that limits the message
     // size to 1 GB.
     // These values should be lowered to more reasonable amounts on the next planned HF/SF.
@@ -446,7 +446,7 @@ pub const TESTNET_PARAMS: Params = Params {
     // We define a year as 365.25 days
     // One week in seconds = 7 * 24 * 60 * 60 = 604800
     deflationary_phase_daa_score: 604800,
-    pre_deflationary_phase_base_subsidy: 1500000000,
+    pre_deflationary_phase_base_subsidy: 5_000_000_000,
     coinbase_maturity: 100,
     skip_proof_of_work: false,
     max_block_level: 250,
@@ -459,8 +459,8 @@ pub const TESTNET_PARAMS: Params = Params {
 pub const TESTNET11_PARAMS: Params = Params {
     dns_seeders: &[
         // Official DNS seeders.
-        "testnet11-dnsseed-1.spectre-network.org",
-        "testnet11-dnsseed-2.spectre-network.org",
+        "testnet11-dnsseed-1.zyanya-network.org",
+        "testnet11-dnsseed-2.zyanya-network.org",
     ],
     net: NetworkId::with_suffix(NetworkType::Testnet, 11),
     genesis: TESTNET11_GENESIS,
@@ -599,7 +599,7 @@ pub const DEVNET_PARAMS: Params = Params {
     coinbase_payload_script_public_key_max_len: 150,
     max_coinbase_payload_len: 204,
 
-    // This is technically a soft fork from the Go implementation since spectred's consensus doesn't
+    // This is technically a soft fork from the Go implementation since zyanyad's consensus doesn't
     // check these rules, but in practice it's enforced by the network layer that limits the message
     // size to 1 GB.
     // These values should be lowered to more reasonable amounts on the next planned HF/SF.
@@ -622,7 +622,7 @@ pub const DEVNET_PARAMS: Params = Params {
     // We define a year as 365.25 days
     // One week in seconds = 7 * 24 * 60 * 60 = 604800
     deflationary_phase_daa_score: 604800,
-    pre_deflationary_phase_base_subsidy: 1500000000,
+    pre_deflationary_phase_base_subsidy: 5_000_000_000,
     coinbase_maturity: 100,
     skip_proof_of_work: false,
     max_block_level: 250,

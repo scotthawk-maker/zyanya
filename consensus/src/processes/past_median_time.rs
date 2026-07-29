@@ -1,5 +1,5 @@
 use crate::model::stores::{block_window_cache::BlockWindowHeap, headers::HeaderStoreReader};
-use spectre_consensus_core::errors::block::RuleError;
+use zyanya_consensus_core::errors::block::RuleError;
 use std::sync::Arc;
 
 /// A past median manager conforming to the legacy golang implementation

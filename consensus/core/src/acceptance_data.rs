@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 
 use crate::tx::TransactionId;
 

@@ -1,13 +1,13 @@
 <html>
     <head>
         <script type="module">
-            import * as spectre from './spectre/spectre_wasm.js';
-            let {PublicKeyGenerator, createAddress, NetworkType, Mnemonic, XPrv} = spectre;
+            import * as zyanya from './zyanya/zyanya_wasm.js';
+            let {PublicKeyGenerator, createAddress, NetworkType, Mnemonic, XPrv} = zyanya;
             window.XPublicKey = PublicKeyGenerator;
             (async () => {
-                const wasm = await spectre.default('./spectre/spectre_wasm_bg.wasm');
-                console.log("spectre", spectre);
-                console.log("version", spectre.version());
+                const wasm = await zyanya.default('./zyanya/zyanya_wasm_bg.wasm');
+                console.log("zyanya", zyanya);
+                console.log("version", zyanya.version());
                 tests();
             })();
 

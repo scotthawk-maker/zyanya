@@ -1,6 +1,6 @@
 //! Error types for the PSST crate.
 
-use spectre_txscript_errors::TxScriptError;
+use zyanya_txscript_errors::TxScriptError;
 
 use crate::input::InputBuilderError;
 

@@ -1,6 +1,6 @@
 [package]
-name = "spectre-metrics-core"
-description = "Tools for collecting and reporting Spectre p2p node metrics"
+name = "zyanya-metrics-core"
+description = "Tools for collecting and reporting Zyanya p2p node metrics"
 rust-version.workspace = true
 version.workspace = true
 authors.workspace = true
@@ -13,8 +13,8 @@ repository.workspace = true
 async-trait.workspace = true
 borsh.workspace = true
 futures.workspace = true
-spectre-core.workspace = true
-spectre-rpc-core.workspace = true
+zyanya-core.workspace = true
+zyanya-rpc-core.workspace = true
 separator.workspace = true
 serde.workspace = true
 thiserror.workspace = true

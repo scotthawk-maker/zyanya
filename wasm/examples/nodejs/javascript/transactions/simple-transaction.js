@@ -6,10 +6,10 @@ const {
     PrivateKey,
     Address,
     RpcClient,
-    spectreToSompi,
+    zyanyaToSompi,
     createTransactions,
     initConsolePanicHook
-} = require('../../../../nodejs/spectre');
+} = require('../../../../nodejs/zyanya');
 
 const { encoding, networkId, address: destinationAddressArg } = require("../utils").parseArgs();
 
@@ -55,7 +55,7 @@ initConsolePanicHook();
 
         let { transactions, summary } = await createTransactions({
             entries,
-            outputs: [{ address : destinationAddress, amount : spectreToSompi("0.00012")}],
+            outputs: [{ address : destinationAddress, amount : zyanyaToSompi("0.00012")}],
             priorityFee: 0n,
             changeAddress: sourceAddress,
         });

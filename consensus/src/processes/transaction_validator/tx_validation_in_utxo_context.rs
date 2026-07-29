@@ -1,13 +1,13 @@
 use crate::constants::{MAX_SOMPI, SEQUENCE_LOCK_TIME_DISABLED, SEQUENCE_LOCK_TIME_MASK};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rayon::ThreadPool;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     hashing::sighash::{SigHashReusedValuesSync, SigHashReusedValuesUnsync},
     tx::{TransactionInput, VerifiableTransaction},
 };
-use spectre_core::warn;
-use spectre_txscript::{caches::Cache, get_sig_op_count_upper_bound, SigCacheKey, TxScriptEngine};
-use spectre_txscript_errors::TxScriptError;
+use zyanya_core::warn;
+use zyanya_txscript::{caches::Cache, get_sig_op_count_upper_bound, SigCacheKey, TxScriptEngine};
+use zyanya_txscript_errors::TxScriptError;
 use std::marker::Sync;
 
 use super::{
@@ -150,7 +150,7 @@ impl TransactionValidator {
                 // lock-time. We subtract one from the relative lock in
                 // order to maintain the original lockTime semantics.
                 //
-                // Note: in the spectred codebase there's a use in i64 in order to use the -1 value
+                // Note: in the zyanyad codebase there's a use in i64 in order to use the -1 value
                 // as None. Here it's not needed, but we still use it to avoid breaking consensus.
                 let lock_daa_score = entry.block_daa_score as i64 + relative_lock - 1;
 
@@ -252,11 +252,11 @@ mod tests {
     use itertools::Itertools;
     use secp256k1::Secp256k1;
     use smallvec::SmallVec;
-    use spectre_consensus_core::sign::sign;
-    use spectre_consensus_core::subnets::SubnetworkId;
-    use spectre_consensus_core::tx::{MutableTransaction, PopulatedTransaction, ScriptVec, TransactionId, UtxoEntry};
-    use spectre_consensus_core::tx::{ScriptPublicKey, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput};
-    use spectre_txscript_errors::TxScriptError;
+    use zyanya_consensus_core::sign::sign;
+    use zyanya_consensus_core::subnets::SubnetworkId;
+    use zyanya_consensus_core::tx::{MutableTransaction, PopulatedTransaction, ScriptVec, TransactionId, UtxoEntry};
+    use zyanya_consensus_core::tx::{ScriptPublicKey, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput};
+    use zyanya_txscript_errors::TxScriptError;
     use std::iter::once;
 
     use crate::{params::MAINNET_PARAMS, processes::transaction_validator::TransactionValidator};

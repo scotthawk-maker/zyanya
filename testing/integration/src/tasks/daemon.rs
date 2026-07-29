@@ -4,11 +4,11 @@ use crate::{
 };
 use async_trait::async_trait;
 use clap::Parser;
-use spectre_addresses::Address;
-use spectre_consensus_core::network::NetworkType;
-use spectre_core::{trace, warn};
-use spectre_utils::{fd_budget, triggers::SingleTrigger};
-use spectred_lib::args::Args;
+use zyanya_addresses::Address;
+use zyanya_consensus_core::network::NetworkType;
+use zyanya_core::{trace, warn};
+use zyanya_utils::{fd_budget, triggers::SingleTrigger};
+use zyanyad_lib::args::Args;
 use std::{iter::once, sync::Arc};
 use tokio::task::JoinHandle;
 
@@ -66,7 +66,7 @@ impl DaemonArgs {
         let mut args = vec![
             "test".to_owned(),
             "--package".to_owned(),
-            "spectre-testing-integration".to_owned(),
+            "zyanya-testing-integration".to_owned(),
             "--lib".to_owned(),
             "--features".to_owned(),
             "devnet-prealloc".to_owned(),
@@ -101,7 +101,7 @@ impl DaemonArgs {
         let schnorr_key = secp256k1::Keypair::from_seckey_slice(secp256k1::SECP256K1, &private_key_bytes).unwrap();
         Address::new(
             NetworkType::Simnet.into(),
-            spectre_addresses::Version::PubKey,
+            zyanya_addresses::Version::PubKey,
             &schnorr_key.public_key().x_only_public_key().0.serialize(),
         )
     }

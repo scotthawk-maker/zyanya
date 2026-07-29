@@ -3,8 +3,8 @@ use crate::{converter::Converter, notifier::DynNotify};
 use async_channel::{Receiver, Sender};
 use async_trait::async_trait;
 use core::fmt::Debug;
-use spectre_core::{debug, trace};
-use spectre_utils::{channel::Channel, triggers::SingleTrigger};
+use zyanya_core::{debug, trace};
+use zyanya_utils::{channel::Channel, triggers::SingleTrigger};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,

@@ -1,6 +1,6 @@
 [package]
-name = "spectre-mining-errors"
-description = "Spectre mining error definitions"
+name = "zyanya-mining-errors"
+description = "Zyanya mining error definitions"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -13,4 +13,4 @@ repository.workspace = true
 
 [dependencies]
 thiserror.workspace = true
-spectre-consensus-core.workspace = true
+zyanya-consensus-core.workspace = true

@@ -1,5 +1,5 @@
-use spectre_mining::feerate::{FeeEstimateVerbose, FeerateBucket, FeerateEstimations};
-use spectre_rpc_core::{
+use zyanya_mining::feerate::{FeeEstimateVerbose, FeerateBucket, FeerateEstimations};
+use zyanya_rpc_core::{
     message::GetFeeEstimateExperimentalResponse as RpcFeeEstimateVerboseResponse, RpcFeeEstimate,
     RpcFeeEstimateVerboseExperimentalData as RpcFeeEstimateVerbose, RpcFeerateBucket,
 };

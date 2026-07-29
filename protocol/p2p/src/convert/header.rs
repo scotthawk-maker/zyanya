@@ -1,6 +1,6 @@
 use crate::pb as protowire;
-use spectre_consensus_core::{header::Header, BlueWorkType};
-use spectre_hashes::Hash;
+use zyanya_consensus_core::{header::Header, BlueWorkType};
+use zyanya_hashes::Hash;
 
 use super::error::ConversionError;
 use super::option::TryIntoOptionEx;

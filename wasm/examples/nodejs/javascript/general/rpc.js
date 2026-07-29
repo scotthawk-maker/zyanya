@@ -1,14 +1,14 @@
 // @ts-ignore
 globalThis.WebSocket = require('websocket').w3cwebsocket; // W3C WebSocket module shim
 
-const spectre = require('../../../../nodejs/spectre');
+const zyanya = require('../../../../nodejs/zyanya');
 const { parseArgs } = require("../utils");
 const {
     RpcClient,
     Resolver,
-} = spectre;
+} = zyanya;
 
-spectre.initConsolePanicHook();
+zyanya.initConsolePanicHook();
 
 const {
     networkId,

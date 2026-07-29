@@ -4,12 +4,12 @@
 
 use crate::error::Error;
 use crate::result::Result;
-use spectre_consensus_client as kcc;
-use spectre_consensus_client::UtxoEntryReference;
-use spectre_consensus_core::mass::calc_storage_mass as consensus_calc_storage_mass;
-use spectre_consensus_core::tx::{Transaction, TransactionInput, TransactionOutput, SCRIPT_VECTOR_SIZE};
-use spectre_consensus_core::{config::params::Params, constants::*, subnets::SUBNETWORK_ID_SIZE};
-use spectre_hashes::HASH_SIZE;
+use zyanya_consensus_client as kcc;
+use zyanya_consensus_client::UtxoEntryReference;
+use zyanya_consensus_core::mass::calc_storage_mass as consensus_calc_storage_mass;
+use zyanya_consensus_core::tx::{Transaction, TransactionInput, TransactionOutput, SCRIPT_VECTOR_SIZE};
+use zyanya_consensus_core::{config::params::Params, constants::*, subnets::SUBNETWORK_ID_SIZE};
+use zyanya_hashes::HASH_SIZE;
 
 // pub const ECDSA_SIGNATURE_SIZE: u64 = 64;
 // pub const SCHNORR_SIGNATURE_SIZE: u64 = 64;

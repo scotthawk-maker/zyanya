@@ -1,5 +1,5 @@
 use crate::Notification;
-use spectre_notify::{collector::CollectorFrom, converter::ConverterFrom};
+use zyanya_notify::{collector::CollectorFrom, converter::ConverterFrom};
 
 pub type RpcCoreConverter = ConverterFrom<Notification, Notification>;
 

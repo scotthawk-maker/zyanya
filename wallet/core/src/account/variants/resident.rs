@@ -5,9 +5,9 @@
 use crate::account::Inner;
 use crate::imports::*;
 use secp256k1::{PublicKey, SecretKey};
-use spectre_addresses::Version;
+use zyanya_addresses::Version;
 
-pub const RESIDENT_ACCOUNT_KIND: &str = "spectre-resident-standard";
+pub const RESIDENT_ACCOUNT_KIND: &str = "zyanya-resident-standard";
 
 pub struct Resident {
     inner: Arc<Inner>,

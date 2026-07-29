@@ -1,5 +1,5 @@
 //!
-//! Declares the client-side [`Transaction`] type, which represents a Spectre transaction.
+//! Declares the client-side [`Transaction`] type, which represents a Zyanya transaction.
 //!
 
 #![allow(non_snake_case)]
@@ -12,12 +12,12 @@ use crate::result::Result;
 use crate::serializable::{numeric, string, SerializableTransactionT};
 use crate::utxo::{UtxoEntryId, UtxoEntryReference};
 use ahash::AHashMap;
-use spectre_consensus_core::network::NetworkType;
-use spectre_consensus_core::network::NetworkTypeT;
-use spectre_consensus_core::subnets::{self, SubnetworkId};
-use spectre_consensus_core::tx::UtxoEntry;
-use spectre_txscript::extract_script_pub_key_address;
-use spectre_utils::hex::*;
+use zyanya_consensus_core::network::NetworkType;
+use zyanya_consensus_core::network::NetworkTypeT;
+use zyanya_consensus_core::subnets::{self, SubnetworkId};
+use zyanya_consensus_core::tx::UtxoEntry;
+use zyanya_txscript::extract_script_pub_key_address;
+use zyanya_utils::hex::*;
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_TRANSACTION: &'static str = r#"
@@ -81,7 +81,7 @@ pub struct TransactionInner {
     pub id: TransactionId,
 }
 
-/// Represents a Spectre transaction.
+/// Represents a Zyanya transaction.
 /// This is an artificial construct that includes additional
 /// transaction-related data such as additional data from UTXOs
 /// used by transaction inputs.
@@ -174,7 +174,7 @@ impl Transaction {
     /// Returns a list of unique addresses used by transaction inputs.
     /// This method can be used to determine addresses used by transaction inputs
     /// in order to select private keys needed for transaction signing.
-    pub fn addresses(&self, network_type: &NetworkTypeT) -> Result<spectre_addresses::AddressArrayT> {
+    pub fn addresses(&self, network_type: &NetworkTypeT) -> Result<zyanya_addresses::AddressArrayT> {
         let mut list = std::collections::HashSet::new();
         for input in &self.inner.lock().unwrap().inputs {
             if let Some(utxo) = input.get_utxo() {

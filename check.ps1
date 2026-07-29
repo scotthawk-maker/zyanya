@@ -2,12 +2,12 @@ cargo fmt --all
 cargo clippy
 
 $crates = @(
-  "spectre-wrpc-wasm",
-  "spectre-wallet-cli-wasm",
-  "spectre-wasm",
-  "spectre-cli",
-  "spectre-os",
-  "spectre-daemon"
+  "zyanya-wrpc-wasm",
+  "zyanya-wallet-cli-wasm",
+  "zyanya-wasm",
+  "zyanya-cli",
+  "zyanya-os",
+  "zyanya-daemon"
 )
 
 $env:AR="llvm-ar"

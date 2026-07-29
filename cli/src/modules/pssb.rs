@@ -1,21 +1,21 @@
 #![allow(unused_imports)]
 
 use crate::imports::*;
-use spectre_addresses::Prefix;
-use spectre_consensus_core::tx::{TransactionOutpoint, UtxoEntry};
-use spectre_wallet_core::account::pssb::finalize_psst_one_or_more_sig_and_redeem_script;
-use spectre_wallet_psst::{
+use zyanya_addresses::Prefix;
+use zyanya_consensus_core::tx::{TransactionOutpoint, UtxoEntry};
+use zyanya_wallet_core::account::pssb::finalize_psst_one_or_more_sig_and_redeem_script;
+use zyanya_wallet_psst::{
     prelude::{lock_script_sig_templating, script_sig_to_address, unlock_utxos_as_pssb, Bundle, Signer, PSST},
     psst::Inner,
 };
 
 #[derive(Default, Handler)]
-#[help("Send a Spectre transaction to a public address")]
+#[help("Send a Zyanya transaction to a public address")]
 pub struct Pssb;
 
 impl Pssb {
     async fn main(self: Arc<Self>, ctx: &Arc<dyn Context>, mut argv: Vec<String>, _cmd: &str) -> Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
 
         if !ctx.wallet().is_open() {
             return Err(Error::WalletIsNotOpen);
@@ -36,9 +36,9 @@ impl Pssb {
                 let _ = ctx.notifier().show(Notification::Processing).await;
 
                 let address = Address::try_from(argv.first().unwrap().as_str())?;
-                let amount_sompi = try_parse_required_nonzero_spectre_as_sompi_u64(argv.get(1))?;
+                let amount_sompi = try_parse_required_nonzero_zyanya_as_sompi_u64(argv.get(1))?;
                 let outputs = PaymentOutputs::from((address, amount_sompi));
-                let priority_fee_sompi = try_parse_optional_spectre_as_sompi_i64(argv.get(2))?.unwrap_or(0);
+                let priority_fee_sompi = try_parse_optional_zyanya_as_sompi_i64(argv.get(2))?.unwrap_or(0);
                 let abortable = Abortable::default();
 
                 let account: Arc<dyn Account> = ctx.wallet().account()?;
@@ -87,9 +87,9 @@ impl Pssb {
 
                 match subcommand.as_str() {
                     "lock" => {
-                        let amount_sompi = try_parse_required_nonzero_spectre_as_sompi_u64(argv.first())?;
+                        let amount_sompi = try_parse_required_nonzero_zyanya_as_sompi_u64(argv.first())?;
                         let outputs = PaymentOutputs::from((script_p2sh, amount_sompi));
-                        let priority_fee_sompi = try_parse_optional_spectre_as_sompi_i64(argv.get(1))?.unwrap_or(0);
+                        let priority_fee_sompi = try_parse_optional_zyanya_as_sompi_i64(argv.get(1))?.unwrap_or(0);
                         let abortable = Abortable::default();
 
                         let signer = account
@@ -114,9 +114,9 @@ impl Pssb {
                         }
 
                         // Get locked UTXO set.
-                        let spend_utxos: Vec<spectre_rpc_core::RpcUtxosByAddressesEntry> =
+                        let spend_utxos: Vec<zyanya_rpc_core::RpcUtxosByAddressesEntry> =
                             ctx.wallet().rpc_api().get_utxos_by_addresses(vec![script_p2sh.clone()]).await?;
-                        let priority_fee_sompi = try_parse_optional_spectre_as_sompi_i64(argv.first())?.unwrap_or(0) as u64;
+                        let priority_fee_sompi = try_parse_optional_zyanya_as_sompi_i64(argv.first())?.unwrap_or(0) as u64;
 
                         if spend_utxos.is_empty() {
                             twarnln!(ctx, "No locked UTXO set found.");
@@ -130,10 +130,10 @@ impl Pssb {
 
                         tprintln!(
                             ctx,
-                            "{} locked UTXO{} found with total amount of {} SPR",
+                            "{} locked UTXO{} found with total amount of {} ZYAN",
                             spend_utxos.len(),
                             if spend_utxos.len() == 1 { "" } else { "s" },
-                            sompi_to_spectre(total_locked_sompi)
+                            sompi_to_zyanya(total_locked_sompi)
                         );
 
                         // Sweep UTXO set.
@@ -204,7 +204,7 @@ impl Pssb {
                     return self.display_help(ctx, argv).await;
                 }
                 let pssb = Self::parse_input_pssb(argv.first().unwrap().as_str())?;
-                tprintln!(ctx, "{}", pssb.display_format(ctx.wallet().network_id()?, sompi_to_spectre_string_with_suffix));
+                tprintln!(ctx, "{}", pssb.display_format(ctx.wallet().network_id()?, sompi_to_zyanya_string_with_suffix));
 
                 for (psst_index, bundle_inner) in pssb.0.iter().enumerate() {
                     tprintln!(ctx, "PSST #{:03} finalized check:", psst_index + 1);
@@ -244,7 +244,7 @@ impl Pssb {
         }
     }
 
-    async fn display_help(self: Arc<Self>, ctx: Arc<SpectreCli>, _argv: Vec<String>) -> Result<()> {
+    async fn display_help(self: Arc<Self>, ctx: Arc<ZyanyaCli>, _argv: Vec<String>) -> Result<()> {
         ctx.term().help(
             &[
                 ("pssb create <address> <amount> <priority fee>", "Create a PSSB from single send transaction"),

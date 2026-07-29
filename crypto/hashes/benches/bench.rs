@@ -2,7 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::{thread_rng, Rng, RngCore};
 use sha3::digest::{ExtendableOutput, Update, XofReader};
 use sha3::{CShake256, CShake256Core};
-use spectre_hashes::*;
+use zyanya_hashes::*;
 use std::any::type_name;
 
 fn test_bytes_hasher<H: Hasher>(c: &mut Criterion) {

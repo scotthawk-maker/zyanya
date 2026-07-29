@@ -4,10 +4,10 @@ use crate::utxo as native;
 use crate::utxo::{UtxoContextBinding, UtxoContextId};
 use crate::wasm::utxo::UtxoProcessor;
 use crate::wasm::{Balance, BalanceStrings};
-use spectre_addresses::AddressOrStringArrayT;
-use spectre_consensus_client::UtxoEntryReferenceArrayT;
-use spectre_hashes::Hash;
-use spectre_wallet_macros::declare_typescript_wasm_interface as declare;
+use zyanya_addresses::AddressOrStringArrayT;
+use zyanya_consensus_client::UtxoEntryReferenceArrayT;
+use zyanya_hashes::Hash;
+use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
 
 declare! {
     IUtxoContextArgs,
@@ -38,7 +38,7 @@ declare! {
 
 ///
 /// UtxoContext is a class that provides a way to track addresses activity
-/// on the Spectre network.  When an address is registered with UtxoContext
+/// on the Zyanya network.  When an address is registered with UtxoContext
 /// it aggregates all UTXO entries for that address and emits events when
 /// any activity against these addresses occurs.
 ///

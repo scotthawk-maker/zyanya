@@ -3,17 +3,17 @@ use crate::{
     flow_trait::Flow,
     flowcontext::orphans::OrphanOutput,
 };
-use spectre_consensus_core::{api::BlockValidationFutures, block::Block, blockstatus::BlockStatus, errors::block::RuleError};
-use spectre_consensusmanager::{BlockProcessingBatch, ConsensusProxy};
-use spectre_core::debug;
-use spectre_hashes::Hash;
-use spectre_p2p_lib::{
+use zyanya_consensus_core::{api::BlockValidationFutures, block::Block, blockstatus::BlockStatus, errors::block::RuleError};
+use zyanya_consensusmanager::{BlockProcessingBatch, ConsensusProxy};
+use zyanya_core::debug;
+use zyanya_hashes::Hash;
+use zyanya_p2p_lib::{
     common::ProtocolError,
     dequeue, dequeue_with_timeout, make_message, make_request,
-    pb::{spectred_message::Payload, InvRelayBlockMessage, RequestBlockLocatorMessage, RequestRelayBlocksMessage},
+    pb::{zyanyad_message::Payload, InvRelayBlockMessage, RequestBlockLocatorMessage, RequestRelayBlocksMessage},
     IncomingRoute, Router, SharedIncomingRoute,
 };
-use spectre_utils::channel::{JobSender, JobTrySendError as TrySendError};
+use zyanya_utils::channel::{JobSender, JobTrySendError as TrySendError};
 use std::{collections::VecDeque, sync::Arc};
 
 pub struct RelayInvMessage {
@@ -342,7 +342,7 @@ impl HandleRelayInvsFlow {
         let msg = dequeue_with_timeout!(self.msg_route, Payload::BlockLocator)?;
         let locator_hashes: Vec<Hash> = msg.try_into()?;
         // Locator hashes are sent from later to earlier, so it makes sense to query consensus in reverse. Technically
-        // with current syncer-side implementations (in both go-spectre and this codebase) we could query only the last one,
+        // with current syncer-side implementations (in both go-zyanya and this codebase) we could query only the last one,
         // but we prefer not relying on such details for correctness
         //
         // The current syncer-side implementation sends a full locator even though it suffices to only send the

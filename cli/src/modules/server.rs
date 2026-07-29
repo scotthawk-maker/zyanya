@@ -1,5 +1,5 @@
 use crate::imports::*;
-use spectre_wrpc_client::parse::parse_host;
+use zyanya_wrpc_client::parse::parse_host;
 
 #[derive(Default, Handler)]
 #[help("Configure the RPC server address")]
@@ -7,7 +7,7 @@ pub struct Server;
 
 impl Server {
     async fn main(self: Arc<Self>, ctx: &Arc<dyn Context>, argv: Vec<String>, _cmd: &str) -> Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
 
         if let Some(url) = argv.first() {
             let Ok(_) = parse_host(url) else {

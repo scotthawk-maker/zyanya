@@ -3,9 +3,9 @@ use crate::mempool::{
     model::{pool::Pool, tx::TxRemovalReason},
     Mempool,
 };
-use spectre_consensus_core::tx::TransactionId;
-use spectre_core::debug;
-use spectre_utils::iter::IterExtensions;
+use zyanya_consensus_core::tx::TransactionId;
+use zyanya_core::debug;
+use zyanya_utils::iter::IterExtensions;
 
 impl Mempool {
     pub(crate) fn remove_transaction(

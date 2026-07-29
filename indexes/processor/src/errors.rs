@@ -1,5 +1,5 @@
-use spectre_notify::events::EventType;
-use spectre_utxoindex::errors::UtxoIndexError;
+use zyanya_notify::events::EventType;
+use zyanya_utxoindex::errors::UtxoIndexError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

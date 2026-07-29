@@ -1,6 +1,6 @@
 [package]
-name = "spectre-notify"
-description = "Spectre notification subsystem"
+name = "zyanya-notify"
+description = "Zyanya notification subsystem"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -18,13 +18,13 @@ futures-util.workspace = true
 futures.workspace = true
 indexmap.workspace = true
 itertools.workspace = true
-spectre-addresses.workspace = true
-spectre-consensus-core.workspace = true
-spectre-core.workspace = true
-spectre-hashes.workspace = true
-spectre-txscript-errors.workspace = true
-spectre-txscript.workspace = true
-spectre-utils.workspace = true
+zyanya-addresses.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-core.workspace = true
+zyanya-hashes.workspace = true
+zyanya-txscript-errors.workspace = true
+zyanya-txscript.workspace = true
+zyanya-utils.workspace = true
 log.workspace = true
 parking_lot.workspace = true
 paste.workspace = true
@@ -38,8 +38,8 @@ workflow-serializer.workspace = true
 
 [dev-dependencies]
 criterion.workspace = true
-spectre-alloc.workspace = true
-spectre-math.workspace = true
+zyanya-alloc.workspace = true
+zyanya-math.workspace = true
 tokio = { workspace = true, features = ["rt", "macros"] }
 workflow-perf-monitor.workspace = true
 

@@ -74,7 +74,7 @@ mod tests {
     use core::str::FromStr;
     use rand::thread_rng;
     use secp256k1::Keypair;
-    use spectre_consensus_core::{
+    use zyanya_consensus_core::{
         hashing::{
             sighash::{calc_ecdsa_signature_hash, calc_schnorr_signature_hash, SigHashReusedValuesUnsync},
             sighash_type::SIG_HASH_ALL,

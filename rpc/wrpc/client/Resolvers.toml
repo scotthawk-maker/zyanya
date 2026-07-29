@@ -1,6 +1,6 @@
 [[resolver]]
 enable = true
-address = "https://resolver.spectre-network.org"
+address = "https://resolver.zyanya-network.org"
 
 [[resolver]]
 enable = false

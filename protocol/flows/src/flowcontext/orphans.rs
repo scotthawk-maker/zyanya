@@ -1,12 +1,12 @@
 use indexmap::{map::Entry::Occupied, IndexMap};
 use rand::Rng;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     api::{BlockValidationFuture, BlockValidationFutures},
     block::Block,
 };
-use spectre_consensusmanager::{BlockProcessingBatch, ConsensusProxy};
-use spectre_core::debug;
-use spectre_hashes::Hash;
+use zyanya_consensusmanager::{BlockProcessingBatch, ConsensusProxy};
+use zyanya_core::debug;
+use zyanya_hashes::Hash;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     iter::once,
@@ -283,13 +283,13 @@ mod tests {
     use super::*;
     use futures::future::try_join_all;
     use parking_lot::RwLock;
-    use spectre_consensus_core::{
+    use zyanya_consensus_core::{
         api::{BlockValidationFutures, ConsensusApi},
         blockstatus::BlockStatus,
         errors::block::BlockProcessResult,
     };
-    use spectre_consensusmanager::{ConsensusInstance, SessionLock};
-    use spectre_core::assert_match;
+    use zyanya_consensusmanager::{ConsensusInstance, SessionLock};
+    use zyanya_core::assert_match;
     use std::sync::Arc;
 
     #[derive(Default)]

@@ -8,22 +8,22 @@ use secp256k1::{
     rand::{thread_rng, Rng},
     Keypair,
 };
-use spectre_addresses::{Address, Prefix, Version};
-use spectre_consensus_core::{
+use zyanya_addresses::{Address, Prefix, Version};
+use zyanya_consensus_core::{
     config::params::{TESTNET11_PARAMS, TESTNET_PARAMS},
-    constants::{SOMPI_PER_SPECTRE, TX_VERSION},
+    constants::{SOMPI_PER_ZYANYA, TX_VERSION},
     sign::sign,
     subnets::SUBNETWORK_ID_NATIVE,
     tx::{MutableTransaction, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput, UtxoEntry},
 };
-use spectre_core::{info, spectred_env::version, time::unix_now, warn};
-use spectre_grpc_client::{ClientPool, GrpcClient};
-use spectre_notify::subscription::context::SubscriptionContext;
-use spectre_rpc_core::{api::rpc::RpcApi, notify::mode::NotificationMode, RpcUtxoEntry};
-use spectre_txscript::pay_to_address_script;
+use zyanya_core::{info, zyanyad_env::version, time::unix_now, warn};
+use zyanya_grpc_client::{ClientPool, GrpcClient};
+use zyanya_notify::subscription::context::SubscriptionContext;
+use zyanya_rpc_core::{api::rpc::RpcApi, notify::mode::NotificationMode, RpcUtxoEntry};
+use zyanya_txscript::pay_to_address_script;
 use tokio::time::{interval, Instant, MissedTickBehavior};
 
-const DEFAULT_SEND_AMOUNT: u64 = 10 * SOMPI_PER_SPECTRE;
+const DEFAULT_SEND_AMOUNT: u64 = 10 * SOMPI_PER_ZYANYA;
 const FEE_RATE: u64 = 10;
 const MILLIS_PER_TICK: u64 = 10;
 const ADDRESS_PREFIX: Prefix = Prefix::Testnet;
@@ -146,7 +146,7 @@ struct TxsFeeConfig {
 
 #[tokio::main]
 async fn main() {
-    spectre_core::log::init_logger(None, "");
+    zyanya_core::log::init_logger(None, "");
     let args = Args::parse();
     let stats = Arc::new(Mutex::new(Stats { num_txs: 0, since: unix_now(), num_utxos: 0, utxos_amount: 0, num_outs: 0 }));
     let subscription_context = SubscriptionContext::new();
@@ -173,20 +173,20 @@ async fn main() {
         Keypair::from_seckey_slice(secp256k1::SECP256K1, &private_key_bytes).unwrap()
     } else {
         let (sk, pk) = &secp256k1::generate_keypair(&mut thread_rng());
-        let spectre_addr = Address::new(ADDRESS_PREFIX, ADDRESS_VERSION, &pk.x_only_public_key().0.serialize());
+        let zyanya_addr = Address::new(ADDRESS_PREFIX, ADDRESS_VERSION, &pk.x_only_public_key().0.serialize());
         info!(
             "Generated private key {} and address {}. Send some funds to this address and rerun rothschild with `--private-key {}`",
             sk.display_secret(),
-            String::from(&spectre_addr),
+            String::from(&zyanya_addr),
             sk.display_secret()
         );
         return;
     };
 
-    let spectre_addr = Address::new(ADDRESS_PREFIX, ADDRESS_VERSION, &schnorr_key.x_only_public_key().0.serialize());
+    let zyanya_addr = Address::new(ADDRESS_PREFIX, ADDRESS_VERSION, &schnorr_key.x_only_public_key().0.serialize());
 
-    let spectre_to_addr =
-        args.addr.as_ref().map_or_else(|| spectre_addr.clone(), |addr_str| Address::try_from(addr_str.clone()).unwrap());
+    let zyanya_to_addr =
+        args.addr.as_ref().map_or_else(|| zyanya_addr.clone(), |addr_str| Address::try_from(addr_str.clone()).unwrap());
 
     let fee_config = TxsFeeConfig { priority_fee: args.priority_fee, randomize_fee: args.randomize_fee };
 
@@ -197,10 +197,10 @@ async fn main() {
         \tprivate key: {}\n\
         \tfrom address: {}",
         schnorr_key.display_secret(),
-        String::from(&spectre_addr)
+        String::from(&zyanya_addr)
     );
     if args.addr.is_some() {
-        log_message.push_str(&format!("\n\tto address: {}", String::from(&spectre_to_addr)));
+        log_message.push_str(&format!("\n\tto address: {}", String::from(&zyanya_to_addr)));
     }
     if args.priority_fee != 0 {
         log_message.push_str(&format!(
@@ -280,7 +280,7 @@ async fn main() {
     let target_tps = args.tps.min(if args.unleashed { u64::MAX } else { 100 });
     let should_tick_per_second = target_tps * MILLIS_PER_TICK / 1000 == 0;
     let avg_txs_per_tick = if should_tick_per_second { target_tps } else { target_tps * MILLIS_PER_TICK / 1000 };
-    let mut utxos = refresh_utxos(&rpc_client, spectre_addr.clone(), &mut pending, coinbase_maturity).await;
+    let mut utxos = refresh_utxos(&rpc_client, zyanya_addr.clone(), &mut pending, coinbase_maturity).await;
     let mut ticker = interval(Duration::from_millis(if should_tick_per_second { 1000 } else { MILLIS_PER_TICK }));
     ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
 
@@ -308,7 +308,7 @@ async fn main() {
         let has_funds = maybe_send_tx(
             txs_to_send,
             &tx_sender,
-            spectre_to_addr.clone(),
+            zyanya_to_addr.clone(),
             &mut utxos,
             &mut pending,
             schnorr_key,
@@ -324,7 +324,7 @@ async fn main() {
         if !has_funds || now - last_refresh > 60_000 {
             info!("Refetching UTXO set");
             tokio::time::sleep(Duration::from_millis(100)).await; // We don't want this operation to be too frequent since its heavy on the node, so we wait some time before executing it.
-            utxos = refresh_utxos(&rpc_client, spectre_addr.clone(), &mut pending, coinbase_maturity).await;
+            utxos = refresh_utxos(&rpc_client, zyanya_addr.clone(), &mut pending, coinbase_maturity).await;
             last_refresh = unix_now();
             next_available_utxo_index = 0;
             pause_if_mempool_is_full(&rpc_client).await;
@@ -365,20 +365,20 @@ async fn pause_if_mempool_is_full(rpc_client: &GrpcClient) {
 
 async fn refresh_utxos(
     rpc_client: &GrpcClient,
-    spectre_addr: Address,
+    zyanya_addr: Address,
     pending: &mut HashMap<TransactionOutpoint, Instant>,
     coinbase_maturity: u64,
 ) -> Vec<(TransactionOutpoint, UtxoEntry)> {
-    populate_pending_outpoints_from_mempool(rpc_client, spectre_addr.clone(), pending).await;
-    fetch_spendable_utxos(rpc_client, spectre_addr, coinbase_maturity, pending).await
+    populate_pending_outpoints_from_mempool(rpc_client, zyanya_addr.clone(), pending).await;
+    fetch_spendable_utxos(rpc_client, zyanya_addr, coinbase_maturity, pending).await
 }
 
 async fn populate_pending_outpoints_from_mempool(
     rpc_client: &GrpcClient,
-    spectre_addr: Address,
+    zyanya_addr: Address,
     pending_outpoints: &mut HashMap<TransactionOutpoint, Instant>,
 ) {
-    let entries = rpc_client.get_mempool_entries_by_addresses(vec![spectre_addr], true, false).await.unwrap();
+    let entries = rpc_client.get_mempool_entries_by_addresses(vec![zyanya_addr], true, false).await.unwrap();
     let now = Instant::now();
 
     for entry in entries {
@@ -392,11 +392,11 @@ async fn populate_pending_outpoints_from_mempool(
 
 async fn fetch_spendable_utxos(
     rpc_client: &GrpcClient,
-    spectre_addr: Address,
+    zyanya_addr: Address,
     coinbase_maturity: u64,
     pending: &mut HashMap<TransactionOutpoint, Instant>,
 ) -> Vec<(TransactionOutpoint, UtxoEntry)> {
-    let resp = rpc_client.get_utxos_by_addresses(vec![spectre_addr]).await.unwrap();
+    let resp = rpc_client.get_utxos_by_addresses(vec![zyanya_addr]).await.unwrap();
     let dag_info = rpc_client.get_block_dag_info().await.unwrap();
 
     let mut utxos = resp.into_iter()
@@ -423,7 +423,7 @@ fn is_utxo_spendable(entry: &RpcUtxoEntry, virtual_daa_score: u64, coinbase_matu
 async fn maybe_send_tx(
     txs_to_send: u64,
     tx_sender: &async_channel::Sender<ClientPoolArg>,
-    spectre_addr: Address,
+    zyanya_addr: Address,
     utxos: &mut [(TransactionOutpoint, UtxoEntry)],
     pending: &mut HashMap<TransactionOutpoint, Instant>,
     schnorr_key: Keypair,
@@ -465,7 +465,7 @@ async fn maybe_send_tx(
         .into_par_iter()
         .map(|utxo_option| {
             if let Some((selected_utxos, selected_amount)) = utxo_option {
-                let tx = generate_tx(schnorr_key, &selected_utxos, selected_amount, num_outs, &spectre_addr);
+                let tx = generate_tx(schnorr_key, &selected_utxos, selected_amount, num_outs, &zyanya_addr);
 
                 return Some((tx, selected_utxos.len(), selected_utxos.into_iter().map(|(_, entry)| entry.amount).sum::<u64>()));
             }
@@ -509,9 +509,9 @@ fn generate_tx(
     utxos: &[(TransactionOutpoint, UtxoEntry)],
     send_amount: u64,
     num_outs: u64,
-    spectre_addr: &Address,
+    zyanya_addr: &Address,
 ) -> Transaction {
-    let script_public_key = pay_to_address_script(spectre_addr);
+    let script_public_key = pay_to_address_script(zyanya_addr);
     let inputs = utxos
         .iter()
         .map(|(op, _)| TransactionInput { previous_outpoint: *op, signature_script: vec![], sequence: 0, sig_op_count: 1 })

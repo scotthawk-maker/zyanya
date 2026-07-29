@@ -7,11 +7,11 @@
 
 use crate::imports::*;
 // use futures::pin_mut;
-use spectre_notify::{
+use zyanya_notify::{
     listener::ListenerId,
     scope::{Scope, UtxosChangedScope, VirtualDaaScoreChangedScope},
 };
-use spectre_rpc_core::{
+use zyanya_rpc_core::{
     api::{
         ctl::{RpcCtl, RpcState},
         ops::{RPC_API_REVISION, RPC_API_VERSION},
@@ -19,7 +19,7 @@ use spectre_rpc_core::{
     message::UtxosChangedNotification,
     GetServerInfoResponse,
 };
-use spectre_wrpc_client::SpectreRpcClient;
+use zyanya_wrpc_client::ZyanyaRpcClient;
 use workflow_core::channel::{Channel, DuplexChannel, Sender};
 use workflow_core::task::spawn;
 
@@ -29,7 +29,7 @@ use crate::utxo::{
     Maturity, OutgoingTransaction, PendingUtxoEntryReference, SyncMonitor, UtxoContext, UtxoEntryId, UtxoEntryReference,
 };
 use crate::wallet::WalletBusMessage;
-use spectre_rpc_core::{
+use zyanya_rpc_core::{
     notify::connection::{ChannelConnection, ChannelType},
     Notification,
 };
@@ -131,8 +131,8 @@ impl UtxoProcessor {
         self.rpc_ctl().descriptor()
     }
 
-    pub fn rpc_client(&self) -> Option<Arc<SpectreRpcClient>> {
-        self.rpc_api().clone().downcast_arc::<SpectreRpcClient>().ok()
+    pub fn rpc_client(&self) -> Option<Arc<ZyanyaRpcClient>> {
+        self.rpc_api().clone().downcast_arc::<ZyanyaRpcClient>().ok()
     }
 
     pub async fn bind_rpc(&self, rpc: Option<Rpc>) -> Result<()> {
@@ -468,7 +468,7 @@ impl UtxoProcessor {
 
         self.inner.current_daa_score.store(virtual_daa_score, Ordering::SeqCst);
 
-        log_trace!("Connected to spectred: '{server_version}' on '{server_network_id}';  SYNC: {is_synced}  DAA: {virtual_daa_score}");
+        log_trace!("Connected to zyanyad: '{server_version}' on '{server_network_id}';  SYNC: {is_synced}  DAA: {virtual_daa_score}");
         self.notify(Events::ServerStatus { server_version, is_synced, network_id, url: self.rpc_url() }).await?;
 
         Ok(is_synced)

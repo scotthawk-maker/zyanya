@@ -6,7 +6,7 @@ use crate::account::Inner;
 use crate::derivation::{AddressDerivationManager, AddressDerivationManagerTrait};
 use crate::imports::*;
 
-pub const MULTISIG_ACCOUNT_KIND: &str = "spectre-multisig-standard";
+pub const MULTISIG_ACCOUNT_KIND: &str = "zyanya-multisig-standard";
 
 pub struct Ctor {}
 
@@ -17,7 +17,7 @@ impl Factory for Ctor {
     }
 
     fn description(&self) -> String {
-        "Spectre Core Multi-Signature Account".to_string()
+        "Zyanya Core Multi-Signature Account".to_string()
     }
 
     async fn try_load(

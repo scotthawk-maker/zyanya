@@ -1,6 +1,6 @@
 [package]
-name = "spectre-utils"
-description = "Spectre utilities"
+name = "zyanya-utils"
+description = "Zyanya utilities"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true

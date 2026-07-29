@@ -1,4 +1,4 @@
-extern crate self as spectre_notify;
+extern crate self as zyanya_notify;
 
 pub mod address;
 pub(crate) mod broadcaster;

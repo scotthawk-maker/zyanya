@@ -1,2 +1,2 @@
 /// Re-export errors
-pub use spectre_mining_errors::manager::*;
+pub use zyanya_mining_errors::manager::*;

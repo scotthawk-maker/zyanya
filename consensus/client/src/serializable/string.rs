@@ -11,8 +11,8 @@ use crate::{
 };
 use ahash::AHashMap;
 use cctx::VerifiableTransaction;
-use spectre_addresses::Address;
-use spectre_consensus_core::subnets::SubnetworkId;
+use zyanya_addresses::Address;
+use zyanya_consensus_core::subnets::SubnetworkId;
 use workflow_wasm::serde::{from_value, to_value};
 
 pub type SignedTransactionIndexType = u32;

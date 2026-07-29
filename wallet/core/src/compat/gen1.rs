@@ -23,7 +23,7 @@ pub fn decrypt_mnemonic<T: AsRef<[u8]>>(
 mod test {
     use super::*;
     use hex_literal::hex;
-    use spectre_addresses::Address;
+    use zyanya_addresses::Address;
 
     #[test]
     fn decrypt_go_encrypted_mnemonics_test() {
@@ -72,10 +72,10 @@ mod test {
         };
         let import_secret = Secret::new(vec![]);
 
-        let acc = wallet.import_spectrewallet_golang_single_v1(&import_secret, &wallet_secret, file).await.unwrap();
+        let acc = wallet.import_zyanyawallet_golang_single_v1(&import_secret, &wallet_secret, file).await.unwrap();
         assert_eq!(
             acc.receive_address().unwrap(),
-            Address::try_from("spectre:qpxrjjwjzeu08q07cdums5ua7ynz0tuvyhj262y238949qaetjhh5r25aekwn").unwrap(), // taken from golang impl
+            Address::try_from("zyanya:qpxrjjwjzeu08q07cdums5ua7ynz0tuvyhj262y238949qaetjhh5r25aekwn").unwrap(), // taken from golang impl
         );
     }
 
@@ -123,10 +123,10 @@ mod test {
         };
         let import_secret = Secret::new(vec![]);
 
-        let acc = wallet.import_spectrewallet_golang_multisig_v1(&import_secret, &wallet_secret, file).await.unwrap();
+        let acc = wallet.import_zyanyawallet_golang_multisig_v1(&import_secret, &wallet_secret, file).await.unwrap();
         assert_eq!(
             acc.receive_address().unwrap(),
-            Address::try_from("spectre:pqdpyf9m3az678cp69xvcypfcjqtjtvlqt9qm9fves24tj3gguknq3r0p98hg").unwrap(), // taken from golang impl
+            Address::try_from("zyanya:pqdpyf9m3az678cp69xvcypfcjqtjtvlqt9qm9fves24tj3gguknq3r0p98hg").unwrap(), // taken from golang impl
         );
     }
 
@@ -143,9 +143,9 @@ mod test {
 
         #[derive(Debug, Default, Deserialize)]
         struct EncryptedMnemonicIntermediate {
-            #[serde(with = "spectre_utils::serde_bytes")]
+            #[serde(with = "zyanya_utils::serde_bytes")]
             cipher: Vec<u8>,
-            #[serde(with = "spectre_utils::serde_bytes")]
+            #[serde(with = "zyanya_utils::serde_bytes")]
             salt: Vec<u8>,
         }
         impl From<EncryptedMnemonicIntermediate> for EncryptedMnemonic<Vec<u8>> {

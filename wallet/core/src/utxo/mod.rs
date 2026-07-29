@@ -25,7 +25,7 @@ pub use processor::UtxoProcessor;
 pub use reference::{Maturity, TryIntoUtxoEntryReferences, UtxoEntryReference, UtxoEntryReferenceExtension};
 pub use scan::{Scan, ScanExtent};
 pub use settings::*;
-pub use spectre_consensus_client::UtxoEntryId;
+pub use zyanya_consensus_client::UtxoEntryId;
 pub use stream::UtxoStream;
 pub use sync::SyncMonitor;
 

@@ -13,7 +13,7 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
-use spectre_addresses::Prefix;
+use zyanya_addresses::Prefix;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::Deref;
 use std::str::FromStr;
@@ -156,7 +156,7 @@ impl TryFrom<&NetworkTypeT> for Prefix {
 
 #[derive(thiserror::Error, Debug, Clone)]
 pub enum NetworkIdError {
-    #[error("Invalid network name prefix: {0}. The expected prefix is 'spectre'.")]
+    #[error("Invalid network name prefix: {0}. The expected prefix is 'zyanya'.")]
     InvalidPrefix(String),
 
     #[error(transparent)]
@@ -188,7 +188,7 @@ impl From<NetworkIdError> for JsValue {
 }
 
 ///
-/// NetworkId is a unique identifier for a Spectre network instance.
+/// NetworkId is a unique identifier for a Zyanya network instance.
 /// It is composed of a network type and an optional suffix.
 ///
 /// @category Consensus
@@ -263,13 +263,13 @@ impl NetworkId {
         NETWORK_IDS.iter().copied()
     }
 
-    /// Returns a textual description of the network prefixed with `spectre-`
+    /// Returns a textual description of the network prefixed with `zyanya-`
     pub fn to_prefixed(&self) -> String {
-        format!("spectre-{}", self)
+        format!("zyanya-{}", self)
     }
 
     pub fn from_prefixed(prefixed: &str) -> Result<Self, NetworkIdError> {
-        if let Some(stripped) = prefixed.strip_prefix("spectre-") {
+        if let Some(stripped) = prefixed.strip_prefix("zyanya-") {
             Self::from_str(stripped)
         } else {
             Err(NetworkIdError::InvalidPrefix(prefixed.to_string()))

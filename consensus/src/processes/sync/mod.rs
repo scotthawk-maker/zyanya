@@ -2,10 +2,10 @@ use std::{cmp::min, ops::Deref, sync::Arc};
 
 use itertools::Itertools;
 use parking_lot::RwLock;
-use spectre_consensus_core::errors::sync::{SyncManagerError, SyncManagerResult};
-use spectre_database::prelude::StoreResultExtensions;
-use spectre_hashes::Hash;
-use spectre_math::uint::malachite_base::num::arithmetic::traits::CeilingLogBase2;
+use zyanya_consensus_core::errors::sync::{SyncManagerError, SyncManagerResult};
+use zyanya_database::prelude::StoreResultExtensions;
+use zyanya_hashes::Hash;
+use zyanya_math::uint::malachite_base::num::arithmetic::traits::CeilingLogBase2;
 
 use crate::model::{
     services::reachability::{MTReachabilityService, ReachabilityService},

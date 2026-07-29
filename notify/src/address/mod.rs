@@ -2,8 +2,8 @@ pub mod error;
 pub mod tracker;
 
 pub mod test_helpers {
-    use spectre_addresses::Address;
-    use spectre_addresses::{Prefix, Version};
+    use zyanya_addresses::Address;
+    use zyanya_addresses::{Prefix, Version};
 
     pub const ADDRESS_PREFIX: Prefix = Prefix::Mainnet;
 

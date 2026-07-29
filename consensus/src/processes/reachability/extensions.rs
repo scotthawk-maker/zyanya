@@ -1,7 +1,7 @@
 use super::interval::Interval;
 use crate::model::stores::reachability::ReachabilityStoreReader;
-use spectre_database::prelude::StoreResult;
-use spectre_hashes::Hash;
+use zyanya_database::prelude::StoreResult;
+use zyanya_hashes::Hash;
 
 pub(super) trait ReachabilityStoreIntervalExtensions {
     fn interval_children_capacity(&self, block: Hash) -> StoreResult<Interval>;

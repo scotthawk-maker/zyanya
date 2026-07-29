@@ -1,10 +1,10 @@
 use super::process_queue::ProcessQueue;
 use itertools::Itertools;
-use spectre_consensus_core::tx::TransactionId;
-use spectre_core::debug;
-use spectre_p2p_lib::{
+use zyanya_consensus_core::tx::TransactionId;
+use zyanya_core::debug;
+use zyanya_p2p_lib::{
     make_message,
-    pb::{spectred_message::Payload, InvTransactionsMessage, SpectredMessage},
+    pb::{zyanyad_message::Payload, InvTransactionsMessage, ZyanyadMessage},
     Hub,
 };
 use std::time::{Duration, Instant};
@@ -75,7 +75,7 @@ impl TransactionsSpread {
     /// every `BROADCAST_INTERVAL` milliseconds or when the queue length is larger than the Inv message
     /// capacity.
     ///
-    /// _GO-SPECTRED: EnqueueTransactionIDsForPropagation_
+    /// _GO-ZYANYAD: EnqueueTransactionIDsForPropagation_
     pub async fn broadcast_transactions<I: IntoIterator<Item = TransactionId>>(&mut self, transaction_ids: I, should_throttle: bool) {
         self.transaction_ids.enqueue_chunk(transaction_ids);
 
@@ -94,7 +94,7 @@ impl TransactionsSpread {
         self.last_broadcast_time = Instant::now();
     }
 
-    async fn broadcast(&self, msg: SpectredMessage, should_throttle: bool) {
+    async fn broadcast(&self, msg: ZyanyadMessage, should_throttle: bool) {
         if should_throttle {
             // TODO: Figure out a better number
             self.hub.broadcast_to_some_peers(msg, 8).await

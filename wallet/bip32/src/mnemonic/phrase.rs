@@ -10,7 +10,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use rand_core::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use spectre_utils::hex::*;
+use zyanya_utils::hex::*;
 use wasm_bindgen::prelude::*;
 use zeroize::{Zeroize, Zeroizing};
 use {super::seed::Seed, hmac::Hmac, sha2::Sha512};
@@ -296,12 +296,12 @@ mod tests {
                 "xprv9s21ZrQH143K2YStJyGeTyoWRBu2N1wkamjidQSdxrVeDziGfvwkmP67L2xf6weijVapZxwi64pW8ywHDvCaBQA8PyrRHqkjuuPY9aapypz"
             ],
             [
-                // KPRV (spectre mainnet xprv)
+                // KPRV (zyanya mainnet xprv)
                 "cruise village slam canyon monster scrub myself farm add riot large board sentence outer nice coast raven bird scheme undo december blanket trim hero",
                 "kprv5y2qurMHCsXYr8yytxy6ZwYWLtFbdtWWavDL6bPfz2fNLvnZymmNfE6KpQqNHHjb7mAWYCtuUkZPbkgUR19LSKS9VasqRR852L5GMVY8wf9"
             ],
             [
-                // KTRV (spectre testnet xprv)
+                // KTRV (zyanya testnet xprv)
                 "short diagram life tip retreat nothing dynamic absent lamp carry mansion keen truck cram crash science liberty emotion live pepper orphan quiz wide prison",
                 "ktrv5himbbCxArFU23gGTxVHNKahNXXSETHjNWgwc5qm85nKS1p55FEb8DUdTd2CPvQvBUKYFRSjjXb5nagr7wXUE4eSaFSxof8cUd6Sm66NRjA"
             ]

@@ -1,6 +1,6 @@
 [package]
-name = "spectre-addresses"
-description = "Spectre address"
+name = "zyanya-addresses"
+description = "Zyanya address"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true

@@ -1,6 +1,6 @@
 use crate::ELEMENT_BYTE_SIZE;
 use serde::{Deserialize, Serialize};
-use spectre_math::Uint3072;
+use zyanya_math::Uint3072;
 use std::ops::{DivAssign, MulAssign};
 
 // TODO: Add u32 support for optimization on 32 bit machines.

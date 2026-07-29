@@ -1,9 +1,9 @@
-use spectre_consensus_core::subnets::SubnetworkId;
-use spectre_core::{
-    spectred_env::{name, version},
+use zyanya_consensus_core::subnets::SubnetworkId;
+use zyanya_core::{
+    zyanyad_env::{name, version},
     time::unix_now,
 };
-use spectre_utils::networking::{NetAddress, PeerId};
+use zyanya_utils::networking::{NetAddress, PeerId};
 
 /// Maximum allowed length for the user agent field in a version message `VersionMessage`.
 pub const MAX_USER_AGENT_LEN: usize = 256;

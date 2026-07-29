@@ -1,6 +1,6 @@
 [package]
-name = "spectre-wrpc-client"
-description = "Spectre wRPC client"
+name = "zyanya-wrpc-client"
+description = "Zyanya wRPC client"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -10,7 +10,7 @@ license.workspace = true
 repository.workspace = true
 
 [features]
-wasm32-sdk = ["spectre-consensus-wasm/wasm32-sdk","spectre-rpc-core/wasm32-sdk","workflow-rpc/wasm32-sdk"]
+wasm32-sdk = ["zyanya-consensus-wasm/wasm32-sdk","zyanya-rpc-core/wasm32-sdk","workflow-rpc/wasm32-sdk"]
 default = []
 
 [lib]
@@ -23,12 +23,12 @@ borsh.workspace = true
 cfg-if.workspace = true
 futures.workspace = true
 js-sys.workspace = true
-spectre-addresses.workspace = true
-spectre-consensus-core.workspace = true
-spectre-consensus-wasm.workspace = true
-spectre-notify.workspace = true
-spectre-rpc-core.workspace = true
-spectre-rpc-macros.workspace = true
+zyanya-addresses.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-wasm.workspace = true
+zyanya-notify.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-rpc-macros.workspace = true
 paste.workspace = true
 rand.workspace = true
 regex.workspace = true

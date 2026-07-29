@@ -5,11 +5,11 @@ use crate::modules::miner::Miner;
 use crate::modules::node::Node;
 use crate::notifier::{Notification, Notifier};
 use crate::result::Result;
-use spectre_daemon::{DaemonEvent, DaemonKind, Daemons};
-use spectre_wallet_core::account::Account;
-use spectre_wallet_core::rpc::DynRpcApi;
-use spectre_wallet_core::storage::{IdT, PrvKeyDataInfo};
-use spectre_wrpc_client::{Resolver, SpectreRpcClient};
+use zyanya_daemon::{DaemonEvent, DaemonKind, Daemons};
+use zyanya_wallet_core::account::Account;
+use zyanya_wallet_core::rpc::DynRpcApi;
+use zyanya_wallet_core::storage::{IdT, PrvKeyDataInfo};
+use zyanya_wrpc_client::{Resolver, ZyanyaRpcClient};
 use workflow_core::channel::*;
 use workflow_core::time::Instant;
 use workflow_log::*;
@@ -30,7 +30,7 @@ impl Options {
     }
 }
 
-pub struct SpectreCli {
+pub struct ZyanyaCli {
     term: Arc<Mutex<Option<Arc<Terminal>>>>,
     wallet: Arc<Wallet>,
     notifications_task_ctl: DuplexChannel,
@@ -46,19 +46,19 @@ pub struct SpectreCli {
     sync_state: Mutex<Option<SyncState>>,
 }
 
-impl From<&SpectreCli> for Arc<Terminal> {
-    fn from(ctx: &SpectreCli) -> Arc<Terminal> {
+impl From<&ZyanyaCli> for Arc<Terminal> {
+    fn from(ctx: &ZyanyaCli) -> Arc<Terminal> {
         ctx.term()
     }
 }
 
-impl AsRef<SpectreCli> for SpectreCli {
+impl AsRef<ZyanyaCli> for ZyanyaCli {
     fn as_ref(&self) -> &Self {
         self
     }
 }
 
-impl workflow_log::Sink for SpectreCli {
+impl workflow_log::Sink for ZyanyaCli {
     fn write(&self, _target: Option<&str>, _level: Level, args: &std::fmt::Arguments<'_>) -> bool {
         if let Some(term) = self.try_term() {
             cfg_if! {
@@ -85,7 +85,7 @@ impl workflow_log::Sink for SpectreCli {
     }
 }
 
-impl SpectreCli {
+impl ZyanyaCli {
     pub fn init() {
         cfg_if! {
             if #[cfg(not(target_arch = "wasm32"))] {
@@ -93,9 +93,9 @@ impl SpectreCli {
                     std::println!("halt");
                     1
                 });
-                spectre_core::log::init_logger(None, "info");
+                zyanya_core::log::init_logger(None, "info");
             } else {
-                spectre_core::log::set_log_level(LevelFilter::Info);
+                zyanya_core::log::set_log_level(LevelFilter::Info);
             }
         }
 
@@ -105,7 +105,7 @@ impl SpectreCli {
     pub async fn try_new_arc(options: Options) -> Result<Arc<Self>> {
         let wallet = Arc::new(Wallet::try_new(Wallet::local_store()?, Some(Resolver::default()), None)?);
 
-        let spectre_cli = Arc::new(SpectreCli {
+        let zyanya_cli = Arc::new(ZyanyaCli {
             term: Arc::new(Mutex::new(None)),
             wallet,
             notifications_task_ctl: DuplexChannel::oneshot(),
@@ -121,16 +121,16 @@ impl SpectreCli {
             sync_state: Mutex::new(None),
         });
 
-        let term = Arc::new(Terminal::try_new_with_options(spectre_cli.clone(), options.terminal)?);
+        let term = Arc::new(Terminal::try_new_with_options(zyanya_cli.clone(), options.terminal)?);
         term.init().await?;
 
         cfg_if! {
             if #[cfg(target_arch = "wasm32")] {
-                spectre_cli.init_panic_hook();
+                zyanya_cli.init_panic_hook();
             }
         }
 
-        Ok(spectre_cli)
+        Ok(zyanya_cli)
     }
 
     pub fn term(&self) -> Arc<Terminal> {
@@ -165,7 +165,7 @@ impl SpectreCli {
         self.wallet.try_rpc_api().clone()
     }
 
-    pub fn try_rpc_client(&self) -> Option<Arc<SpectreRpcClient>> {
+    pub fn try_rpc_client(&self) -> Option<Arc<ZyanyaRpcClient>> {
         self.wallet.try_wrpc_client().clone()
     }
 
@@ -219,7 +219,7 @@ impl SpectreCli {
 
     pub async fn handle_daemon_event(self: &Arc<Self>, event: DaemonEvent) -> Result<()> {
         match event.kind() {
-            DaemonKind::Spectred => {
+            DaemonKind::Zyanyad => {
                 let node = self.node.lock().unwrap().clone();
                 if let Some(node) = node {
                     node.handle_event(self, event.into()).await?;
@@ -286,10 +286,10 @@ impl SpectreCli {
                         if let Ok(msg) = msg {
                             match *msg {
                                 Events::WalletPing => {
-                                    // log_info!("Spectre NG - received wallet ping");
+                                    // log_info!("Zyanya NG - received wallet ping");
                                 },
                                 Events::Metrics { network_id : _, metrics : _ } => {
-                                    // log_info!("Spectre NG - received metrics event {metrics:?}")
+                                    // log_info!("Zyanya NG - received metrics event {metrics:?}")
                                 }
                                 Events::Error { message } => { terrorln!(this,"{message}"); },
                                 Events::UtxoProcStart => {},
@@ -307,7 +307,7 @@ impl SpectreCli {
                                     this.term().refresh_prompt();
                                 },
                                 Events::UtxoIndexNotEnabled { .. } => {
-                                    tprintln!(this, "Error: Spectre node UTXO index is not enabled...")
+                                    tprintln!(this, "Error: Zyanya node UTXO index is not enabled...")
                                 },
                                 Events::SyncState { sync_state } => {
 
@@ -329,16 +329,16 @@ impl SpectreCli {
                                     ..
                                 } => {
 
-                                    tprintln!(this, "Connected to Spectre node version {server_version} at {}", url.unwrap_or("N/A".to_string()));
+                                    tprintln!(this, "Connected to Zyanya node version {server_version} at {}", url.unwrap_or("N/A".to_string()));
 
                                     let is_open = this.wallet.is_open();
 
                                     if !is_synced {
                                         if is_open {
-                                            terrorln!(this, "Unable to update the wallet state - Spectre node is currently syncing with the network...");
+                                            terrorln!(this, "Unable to update the wallet state - Zyanya node is currently syncing with the network...");
 
                                         } else {
-                                            terrorln!(this, "Spectre node is currently syncing with the network, please wait for the sync to complete...");
+                                            terrorln!(this, "Zyanya node is currently syncing with the network, please wait for the sync to complete...");
                                         }
                                     }
 
@@ -742,24 +742,24 @@ impl SpectreCli {
             tprintln!(self, "{}", style("shutting down...").magenta());
 
             let miner = self.daemons().try_cpu_miner();
-            let spectred = self.daemons().try_spectred();
+            let zyanyad = self.daemons().try_zyanyad();
 
             if let Some(miner) = miner.as_ref() {
                 miner.mute(false).await?;
                 miner.stop().await?;
             }
 
-            if let Some(spectred) = spectred.as_ref() {
-                spectred.mute(false).await?;
-                spectred.stop().await?;
+            if let Some(zyanyad) = zyanyad.as_ref() {
+                zyanyad.mute(false).await?;
+                zyanyad.stop().await?;
             }
 
             if let Some(miner) = miner.as_ref() {
                 miner.join().await?;
             }
 
-            if let Some(spectred) = spectred.as_ref() {
-                spectred.join().await?;
+            if let Some(zyanyad) = zyanyad.as_ref() {
+                zyanyad.join().await?;
             }
 
             self.term().exit().await;
@@ -816,7 +816,7 @@ impl SpectreCli {
 }
 
 #[async_trait]
-impl Cli for SpectreCli {
+impl Cli for ZyanyaCli {
     fn init(self: Arc<Self>, term: &Arc<Terminal>) -> TerminalResult<()> {
         *self.term.lock().unwrap() = Some(term.clone());
 
@@ -872,7 +872,7 @@ impl Cli for SpectreCli {
 
         if let Some(descriptor) = self.wallet.descriptor() {
             let title = descriptor.title.unwrap_or(descriptor.filename);
-            if title.to_lowercase().as_str() != "spectre" {
+            if title.to_lowercase().as_str() != "zyanya" {
                 prompt.push(title);
             }
 
@@ -895,13 +895,13 @@ impl Cli for SpectreCli {
     }
 }
 
-impl cli::Context for SpectreCli {
+impl cli::Context for ZyanyaCli {
     fn term(&self) -> Arc<Terminal> {
         self.term.lock().unwrap().as_ref().unwrap().clone()
     }
 }
 
-impl SpectreCli {}
+impl ZyanyaCli {}
 
 #[allow(dead_code)]
 async fn select_item<T>(
@@ -990,14 +990,14 @@ where
 //     Ok(selection.unwrap())
 // }
 
-pub async fn spectre_cli(terminal_options: TerminalOptions, banner: Option<String>) -> Result<()> {
-    SpectreCli::init();
+pub async fn zyanya_cli(terminal_options: TerminalOptions, banner: Option<String>) -> Result<()> {
+    ZyanyaCli::init();
 
     let options = Options::new(terminal_options, None);
-    let cli = SpectreCli::try_new_arc(options).await?;
+    let cli = ZyanyaCli::try_new_arc(options).await?;
 
     let banner =
-        banner.unwrap_or_else(|| format!("Spectre Cli Wallet v{} (type 'help' for list of commands)", env!("CARGO_PKG_VERSION")));
+        banner.unwrap_or_else(|| format!("Zyanya Cli Wallet v{} (type 'help' for list of commands)", env!("CARGO_PKG_VERSION")));
     cli.term().writeln(banner);
 
     // redirect the global log output to terminal
@@ -1070,7 +1070,7 @@ mod panic_handler {
     }
 }
 
-impl SpectreCli {
+impl ZyanyaCli {
     pub fn init_panic_hook(self: &Arc<Self>) {
         let this = self.clone();
         let handler = move |info: &std::panic::PanicHookInfo| {

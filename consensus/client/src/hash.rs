@@ -7,9 +7,9 @@
 
 use crate::imports::*;
 use crate::result::Result;
-use spectre_hashes as native;
-use spectre_hashes::HasherBase;
-use spectre_wasm_core::types::BinaryT;
+use zyanya_hashes as native;
+use zyanya_hashes::HasherBase;
+use zyanya_wasm_core::types::BinaryT;
 
 /// @category Wallet SDK
 #[derive(Default, Clone)]

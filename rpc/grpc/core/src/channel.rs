@@ -1,4 +1,4 @@
-use spectre_rpc_core::Notification;
-use spectre_utils::channel::Channel;
+use zyanya_rpc_core::Notification;
+use zyanya_utils::channel::Channel;
 
 pub type NotificationChannel = Channel<Notification>;

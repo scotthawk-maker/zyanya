@@ -1,6 +1,6 @@
 //!
 //! Tools for interfacing wallet accounts with PSSBs.
-//! (Partial Signed Spectre Transaction Bundles).
+//! (Partial Signed Zyanya Transaction Bundles).
 //!
 
 pub use crate::error::Error;
@@ -9,19 +9,19 @@ use crate::tx::PaymentOutputs;
 use futures::stream;
 use secp256k1::schnorr;
 use secp256k1::{Message, PublicKey};
-use spectre_bip32::{DerivationPath, KeyFingerprint, PrivateKey};
-use spectre_consensus_client::UtxoEntry as ClientUTXO;
-use spectre_consensus_core::hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync};
-use spectre_consensus_core::tx::VerifiableTransaction;
-use spectre_consensus_core::tx::{TransactionInput, UtxoEntry};
-use spectre_txscript::extract_script_pub_key_address;
-use spectre_txscript::opcodes::codes::OpData65;
-use spectre_txscript::script_builder::ScriptBuilder;
-use spectre_wallet_core::tx::{Generator, GeneratorSettings, PaymentDestination, PendingTransaction};
-pub use spectre_wallet_psst::bundle::Bundle;
-use spectre_wallet_psst::prelude::KeySource;
-use spectre_wallet_psst::prelude::{Finalizer, Inner, SignInputOk, Signature, Signer};
-pub use spectre_wallet_psst::psst::{Creator, PSST};
+use zyanya_bip32::{DerivationPath, KeyFingerprint, PrivateKey};
+use zyanya_consensus_client::UtxoEntry as ClientUTXO;
+use zyanya_consensus_core::hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync};
+use zyanya_consensus_core::tx::VerifiableTransaction;
+use zyanya_consensus_core::tx::{TransactionInput, UtxoEntry};
+use zyanya_txscript::extract_script_pub_key_address;
+use zyanya_txscript::opcodes::codes::OpData65;
+use zyanya_txscript::script_builder::ScriptBuilder;
+use zyanya_wallet_core::tx::{Generator, GeneratorSettings, PaymentDestination, PendingTransaction};
+pub use zyanya_wallet_psst::bundle::Bundle;
+use zyanya_wallet_psst::prelude::KeySource;
+use zyanya_wallet_psst::prelude::{Finalizer, Inner, SignInputOk, Signature, Signer};
+pub use zyanya_wallet_psst::psst::{Creator, PSST};
 use std::iter;
 
 struct PSSBSignerInner {
@@ -319,7 +319,7 @@ pub fn psst_to_pending_transaction(
         })
         .collect();
 
-    let output: Vec<spectre_consensus_core::tx::TransactionOutput> = signed_tx.outputs.clone();
+    let output: Vec<zyanya_consensus_core::tx::TransactionOutput> = signed_tx.outputs.clone();
     let recipient = extract_script_pub_key_address(&output[0].script_public_key, network_id.into())?;
     let fee_u: u64 = 0;
 
@@ -360,7 +360,7 @@ pub fn psst_to_pending_transaction(
         1,
         0,
         0,
-        spectre_wallet_core::tx::DataKind::Final,
+        zyanya_wallet_core::tx::DataKind::Final,
     )?;
 
     Ok(pending_tx)

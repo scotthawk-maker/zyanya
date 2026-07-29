@@ -7,8 +7,8 @@ use crate::encryption::sha256_hash;
 use crate::imports::*;
 use crate::storage::PrvKeyDataId;
 use secp256k1::PublicKey;
-use spectre_hashes::Hash;
-use spectre_utils::as_slice::AsSlice;
+use zyanya_hashes::Hash;
+use zyanya_utils::as_slice::AsSlice;
 
 /// Deterministic byte sequence derived from account data (can be used for auxiliary data storage encryption).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]

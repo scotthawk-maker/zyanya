@@ -9,7 +9,7 @@ use crate::{
         TransactionIdSet,
     },
 };
-use spectre_consensus_core::tx::{MutableTransaction, TransactionId};
+use zyanya_consensus_core::tx::{MutableTransaction, TransactionId};
 use std::collections::{hash_set::Iter, HashMap, HashSet, VecDeque};
 
 pub(crate) type TransactionsEdges = HashMap<TransactionId, TransactionIdSet>;

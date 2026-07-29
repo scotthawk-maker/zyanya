@@ -11,10 +11,10 @@ use futures_util::future::{join_all, try_join_all};
 use itertools::Itertools;
 use parking_lot::Mutex as ParkingLotMutex;
 use rand::{seq::SliceRandom, thread_rng};
-use spectre_addressmanager::{AddressManager, NetAddress};
-use spectre_core::{debug, info, warn};
-use spectre_p2p_lib::{common::ProtocolError, ConnectionError, Peer};
-use spectre_utils::triggers::SingleTrigger;
+use zyanya_addressmanager::{AddressManager, NetAddress};
+use zyanya_core::{debug, info, warn};
+use zyanya_p2p_lib::{common::ProtocolError, ConnectionError, Peer};
+use zyanya_utils::triggers::SingleTrigger;
 use tokio::{
     select,
     sync::{
@@ -25,7 +25,7 @@ use tokio::{
 };
 
 pub struct ConnectionManager {
-    p2p_adaptor: Arc<spectre_p2p_lib::Adaptor>,
+    p2p_adaptor: Arc<zyanya_p2p_lib::Adaptor>,
     outbound_target: usize,
     inbound_limit: usize,
     dns_seeders: &'static [&'static str],
@@ -51,7 +51,7 @@ impl ConnectionRequest {
 
 impl ConnectionManager {
     pub fn new(
-        p2p_adaptor: Arc<spectre_p2p_lib::Adaptor>,
+        p2p_adaptor: Arc<zyanya_p2p_lib::Adaptor>,
         outbound_target: usize,
         inbound_limit: usize,
         dns_seeders: &'static [&'static str],
@@ -160,7 +160,7 @@ impl ConnectionManager {
     }
 
     async fn handle_outbound_connections(self: &Arc<Self>, peer_by_address: &HashMap<SocketAddr, Peer>) {
-        let active_outbound: HashSet<spectre_addressmanager::NetAddress> =
+        let active_outbound: HashSet<zyanya_addressmanager::NetAddress> =
             peer_by_address.values().filter(|peer| peer.is_outbound()).map(|peer| peer.net_address().into()).collect();
         if active_outbound.len() >= self.outbound_target {
             return;
@@ -310,7 +310,7 @@ impl ConnectionManager {
 
     /// Bans the given IP and disconnects from all the peers with that IP.
     ///
-    /// _GO-SPECTRED: BanByIP_
+    /// _GO-ZYANYAD: BanByIP_
     pub async fn ban(&self, ip: IpAddr) {
         if self.ip_has_permanent_connection(ip).await {
             return;

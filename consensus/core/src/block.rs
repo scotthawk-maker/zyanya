@@ -4,8 +4,8 @@ use crate::{
     tx::{Transaction, TransactionId},
     BlueWorkType,
 };
-use spectre_hashes::Hash;
-use spectre_utils::mem_size::MemSizeEstimator;
+use zyanya_hashes::Hash;
+use zyanya_utils::mem_size::MemSizeEstimator;
 use std::sync::Arc;
 
 /// A mutable block structure where header and transactions within can still be mutated.

@@ -3,7 +3,7 @@ package protowire;
 
 import "rpc.proto";
 
-message SpectredRequest {
+message ZyanyadRequest {
   uint64 id = 101;
   oneof payload {
     GetCurrentNetworkRequestMessage getCurrentNetworkRequest = 1001;
@@ -66,10 +66,15 @@ message SpectredRequest {
     GetFeeEstimateExperimentalRequestMessage getFeeEstimateExperimentalRequest = 1108;
     GetCurrentBlockColorRequestMessage getCurrentBlockColorRequest = 1110;
     GetUtxoReturnAddressRequestMessage GetUtxoReturnAddressRequest = 1112;
+    DeployContractRequestMessage deployContractRequest = 1120;
+    InvokeContractRequestMessage invokeContractRequest = 1122;
+    GetContractStateRequestMessage getContractStateRequest = 1124;
+    GetContractCodeRequestMessage getContractCodeRequest = 1126;
+    CallContractRequestMessage callContractRequest = 1128;
   }
 }
 
-message SpectredResponse {
+message ZyanyadResponse {
   uint64 id = 101;
   oneof payload {
     GetCurrentNetworkResponseMessage getCurrentNetworkResponse = 1002;
@@ -132,9 +137,14 @@ message SpectredResponse {
     GetFeeEstimateExperimentalResponseMessage getFeeEstimateExperimentalResponse = 1109;
     GetCurrentBlockColorResponseMessage getCurrentBlockColorResponse = 1111;
     GetUtxoReturnAddressResponseMessage GetUtxoReturnAddressResponse = 1113;
+    DeployContractResponseMessage deployContractResponse = 1121;
+    InvokeContractResponseMessage invokeContractResponse = 1123;
+    GetContractStateResponseMessage getContractStateResponse = 1125;
+    GetContractCodeResponseMessage getContractCodeResponse = 1127;
+    CallContractResponseMessage callContractResponse = 1129;
   }
 }
 
 service RPC {
-  rpc MessageStream (stream SpectredRequest) returns (stream SpectredResponse) {}
+  rpc MessageStream (stream ZyanyadRequest) returns (stream ZyanyadResponse) {}
 }

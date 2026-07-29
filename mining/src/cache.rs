@@ -1,6 +1,6 @@
 use parking_lot::{Mutex, MutexGuard};
-use spectre_consensus_core::block::{BlockTemplate, VirtualStateApproxId};
-use spectre_core::time::unix_now;
+use zyanya_consensus_core::block::{BlockTemplate, VirtualStateApproxId};
+use zyanya_core::time::unix_now;
 use std::sync::Arc;
 
 /// CACHE_LIFETIME indicates the default duration in milliseconds after which the cached data expires.

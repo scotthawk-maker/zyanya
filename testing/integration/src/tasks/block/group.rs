@@ -8,10 +8,10 @@ use crate::{
 use async_trait::async_trait;
 use itertools::chain;
 use rand::thread_rng;
-use spectre_addresses::Address;
-use spectre_consensus_core::network::NetworkId;
-use spectre_core::debug;
-use spectre_utils::triggers::SingleTrigger;
+use zyanya_addresses::Address;
+use zyanya_consensus_core::network::NetworkId;
+use zyanya_core::debug;
+use zyanya_utils::triggers::SingleTrigger;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 
@@ -40,7 +40,7 @@ impl MinerGroupTask {
         // Mining key and address
         let (sk, pk) = &secp256k1::generate_keypair(&mut thread_rng());
         let pay_address =
-            Address::new(network.network_type().into(), spectre_addresses::Version::PubKey, &pk.x_only_public_key().0.serialize());
+            Address::new(network.network_type().into(), zyanya_addresses::Version::PubKey, &pk.x_only_public_key().0.serialize());
         debug!("Generated private key {} and address {}", sk.display_secret(), pay_address);
 
         // Block template receiver

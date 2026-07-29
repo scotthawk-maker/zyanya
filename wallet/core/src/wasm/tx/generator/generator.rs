@@ -22,7 +22,7 @@ const TS_GENERATOR_SETTINGS_OBJECT: &'static str = r#"
  * transactions as a source for the "final" transaction.
  * 
  * @see 
- *      {@link spectreToSompi},
+ *      {@link zyanyaToSompi},
  *      {@link Generator}, 
  *      {@link PendingTransaction}, 
  *      {@link UtxoContext}, 
@@ -35,7 +35,7 @@ interface IGeneratorSettingsObject {
     /** 
      * Final transaction outputs (do not supply change transaction).
      * 
-     * Typical usage: { address: "spectre:...", amount: 1000n }
+     * Typical usage: { address: "zyanya:...", amount: 1000n }
      */
     outputs: PaymentOutput | IPaymentOutput[];
     /** 
@@ -116,10 +116,10 @@ extern "C" {
 ///
 /// let generator = new Generator({
 ///     utxoEntries : [...],
-///     changeAddress : "spectre:...",
+///     changeAddress : "zyanya:...",
 ///     outputs : [
-///         { amount : spectreToSompi(10.0), address: "spectre:..."},
-///         { amount : spectreToSompi(20.0), address: "spectre:..."},
+///         { amount : zyanyaToSompi(10.0), address: "zyanya:..."},
+///         { amount : zyanyaToSompi(20.0), address: "zyanya:..."},
 ///         ...
 ///     ],
 ///     priorityFee : 1000n,

@@ -1,3 +1,3 @@
 use crate::notification::Notification;
 
-pub type IndexChannelConnection = spectre_notify::connection::ChannelConnection<Notification>;
+pub type IndexChannelConnection = zyanya_notify::connection::ChannelConnection<Notification>;

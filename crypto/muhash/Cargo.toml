@@ -1,6 +1,6 @@
 [package]
-name = "spectre-muhash"
-description = "Spectre Muhash library"
+name = "zyanya-muhash"
+description = "Zyanya Muhash library"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -10,8 +10,8 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-spectre-hashes.workspace = true
-spectre-math.workspace = true
+zyanya-hashes.workspace = true
+zyanya-math.workspace = true
 rand_chacha.workspace = true
 serde.workspace = true
 

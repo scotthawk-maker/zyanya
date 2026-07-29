@@ -1,11 +1,11 @@
 use super::errors::BuilderResult;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     api::ConsensusApi,
     block::{BlockTemplate, TemplateBuildMode, TemplateTransactionSelector},
     coinbase::MinerData,
     tx::COINBASE_TRANSACTION_INDEX,
 };
-use spectre_core::time::{unix_now, Stopwatch};
+use zyanya_core::time::{unix_now, Stopwatch};
 
 pub(crate) struct BlockTemplateBuilder {}
 

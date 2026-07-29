@@ -12,8 +12,8 @@ use pssb::{
     bundle_from_psst_generator, bundle_to_finalizer_stream, pssb_signer_for_address, psst_to_pending_transaction, PSSBSigner,
     PSSTGenerator,
 };
-use spectre_hashes::Hash;
-use spectre_wallet_psst::bundle::Bundle;
+use zyanya_hashes::Hash;
+use zyanya_wallet_psst::bundle::Bundle;
 pub use variants::*;
 
 use crate::derivation::build_derivate_paths;
@@ -26,9 +26,9 @@ use crate::tx::PaymentOutput;
 use crate::tx::{Fees, Generator, GeneratorSettings, GeneratorSummary, PaymentDestination, PendingTransaction, Signer};
 use crate::utxo::balance::{AtomicBalance, BalanceStrings};
 use crate::utxo::UtxoContextBinding;
-use spectre_bip32::{ChildNumber, ExtendedPrivateKey, PrivateKey};
-use spectre_consensus_client::UtxoEntryReference;
-use spectre_wallet_keys::derivation::gen0::WalletDerivationManagerV0;
+use zyanya_bip32::{ChildNumber, ExtendedPrivateKey, PrivateKey};
+use zyanya_consensus_client::UtxoEntryReference;
+use zyanya_wallet_keys::derivation::gen0::WalletDerivationManagerV0;
 use workflow_core::abortable::Abortable;
 
 /// Notification callback type used by [`Account::sweep`] and [`Account::send`].
@@ -307,7 +307,7 @@ pub trait Account: AnySync + Send + Sync + 'static {
         payment_secret: Option<Secret>,
         abortable: &Abortable,
         notifier: Option<GenerationNotifier>,
-    ) -> Result<(GeneratorSummary, Vec<spectre_hashes::Hash>)> {
+    ) -> Result<(GeneratorSummary, Vec<zyanya_hashes::Hash>)> {
         let keydata = self.prv_key_data(wallet_secret).await?;
         let signer = Arc::new(Signer::new(self.clone().as_dyn_arc(), keydata, payment_secret));
         let settings =
@@ -340,7 +340,7 @@ pub trait Account: AnySync + Send + Sync + 'static {
         payment_secret: Option<Secret>,
         abortable: &Abortable,
         notifier: Option<GenerationNotifier>,
-    ) -> Result<(GeneratorSummary, Vec<spectre_hashes::Hash>)> {
+    ) -> Result<(GeneratorSummary, Vec<zyanya_hashes::Hash>)> {
         let keydata = self.prv_key_data(wallet_secret).await?;
         let signer = Arc::new(Signer::new(self.clone().as_dyn_arc(), keydata, payment_secret));
 
@@ -434,7 +434,7 @@ pub trait Account: AnySync + Send + Sync + 'static {
         abortable: &Abortable,
         notifier: Option<GenerationNotifier>,
         guard: &WalletGuard,
-    ) -> Result<(GeneratorSummary, Vec<spectre_hashes::Hash>)> {
+    ) -> Result<(GeneratorSummary, Vec<zyanya_hashes::Hash>)> {
         let keydata = self.prv_key_data(wallet_secret).await?;
         let signer = Arc::new(Signer::new(self.clone().as_dyn_arc(), keydata, payment_secret));
 
@@ -742,36 +742,36 @@ mod tests {
     use super::create_private_keys;
     use super::ExtendedPrivateKey;
     use crate::imports::LEGACY_ACCOUNT_KIND;
-    use spectre_addresses::Address;
-    use spectre_addresses::Prefix;
-    use spectre_bip32::secp256k1::SecretKey;
-    use spectre_bip32::PrivateKey;
-    use spectre_bip32::SecretKeyExt;
-    use spectre_wallet_keys::derivation::gen0::PubkeyDerivationManagerV0;
+    use zyanya_addresses::Address;
+    use zyanya_addresses::Prefix;
+    use zyanya_bip32::secp256k1::SecretKey;
+    use zyanya_bip32::PrivateKey;
+    use zyanya_bip32::SecretKeyExt;
+    use zyanya_wallet_keys::derivation::gen0::PubkeyDerivationManagerV0;
     use std::str::FromStr;
 
     fn gen0_receive_addresses() -> Vec<&'static str> {
         vec![
-            "spectretest:qqnapngv3zxp305qf06w6hpzmyxtx2r99jjhs04lu980xdyd2ulwwle6jhfwm",
-            "spectretest:qqfwmv2jm7dsuju9wz27ptdm4e28qh6evfsm66uf2vf4fxmpxfqgyl2ypjjrc",
-            "spectretest:qpcerqk4ltxtyprv9096wrlzjx5mnrlw4fqce6hnl3axy7tkvyjxy9d8lkw8f",
-            "spectretest:qr9m4h44ghmyz4wagktx8kgmh9zj8h8q0f6tc87wuad5xvzkdlwd6cr62yzdp",
-            "spectretest:qrkxylqkyjtkjr5zs4z5wjmhmj756e84pa05amcw3zn8wdqjvn4tcu4hnmayh",
-            "spectretest:qp3w5h9hp9ude4vjpllsm4qpe8rcc5dmeealkl0cnxlgtj4ly7rczye8xx3t6",
-            "spectretest:qpqen78dezzj4w7rae4n6kvahlr6wft7jy3lcul78709asxksgxc2ju6znxat",
-            "spectretest:qq7upgj3g8klaylc4etwhlmr70t24wu4n4qrlayuw44yd8wx40seja4pkvqp8",
-            "spectretest:qqt2jzgzwy04j8np6ne4g0akmq4gj3fha0gqupr2mjj95u5utzxqvgwwsetl9",
-            "spectretest:qpcnt3vscphae5q8h576xkufhtuqvntg0ves8jnthgfaxy8ajek8zxwdnnl2q",
-            "spectretest:qz7wzgzvnadgp6v4u6ua9f3hltaa3cv8635mvzlepa63ttt72c6m2tch7u2gc",
-            "spectretest:qpqtsd4flc0n4g720mjwk67tnc46xv9ns5xs2khyvlvszy584ej4xy6zx40su",
-            "spectretest:qq4uy92hzh9eauypps060g2k7zv2xv9fsgc5gxkwgsvlhc7tw4a3gjtuc6jg0",
-            "spectretest:qqgfhd3ur2v2xcf35jggre97ar3awl0h62qlmmaaq28dfrhwzgjnxh5jhnwl6",
-            "spectretest:qzuflj6tgzwjujsym9ap6dvqz9zfwnmkta68fjulax09clh8l4rfsmd6e7e5j",
-            "spectretest:qz6645a8rrf0hmrdvyr9uj673lrr9zwhjvvrytqpjsjdet23czvc7r2xvw4wq",
-            "spectretest:qz2fvhmk996rmmg44ht0s79gnw647ehu8ncmpf3sf6txhkfmuzuxs58xr76fk",
-            "spectretest:qr9aflwylzdu99z2z25lzljyeszhs7j02zhfdazydgahq2vg6x8w7hk76fk8e",
-            "spectretest:qzen7nh0lmzvujlye5sv3nwgwdyew2zp9nz5we7pay65wrt6kfxd6jg3ex7ae",
-            "spectretest:qq74jrja2mh3wn6853g8ywpfy9nlg0uuzchvpa0cmnvds4tfnpjj50lhcm3js",
+            "zyanyatest:qqnapngv3zxp305qf06w6hpzmyxtx2r99jjhs04lu980xdyd2ulwwle6jhfwm",
+            "zyanyatest:qqfwmv2jm7dsuju9wz27ptdm4e28qh6evfsm66uf2vf4fxmpxfqgyl2ypjjrc",
+            "zyanyatest:qpcerqk4ltxtyprv9096wrlzjx5mnrlw4fqce6hnl3axy7tkvyjxy9d8lkw8f",
+            "zyanyatest:qr9m4h44ghmyz4wagktx8kgmh9zj8h8q0f6tc87wuad5xvzkdlwd6cr62yzdp",
+            "zyanyatest:qrkxylqkyjtkjr5zs4z5wjmhmj756e84pa05amcw3zn8wdqjvn4tcu4hnmayh",
+            "zyanyatest:qp3w5h9hp9ude4vjpllsm4qpe8rcc5dmeealkl0cnxlgtj4ly7rczye8xx3t6",
+            "zyanyatest:qpqen78dezzj4w7rae4n6kvahlr6wft7jy3lcul78709asxksgxc2ju6znxat",
+            "zyanyatest:qq7upgj3g8klaylc4etwhlmr70t24wu4n4qrlayuw44yd8wx40seja4pkvqp8",
+            "zyanyatest:qqt2jzgzwy04j8np6ne4g0akmq4gj3fha0gqupr2mjj95u5utzxqvgwwsetl9",
+            "zyanyatest:qpcnt3vscphae5q8h576xkufhtuqvntg0ves8jnthgfaxy8ajek8zxwdnnl2q",
+            "zyanyatest:qz7wzgzvnadgp6v4u6ua9f3hltaa3cv8635mvzlepa63ttt72c6m2tch7u2gc",
+            "zyanyatest:qpqtsd4flc0n4g720mjwk67tnc46xv9ns5xs2khyvlvszy584ej4xy6zx40su",
+            "zyanyatest:qq4uy92hzh9eauypps060g2k7zv2xv9fsgc5gxkwgsvlhc7tw4a3gjtuc6jg0",
+            "zyanyatest:qqgfhd3ur2v2xcf35jggre97ar3awl0h62qlmmaaq28dfrhwzgjnxh5jhnwl6",
+            "zyanyatest:qzuflj6tgzwjujsym9ap6dvqz9zfwnmkta68fjulax09clh8l4rfsmd6e7e5j",
+            "zyanyatest:qz6645a8rrf0hmrdvyr9uj673lrr9zwhjvvrytqpjsjdet23czvc7r2xvw4wq",
+            "zyanyatest:qz2fvhmk996rmmg44ht0s79gnw647ehu8ncmpf3sf6txhkfmuzuxs58xr76fk",
+            "zyanyatest:qr9aflwylzdu99z2z25lzljyeszhs7j02zhfdazydgahq2vg6x8w7hk76fk8e",
+            "zyanyatest:qzen7nh0lmzvujlye5sv3nwgwdyew2zp9nz5we7pay65wrt6kfxd6jg3ex7ae",
+            "zyanyatest:qq74jrja2mh3wn6853g8ywpfy9nlg0uuzchvpa0cmnvds4tfnpjj50lhcm3js",
         ]
     }
 
@@ -802,26 +802,26 @@ mod tests {
 
     fn gen0_change_addresses() -> Vec<&'static str> {
         vec![
-            "spectretest:qrc0xjaq00fq8qzvrudfuk9msag7whnd72nefwq5d07ks4j4d97kzlse6zfv4",
-            "spectretest:qpf00utzmaa2u8w9353ssuazsv7fzs605eg00l9luyvcwzwj9cx0z3ycc7tnt",
-            "spectretest:qrkxek2q6eze7lhg8tq0qw9h890lujvjhtnn5vllrkgj2rgudl6xv4r5wf7u9",
-            "spectretest:qrn0ga4lddypp9w8eygt9vwk92lagr55e2eqjgkfr09az90632jc6hzy950cx",
-            "spectretest:qzga696vavxtrg0heunvlta5ghjucptll9cfs5x0m2j05s55vtl36cg7k8ym0",
-            "spectretest:qq8ernhu26fgt3ap73jalhzl5u5zuergm9f0dcsa8uy7lmcx875hwmwuv7lwc",
-            "spectretest:qrauma73jdn0yfwspr7yf39recvjkk3uy5e4309vjc82qq7sxtskj9gh989hl",
-            "spectretest:qzk7yd3ep4def7sv7yhl8m0mr7p75zclycrv0x0jfm0gmwte23k0usk6xr49a",
-            "spectretest:qzvm7mnhpkrw52c4p85xd5scrpddxnagzmhmz4v8yt6nawwzgjtavcc2zsdql",
-            "spectretest:qq4feppacdug6p6zk2xf4rw400ps92c9h78gctfcdlucvzzjwzyz7k9tygynn",
-            "spectretest:qryepg9agerq4wdzpv39xxjdytktga53dphvs6r4fdjc0gfyndhk7q57cy7v4",
-            "spectretest:qpywh5galz3dd3ndkx96ckpvvf5g8t4adaf0k58y4kgf8w06jt5myku758x3r",
-            "spectretest:qq32grys34737mfe5ud5j2v03cjefynuym27q7jsdt28qy72ucv3sgs5jmytz",
-            "spectretest:qper47ahktzf9lv67a5e9rmfk35pq4xneufhu97px6tlzd0d4qkakmeps2reh",
-            "spectretest:qqal0t8w2y65a4lm5j5y4maxyy4nuwxj6u364eppj5qpxz9s4l7tkhk3y8syg",
-            "spectretest:qr7p66q7lmdqcf2vnyus38efx3l4apvqvv5sff66n808mtclef2w7geg6xr52",
-            "spectretest:qqx4xydd58qe5csedz3l3q7v02e49rwqnydc425d6jchv02el2gdv3stlhaga",
-            "spectretest:qzyc9l5azcae7y3yltgnl5k2dzzvngp90a0glsepq0dnz8dvp4jyvaxa2m677",
-            "spectretest:qq705x6hl9qdvr03n0t65esevpvzkkt2xj0faxp6luvd2hk2gr76cne3vaard",
-            "spectretest:qzufchm3cy2ej6f4cjpxpnt3g7c2gn77c320qhrnrjqqskpn7vnzseeh3e935",
+            "zyanyatest:qrc0xjaq00fq8qzvrudfuk9msag7whnd72nefwq5d07ks4j4d97kzlse6zfv4",
+            "zyanyatest:qpf00utzmaa2u8w9353ssuazsv7fzs605eg00l9luyvcwzwj9cx0z3ycc7tnt",
+            "zyanyatest:qrkxek2q6eze7lhg8tq0qw9h890lujvjhtnn5vllrkgj2rgudl6xv4r5wf7u9",
+            "zyanyatest:qrn0ga4lddypp9w8eygt9vwk92lagr55e2eqjgkfr09az90632jc6hzy950cx",
+            "zyanyatest:qzga696vavxtrg0heunvlta5ghjucptll9cfs5x0m2j05s55vtl36cg7k8ym0",
+            "zyanyatest:qq8ernhu26fgt3ap73jalhzl5u5zuergm9f0dcsa8uy7lmcx875hwmwuv7lwc",
+            "zyanyatest:qrauma73jdn0yfwspr7yf39recvjkk3uy5e4309vjc82qq7sxtskj9gh989hl",
+            "zyanyatest:qzk7yd3ep4def7sv7yhl8m0mr7p75zclycrv0x0jfm0gmwte23k0usk6xr49a",
+            "zyanyatest:qzvm7mnhpkrw52c4p85xd5scrpddxnagzmhmz4v8yt6nawwzgjtavcc2zsdql",
+            "zyanyatest:qq4feppacdug6p6zk2xf4rw400ps92c9h78gctfcdlucvzzjwzyz7k9tygynn",
+            "zyanyatest:qryepg9agerq4wdzpv39xxjdytktga53dphvs6r4fdjc0gfyndhk7q57cy7v4",
+            "zyanyatest:qpywh5galz3dd3ndkx96ckpvvf5g8t4adaf0k58y4kgf8w06jt5myku758x3r",
+            "zyanyatest:qq32grys34737mfe5ud5j2v03cjefynuym27q7jsdt28qy72ucv3sgs5jmytz",
+            "zyanyatest:qper47ahktzf9lv67a5e9rmfk35pq4xneufhu97px6tlzd0d4qkakmeps2reh",
+            "zyanyatest:qqal0t8w2y65a4lm5j5y4maxyy4nuwxj6u364eppj5qpxz9s4l7tkhk3y8syg",
+            "zyanyatest:qr7p66q7lmdqcf2vnyus38efx3l4apvqvv5sff66n808mtclef2w7geg6xr52",
+            "zyanyatest:qqx4xydd58qe5csedz3l3q7v02e49rwqnydc425d6jchv02el2gdv3stlhaga",
+            "zyanyatest:qzyc9l5azcae7y3yltgnl5k2dzzvngp90a0glsepq0dnz8dvp4jyvaxa2m677",
+            "zyanyatest:qq705x6hl9qdvr03n0t65esevpvzkkt2xj0faxp6luvd2hk2gr76cne3vaard",
+            "zyanyatest:qzufchm3cy2ej6f4cjpxpnt3g7c2gn77c320qhrnrjqqskpn7vnzseeh3e935",
         ]
     }
 

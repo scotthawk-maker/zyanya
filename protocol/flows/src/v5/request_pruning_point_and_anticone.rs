@@ -2,12 +2,12 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 use log::debug;
-use spectre_consensus_core::BlockHashMap;
-use spectre_p2p_lib::{
+use zyanya_consensus_core::BlockHashMap;
+use zyanya_p2p_lib::{
     common::ProtocolError,
     dequeue, dequeue_with_request_id, make_response,
     pb::{
-        self, spectred_message::Payload, BlockWithTrustedDataV4Message, DoneBlocksWithTrustedDataMessage, PruningPointsMessage,
+        self, zyanyad_message::Payload, BlockWithTrustedDataV4Message, DoneBlocksWithTrustedDataMessage, PruningPointsMessage,
         TrustedDataMessage,
     },
     IncomingRoute, Router,

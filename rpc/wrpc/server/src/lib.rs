@@ -1,4 +1,4 @@
-//! Spectre wRPC Server (AsyncService) module
+//! Zyanya wRPC Server (AsyncService) module
 pub mod address;
 pub mod collector;
 pub mod connection;

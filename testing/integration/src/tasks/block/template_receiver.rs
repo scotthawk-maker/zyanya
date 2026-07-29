@@ -4,12 +4,12 @@ use crate::{
 };
 use async_trait::async_trait;
 use parking_lot::Mutex;
-use spectre_addresses::Address;
-use spectre_core::warn;
-use spectre_grpc_client::GrpcClient;
-use spectre_notify::{listener::ListenerId, scope::NewBlockTemplateScope};
-use spectre_rpc_core::{api::rpc::RpcApi, GetBlockTemplateResponse, Notification};
-use spectre_utils::{channel::Channel, triggers::SingleTrigger};
+use zyanya_addresses::Address;
+use zyanya_core::warn;
+use zyanya_grpc_client::GrpcClient;
+use zyanya_notify::{listener::ListenerId, scope::NewBlockTemplateScope};
+use zyanya_rpc_core::{api::rpc::RpcApi, GetBlockTemplateResponse, Notification};
+use zyanya_utils::{channel::Channel, triggers::SingleTrigger};
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 

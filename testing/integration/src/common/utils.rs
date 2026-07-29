@@ -2,8 +2,8 @@ use super::client::ListeningClient;
 use itertools::Itertools;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use secp256k1::Keypair;
-use spectre_addresses::Address;
-use spectre_consensus_core::{
+use zyanya_addresses::Address;
+use zyanya_consensus_core::{
     constants::TX_VERSION,
     header::Header,
     sign::sign,
@@ -17,10 +17,10 @@ use spectre_consensus_core::{
         utxo_diff::UtxoDiff,
     },
 };
-use spectre_core::info;
-use spectre_grpc_client::GrpcClient;
-use spectre_rpc_core::{api::rpc::RpcApi, BlockAddedNotification, Notification, RpcUtxoEntry, VirtualDaaScoreChangedNotification};
-use spectre_txscript::pay_to_address_script;
+use zyanya_core::info;
+use zyanya_grpc_client::GrpcClient;
+use zyanya_rpc_core::{api::rpc::RpcApi, BlockAddedNotification, Notification, RpcUtxoEntry, VirtualDaaScoreChangedNotification};
+use zyanya_txscript::pay_to_address_script;
 use std::{
     collections::{hash_map::Entry::Occupied, HashMap, HashSet},
     future::Future,

@@ -1,4 +1,4 @@
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 use std::num::Wrapping;
 
 pub struct XoShiRo256PlusPlus {

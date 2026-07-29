@@ -4,7 +4,7 @@ use crate::mempool::{
     tx::RbfPolicy,
     Mempool,
 };
-use spectre_consensus_core::tx::{MutableTransaction, Transaction};
+use zyanya_consensus_core::tx::{MutableTransaction, Transaction};
 use std::sync::Arc;
 
 impl Mempool {

@@ -1,6 +1,6 @@
 [package]
-name = "spectre-utils-tower"
-description = "Spectre utilities and middleware for Tower HTTP"
+name = "zyanya-utils-tower"
+description = "Zyanya utilities and middleware for Tower HTTP"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true

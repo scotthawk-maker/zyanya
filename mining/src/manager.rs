@@ -22,7 +22,7 @@ use crate::{
 };
 use itertools::Itertools;
 use parking_lot::RwLock;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     api::{
         args::{TransactionValidationArgs, TransactionValidationBatchArgs},
         ConsensusApi,
@@ -32,9 +32,9 @@ use spectre_consensus_core::{
     errors::{block::RuleError as BlockRuleError, tx::TxRuleError},
     tx::{MutableTransaction, Transaction, TransactionId, TransactionOutput},
 };
-use spectre_consensusmanager::{spawn_blocking, ConsensusProxy};
-use spectre_core::{debug, error, info, time::Stopwatch, warn};
-use spectre_mining_errors::{manager::MiningManagerError, mempool::RuleError};
+use zyanya_consensusmanager::{spawn_blocking, ConsensusProxy};
+use zyanya_core::{debug, error, info, time::Stopwatch, warn};
+use zyanya_mining_errors::{manager::MiningManagerError, mempool::RuleError};
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -177,7 +177,7 @@ impl MiningManager {
                             // Original golang comment:
                             // mempool.remove_transactions might return errors in situations that are perfectly fine in this context.
                             // TODO: Once the mempool invariants are clear, this might return an error:
-                            // https://github.com/spectrenet/spectred/issues/1553
+                            // https://github.com/zyanyanet/zyanyad/issues/1553
                             // NOTE: unlike golang, here we continue removing also if an error was found
                             error!("Error from mempool.remove_transactions: {:?}", err);
                         }
@@ -213,7 +213,7 @@ impl MiningManager {
     pub(crate) fn get_realtime_feerate_estimations_verbose(
         &self,
         consensus: &dyn ConsensusApi,
-        prefix: spectre_addresses::Prefix,
+        prefix: zyanya_addresses::Prefix,
     ) -> MiningManagerResult<FeeEstimateVerbose> {
         let args = FeerateEstimatorArgs::new(self.config.network_blocks_per_second, self.config.maximum_mass_per_block);
         let network_mass_per_second = args.network_mass_per_second();
@@ -234,14 +234,14 @@ impl MiningManager {
         };
         // calculate next_block_template_feerate_xxx
         {
-            let script_public_key = spectre_txscript::pay_to_address_script(&spectre_addresses::Address::new(
+            let script_public_key = zyanya_txscript::pay_to_address_script(&zyanya_addresses::Address::new(
                 prefix,
-                spectre_addresses::Version::PubKey,
+                zyanya_addresses::Version::PubKey,
                 &[0u8; 32],
             ));
             let miner_data: MinerData = MinerData::new(script_public_key, vec![]);
 
-            let BlockTemplate { block: spectre_consensus_core::block::MutableBlock { transactions, .. }, calculated_fees, .. } =
+            let BlockTemplate { block: zyanya_consensus_core::block::MutableBlock { transactions, .. }, calculated_fees, .. } =
                 self.get_block_template(consensus, &miner_data)?;
 
             let Some(Stats { max, median, min }) = feerate_stats(transactions, calculated_fees) else {
@@ -862,7 +862,7 @@ impl MiningManagerProxy {
     pub async fn get_realtime_feerate_estimations_verbose(
         self,
         consensus: &ConsensusProxy,
-        prefix: spectre_addresses::Prefix,
+        prefix: zyanya_addresses::Prefix,
     ) -> MiningManagerResult<FeeEstimateVerbose> {
         consensus.clone().spawn_blocking(move |c| self.inner.get_realtime_feerate_estimations_verbose(c, prefix)).await
     }
@@ -1073,7 +1073,7 @@ fn feerate_stats(transactions: Vec<Transaction>, calculated_fees: Vec<u64>) -> O
 #[cfg(test)]
 mod tests {
     use super::*;
-    use spectre_consensus_core::subnets;
+    use zyanya_consensus_core::subnets;
 
     fn transactions(length: usize) -> Vec<Transaction> {
         let tx = || {

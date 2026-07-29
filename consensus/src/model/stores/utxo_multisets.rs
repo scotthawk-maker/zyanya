@@ -1,13 +1,13 @@
 use rocksdb::WriteBatch;
-use spectre_consensus_core::BlockHasher;
-use spectre_database::prelude::CachePolicy;
-use spectre_database::prelude::StoreError;
-use spectre_database::prelude::DB;
-use spectre_database::prelude::{BatchDbWriter, CachedDbAccess, DirectDbWriter};
-use spectre_database::registry::DatabaseStorePrefixes;
-use spectre_hashes::Hash;
-use spectre_math::Uint3072;
-use spectre_muhash::MuHash;
+use zyanya_consensus_core::BlockHasher;
+use zyanya_database::prelude::CachePolicy;
+use zyanya_database::prelude::StoreError;
+use zyanya_database::prelude::DB;
+use zyanya_database::prelude::{BatchDbWriter, CachedDbAccess, DirectDbWriter};
+use zyanya_database::registry::DatabaseStorePrefixes;
+use zyanya_hashes::Hash;
+use zyanya_math::Uint3072;
+use zyanya_muhash::MuHash;
 use std::sync::Arc;
 
 pub trait UtxoMultisetsStoreReader {

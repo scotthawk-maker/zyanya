@@ -1,10 +1,10 @@
 use secp256k1::{rand::thread_rng, Keypair};
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync},
     tx::{TransactionId, TransactionOutpoint, UtxoEntry},
 };
-use spectre_txscript::{multisig_redeem_script, opcodes::codes::OpData65, pay_to_script_hash_script, script_builder::ScriptBuilder};
-use spectre_wallet_psst::prelude::{
+use zyanya_txscript::{multisig_redeem_script, opcodes::codes::OpData65, pay_to_script_hash_script, script_builder::ScriptBuilder};
+use zyanya_wallet_psst::prelude::{
     Combiner, Creator, Extractor, Finalizer, Inner, InputBuilder, SignInputOk, Signature, Signer, Updater, PSST,
 };
 use std::{iter, str::FromStr};

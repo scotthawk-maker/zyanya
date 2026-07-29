@@ -1,6 +1,6 @@
 use crate::imports::*;
 use js_sys::Object;
-use spectre_consensus_core::Hash;
+use zyanya_consensus_core::Hash;
 
 pub trait WalletApiObjectExtension {
     fn get_secret(&self, key: &str) -> Result<Secret>;

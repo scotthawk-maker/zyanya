@@ -22,14 +22,14 @@ pub enum Error {
     #[error("wRPC -> {0}")]
     RpcError(#[from] RpcError),
 
-    #[error("Spectre RpcApi -> {0}")]
-    RpcApiError(#[from] spectre_rpc_core::error::RpcError),
+    #[error("Zyanya RpcApi -> {0}")]
+    RpcApiError(#[from] zyanya_rpc_core::error::RpcError),
 
-    #[error("Spectre RpcApi -> {0}")]
+    #[error("Zyanya RpcApi -> {0}")]
     WebSocketError(#[from] WebSocketError),
 
     #[error("Notification subsystem -> {0}")]
-    NotificationError(#[from] spectre_notify::error::Error),
+    NotificationError(#[from] zyanya_notify::error::Error),
 
     #[error("Channel -> {0}")]
     ChannelError(String),
@@ -44,10 +44,10 @@ pub enum Error {
     ToValue(String),
 
     #[error("invalid network type: {0}")]
-    NetworkType(#[from] spectre_consensus_core::network::NetworkTypeError),
+    NetworkType(#[from] zyanya_consensus_core::network::NetworkTypeError),
 
     #[error(transparent)]
-    ConsensusWasm(#[from] spectre_consensus_wasm::error::Error),
+    ConsensusWasm(#[from] zyanya_consensus_wasm::error::Error),
 
     #[error(transparent)]
     HttpError(#[from] HttpError),
@@ -56,13 +56,13 @@ pub enum Error {
     WasmError(#[from] WasmError),
 
     #[error(transparent)]
-    AddressError(#[from] spectre_addresses::AddressError),
+    AddressError(#[from] zyanya_addresses::AddressError),
 
     #[error(transparent)]
     TomlError(#[from] toml::de::Error),
 
     #[error(transparent)]
-    NetworkId(#[from] spectre_consensus_core::network::NetworkIdError),
+    NetworkId(#[from] zyanya_consensus_core::network::NetworkIdError),
 }
 
 impl Error {

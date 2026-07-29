@@ -1,4 +1,4 @@
-import {version, Wallet} from "../../../../nodejs/spectre";
+import {version, Wallet} from "../../../../nodejs/zyanya";
 
 import {w3cwebsocket} from "websocket";
 (globalThis.WebSocket as any) = w3cwebsocket;

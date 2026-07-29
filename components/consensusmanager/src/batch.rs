@@ -1,4 +1,4 @@
-use spectre_consensus_core::{api::BlockValidationFuture, block::Block};
+use zyanya_consensus_core::{api::BlockValidationFuture, block::Block};
 use std::fmt::Debug;
 
 pub struct BlockProcessingBatch {

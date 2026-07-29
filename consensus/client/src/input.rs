@@ -8,7 +8,7 @@ use crate::imports::*;
 use crate::result::Result;
 use crate::TransactionOutpoint;
 use crate::UtxoEntryReference;
-use spectre_utils::hex::*;
+use zyanya_utils::hex::*;
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_TRANSACTION: &'static str = r#"
@@ -76,7 +76,7 @@ impl TransactionInputInner {
     }
 }
 
-/// Represents a Spectre transaction input
+/// Represents a Zyanya transaction input
 /// @category Consensus
 #[derive(Clone, Debug, Serialize, Deserialize, CastFromJs)]
 #[wasm_bindgen(inspectable)]

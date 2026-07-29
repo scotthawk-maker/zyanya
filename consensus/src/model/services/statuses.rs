@@ -1,8 +1,8 @@
 use crate::model::stores::statuses::StatusesStoreReader;
 use parking_lot::RwLock;
-use spectre_consensus_core::blockstatus::BlockStatus;
-use spectre_database::prelude::StoreError;
-use spectre_hashes::Hash;
+use zyanya_consensus_core::blockstatus::BlockStatus;
+use zyanya_database::prelude::StoreError;
+use zyanya_hashes::Hash;
 use std::sync::Arc;
 
 /// Multi-threaded block-statuses service imp

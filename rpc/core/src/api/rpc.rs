@@ -1,5 +1,5 @@
 //!
-//! The main [`RpcApi`] trait that defines all RPC methods available in the Rusty Spectre p2p node.
+//! The main [`RpcApi`] trait that defines all RPC methods available in the Rusty Zyanya p2p node.
 //!
 //! Rpc = External RPC Service
 //! All data provided by the RPC server can be trusted by the client
@@ -10,7 +10,7 @@ use crate::api::connection::DynRpcConnection;
 use crate::{model::*, notify::connection::ChannelConnection, RpcResult};
 use async_trait::async_trait;
 use downcast::{downcast_sync, AnySync};
-use spectre_notify::{listener::ListenerId, scope::Scope, subscription::Command};
+use zyanya_notify::{listener::ListenerId, scope::Scope, subscription::Command};
 use std::sync::Arc;
 
 pub const MAX_SAFE_WINDOW_SIZE: u32 = 10_000;
@@ -138,7 +138,7 @@ pub trait RpcApi: Sync + Send + AnySync {
         request: GetBlockTemplateRequest,
     ) -> RpcResult<GetBlockTemplateResponse>;
 
-    /// Requests the list of known spectred addresses in the current network (mainnet, testnet, etc.)
+    /// Requests the list of known zyanyad addresses in the current network (mainnet, testnet, etc.)
     async fn get_peer_addresses(&self) -> RpcResult<GetPeerAddressesResponse> {
         self.get_peer_addresses_call(None, GetPeerAddressesRequest {}).await
     }
@@ -480,6 +480,82 @@ pub trait RpcApi: Sync + Send + AnySync {
         connection: Option<&DynRpcConnection>,
         request: GetCurrentBlockColorRequest,
     ) -> RpcResult<GetCurrentBlockColorResponse>;
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Smart Contract API
+
+    async fn deploy_contract(
+        &self,
+        bytecode: Vec<u8>,
+        max_gas: u64,
+        gas_price: u64,
+        deposit_amount: u64,
+    ) -> RpcResult<DeployContractResponse> {
+        self.deploy_contract_call(None, DeployContractRequest { bytecode, max_gas, gas_price, deposit_amount }).await
+    }
+    async fn deploy_contract_call(
+        &self,
+        _connection: Option<&DynRpcConnection>,
+        _request: DeployContractRequest,
+    ) -> RpcResult<DeployContractResponse> {
+        Err(crate::RpcError::NotImplemented)
+    }
+
+    async fn invoke_contract(
+        &self,
+        contract_address: RpcHash,
+        entry_point: u16,
+        parameters: Vec<u64>,
+        max_gas: u64,
+        gas_price: u64,
+        deposit_amount: u64,
+    ) -> RpcResult<InvokeContractResponse> {
+        self.invoke_contract_call(
+            None,
+            InvokeContractRequest { contract_address, entry_point, parameters, max_gas, gas_price, deposit_amount },
+        )
+        .await
+    }
+    async fn invoke_contract_call(
+        &self,
+        _connection: Option<&DynRpcConnection>,
+        _request: InvokeContractRequest,
+    ) -> RpcResult<InvokeContractResponse> {
+        Err(crate::RpcError::NotImplemented)
+    }
+
+    async fn get_contract_state(&self, contract_address: RpcHash, key: u64) -> RpcResult<GetContractStateResponse> {
+        self.get_contract_state_call(None, GetContractStateRequest { contract_address, key }).await
+    }
+    async fn get_contract_state_call(
+        &self,
+        _connection: Option<&DynRpcConnection>,
+        _request: GetContractStateRequest,
+    ) -> RpcResult<GetContractStateResponse> {
+        Err(crate::RpcError::NotImplemented)
+    }
+
+    async fn get_contract_code(&self, contract_address: RpcHash) -> RpcResult<GetContractCodeResponse> {
+        self.get_contract_code_call(None, GetContractCodeRequest { contract_address }).await
+    }
+    async fn get_contract_code_call(
+        &self,
+        _connection: Option<&DynRpcConnection>,
+        _request: GetContractCodeRequest,
+    ) -> RpcResult<GetContractCodeResponse> {
+        Err(crate::RpcError::NotImplemented)
+    }
+
+    async fn call_contract(&self, contract_address: RpcHash, calldata: Vec<u8>, max_gas: u64) -> RpcResult<CallContractResponse> {
+        self.call_contract_call(None, CallContractRequest { contract_address, calldata, max_gas }).await
+    }
+    async fn call_contract_call(
+        &self,
+        _connection: Option<&DynRpcConnection>,
+        _request: CallContractRequest,
+    ) -> RpcResult<CallContractResponse> {
+        Err(crate::RpcError::NotImplemented)
+    }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Notification API

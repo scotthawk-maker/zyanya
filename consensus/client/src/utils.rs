@@ -6,14 +6,14 @@
 
 use crate::imports::*;
 use crate::result::Result;
-use spectre_addresses::*;
-use spectre_consensus_core::{
+use zyanya_addresses::*;
+use zyanya_consensus_core::{
     network::{NetworkType, NetworkTypeT},
     tx::ScriptPublicKeyT,
 };
-use spectre_txscript::{script_class::ScriptClass, standard};
-use spectre_utils::hex::ToHex;
-use spectre_wasm_core::types::{BinaryT, HexString};
+use zyanya_txscript::{script_class::ScriptClass, standard};
+use zyanya_utils::hex::ToHex;
+use zyanya_wasm_core::types::{BinaryT, HexString};
 
 /// Creates a new script to pay a transaction output to the specified address.
 /// @category Wallet SDK

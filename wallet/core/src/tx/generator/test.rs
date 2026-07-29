@@ -4,11 +4,11 @@ use crate::error::Error;
 use crate::result::Result;
 use crate::tx::{Fees, MassCalculator, PaymentDestination};
 use crate::utxo::UtxoEntryReference;
-use crate::{tx::PaymentOutputs, utils::spectre_to_sompi};
+use crate::{tx::PaymentOutputs, utils::zyanya_to_sompi};
 use rand::prelude::*;
-use spectre_addresses::Address;
-use spectre_consensus_core::network::{NetworkId, NetworkType};
-use spectre_consensus_core::tx::Transaction;
+use zyanya_addresses::Address;
+use zyanya_consensus_core::network::{NetworkId, NetworkType};
+use zyanya_consensus_core::tx::Transaction;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
@@ -23,24 +23,24 @@ const DISPLAY_EXPECTED: bool = true;
 pub(crate) struct Sompi(u64);
 
 #[derive(Clone, Copy)]
-struct Spectre(f64);
+struct Zyanya(f64);
 
-impl Debug for Spectre {
+impl Debug for Zyanya {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let sompi: Sompi = self.into();
         write!(f, "{}", sompi.0)
     }
 }
 
-impl From<Spectre> for Sompi {
-    fn from(spectre: Spectre) -> Self {
-        Sompi(spectre_to_sompi(spectre.0))
+impl From<Zyanya> for Sompi {
+    fn from(zyanya: Zyanya) -> Self {
+        Sompi(zyanya_to_sompi(zyanya.0))
     }
 }
 
-impl From<&Spectre> for Sompi {
-    fn from(spectre: &Spectre) -> Self {
-        Sompi(spectre_to_sompi(spectre.0))
+impl From<&Zyanya> for Sompi {
+    fn from(zyanya: &Zyanya) -> Self {
+        Sompi(zyanya_to_sompi(zyanya.0))
     }
 }
 
@@ -405,7 +405,7 @@ where
     let mut values = head.to_vec();
     values.extend(tail);
 
-    let utxo_entries: Vec<UtxoEntryReference> = values.into_iter().map(spectre_to_sompi).map(UtxoEntryReference::simulated).collect();
+    let utxo_entries: Vec<UtxoEntryReference> = values.into_iter().map(zyanya_to_sompi).map(UtxoEntryReference::simulated).collect();
     let multiplexer = None;
     let sig_op_count = 1;
     let minimum_signatures = 1;
@@ -437,9 +437,9 @@ where
 
 pub(crate) fn change_address(network_type: NetworkType) -> Address {
     match network_type {
-        NetworkType::Mainnet => Address::try_from("spectre:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v").unwrap(),
+        NetworkType::Mainnet => Address::try_from("zyanya:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v").unwrap(),
         NetworkType::Testnet => {
-            Address::try_from("spectretest:qqz22l98sf8jun72rwh5rqe2tm8lhwtdxdmynrz4ypwak427qed5jcf5es549").unwrap()
+            Address::try_from("zyanyatest:qqz22l98sf8jun72rwh5rqe2tm8lhwtdxdmynrz4ypwak427qed5jcf5es549").unwrap()
         }
         _ => unreachable!("network type not supported"),
     }
@@ -447,9 +447,9 @@ pub(crate) fn change_address(network_type: NetworkType) -> Address {
 
 pub(crate) fn output_address(network_type: NetworkType) -> Address {
     match network_type {
-        NetworkType::Mainnet => Address::try_from("spectre:qrd9efkvg3pg34sgp6ztwyv3r569qlc43wa5w8nfs302532dzj47knu04aftm").unwrap(),
+        NetworkType::Mainnet => Address::try_from("zyanya:qrd9efkvg3pg34sgp6ztwyv3r569qlc43wa5w8nfs302532dzj47knu04aftm").unwrap(),
         NetworkType::Testnet => {
-            Address::try_from("spectretest:qqrewmx4gpuekvk8grenkvj2hp7xt0c35rxgq383f6gy223c4ud5ssc7qqs76").unwrap()
+            Address::try_from("zyanyatest:qqrewmx4gpuekvk8grenkvj2hp7xt0c35rxgq383f6gy223c4ud5ssc7qqs76").unwrap()
         }
         _ => unreachable!("network type not supported"),
     }
@@ -480,7 +480,7 @@ fn test_generator_sweep_two_utxos() -> Result<()> {
         .fetch(&Expected {
             is_final: true,
             input_count: 2,
-            aggregate_input_value: Spectre(20.0),
+            aggregate_input_value: Zyanya(20.0),
             output_count: 1,
             priority_fees: FeesExpected::None,
         })
@@ -491,7 +491,7 @@ fn test_generator_sweep_two_utxos() -> Result<()> {
 #[test]
 fn test_generator_sweep_two_utxos_with_priority_fees_rejection() -> Result<()> {
     let generator =
-        make_generator(test_network_id(), &[10.0, 10.0], &[], Fees::sender(Spectre(5.0)), change_address, PaymentDestination::Change);
+        make_generator(test_network_id(), &[10.0, 10.0], &[], Fees::sender(Zyanya(5.0)), change_address, PaymentDestination::Change);
     match generator {
         Err(Error::GeneratorFeesInSweepTransaction) => {}
         _ => panic!("merge 2 UTXOs with fees must fail generator creation"),
@@ -501,7 +501,7 @@ fn test_generator_sweep_two_utxos_with_priority_fees_rejection() -> Result<()> {
 
 #[test]
 fn test_generator_compound_200k_10spr_transactions() -> Result<()> {
-    generator(test_network_id(), &[10.0; 200_000], &[], Fees::sender(Spectre(5.0)), [(output_address, Spectre(190_000.0))].as_slice())
+    generator(test_network_id(), &[10.0; 200_000], &[], Fees::sender(Zyanya(5.0)), [(output_address, Zyanya(190_000.0))].as_slice())
         .unwrap()
         .harness()
         .validate()
@@ -515,8 +515,8 @@ fn test_generator_compound_100k_random_transactions() -> Result<()> {
     let mut rng = StdRng::seed_from_u64(0);
     let inputs: Vec<f64> = (0..100_000).map(|_| rng.gen_range(0.001..10.0)).collect();
     let total = inputs.iter().sum::<f64>();
-    let outputs = [(output_address, Spectre(total - 10.0))];
-    generator(test_network_id(), &inputs, &[], Fees::sender(Spectre(5.0)), outputs.as_slice())
+    let outputs = [(output_address, Zyanya(total - 10.0))];
+    generator(test_network_id(), &inputs, &[], Fees::sender(Zyanya(5.0)), outputs.as_slice())
         .unwrap()
         .harness()
         .validate()
@@ -530,9 +530,9 @@ fn test_generator_random_outputs() -> Result<()> {
     let mut rng = StdRng::seed_from_u64(0);
     let outputs: Vec<f64> = (0..30).map(|_| rng.gen_range(1.0..10.0)).collect();
     let total = outputs.iter().sum::<f64>();
-    let outputs: Vec<_> = outputs.into_iter().map(|v| (output_address, Spectre(v))).collect();
+    let outputs: Vec<_> = outputs.into_iter().map(|v| (output_address, Zyanya(v))).collect();
 
-    generator(test_network_id(), &[total + 100.0], &[], Fees::sender(Spectre(5.0)), outputs.as_slice())
+    generator(test_network_id(), &[total + 100.0], &[], Fees::sender(Zyanya(5.0)), outputs.as_slice())
         .unwrap()
         .harness()
         .validate()
@@ -547,17 +547,17 @@ fn test_generator_dust_1_1() -> Result<()> {
         test_network_id(),
         &[10.0; 20],
         &[],
-        Fees::sender(Spectre(5.0)),
-        [(output_address, Spectre(1.0)), (output_address, Spectre(1.0))].as_slice(),
+        Fees::sender(Zyanya(5.0)),
+        [(output_address, Zyanya(1.0)), (output_address, Zyanya(1.0))].as_slice(),
     )
     .unwrap()
     .harness()
     .fetch(&Expected {
         is_final: true,
         input_count: 4,
-        aggregate_input_value: Spectre(40.0),
+        aggregate_input_value: Zyanya(40.0),
         output_count: 3,
-        priority_fees: FeesExpected::sender(Spectre(5.0)),
+        priority_fees: FeesExpected::sender(Zyanya(5.0)),
     })
     .finalize();
 
@@ -570,17 +570,17 @@ fn test_generator_inputs_2_outputs_2_fees_exclude() -> Result<()> {
         test_network_id(),
         &[10.0; 2],
         &[],
-        Fees::sender(Spectre(5.0)),
-        [(output_address, Spectre(10.0)), (output_address, Spectre(1.0))].as_slice(),
+        Fees::sender(Zyanya(5.0)),
+        [(output_address, Zyanya(10.0)), (output_address, Zyanya(1.0))].as_slice(),
     )
     .unwrap()
     .harness()
     .fetch(&Expected {
         is_final: true,
         input_count: 2,
-        aggregate_input_value: Spectre(20.0),
+        aggregate_input_value: Zyanya(20.0),
         output_count: 3,
-        priority_fees: FeesExpected::sender(Spectre(5.0)),
+        priority_fees: FeesExpected::sender(Zyanya(5.0)),
     })
     .finalize();
 
@@ -589,21 +589,21 @@ fn test_generator_inputs_2_outputs_2_fees_exclude() -> Result<()> {
 
 #[test]
 fn test_generator_inputs_100_outputs_1_fees_exclude_success() -> Result<()> {
-    // generator(test_network_id(), &[10.0; 100], &[], Fees::sender(Spectre(5.0)), [(output_address, Spectre(990.0))].as_slice())
-    generator(test_network_id(), &[10.0; 100], &[], Fees::sender(Spectre(0.0)), [(output_address, Spectre(990.0))].as_slice())
+    // generator(test_network_id(), &[10.0; 100], &[], Fees::sender(Zyanya(5.0)), [(output_address, Zyanya(990.0))].as_slice())
+    generator(test_network_id(), &[10.0; 100], &[], Fees::sender(Zyanya(0.0)), [(output_address, Zyanya(990.0))].as_slice())
         .unwrap()
         .harness()
         .fetch(&Expected {
             is_final: false,
             input_count: 88,
-            aggregate_input_value: Spectre(880.0),
+            aggregate_input_value: Zyanya(880.0),
             output_count: 1,
             priority_fees: FeesExpected::None,
         })
         .fetch(&Expected {
             is_final: false,
             input_count: 12,
-            aggregate_input_value: Spectre(120.0),
+            aggregate_input_value: Zyanya(120.0),
             output_count: 1,
             priority_fees: FeesExpected::None,
         })
@@ -612,8 +612,8 @@ fn test_generator_inputs_100_outputs_1_fees_exclude_success() -> Result<()> {
             input_count: 2,
             aggregate_input_value: Sompi(999_99886576),
             output_count: 2,
-            // priority_fees: FeesExpected::sender(Spectre(5.0)),
-            priority_fees: FeesExpected::sender(Spectre(0.0)),
+            // priority_fees: FeesExpected::sender(Zyanya(5.0)),
+            priority_fees: FeesExpected::sender(Zyanya(0.0)),
         })
         .finalize();
 
@@ -626,23 +626,23 @@ fn test_generator_inputs_100_outputs_1_fees_include_success() -> Result<()> {
         test_network_id(),
         &[1.0; 100],
         &[],
-        Fees::receiver(Spectre(5.0)),
-        // [(output_address, Spectre(100.0))].as_slice(),
-        [(output_address, Spectre(100.0))].as_slice(),
+        Fees::receiver(Zyanya(5.0)),
+        // [(output_address, Zyanya(100.0))].as_slice(),
+        [(output_address, Zyanya(100.0))].as_slice(),
     )
     .unwrap()
     .harness()
     .fetch(&Expected {
         is_final: false,
         input_count: 88,
-        aggregate_input_value: Spectre(88.0),
+        aggregate_input_value: Zyanya(88.0),
         output_count: 1,
         priority_fees: FeesExpected::None,
     })
     .fetch(&Expected {
         is_final: false,
         input_count: 12,
-        aggregate_input_value: Spectre(12.0),
+        aggregate_input_value: Zyanya(12.0),
         output_count: 1,
         priority_fees: FeesExpected::None,
     })
@@ -651,7 +651,7 @@ fn test_generator_inputs_100_outputs_1_fees_include_success() -> Result<()> {
         input_count: 2,
         aggregate_input_value: Sompi(99_99886576),
         output_count: 1,
-        priority_fees: FeesExpected::receiver(Spectre(5.0)),
+        priority_fees: FeesExpected::receiver(Zyanya(5.0)),
     })
     .finalize();
 
@@ -660,13 +660,13 @@ fn test_generator_inputs_100_outputs_1_fees_include_success() -> Result<()> {
 
 #[test]
 fn test_generator_inputs_100_outputs_1_fees_exclude_insufficient_funds() -> Result<()> {
-    generator(test_network_id(), &[10.0; 100], &[], Fees::sender(Spectre(5.0)), [(output_address, Spectre(1000.0))].as_slice())
+    generator(test_network_id(), &[10.0; 100], &[], Fees::sender(Zyanya(5.0)), [(output_address, Zyanya(1000.0))].as_slice())
         .unwrap()
         .harness()
         .fetch(&Expected {
             is_final: false,
             input_count: 88,
-            aggregate_input_value: Spectre(880.0),
+            aggregate_input_value: Zyanya(880.0),
             output_count: 1,
             priority_fees: FeesExpected::None,
         })
@@ -677,7 +677,7 @@ fn test_generator_inputs_100_outputs_1_fees_exclude_insufficient_funds() -> Resu
 
 #[test]
 fn test_generator_inputs_1k_outputs_2_fees_exclude() -> Result<()> {
-    generator(test_network_id(), &[10.0; 1_000], &[], Fees::sender(Spectre(5.0)), [(output_address, Spectre(9_000.0))].as_slice())
+    generator(test_network_id(), &[10.0; 1_000], &[], Fees::sender(Zyanya(5.0)), [(output_address, Zyanya(9_000.0))].as_slice())
         .unwrap()
         .harness()
         .drain(
@@ -685,7 +685,7 @@ fn test_generator_inputs_1k_outputs_2_fees_exclude() -> Result<()> {
             &Expected {
                 is_final: false,
                 input_count: 88,
-                aggregate_input_value: Spectre(880.0),
+                aggregate_input_value: Zyanya(880.0),
                 output_count: 1,
                 priority_fees: FeesExpected::None,
             },
@@ -693,7 +693,7 @@ fn test_generator_inputs_1k_outputs_2_fees_exclude() -> Result<()> {
         .fetch(&Expected {
             is_final: false,
             input_count: 21,
-            aggregate_input_value: Spectre(210.0),
+            aggregate_input_value: Zyanya(210.0),
             output_count: 1,
             priority_fees: FeesExpected::None,
         })
@@ -702,7 +702,7 @@ fn test_generator_inputs_1k_outputs_2_fees_exclude() -> Result<()> {
             input_count: 11,
             aggregate_input_value: Sompi(9009_98981896),
             output_count: 2,
-            priority_fees: FeesExpected::receiver(Spectre(5.0)),
+            priority_fees: FeesExpected::receiver(Zyanya(5.0)),
         })
         .finalize();
 
@@ -716,8 +716,8 @@ fn test_generator_inputs_32k_outputs_2_fees_exclude() -> Result<()> {
         test_network_id(),
         &[f; 32_747],
         &[],
-        Fees::sender(Spectre(10_000.0)),
-        [(output_address, Spectre(f * 32_747.0 - 10_001.0))].as_slice(),
+        Fees::sender(Zyanya(10_000.0)),
+        [(output_address, Zyanya(f * 32_747.0 - 10_001.0))].as_slice(),
     )
     .unwrap()
     .harness()

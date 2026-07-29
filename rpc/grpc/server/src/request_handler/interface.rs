@@ -4,41 +4,41 @@ use crate::{
     connection_handler::ServerContext,
     error::{GrpcServerError, GrpcServerResult},
 };
-use spectre_grpc_core::{
-    ops::SpectredPayloadOps,
-    protowire::{SpectredRequest, SpectredResponse},
+use zyanya_grpc_core::{
+    ops::ZyanyadPayloadOps,
+    protowire::{ZyanyadRequest, ZyanyadResponse},
 };
 use std::fmt::Debug;
 use std::{collections::HashMap, sync::Arc};
 
-pub type SpectredMethod = Method<ServerContext, Connection, SpectredRequest, SpectredResponse>;
-pub type DynSpectredMethod = Arc<dyn MethodTrait<ServerContext, Connection, SpectredRequest, SpectredResponse>>;
-pub type SpectredDropFn = DropFn<SpectredRequest, SpectredResponse>;
-pub type SpectredRoutingPolicy = RoutingPolicy<SpectredRequest, SpectredResponse>;
+pub type ZyanyadMethod = Method<ServerContext, Connection, ZyanyadRequest, ZyanyadResponse>;
+pub type DynZyanyadMethod = Arc<dyn MethodTrait<ServerContext, Connection, ZyanyadRequest, ZyanyadResponse>>;
+pub type ZyanyadDropFn = DropFn<ZyanyadRequest, ZyanyadResponse>;
+pub type ZyanyadRoutingPolicy = RoutingPolicy<ZyanyadRequest, ZyanyadResponse>;
 
 /// An interface providing methods implementations and a fallback "not implemented" method
 /// actually returning a message with a "not implemented" error.
 ///
-/// The interface can provide a method clone for every [`SpectredPayloadOps`] variant for later
+/// The interface can provide a method clone for every [`ZyanyadPayloadOps`] variant for later
 /// processing of related requests.
 ///
 /// It is also possible to directly let the interface itself process a request by invoking
 /// the `call()` method.
 pub struct Interface {
     server_ctx: ServerContext,
-    methods: HashMap<SpectredPayloadOps, DynSpectredMethod>,
-    method_not_implemented: DynSpectredMethod,
+    methods: HashMap<ZyanyadPayloadOps, DynZyanyadMethod>,
+    method_not_implemented: DynZyanyadMethod,
 }
 
 impl Interface {
     pub fn new(server_ctx: ServerContext) -> Self {
-        let method_not_implemented = Arc::new(Method::new(|_, _, spectred_request: SpectredRequest| {
+        let method_not_implemented = Arc::new(Method::new(|_, _, zyanyad_request: ZyanyadRequest| {
             Box::pin(async move {
-                match spectred_request.payload {
-                    Some(ref request) => Ok(SpectredResponse {
-                        id: spectred_request.id,
+                match zyanyad_request.payload {
+                    Some(ref request) => Ok(ZyanyadResponse {
+                        id: zyanyad_request.id,
                         payload: Some(
-                            SpectredPayloadOps::from(request).to_error_response(GrpcServerError::MethodNotImplemented.into()),
+                            ZyanyadPayloadOps::from(request).to_error_response(GrpcServerError::MethodNotImplemented.into()),
                         ),
                     }),
                     None => Err(GrpcServerError::InvalidRequestPayload),
@@ -48,43 +48,43 @@ impl Interface {
         Self { server_ctx, methods: Default::default(), method_not_implemented }
     }
 
-    pub fn method(&mut self, op: SpectredPayloadOps, method: SpectredMethod) {
-        let method: DynSpectredMethod = Arc::new(method);
+    pub fn method(&mut self, op: ZyanyadPayloadOps, method: ZyanyadMethod) {
+        let method: DynZyanyadMethod = Arc::new(method);
         if self.methods.insert(op, method).is_some() {
             panic!("RPC method {op:?} is declared multiple times")
         }
     }
 
-    pub fn replace_method(&mut self, op: SpectredPayloadOps, method: SpectredMethod) {
-        let method: DynSpectredMethod = Arc::new(method);
+    pub fn replace_method(&mut self, op: ZyanyadPayloadOps, method: ZyanyadMethod) {
+        let method: DynZyanyadMethod = Arc::new(method);
         let _ = self.methods.insert(op, method);
     }
 
     pub fn set_method_properties(
         &mut self,
-        op: SpectredPayloadOps,
+        op: ZyanyadPayloadOps,
         tasks: usize,
         queue_size: usize,
-        routing_policy: SpectredRoutingPolicy,
+        routing_policy: ZyanyadRoutingPolicy,
     ) {
         self.methods.entry(op).and_modify(|x| {
-            let method: Method<ServerContext, Connection, SpectredRequest, SpectredResponse> =
+            let method: Method<ServerContext, Connection, ZyanyadRequest, ZyanyadResponse> =
                 Method::with_properties(x.method_fn(), tasks, queue_size, routing_policy);
-            let method: Arc<dyn MethodTrait<ServerContext, Connection, SpectredRequest, SpectredResponse>> = Arc::new(method);
+            let method: Arc<dyn MethodTrait<ServerContext, Connection, ZyanyadRequest, ZyanyadResponse>> = Arc::new(method);
             *x = method;
         });
     }
 
     pub async fn call(
         &self,
-        op: &SpectredPayloadOps,
+        op: &ZyanyadPayloadOps,
         connection: Connection,
-        request: SpectredRequest,
-    ) -> GrpcServerResult<SpectredResponse> {
+        request: ZyanyadRequest,
+    ) -> GrpcServerResult<ZyanyadResponse> {
         self.methods.get(op).unwrap_or(&self.method_not_implemented).call(self.server_ctx.clone(), connection, request).await
     }
 
-    pub fn get_method(&self, op: &SpectredPayloadOps) -> DynSpectredMethod {
+    pub fn get_method(&self, op: &ZyanyadPayloadOps) -> DynZyanyadMethod {
         self.methods.get(op).unwrap_or(&self.method_not_implemented).clone()
     }
 }

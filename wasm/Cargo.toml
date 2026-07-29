@@ -1,6 +1,6 @@
 [package]
-name = "spectre-wasm"
-description = "SPECTRE WASM bindings"
+name = "zyanya-wasm"
+description = "ZYANYA WASM bindings"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -17,21 +17,21 @@ crate-type = ["cdylib"]
 [dependencies]
 cfg-if.workspace = true
 js-sys.workspace = true
-spectre-addresses.workspace = true
-spectre-bip32.workspace = true
-spectre-consensus-core.workspace = true
-spectre-consensus-wasm.workspace = true
-spectre-core.workspace = true
-spectre-math.workspace = true
-spectre-pow.workspace = true
-spectre-txscript.workspace = true
-spectre-rpc-core.workspace = true
-spectre-utils.workspace = true
-spectre-wasm-core.workspace = true
-spectre-wallet-core.workspace = true
-spectre-wallet-keys.workspace = true
-spectre-wrpc-client.workspace = true
-spectre-wrpc-wasm.workspace = true
+zyanya-addresses.workspace = true
+zyanya-bip32.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-wasm.workspace = true
+zyanya-core.workspace = true
+zyanya-math.workspace = true
+zyanya-pow.workspace = true
+zyanya-txscript.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-utils.workspace = true
+zyanya-wasm-core.workspace = true
+zyanya-wallet-core.workspace = true
+zyanya-wallet-keys.workspace = true
+zyanya-wrpc-client.workspace = true
+zyanya-wrpc-wasm.workspace = true
 num.workspace = true
 wasm-bindgen.workspace = true
 workflow-log.workspace = true
@@ -40,20 +40,20 @@ workflow-wasm.workspace = true
 
 [features] 
 wasm32-sdk = [
-    "spectre-wallet-core/wasm32-sdk",
-    "spectre-pow/wasm32-sdk",
-    "spectre-txscript/wasm32-sdk",
+    "zyanya-wallet-core/wasm32-sdk",
+    "zyanya-pow/wasm32-sdk",
+    "zyanya-txscript/wasm32-sdk",
 ]
 wasm32-core = [
-    "spectre-wallet-core/wasm32-core",
-    "spectre-pow/wasm32-sdk",
-    "spectre-txscript/wasm32-sdk",
+    "zyanya-wallet-core/wasm32-core",
+    "zyanya-pow/wasm32-sdk",
+    "zyanya-txscript/wasm32-sdk",
 ]
 wasm32-rpc = [
-    "spectre-consensus-core/wasm32-sdk",
-    "spectre-consensus-wasm/wasm32-sdk",
-    "spectre-wrpc-client/wasm32-sdk",
-    "spectre-wrpc-wasm/wasm32-sdk",
+    "zyanya-consensus-core/wasm32-sdk",
+    "zyanya-consensus-wasm/wasm32-sdk",
+    "zyanya-wrpc-client/wasm32-sdk",
+    "zyanya-wrpc-wasm/wasm32-sdk",
 ]
 wasm32-keygen = []
 default = []
@@ -63,7 +63,7 @@ targets = ["wasm32-unknown-unknown"]
 
 [package.metadata.emanate.wasm]
 targets = [
-    { target = "nodejs", out-dir = "nodejs/spectre" },
-    { target = "web", out-dir = "web/spectre" }
+    { target = "nodejs", out-dir = "nodejs/zyanya" },
+    { target = "web", out-dir = "web/zyanya" }
 ]
 folder = "setup"

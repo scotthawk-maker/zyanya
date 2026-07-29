@@ -3,11 +3,11 @@ mod utxo_set_override_inner {
     use std::sync::Arc;
 
     use itertools::Itertools;
-    use spectre_consensus_core::{
+    use zyanya_consensus_core::{
         api::ConsensusApi, config::Config, header::Header, muhash::MuHashExtensions, utxo::utxo_collection::UtxoCollection,
     };
-    use spectre_hashes::Hash;
-    use spectre_muhash::MuHash;
+    use zyanya_hashes::Hash;
+    use zyanya_muhash::MuHash;
 
     use crate::consensus::Consensus;
 

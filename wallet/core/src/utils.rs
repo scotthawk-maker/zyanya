@@ -1,15 +1,15 @@
 //!
-//! Spectre value formatting and parsing utilities.
+//! Zyanya value formatting and parsing utilities.
 //!
 
 use crate::result::Result;
 use separator::{separated_float, separated_int, separated_uint_with_output, Separatable};
-use spectre_addresses::Address;
-use spectre_consensus_core::constants::*;
-use spectre_consensus_core::network::NetworkType;
+use zyanya_addresses::Address;
+use zyanya_consensus_core::constants::*;
+use zyanya_consensus_core::network::NetworkType;
 use workflow_log::style;
 
-pub fn try_spectre_str_to_sompi<S: Into<String>>(s: S) -> Result<Option<u64>> {
+pub fn try_zyanya_str_to_sompi<S: Into<String>>(s: S) -> Result<Option<u64>> {
     let s: String = s.into();
     let amount = s.trim();
     if amount.is_empty() {
@@ -19,57 +19,57 @@ pub fn try_spectre_str_to_sompi<S: Into<String>>(s: S) -> Result<Option<u64>> {
     Ok(Some(str_to_sompi(amount)?))
 }
 
-pub fn try_spectre_str_to_sompi_i64<S: Into<String>>(s: S) -> Result<Option<i64>> {
+pub fn try_zyanya_str_to_sompi_i64<S: Into<String>>(s: S) -> Result<Option<i64>> {
     let s: String = s.into();
     let amount = s.trim();
     if amount.is_empty() {
         return Ok(None);
     }
 
-    let amount = amount.parse::<f64>()? * SOMPI_PER_SPECTRE as f64;
+    let amount = amount.parse::<f64>()? * SOMPI_PER_ZYANYA as f64;
     Ok(Some(amount as i64))
 }
 
 #[inline]
-pub fn sompi_to_spectre(sompi: u64) -> f64 {
-    sompi as f64 / SOMPI_PER_SPECTRE as f64
+pub fn sompi_to_zyanya(sompi: u64) -> f64 {
+    sompi as f64 / SOMPI_PER_ZYANYA as f64
 }
 
 #[inline]
-pub fn spectre_to_sompi(spectre: f64) -> u64 {
-    (spectre * SOMPI_PER_SPECTRE as f64) as u64
+pub fn zyanya_to_sompi(zyanya: f64) -> u64 {
+    (zyanya * SOMPI_PER_ZYANYA as f64) as u64
 }
 
 #[inline]
-pub fn sompi_to_spectre_string(sompi: u64) -> String {
-    sompi_to_spectre(sompi).separated_string()
+pub fn sompi_to_zyanya_string(sompi: u64) -> String {
+    sompi_to_zyanya(sompi).separated_string()
 }
 
 #[inline]
-pub fn sompi_to_spectre_string_with_trailing_zeroes(sompi: u64) -> String {
-    separated_float!(format!("{:.8}", sompi_to_spectre(sompi)))
+pub fn sompi_to_zyanya_string_with_trailing_zeroes(sompi: u64) -> String {
+    separated_float!(format!("{:.8}", sompi_to_zyanya(sompi)))
 }
 
-pub fn spectre_suffix(network_type: &NetworkType) -> &'static str {
+pub fn zyanya_suffix(network_type: &NetworkType) -> &'static str {
     match network_type {
-        NetworkType::Mainnet => "SPR",
-        NetworkType::Testnet => "TSPR",
-        NetworkType::Simnet => "SSPR",
-        NetworkType::Devnet => "DSPR",
+        NetworkType::Mainnet => "ZYAN",
+        NetworkType::Testnet => "TZYAN",
+        NetworkType::Simnet => "SZYAN",
+        NetworkType::Devnet => "DZYAN",
     }
 }
 
 #[inline]
-pub fn sompi_to_spectre_string_with_suffix(sompi: u64, network_type: &NetworkType) -> String {
-    let spr = sompi_to_spectre_string(sompi);
-    let suffix = spectre_suffix(network_type);
+pub fn sompi_to_zyanya_string_with_suffix(sompi: u64, network_type: &NetworkType) -> String {
+    let spr = sompi_to_zyanya_string(sompi);
+    let suffix = zyanya_suffix(network_type);
     format!("{spr} {suffix}")
 }
 
 #[inline]
-pub fn sompi_to_spectre_string_with_trailing_zeroes_and_suffix(sompi: u64, network_type: &NetworkType) -> String {
-    let spr = sompi_to_spectre_string_with_trailing_zeroes(sompi);
-    let suffix = spectre_suffix(network_type);
+pub fn sompi_to_zyanya_string_with_trailing_zeroes_and_suffix(sompi: u64, network_type: &NetworkType) -> String {
+    let spr = sompi_to_zyanya_string_with_trailing_zeroes(sompi);
+    let suffix = zyanya_suffix(network_type);
     format!("{spr} {suffix}")
 }
 
@@ -92,9 +92,9 @@ pub fn format_address_colors(address: &Address, range: Option<usize>) -> String 
 
 fn str_to_sompi(amount: &str) -> Result<u64> {
     let Some(dot_idx) = amount.find('.') else {
-        return Ok(amount.parse::<u64>()? * SOMPI_PER_SPECTRE);
+        return Ok(amount.parse::<u64>()? * SOMPI_PER_ZYANYA);
     };
-    let integer = amount[..dot_idx].parse::<u64>()? * SOMPI_PER_SPECTRE;
+    let integer = amount[..dot_idx].parse::<u64>()? * SOMPI_PER_ZYANYA;
     let decimal = &amount[dot_idx + 1..];
     let decimal_len = decimal.len();
     let decimal = if decimal_len == 0 {

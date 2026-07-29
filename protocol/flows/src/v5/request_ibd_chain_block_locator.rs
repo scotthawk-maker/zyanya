@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use spectre_consensus_core::errors::{consensus::ConsensusError, sync::SyncManagerError};
-use spectre_p2p_lib::{
+use zyanya_consensus_core::errors::{consensus::ConsensusError, sync::SyncManagerError};
+use zyanya_p2p_lib::{
     common::ProtocolError,
     dequeue_with_request_id, make_response,
-    pb::{spectred_message::Payload, IbdChainBlockLocatorMessage},
+    pb::{zyanyad_message::Payload, IbdChainBlockLocatorMessage},
     IncomingRoute, Router,
 };
 

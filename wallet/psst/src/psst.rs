@@ -1,11 +1,11 @@
 //!
-//! Partially Signed Spectre Transaction (PSST)
+//! Partially Signed Zyanya Transaction (PSST)
 //!
 
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use spectre_bip32::{secp256k1, DerivationPath, KeyFingerprint};
-use spectre_consensus_core::hashing::sighash::SigHashReusedValuesUnsync;
+use zyanya_bip32::{secp256k1, DerivationPath, KeyFingerprint};
+use zyanya_consensus_core::hashing::sighash::SigHashReusedValuesUnsync;
 use std::{collections::BTreeMap, fmt::Display, fmt::Formatter, future::Future, marker::PhantomData, ops::Deref};
 
 pub use crate::error::Error;
@@ -13,13 +13,13 @@ pub use crate::global::{Global, GlobalBuilder};
 pub use crate::input::{Input, InputBuilder};
 pub use crate::output::{Output, OutputBuilder};
 pub use crate::role::{Combiner, Constructor, Creator, Extractor, Finalizer, Signer, Updater};
-use spectre_consensus_core::tx::UtxoEntry;
-use spectre_consensus_core::{
+use zyanya_consensus_core::tx::UtxoEntry;
+use zyanya_consensus_core::{
     hashing::sighash_type::SigHashType,
     subnets::SUBNETWORK_ID_NATIVE,
     tx::{MutableTransaction, SignableTransaction, Transaction, TransactionId, TransactionInput, TransactionOutput},
 };
-use spectre_txscript::{caches::Cache, TxScriptEngine};
+use zyanya_txscript::{caches::Cache, TxScriptEngine};
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -52,7 +52,7 @@ impl Display for Version {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct KeySource {
-    #[serde(with = "spectre_utils::serde_bytes_fixed")]
+    #[serde(with = "zyanya_utils::serde_bytes_fixed")]
     pub key_fingerprint: KeyFingerprint,
     pub derivation_path: DerivationPath,
 }
@@ -82,9 +82,9 @@ impl Signature {
 }
 
 ///
-/// A Partially Signed Spectre Transaction (PSST) is a standardized format
+/// A Partially Signed Zyanya Transaction (PSST) is a standardized format
 /// that allows multiple participants to collaborate in creating and signing
-/// a Spectre transaction. PSST enables the exchange of incomplete transaction
+/// a Zyanya transaction. PSST enables the exchange of incomplete transaction
 /// data between different wallets or entities, allowing each participant
 /// to add their signature or inputs in stages. This facilitates more complex
 /// transaction workflows, such as multi-signature setups or hardware wallet
@@ -429,7 +429,7 @@ impl PSST<Extractor> {
         let (tx, entries) = self.extract_tx_unchecked()?(0);
 
         let tx = MutableTransaction::with_entries(tx, entries.into_iter().flatten().collect());
-        use spectre_consensus_core::tx::VerifiableTransaction;
+        use zyanya_consensus_core::tx::VerifiableTransaction;
         {
             let tx = tx.as_verifiable();
             let cache = Cache::new(10_000);
@@ -474,7 +474,7 @@ pub enum FinalizeError<E> {
 #[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
 pub enum ExtractError {
     #[error(transparent)]
-    TxScriptError(#[from] spectre_txscript_errors::TxScriptError),
+    TxScriptError(#[from] zyanya_txscript_errors::TxScriptError),
     #[error(transparent)]
     TxNotFinalized(#[from] TxNotFinalized),
 }

@@ -1,5 +1,5 @@
 use crate::{CountersSnapshot, Monitor};
-use spectre_core::task::tick::TickService;
+use zyanya_core::task::tick::TickService;
 use std::time::Duration;
 
 pub struct Unspecified {}

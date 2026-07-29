@@ -26,7 +26,7 @@ use crossbeam_channel::Receiver as CrossbeamReceiver;
 use itertools::Itertools;
 use parking_lot::RwLockUpgradableReadGuard;
 use rocksdb::WriteBatch;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     blockhash::ORIGIN,
     blockstatus::BlockStatus::StatusHeaderOnly,
     config::Config,
@@ -35,12 +35,12 @@ use spectre_consensus_core::{
     trusted::ExternalGhostdagData,
     BlockHashMap, BlockHashSet, BlockLevel,
 };
-use spectre_consensusmanager::SessionLock;
-use spectre_core::{debug, info, warn};
-use spectre_database::prelude::{BatchDbWriter, MemoryWriter, StoreResultExtensions, DB};
-use spectre_hashes::Hash;
-use spectre_muhash::MuHash;
-use spectre_utils::iter::IterExtensions;
+use zyanya_consensusmanager::SessionLock;
+use zyanya_core::{debug, info, warn};
+use zyanya_database::prelude::{BatchDbWriter, MemoryWriter, StoreResultExtensions, DB};
+use zyanya_hashes::Hash;
+use zyanya_muhash::MuHash;
+use zyanya_utils::iter::IterExtensions;
 use std::{
     collections::{hash_map::Entry::Vacant, VecDeque},
     ops::Deref,

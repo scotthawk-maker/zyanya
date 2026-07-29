@@ -1,5 +1,5 @@
 use crate::imports::*;
-use spectre_daemon::{locate_binaries, CpuMinerConfig};
+use zyanya_daemon::{locate_binaries, CpuMinerConfig};
 pub use workflow_node::process::Event;
 
 #[derive(Describe, Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -21,7 +21,7 @@ impl DefaultSettings for MinerSettings {
         let mut settings = vec![(Self::Server, to_value("127.0.0.1").unwrap()), (Self::Mute, to_value(true).unwrap())];
 
         let root = nw_sys::app::folder();
-        if let Ok(binaries) = locate_binaries(&root, "spectre-cpu-miner").await {
+        if let Ok(binaries) = locate_binaries(&root, "zyanya-cpu-miner").await {
             if let Some(path) = binaries.first() {
                 settings.push((Self::Location, to_value(path.to_string_lossy().to_string()).unwrap()));
             }
@@ -50,7 +50,7 @@ impl Default for Miner {
 #[async_trait]
 impl Handler for Miner {
     fn verb(&self, ctx: &Arc<dyn Context>) -> Option<&'static str> {
-        if let Ok(ctx) = ctx.clone().downcast_arc::<SpectreCli>() {
+        if let Ok(ctx) = ctx.clone().downcast_arc::<ZyanyaCli>() {
             ctx.daemons().clone().cpu_miner.as_ref().map(|_| "miner")
         } else {
             None
@@ -71,7 +71,7 @@ impl Handler for Miner {
     }
 
     async fn handle(self: Arc<Self>, ctx: &Arc<dyn Context>, argv: Vec<String>, cmd: &str) -> cli::Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
         self.main(ctx, argv, cmd).await.map_err(|e| e.into())
     }
 }
@@ -81,7 +81,7 @@ impl Miner {
         self.is_running.load(Ordering::SeqCst)
     }
 
-    async fn create_config(&self, ctx: &Arc<SpectreCli>) -> Result<CpuMinerConfig> {
+    async fn create_config(&self, ctx: &Arc<ZyanyaCli>) -> Result<CpuMinerConfig> {
         let location: String = self
             .settings
             .get(MinerSettings::Location)
@@ -95,7 +95,7 @@ impl Miner {
         Ok(config)
     }
 
-    async fn main(self: Arc<Self>, ctx: Arc<SpectreCli>, mut argv: Vec<String>, _cmd: &str) -> Result<()> {
+    async fn main(self: Arc<Self>, ctx: Arc<ZyanyaCli>, mut argv: Vec<String>, _cmd: &str) -> Result<()> {
         if argv.is_empty() {
             return self.display_help(ctx, argv).await;
         }
@@ -168,7 +168,7 @@ impl Miner {
         Ok(())
     }
 
-    async fn display_help(self: Arc<Self>, ctx: Arc<SpectreCli>, _argv: Vec<String>) -> Result<()> {
+    async fn display_help(self: Arc<Self>, ctx: Arc<ZyanyaCli>, _argv: Vec<String>) -> Result<()> {
         ctx.term().help(
             &[
                 ("select [<path>]", "Select CPU miner executable (binary) location"),
@@ -185,16 +185,16 @@ impl Miner {
         Ok(())
     }
 
-    async fn select(self: Arc<Self>, ctx: Arc<SpectreCli>) -> Result<()> {
+    async fn select(self: Arc<Self>, ctx: Arc<ZyanyaCli>) -> Result<()> {
         let root = nw_sys::app::folder();
 
-        let binaries = spectre_daemon::locate_binaries(root.as_str(), "spectre-cpu-miner").await?;
+        let binaries = zyanya_daemon::locate_binaries(root.as_str(), "zyanya-cpu-miner").await?;
 
         if binaries.is_empty() {
-            tprintln!(ctx, "No spectre-cpu-miner binaries found");
+            tprintln!(ctx, "No zyanya-cpu-miner binaries found");
         } else {
             let binaries = binaries.iter().map(|p| p.display().to_string()).collect::<Vec<_>>();
-            if let Some(selection) = ctx.term().select("Please select spectre-cpu-miner binary", &binaries).await? {
+            if let Some(selection) = ctx.term().select("Please select zyanya-cpu-miner binary", &binaries).await? {
                 tprintln!(ctx, "selecting: {}", selection);
                 self.settings.set(MinerSettings::Location, selection.as_str()).await?;
             } else {
@@ -205,7 +205,7 @@ impl Miner {
         Ok(())
     }
 
-    pub async fn handle_event(&self, ctx: &Arc<SpectreCli>, event: Event) -> Result<()> {
+    pub async fn handle_event(&self, ctx: &Arc<ZyanyaCli>, event: Event) -> Result<()> {
         let term = ctx.term();
 
         match event {

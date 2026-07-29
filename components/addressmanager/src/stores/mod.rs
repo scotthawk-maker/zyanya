@@ -1,6 +1,6 @@
 use std::net::{IpAddr, Ipv6Addr};
 
-pub use spectre_utils::networking::NetAddress;
+pub use zyanya_utils::networking::NetAddress;
 
 pub(super) mod address_store;
 pub(super) mod banned_address_store;

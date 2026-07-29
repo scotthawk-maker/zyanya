@@ -3,9 +3,9 @@ use crate::storage::local::interface::LocalStore;
 use crate::storage::WalletDescriptor;
 use crate::wallet as native;
 use crate::wasm::notify::{WalletEventTarget, WalletNotificationCallback, WalletNotificationTypeOrCallback};
-use spectre_wallet_macros::declare_typescript_wasm_interface as declare;
-use spectre_wasm_core::events::{get_event_targets, Sink};
-use spectre_wrpc_wasm::{IConnectOptions, Resolver, RpcClient, RpcConfig, WrpcEncoding};
+use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
+use zyanya_wasm_core::events::{get_event_targets, Sink};
+use zyanya_wrpc_wasm::{IConnectOptions, Resolver, RpcClient, RpcConfig, WrpcEncoding};
 
 declare! {
     IWalletConfig,
@@ -87,7 +87,7 @@ impl Inner {
 /// between the integrated Wallet subsystem providing a high-level interface
 /// for wallet key and account management.
 ///
-/// The Rusty Spectre is developed in Rust, and the Wallet class is a Rust implementation
+/// The Rusty Zyanya is developed in Rust, and the Wallet class is a Rust implementation
 /// exposed to the JavaScript/TypeScript environment using the WebAssembly (WASM32) interface.
 /// As such, the Wallet implementation can be powered up using native Rust or built
 /// as a WebAssembly module and used in the browser or Node.js environment.

@@ -2,9 +2,9 @@
 
 A design document intended to guide the new concurrent implementation of header and block processing.
 
-## Sequential processing flow (in go-spectred)
+## Sequential processing flow (in go-zyanyad)
 
-Below we detail the current state of affairs in _go-spectred_ and discuss future parallelism opportunities. Processing dependencies between various stages are detailed in square brackets [***deps; type***].
+Below we detail the current state of affairs in _go-zyanyad_ and discuss future parallelism opportunities. Processing dependencies between various stages are detailed in square brackets [***deps; type***].
 
 ### Header processing
 
@@ -74,7 +74,7 @@ There are two levels of possible concurrency to support: (i) process the various
 
 ### Pipeline concurrency
 
-The current code design (_go-spectred_) already logically supports this since the various processing stages were already decoupled for supporting efficient IBD.
+The current code design (_go-zyanyad_) already logically supports this since the various processing stages were already decoupled for supporting efficient IBD.
 
 ### Header processing parallelism
 

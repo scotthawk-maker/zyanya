@@ -1,10 +1,10 @@
 use crate::model::*;
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use spectre_consensus_core::api::stats::BlockCount;
-use spectre_core::debug;
-use spectre_notify::subscription::{context::SubscriptionContext, single::UtxosChangedSubscription, Command};
-use spectre_utils::hex::ToHex;
+use zyanya_consensus_core::api::stats::BlockCount;
+use zyanya_core::debug;
+use zyanya_notify::subscription::{context::SubscriptionContext, single::UtxosChangedSubscription, Command};
+use zyanya_utils::hex::ToHex;
 use std::collections::HashMap;
 use std::{
     fmt::{Display, Formatter},
@@ -119,7 +119,7 @@ impl Deserializer for SubmitBlockResponse {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GetBlockTemplateRequest {
-    /// Which spectre address should the coinbase block reward transaction pay into
+    /// Which zyanya address should the coinbase block reward transaction pay into
     pub pay_address: RpcAddress,
     // TODO: replace with hex serialization
     pub extra_data: RpcExtraData,
@@ -155,9 +155,9 @@ impl Deserializer for GetBlockTemplateRequest {
 pub struct GetBlockTemplateResponse {
     pub block: RpcRawBlock,
 
-    /// Whether spectred thinks that it's synced.
-    /// Callers are discouraged (but not forbidden) from solving blocks when spectred is not synced.
-    /// That is because when spectred isn't in sync with the rest of the network there's a high
+    /// Whether zyanyad thinks that it's synced.
+    /// Callers are discouraged (but not forbidden) from solving blocks when zyanyad is not synced.
+    /// That is because when zyanyad isn't in sync with the rest of the network there's a high
     /// chance the block will never be accepted, thus the solving effort would have been wasted.
     pub is_synced: bool,
 }
@@ -3053,7 +3053,7 @@ impl Deserializer for FinalityConflictResolvedNotification {
 //
 // If `addresses` is empty, the notifications will start or stop for all addresses.
 //
-// This call is only available when this spectred was started with `--utxoindex`
+// This call is only available when this zyanyad was started with `--utxoindex`
 //
 // See: UtxosChangedNotification
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3509,5 +3509,286 @@ impl Deserializer for UnsubscribeResponse {
     fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
         let _version = load!(u16, reader);
         Ok(Self {})
+    }
+}
+
+// ============================================================================
+// Smart Contract Messages
+// ============================================================================
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeployContractRequest {
+    pub bytecode: Vec<u8>,
+    pub max_gas: u64,
+    pub gas_price: u64,
+    pub deposit_amount: u64,
+}
+
+impl Serializer for DeployContractRequest {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        store!(Vec<u8>, &self.bytecode, writer)?;
+        store!(u64, &self.max_gas, writer)?;
+        store!(u64, &self.gas_price, writer)?;
+        store!(u64, &self.deposit_amount, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for DeployContractRequest {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        let bytecode = load!(Vec<u8>, reader)?;
+        let max_gas = load!(u64, reader)?;
+        let gas_price = load!(u64, reader)?;
+        let deposit_amount = load!(u64, reader)?;
+        Ok(Self { bytecode, max_gas, gas_price, deposit_amount })
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeployContractResponse {
+    pub contract_address: RpcHash,
+    pub transaction_id: RpcTransactionId,
+    pub gas_used: u64,
+    pub success: bool,
+}
+
+impl Serializer for DeployContractResponse {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        store!(RpcHash, &self.contract_address, writer)?;
+        store!(RpcTransactionId, &self.transaction_id, writer)?;
+        store!(u64, &self.gas_used, writer)?;
+        store!(bool, &self.success, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for DeployContractResponse {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        let contract_address = load!(RpcHash, reader)?;
+        let transaction_id = load!(RpcTransactionId, reader)?;
+        let gas_used = load!(u64, reader)?;
+        let success = load!(bool, reader)?;
+        Ok(Self { contract_address, transaction_id, gas_used, success })
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InvokeContractRequest {
+    pub contract_address: RpcHash,
+    pub entry_point: u16,
+    pub parameters: Vec<u64>,
+    pub max_gas: u64,
+    pub gas_price: u64,
+    pub deposit_amount: u64,
+}
+
+impl Serializer for InvokeContractRequest {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        store!(RpcHash, &self.contract_address, writer)?;
+        store!(u16, &self.entry_point, writer)?;
+        store!(Vec<u64>, &self.parameters, writer)?;
+        store!(u64, &self.max_gas, writer)?;
+        store!(u64, &self.gas_price, writer)?;
+        store!(u64, &self.deposit_amount, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for InvokeContractRequest {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        let contract_address = load!(RpcHash, reader)?;
+        let entry_point = load!(u16, reader)?;
+        let parameters = load!(Vec<u64>, reader)?;
+        let max_gas = load!(u64, reader)?;
+        let gas_price = load!(u64, reader)?;
+        let deposit_amount = load!(u64, reader)?;
+        Ok(Self { contract_address, entry_point, parameters, max_gas, gas_price, deposit_amount })
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InvokeContractResponse {
+    pub transaction_id: RpcTransactionId,
+    pub gas_used: u64,
+    pub return_value: Option<u64>,
+    pub success: bool,
+}
+
+impl Serializer for InvokeContractResponse {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        store!(RpcTransactionId, &self.transaction_id, writer)?;
+        store!(u64, &self.gas_used, writer)?;
+        store!(Option<u64>, &self.return_value, writer)?;
+        store!(bool, &self.success, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for InvokeContractResponse {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        let transaction_id = load!(RpcTransactionId, reader)?;
+        let gas_used = load!(u64, reader)?;
+        let return_value = load!(Option<u64>, reader)?;
+        let success = load!(bool, reader)?;
+        Ok(Self { transaction_id, gas_used, return_value, success })
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetContractStateRequest {
+    pub contract_address: RpcHash,
+    pub key: u64,
+}
+
+impl Serializer for GetContractStateRequest {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        store!(RpcHash, &self.contract_address, writer)?;
+        store!(u64, &self.key, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for GetContractStateRequest {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        let contract_address = load!(RpcHash, reader)?;
+        let key = load!(u64, reader)?;
+        Ok(Self { contract_address, key })
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetContractStateResponse {
+    pub value: u64,
+}
+
+impl Serializer for GetContractStateResponse {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        store!(u64, &self.value, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for GetContractStateResponse {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        let value = load!(u64, reader)?;
+        Ok(Self { value })
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetContractCodeRequest {
+    pub contract_address: RpcHash,
+}
+
+impl Serializer for GetContractCodeRequest {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        store!(RpcHash, &self.contract_address, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for GetContractCodeRequest {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        let contract_address = load!(RpcHash, reader)?;
+        Ok(Self { contract_address })
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetContractCodeResponse {
+    pub bytecode: Vec<u8>,
+}
+
+impl Serializer for GetContractCodeResponse {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        store!(Vec<u8>, &self.bytecode, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for GetContractCodeResponse {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        let bytecode = load!(Vec<u8>, reader)?;
+        Ok(Self { bytecode })
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CallContractRequest {
+    pub contract_address: RpcHash,
+    pub calldata: Vec<u8>,
+    pub max_gas: u64,
+}
+
+impl Serializer for CallContractRequest {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        store!(RpcHash, &self.contract_address, writer)?;
+        store!(Vec<u8>, &self.calldata, writer)?;
+        store!(u64, &self.max_gas, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for CallContractRequest {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        let contract_address = load!(RpcHash, reader)?;
+        let calldata = load!(Vec<u8>, reader)?;
+        let max_gas = load!(u64, reader)?;
+        Ok(Self { contract_address, calldata, max_gas })
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CallContractResponse {
+    pub return_value: Option<u64>,
+    pub gas_used: u64,
+    pub success: bool,
+}
+
+impl Serializer for CallContractResponse {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        store!(u16, &1, writer)?;
+        store!(Option<u64>, &self.return_value, writer)?;
+        store!(u64, &self.gas_used, writer)?;
+        store!(bool, &self.success, writer)?;
+        Ok(())
+    }
+}
+
+impl Deserializer for CallContractResponse {
+    fn deserialize<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let _version = load!(u16, reader)?;
+        let return_value = load!(Option<u64>, reader)?;
+        let gas_used = load!(u64, reader)?;
+        let success = load!(bool, reader)?;
+        Ok(Self { return_value, gas_used, success })
     }
 }

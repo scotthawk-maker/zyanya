@@ -1,6 +1,6 @@
 [package]
-name = "spectre-alloc"
-description = "Spectre allocator wrapper"
+name = "zyanya-alloc"
+description = "Zyanya allocator wrapper"
 rust-version.workspace = true
 version.workspace = true
 authors.workspace = true

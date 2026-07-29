@@ -3,7 +3,7 @@ use std::sync::Arc;
 use super::{
     handler::RequestHandler,
     handler_trait::Handler,
-    interface::{Interface, SpectredMethod, SpectredRoutingPolicy},
+    interface::{Interface, ZyanyadMethod, ZyanyadRoutingPolicy},
     method::Method,
 };
 use crate::{
@@ -11,17 +11,17 @@ use crate::{
     connection_handler::ServerContext,
     error::GrpcServerError,
 };
-use spectre_grpc_core::protowire::{spectred_request::Payload, *};
-use spectre_grpc_core::{ops::SpectredPayloadOps, protowire::NotifyFinalityConflictResponseMessage};
-use spectre_notify::{scope::FinalityConflictResolvedScope, subscriber::SubscriptionManager};
-use spectre_rpc_core::{SubmitBlockRejectReason, SubmitBlockReport, SubmitBlockResponse};
-use spectre_rpc_macros::build_grpc_server_interface;
+use zyanya_grpc_core::protowire::{zyanyad_request::Payload, *};
+use zyanya_grpc_core::{ops::ZyanyadPayloadOps, protowire::NotifyFinalityConflictResponseMessage};
+use zyanya_notify::{scope::FinalityConflictResolvedScope, subscriber::SubscriptionManager};
+use zyanya_rpc_core::{SubmitBlockRejectReason, SubmitBlockReport, SubmitBlockResponse};
+use zyanya_rpc_macros::build_grpc_server_interface;
 
 pub struct Factory {}
 
 impl Factory {
     pub fn new_handler(
-        rpc_op: SpectredPayloadOps,
+        rpc_op: ZyanyadPayloadOps,
         incoming_route: IncomingRoute,
         server_context: ServerContext,
         interface: &Interface,
@@ -32,14 +32,14 @@ impl Factory {
 
     pub fn new_interface(server_ctx: ServerContext, network_bps: u64) -> Interface {
         // The array as last argument in the macro call below must exactly match the full set of
-        // SpectredPayloadOps variants.
+        // ZyanyadPayloadOps variants.
         let mut interface = build_grpc_server_interface!(
             server_ctx.clone(),
             ServerContext,
             Connection,
-            SpectredRequest,
-            SpectredResponse,
-            SpectredPayloadOps,
+            ZyanyadRequest,
+            ZyanyadResponse,
+            ZyanyadPayloadOps,
             [
                 SubmitBlock,
                 GetBlockTemplate,
@@ -82,6 +82,11 @@ impl Factory {
                 GetFeeEstimateExperimental,
                 GetCurrentBlockColor,
                 GetUtxoReturnAddress,
+                DeployContract,
+                InvokeContract,
+                GetContractState,
+                GetContractCode,
+                CallContract,
                 NotifyBlockAdded,
                 NotifyNewBlockTemplate,
                 NotifyFinalityConflict,
@@ -97,11 +102,11 @@ impl Factory {
 
         // Manually reimplementing the NotifyFinalityConflictRequest method so subscription
         // gets mirrored to FinalityConflictResolved notifications as well.
-        let method: SpectredMethod = Method::new(|server_ctx: ServerContext, connection: Connection, request: SpectredRequest| {
+        let method: ZyanyadMethod = Method::new(|server_ctx: ServerContext, connection: Connection, request: ZyanyadRequest| {
             Box::pin(async move {
-                let mut response: SpectredResponse = match request.payload {
+                let mut response: ZyanyadResponse = match request.payload {
                     Some(Payload::NotifyFinalityConflictRequest(ref request)) => {
-                        match spectre_rpc_core::NotifyFinalityConflictRequest::try_from(request) {
+                        match zyanya_rpc_core::NotifyFinalityConflictRequest::try_from(request) {
                             Ok(request) => {
                                 let listener_id = connection.get_or_register_listener_id()?;
                                 let command = request.command;
@@ -134,15 +139,15 @@ impl Factory {
                 Ok(response)
             })
         });
-        interface.replace_method(SpectredPayloadOps::NotifyFinalityConflict, method);
+        interface.replace_method(ZyanyadPayloadOps::NotifyFinalityConflict, method);
 
         // Methods with special properties
         let network_bps = network_bps as usize;
         interface.set_method_properties(
-            SpectredPayloadOps::SubmitBlock,
+            ZyanyadPayloadOps::SubmitBlock,
             network_bps,
             10.max(network_bps * 2),
-            SpectredRoutingPolicy::DropIfFull(Arc::new(Box::new(|_: &SpectredRequest| {
+            ZyanyadRoutingPolicy::DropIfFull(Arc::new(Box::new(|_: &ZyanyadRequest| {
                 Ok(Ok(SubmitBlockResponse { report: SubmitBlockReport::Reject(SubmitBlockRejectReason::RouteIsFull) }).into())
             }))),
         );

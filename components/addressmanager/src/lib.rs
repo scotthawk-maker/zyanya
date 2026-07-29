@@ -15,10 +15,10 @@ use itertools::{
 };
 use local_ip_address::list_afinet_netifas;
 use parking_lot::Mutex;
-use spectre_consensus_core::config::Config;
-use spectre_core::{debug, info, task::tick::TickService, time::unix_now, warn};
-use spectre_database::prelude::{CachePolicy, StoreResultExtensions, DB};
-use spectre_utils::networking::IpAddress;
+use zyanya_consensus_core::config::Config;
+use zyanya_core::{debug, info, task::tick::TickService, time::unix_now, warn};
+use zyanya_database::prelude::{CachePolicy, StoreResultExtensions, DB};
+use zyanya_utils::networking::IpAddress;
 use stores::banned_address_store::{BannedAddressesStore, BannedAddressesStoreReader, ConnectionBanTimestamp, DbBannedAddressesStore};
 use thiserror::Error;
 
@@ -31,7 +31,7 @@ const UPNP_DEADLINE_SEC: u64 = 2 * 60;
 const UPNP_EXTEND_PERIOD: u64 = UPNP_DEADLINE_SEC / 2;
 
 /// The name used as description when registering the UPnP service
-pub(crate) const UPNP_REGISTRATION_NAME: &str = "rusty-spectre";
+pub(crate) const UPNP_REGISTRATION_NAME: &str = "rusty-zyanya";
 
 struct ExtendHelper {
     gateway: Gateway,
@@ -341,8 +341,8 @@ mod address_store_with_cache {
         distributions::{WeightedError, WeightedIndex},
         prelude::Distribution,
     };
-    use spectre_database::prelude::{CachePolicy, DB};
-    use spectre_utils::networking::PrefixBucket;
+    use zyanya_database::prelude::{CachePolicy, DB};
+    use zyanya_utils::networking::PrefixBucket;
 
     use crate::{
         stores::{
@@ -516,11 +516,11 @@ mod address_store_with_cache {
         use super::*;
         use address_manager::AddressManager;
         use rv::{dist::Uniform, misc::ks_test as one_way_ks_test, traits::Cdf};
-        use spectre_consensus_core::config::{params::SIMNET_PARAMS, Config};
-        use spectre_core::task::tick::TickService;
-        use spectre_database::create_temp_db;
-        use spectre_database::prelude::ConnBuilder;
-        use spectre_utils::networking::IpAddress;
+        use zyanya_consensus_core::config::{params::SIMNET_PARAMS, Config};
+        use zyanya_core::task::tick::TickService;
+        use zyanya_database::create_temp_db;
+        use zyanya_database::prelude::ConnBuilder;
+        use zyanya_utils::networking::IpAddress;
         use std::net::{IpAddr, Ipv6Addr};
 
         #[test]
@@ -537,7 +537,7 @@ mod address_store_with_cache {
 
         #[test]
         fn test_network_distribution_weighting() {
-            spectre_core::log::try_init_logger("info");
+            zyanya_core::log::try_init_logger("info");
 
             // Variables to initialize ip generation with.
             let largest_bucket: u16 = 2048;
@@ -613,7 +613,7 @@ mod address_store_with_cache {
             let significance = 0.10;
 
             // Display and assert the result
-            spectre_core::info!(
+            zyanya_core::info!(
                 "Kolmogorov–Smirnov test result for weighted network distribution uniformity: p = {0:.4} (p < {1})",
                 adjusted_p,
                 significance

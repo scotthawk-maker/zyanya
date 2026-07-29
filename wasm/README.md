@@ -1,11 +1,11 @@
-## WASM32 bindings for Rusty Spectre SDK
+## WASM32 bindings for Rusty Zyanya SDK
 
-[<img alt="github" src="https://img.shields.io/badge/github-spectre--project/rusty--spectre-8da0cb?style=for-the-badge&labelColor=555555&color=8da0cb&logo=github" height="20">](https://github.com/spectre-project/rusty-spectre/tree/main/wasm)
-[<img alt="crates.io" src="https://img.shields.io/crates/v/spectre-wasm.svg?maxAge=2592000&style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/spectre-wasm)
-[<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-spectre--wasm-56c2a5?maxAge=2592000&style=for-the-badge&logo=docs.rs" height="20">](https://docs.rs/spectre-wasm)
-<img alt="license" src="https://img.shields.io/crates/l/spectre-wasm.svg?maxAge=2592000&color=6ac&style=for-the-badge&logoColor=fff" height="20">
+[<img alt="github" src="https://img.shields.io/badge/github-zyanya--project/rusty--zyanya-8da0cb?style=for-the-badge&labelColor=555555&color=8da0cb&logo=github" height="20">](https://github.com/zyanya-project/rusty-zyanya/tree/main/wasm)
+[<img alt="crates.io" src="https://img.shields.io/crates/v/zyanya-wasm.svg?maxAge=2592000&style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/zyanya-wasm)
+[<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-zyanya--wasm-56c2a5?maxAge=2592000&style=for-the-badge&logo=docs.rs" height="20">](https://docs.rs/zyanya-wasm)
+<img alt="license" src="https://img.shields.io/crates/l/zyanya-wasm.svg?maxAge=2592000&color=6ac&style=for-the-badge&logoColor=fff" height="20">
 
-Rusty-Spectre WASM32 bindings offer direct integration of Rust code and Rusty-Spectre
+Rusty-Zyanya WASM32 bindings offer direct integration of Rust code and Rusty-Zyanya
 codebase within JavaScript and TypeScript environments such as Node.js and Web Browsers.
 
 ## Documentation
@@ -22,9 +22,9 @@ types will not be constrained by TypeScript type definitions.
 
 The SDK is currently separated into the following top-level categories:
 
-- **RPC API** — RPC API for the Spectre node using WebSockets.
+- **RPC API** — RPC API for the Zyanya node using WebSockets.
 - **Wallet SDK** — Bindings for primitives related to key management and transactions.
-- **Wallet API** — API for the Rusty Spectre Wallet framework.
+- **Wallet API** — API for the Rusty Zyanya Wallet framework.
 
 ## WASM32 SDK release packages
 
@@ -40,29 +40,29 @@ The SDK is built as 4 packages for Web Browsers as follows:
 
 The following is a brief overview of the SDK folder structure (as available in the release):
 
-- `web/spectre` - **full** Rusty Spectre WASM32 SDK bindings for use in web browsers.
-- `web/spectre-rpc` - only the RPC bindings for use in web browsers (reduced WASM binary size).
-- `nodejs/spectre` - **full** Rusty Spectre WASM32 SDK bindings for use with NodeJS.
-- `docs` - Rusty Spectre WASM32 SDK documentation.
+- `web/zyanya` - **full** Rusty Zyanya WASM32 SDK bindings for use in web browsers.
+- `web/zyanya-rpc` - only the RPC bindings for use in web browsers (reduced WASM binary size).
+- `nodejs/zyanya` - **full** Rusty Zyanya WASM32 SDK bindings for use with NodeJS.
+- `docs` - Rusty Zyanya WASM32 SDK documentation.
 - `examples` folders contain examples for NodeJS and web browsers.
 - `examples/data` - folder user by examples for configuration and wallet data storage.
 - `examples/javascript` - JavaScript examples.
 - `examples/javascript/general` - General SDK examples (keys & derivation, addresses, encryption, etc.).
 - `examples/javascript/transactions` - Creating, sending and receiving transactions.
-- `examples/javascript/wallet` - Interfacing with the Rusty Spectre Wallet framework.
+- `examples/javascript/wallet` - Interfacing with the Rusty Zyanya Wallet framework.
 - `examples/typescript` - TypeScript examples.
 
 If you are using JavaScript and Visual Studio Code, it is highly recommended you replicate
 the `jsconfig.json` configuration file as is done in the SDK examples. This file allows
 Visual Studio to provide TypeScript-like code completion, type checking and documentation.
 
-Included documentation in the release can be accessed by loading the `docs/spectre/index.html`
+Included documentation in the release can be accessed by loading the `docs/zyanya/index.html`
 file in a web browser.
 
 ## Building from Source
 
 To build the WASM32 SDK from source, you need to have the Rust environment installed. To do that,
-follow instructions in the [Rusty Spectre README](https://github.com/spectre-project/rusty-spectre).
+follow instructions in the [Rusty Zyanya README](https://github.com/zyanya-project/rusty-zyanya).
 
 Once you have Rust installed, you can build the WASM32 SDK as follows:
 
@@ -76,8 +76,8 @@ Please note that to build from source, you need to have TypeDoc installed global
 ## Running Web examples
 
 **IMPORTANT:** To view web examples, you need to serve them from a local web server and
-serve them from the root of the SDK folder (`spectre-wasm32-sdk` if using a redistributable or
-`rusty-spectre/wasm` if building from source). This is because examples use relative paths.
+serve them from the root of the SDK folder (`zyanya-wasm32-sdk` if using a redistributable or
+`rusty-zyanya/wasm` if building from source). This is because examples use relative paths.
 WASM32 currently can not be loaded using the `file://` protocol.
 
 You can use any web server of your choice. If you don't have one, you can run one as follows:
@@ -125,7 +125,7 @@ There are multiple ways to use RPC:
 - Use `RpcClient` class that handles the connectivity automatically and provides RPC interfaces in a form of async function calls.
 
 **NODEJS:** To use WASM RPC client in the Node.js environment, you need to introduce a W3C WebSocket object
-before loading the WASM32 library. The compatible WebSocket library is [WebSocket](https://www.npmjs.com/package/websocket) and is included in the `spectre` NPM package. `spectre` package is a wrapper around `spectre-wasm` that imports and installs this WebSocket shim in the `globalThis` object and then re-exports `spectre-wasm` exports.
+before loading the WASM32 library. The compatible WebSocket library is [WebSocket](https://www.npmjs.com/package/websocket) and is included in the `zyanya` NPM package. `zyanya` package is a wrapper around `zyanya-wasm` that imports and installs this WebSocket shim in the `globalThis` object and then re-exports `zyanya-wasm` exports.
 
 ## Loading in a Web App
 
@@ -133,10 +133,10 @@ before loading the WASM32 library. The compatible WebSocket library is [WebSocke
 <html>
     <head>
         <script type="module">
-            import * as spectre from './spectre/spectre-wasm.js';
+            import * as zyanya from './zyanya/zyanya-wasm.js';
             (async () => {
-                await spectre.default('./spectre/spectre-wasm_bg.wasm');
-                console.log(spectre.version());
+                await zyanya.default('./zyanya/zyanya-wasm_bg.wasm');
+                console.log(zyanya.version());
                 // ...
             })();
         </script>
@@ -150,7 +150,7 @@ before loading the WASM32 library. The compatible WebSocket library is [WebSocke
 ```javascript
 //
 // W3C WebSocket module shim
-// this is provided by NPM `spectre` module and is only needed
+// this is provided by NPM `zyanya` module and is only needed
 // if you are building WASM libraries for NodeJS from source
 //
 // @ts-ignore
@@ -161,7 +161,7 @@ let {
     RpcClient,
     Encoding,
     initConsolePanicHook
-} = require('./spectre');
+} = require('./zyanya');
 
 // enabling console panic hooks allows WASM to print panic details to console
 // initConsolePanicHook();

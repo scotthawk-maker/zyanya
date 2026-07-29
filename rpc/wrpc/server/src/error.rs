@@ -1,5 +1,5 @@
-use spectre_notify::error::Error as NotifyError;
-use spectre_rpc_core::RpcError;
+use zyanya_notify::error::Error as NotifyError;
+use zyanya_rpc_core::RpcError;
 use std::sync::PoisonError;
 use thiserror::Error;
 use workflow_rpc::server::{error::Error as RpcServerError, WebSocketError};

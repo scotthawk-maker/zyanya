@@ -1,10 +1,10 @@
 <html>
     <head>
         <script type="module">
-            import * as spectre from './spectre-wallet/spectre-wallet.js';
+            import * as zyanya from './zyanya-wallet/zyanya-wallet.js';
             (async () => {
-                const wasm = await spectre.default('./spectre-wallet/spectre-wallet_bg.wasm');
-                await wasm.load_spectre_wallet_cli();
+                const wasm = await zyanya.default('./zyanya-wallet/zyanya-wallet_bg.wasm');
+                await wasm.load_zyanya_wallet_cli();
             })();
         </script>
         <style>

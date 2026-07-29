@@ -1,7 +1,7 @@
 //!
-//! # Spectre Wallet Keys
+//! # Zyanya Wallet Keys
 //!
-//! This crate provides tools for creating and managing Spectre wallet keys.
+//! This crate provides tools for creating and managing Zyanya wallet keys.
 //! This includes extended key generation and derivation.
 //!
 

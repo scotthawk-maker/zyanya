@@ -4,21 +4,21 @@ use rand::rngs::ThreadRng;
 use rand::Rng;
 use rand_distr::{Distribution, Exp};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
-use spectre_consensus::consensus::Consensus;
-use spectre_consensus::model::stores::virtual_state::VirtualStateStoreReader;
-use spectre_consensus::params::Params;
-use spectre_consensus_core::api::ConsensusApi;
-use spectre_consensus_core::block::{Block, TemplateBuildMode, TemplateTransactionSelector};
-use spectre_consensus_core::coinbase::MinerData;
-use spectre_consensus_core::mass::MassCalculator;
-use spectre_consensus_core::sign::sign;
-use spectre_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
-use spectre_consensus_core::tx::{
+use zyanya_consensus::consensus::Consensus;
+use zyanya_consensus::model::stores::virtual_state::VirtualStateStoreReader;
+use zyanya_consensus::params::Params;
+use zyanya_consensus_core::api::ConsensusApi;
+use zyanya_consensus_core::block::{Block, TemplateBuildMode, TemplateTransactionSelector};
+use zyanya_consensus_core::coinbase::MinerData;
+use zyanya_consensus_core::mass::MassCalculator;
+use zyanya_consensus_core::sign::sign;
+use zyanya_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
+use zyanya_consensus_core::tx::{
     MutableTransaction, ScriptPublicKey, ScriptVec, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput, UtxoEntry,
 };
-use spectre_consensus_core::utxo::utxo_view::UtxoView;
-use spectre_core::trace;
-use spectre_utils::sim::{Environment, Process, Resumption, Suspension};
+use zyanya_consensus_core::utxo::utxo_view::UtxoView;
+use zyanya_core::trace;
+use zyanya_utils::sim::{Environment, Process, Resumption, Suspension};
 use std::cmp::max;
 use std::iter::once;
 use std::sync::Arc;
@@ -38,7 +38,7 @@ impl TemplateTransactionSelector for OnetimeTxSelector {
         self.txs.take().unwrap()
     }
 
-    fn reject_selection(&mut self, _tx_id: spectre_consensus_core::tx::TransactionId) {
+    fn reject_selection(&mut self, _tx_id: zyanya_consensus_core::tx::TransactionId) {
         unimplemented!()
     }
 

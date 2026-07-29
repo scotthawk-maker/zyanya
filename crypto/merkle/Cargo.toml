@@ -1,6 +1,6 @@
 [package]
-name = "spectre-merkle"
-description = "Spectre merkle tree library"
+name = "zyanya-merkle"
+description = "Zyanya merkle tree library"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -10,4 +10,4 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-spectre-hashes.workspace = true
+zyanya-hashes.workspace = true

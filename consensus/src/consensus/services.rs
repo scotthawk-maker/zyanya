@@ -17,8 +17,8 @@ use crate::{
     },
 };
 use itertools::Itertools;
-use spectre_consensus_core::mass::MassCalculator;
-use spectre_txscript::caches::TxScriptCacheCounters;
+use zyanya_consensus_core::mass::MassCalculator;
+use zyanya_txscript::caches::TxScriptCacheCounters;
 use std::sync::{atomic::AtomicBool, Arc};
 
 pub type DbGhostdagManager =

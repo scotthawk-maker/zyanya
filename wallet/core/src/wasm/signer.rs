@@ -2,14 +2,14 @@ use crate::imports::*;
 use crate::result::Result;
 use js_sys::Array;
 use serde_wasm_bindgen::from_value;
-use spectre_consensus_client::{sign_with_multiple_v3, Transaction};
-use spectre_consensus_core::hashing::wasm::SighashType;
-use spectre_consensus_core::sign::sign_input;
-use spectre_consensus_core::tx::PopulatedTransaction;
-use spectre_consensus_core::{hashing::sighash_type::SIG_HASH_ALL, sign::verify};
-use spectre_hashes::Hash;
-use spectre_wallet_keys::privatekey::PrivateKey;
-use spectre_wasm_core::types::HexString;
+use zyanya_consensus_client::{sign_with_multiple_v3, Transaction};
+use zyanya_consensus_core::hashing::wasm::SighashType;
+use zyanya_consensus_core::sign::sign_input;
+use zyanya_consensus_core::tx::PopulatedTransaction;
+use zyanya_consensus_core::{hashing::sighash_type::SIG_HASH_ALL, sign::verify};
+use zyanya_hashes::Hash;
+use zyanya_wallet_keys::privatekey::PrivateKey;
+use zyanya_wasm_core::types::HexString;
 
 #[wasm_bindgen]
 extern "C" {

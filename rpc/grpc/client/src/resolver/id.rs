@@ -1,11 +1,11 @@
 use crate::{
     error::{Error, Result},
-    resolver::{Resolver, SpectredResponseReceiver, SpectredResponseSender},
+    resolver::{Resolver, ZyanyadResponseReceiver, ZyanyadResponseSender},
 };
-use spectre_core::trace;
-use spectre_grpc_core::{
-    ops::SpectredPayloadOps,
-    protowire::{SpectredRequest, SpectredResponse},
+use zyanya_core::trace;
+use zyanya_grpc_core::{
+    ops::ZyanyadPayloadOps,
+    protowire::{ZyanyadRequest, ZyanyadResponse},
 };
 use std::{
     collections::HashMap,
@@ -17,11 +17,11 @@ use tokio::sync::oneshot;
 #[derive(Debug)]
 struct Pending {
     timestamp: Instant,
-    sender: SpectredResponseSender,
+    sender: ZyanyadResponseSender,
 }
 
 impl Pending {
-    fn new(sender: SpectredResponseSender) -> Self {
+    fn new(sender: ZyanyadResponseSender) -> Self {
         Self { timestamp: Instant::now(), sender }
     }
 }
@@ -38,8 +38,8 @@ impl IdResolver {
 }
 
 impl Resolver for IdResolver {
-    fn register_request(&self, _: SpectredPayloadOps, request: &SpectredRequest) -> SpectredResponseReceiver {
-        let (sender, receiver) = oneshot::channel::<Result<SpectredResponse>>();
+    fn register_request(&self, _: ZyanyadPayloadOps, request: &ZyanyadRequest) -> ZyanyadResponseReceiver {
+        let (sender, receiver) = oneshot::channel::<Result<ZyanyadResponse>>();
         {
             let mut pending_calls = self.pending_calls.lock().unwrap();
             pending_calls.insert(request.id, Pending::new(sender));
@@ -48,7 +48,7 @@ impl Resolver for IdResolver {
         receiver
     }
 
-    fn handle_response(&self, response: SpectredResponse) {
+    fn handle_response(&self, response: ZyanyadResponse) {
         match self.pending_calls.lock().unwrap().remove(&response.id) {
             Some(pending) => {
                 trace!("[Resolver] handle_response has matching request with id {}", response.id);

@@ -1,5 +1,5 @@
 use crate::imports::*;
-use spectre_metrics_core::{Metrics as MetricsProcessor, MetricsSinkFn};
+use zyanya_metrics_core::{Metrics as MetricsProcessor, MetricsSinkFn};
 use workflow_core::runtime::is_nw;
 
 #[derive(Describe, Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -43,7 +43,7 @@ impl Handler for Metrics {
     }
 
     async fn start(self: Arc<Self>, ctx: &Arc<dyn Context>) -> cli::Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
 
         self.settings.try_load().await.ok();
         if let Some(mute) = self.settings.get(MetricsSettings::Mute) {
@@ -61,7 +61,7 @@ impl Handler for Metrics {
     }
 
     async fn handle(self: Arc<Self>, ctx: &Arc<dyn Context>, argv: Vec<String>, cmd: &str) -> cli::Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
         self.main(ctx, argv, cmd).await.map_err(|e| e.into())
     }
 }
@@ -79,7 +79,7 @@ impl Metrics {
         self.metrics.sink()
     }
 
-    async fn main(self: Arc<Self>, ctx: Arc<SpectreCli>, mut argv: Vec<String>, _cmd: &str) -> Result<()> {
+    async fn main(self: Arc<Self>, ctx: Arc<ZyanyaCli>, mut argv: Vec<String>, _cmd: &str) -> Result<()> {
         if argv.is_empty() {
             return self.display_help(ctx, argv).await;
         }
@@ -95,7 +95,7 @@ impl Metrics {
         Ok(())
     }
 
-    pub async fn display_help(self: &Arc<Self>, ctx: Arc<SpectreCli>, _argv: Vec<String>) -> Result<()> {
+    pub async fn display_help(self: &Arc<Self>, ctx: Arc<ZyanyaCli>, _argv: Vec<String>) -> Result<()> {
         // disable help in non-nw environments
         if !is_nw() {
             return Ok(());

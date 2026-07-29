@@ -1,12 +1,12 @@
 use std::{cmp::max, sync::Arc};
 
 use log::debug;
-use spectre_consensus_core::api::ConsensusApi;
-use spectre_hashes::Hash;
-use spectre_p2p_lib::{
+use zyanya_consensus_core::api::ConsensusApi;
+use zyanya_hashes::Hash;
+use zyanya_p2p_lib::{
     common::ProtocolError,
     dequeue, dequeue_with_request_id, make_response,
-    pb::{self, spectred_message::Payload, BlockHeadersMessage, DoneHeadersMessage},
+    pb::{self, zyanyad_message::Payload, BlockHeadersMessage, DoneHeadersMessage},
     IncomingRoute, Router,
 };
 

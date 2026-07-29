@@ -1,11 +1,11 @@
 syntax = "proto3";
 package protowire;
 
-option go_package = "github.com/spectre-project/spectred/protowire";
+option go_package = "github.com/zyanya-project/zyanyad/protowire";
 
 import "p2p.proto";
 
-message SpectredMessage {
+message ZyanyadMessage {
   uint32 response_id = 101;
   uint32 request_id = 102;
   oneof payload {
@@ -56,5 +56,5 @@ message SpectredMessage {
 }
 
 service P2P {
-  rpc MessageStream (stream SpectredMessage) returns (stream SpectredMessage) {}
+  rpc MessageStream (stream ZyanyadMessage) returns (stream ZyanyadMessage) {}
 }

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use core::fmt::Debug;
-use spectre_core::{debug, trace};
+use zyanya_core::{debug, trace};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,

@@ -1,7 +1,7 @@
 use super::sighash_type::{self, SigHashType};
 use wasm_bindgen::prelude::*;
 
-/// Spectre Sighash types allowed by consensus
+/// Zyanya Sighash types allowed by consensus
 /// @category Consensus
 #[wasm_bindgen]
 pub enum SighashType {

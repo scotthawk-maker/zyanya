@@ -20,7 +20,7 @@ impl Handler for Monitor {
     }
 
     fn help(&self, _ctx: &Arc<dyn Context>) -> &'static str {
-        "Monitors and displays the balance and synchronization status of the Spectre wallet."
+        "Monitors and displays the balance and synchronization status of the Zyanya wallet."
     }
 
     async fn stop(self: Arc<Self>, _ctx: &Arc<dyn Context>) -> cli::Result<()> {
@@ -32,13 +32,13 @@ impl Handler for Monitor {
     }
 
     async fn handle(self: Arc<Self>, ctx: &Arc<dyn Context>, argv: Vec<String>, cmd: &str) -> cli::Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
         self.main(&ctx, argv, cmd).await.map_err(|e| e.into())
     }
 }
 
 impl Monitor {
-    async fn main(self: Arc<Self>, ctx: &Arc<SpectreCli>, _argv: Vec<String>, _cmd: &str) -> Result<()> {
+    async fn main(self: Arc<Self>, ctx: &Arc<ZyanyaCli>, _argv: Vec<String>, _cmd: &str) -> Result<()> {
         let max_events = 16;
         let events = Arc::new(Mutex::new(VecDeque::new()));
         let events_rx = ctx.wallet().multiplexer().channel();
@@ -88,7 +88,7 @@ impl Monitor {
         Ok(())
     }
 
-    async fn redraw(self: &Arc<Self>, ctx: &Arc<SpectreCli>, events: &Arc<Mutex<VecDeque<Box<Events>>>>) -> Result<()> {
+    async fn redraw(self: &Arc<Self>, ctx: &Arc<ZyanyaCli>, events: &Arc<Mutex<VecDeque<Box<Events>>>>) -> Result<()> {
         tprint!(ctx, "{}", ClearScreen);
         tprint!(ctx, "{}", Goto(1, 1));
 
@@ -98,7 +98,7 @@ impl Monitor {
             tprintln!(ctx, "{}", style("Wallet is not connected to the network").magenta());
             tprintln!(ctx);
         } else if !wallet.is_synced() {
-            tprintln!(ctx, "{}", style("Spectre node is currently syncing").magenta());
+            tprintln!(ctx, "{}", style("Zyanya node is currently syncing").magenta());
             tprintln!(ctx);
         }
 

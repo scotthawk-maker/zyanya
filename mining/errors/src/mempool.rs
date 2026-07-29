@@ -1,4 +1,4 @@
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     errors::tx::TxRuleError,
     tx::{TransactionId, TransactionOutpoint},
 };

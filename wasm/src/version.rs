@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 
-/// Returns the version of the Rusty Spectre framework.
+/// Returns the version of the Rusty Zyanya framework.
 /// @category General
 #[wasm_bindgen]
 pub fn version() -> String {

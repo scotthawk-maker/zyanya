@@ -1,11 +1,11 @@
 use crate::{
     error::{Error, Result},
-    resolver::{matcher::Matcher, Resolver, SpectredResponseReceiver, SpectredResponseSender},
+    resolver::{matcher::Matcher, Resolver, ZyanyadResponseReceiver, ZyanyadResponseSender},
 };
-use spectre_core::trace;
-use spectre_grpc_core::{
-    ops::SpectredPayloadOps,
-    protowire::{SpectredRequest, SpectredResponse},
+use zyanya_core::trace;
+use zyanya_grpc_core::{
+    ops::ZyanyadPayloadOps,
+    protowire::{ZyanyadRequest, ZyanyadResponse},
 };
 use std::{
     collections::VecDeque,
@@ -17,17 +17,17 @@ use tokio::sync::oneshot;
 #[derive(Debug)]
 struct Pending {
     timestamp: Instant,
-    op: SpectredPayloadOps,
-    request: SpectredRequest,
-    sender: SpectredResponseSender,
+    op: ZyanyadPayloadOps,
+    request: ZyanyadRequest,
+    sender: ZyanyadResponseSender,
 }
 
 impl Pending {
-    fn new(op: SpectredPayloadOps, request: SpectredRequest, sender: SpectredResponseSender) -> Self {
+    fn new(op: ZyanyadPayloadOps, request: ZyanyadRequest, sender: ZyanyadResponseSender) -> Self {
         Self { timestamp: Instant::now(), op, request, sender }
     }
 
-    fn is_matching(&self, response: &SpectredResponse, response_op: SpectredPayloadOps) -> bool {
+    fn is_matching(&self, response: &ZyanyadResponse, response_op: ZyanyadPayloadOps) -> bool {
         self.op == response_op && self.request.is_matching(response)
     }
 }
@@ -44,8 +44,8 @@ impl QueueResolver {
 }
 
 impl Resolver for QueueResolver {
-    fn register_request(&self, op: SpectredPayloadOps, request: &SpectredRequest) -> SpectredResponseReceiver {
-        let (sender, receiver) = oneshot::channel::<Result<SpectredResponse>>();
+    fn register_request(&self, op: ZyanyadPayloadOps, request: &ZyanyadRequest) -> ZyanyadResponseReceiver {
+        let (sender, receiver) = oneshot::channel::<Result<ZyanyadResponse>>();
         {
             let pending = Pending::new(op, request.clone(), sender);
 
@@ -56,8 +56,8 @@ impl Resolver for QueueResolver {
         receiver
     }
 
-    fn handle_response(&self, response: SpectredResponse) {
-        let response_op: SpectredPayloadOps = response.payload.as_ref().unwrap().try_into().expect("response is not a notification");
+    fn handle_response(&self, response: ZyanyadResponse) {
+        let response_op: ZyanyadPayloadOps = response.payload.as_ref().unwrap().try_into().expect("response is not a notification");
         trace!("[Resolver] handle_response type: {:?}", response_op);
         let mut pending_calls = self.pending_calls.lock().unwrap();
         let mut pending: Option<Pending> = None;

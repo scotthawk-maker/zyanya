@@ -3,12 +3,12 @@ use crate::model::stores::{
     ghostdag::{GhostdagData, GhostdagStoreReader},
     headers::HeaderStoreReader,
 };
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     config::params::MIN_DIFFICULTY_WINDOW_LEN,
     errors::difficulty::{DifficultyError, DifficultyResult},
     BlockHashSet, BlueWorkType, MAX_WORK_LEVEL,
 };
-use spectre_math::{Uint256, Uint320};
+use zyanya_math::{Uint256, Uint320};
 use std::{
     cmp::{max, Ordering},
     iter::once_with,
@@ -320,12 +320,12 @@ impl Ord for DifficultyBlock {
 
 #[cfg(test)]
 mod tests {
-    use spectre_consensus_core::{BlockLevel, BlueWorkType, MAX_WORK_LEVEL};
-    use spectre_math::{Uint256, Uint320};
-    use spectre_pow::calc_level_from_pow;
+    use zyanya_consensus_core::{BlockLevel, BlueWorkType, MAX_WORK_LEVEL};
+    use zyanya_math::{Uint256, Uint320};
+    use zyanya_pow::calc_level_from_pow;
 
     use crate::processes::difficulty::{calc_work, level_work};
-    use spectre_utils::hex::ToHex;
+    use zyanya_utils::hex::ToHex;
 
     #[test]
     fn test_target_levels() {

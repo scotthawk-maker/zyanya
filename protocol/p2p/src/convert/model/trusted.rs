@@ -3,7 +3,7 @@
 //! a specific syncing protocol and thus do not belong within consensus core.
 //!
 
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     block::Block,
     blockhash::ORIGIN,
     trusted::{TrustedBlock, TrustedGhostdagData, TrustedHeader},

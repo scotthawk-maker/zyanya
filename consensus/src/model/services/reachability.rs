@@ -2,11 +2,11 @@ use std::ops::Deref;
 use std::sync::Arc;
 
 use parking_lot::RwLock;
-use spectre_consensus_core::blockhash;
+use zyanya_consensus_core::blockhash;
 
 use crate::model::stores::reachability::ReachabilityStoreReader;
 use crate::processes::reachability::{inquirer, Result};
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 
 pub trait ReachabilityService {
     /// Checks if `this` block is a chain ancestor of `queried` block (i.e., `this ∈ chain(queried) ∪ {queried}`).

@@ -1,7 +1,7 @@
 use crate::connection::{Connection, ConnectionId};
 use parking_lot::RwLock;
-use spectre_core::{debug, info, warn};
-use spectre_notify::connection::Connection as ConnectionT;
+use zyanya_core::{debug, info, warn};
+use zyanya_notify::connection::Connection as ConnectionT;
 use std::{
     collections::{hash_map::Entry::Occupied, HashMap, HashSet},
     sync::Arc,

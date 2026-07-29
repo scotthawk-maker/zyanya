@@ -2,8 +2,8 @@ use std::fmt::{Debug, Display, Formatter};
 use std::str::{self, FromStr};
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use spectre_utils::hex::{FromHex, ToHex};
-use spectre_utils::{serde_impl_deser_fixed_bytes_ref, serde_impl_ser_fixed_bytes_ref};
+use zyanya_utils::hex::{FromHex, ToHex};
+use zyanya_utils::{serde_impl_deser_fixed_bytes_ref, serde_impl_ser_fixed_bytes_ref};
 use thiserror::Error;
 
 /// The size of the array used to store subnetwork IDs.
@@ -70,6 +70,12 @@ impl SubnetworkId {
     pub fn is_builtin_or_native(&self) -> bool {
         self.is_native() || self.is_builtin()
     }
+
+    /// Returns true if the subnetwork is the smart contract subnetwork
+    #[inline]
+    pub fn is_smart_contract(&self) -> bool {
+        *self == SUBNETWORK_ID_SMART_CONTRACT
+    }
 }
 
 #[derive(Error, Debug, Clone)]
@@ -135,3 +141,6 @@ pub const SUBNETWORK_ID_COINBASE: SubnetworkId = SubnetworkId::from_byte(1);
 
 /// The subnetwork ID which is used for adding new sub networks to the registry
 pub const SUBNETWORK_ID_REGISTRY: SubnetworkId = SubnetworkId::from_byte(2);
+
+/// The subnetwork ID used for Zyanya smart contract deployment and invocation
+pub const SUBNETWORK_ID_SMART_CONTRACT: SubnetworkId = SubnetworkId::from_byte(3);

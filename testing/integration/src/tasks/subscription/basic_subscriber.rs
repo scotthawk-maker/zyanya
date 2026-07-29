@@ -1,10 +1,10 @@
 use crate::tasks::{subscription::submitter::SubscribeCommand, Task};
 use async_channel::Sender;
 use async_trait::async_trait;
-use spectre_core::warn;
-use spectre_grpc_client::GrpcClient;
-use spectre_notify::scope::Scope;
-use spectre_utils::triggers::SingleTrigger;
+use zyanya_core::warn;
+use zyanya_grpc_client::GrpcClient;
+use zyanya_notify::scope::Scope;
+use zyanya_utils::triggers::SingleTrigger;
 use std::{sync::Arc, time::Duration};
 use tokio::{sync::oneshot::channel, task::JoinHandle, time::sleep};
 

@@ -5,8 +5,8 @@
 use crate::derivation::create_xpub_from_xprv;
 use crate::imports::*;
 use secp256k1::SecretKey;
-use spectre_bip32::{ExtendedPrivateKey, ExtendedPublicKey, Language, Mnemonic};
-use spectre_utils::hex::ToHex;
+use zyanya_bip32::{ExtendedPrivateKey, ExtendedPublicKey, Language, Mnemonic};
+use zyanya_utils::hex::ToHex;
 use xxhash_rust::xxh3::xxh3_64;
 
 #[derive(Clone, Debug, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]

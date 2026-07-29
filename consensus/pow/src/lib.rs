@@ -9,9 +9,9 @@ pub mod xoshiro;
 use std::cmp::max;
 
 use crate::matrix::Matrix;
-use spectre_consensus_core::{hashing, header::Header, BlockLevel};
-use spectre_hashes::PowHash;
-use spectre_math::Uint256;
+use zyanya_consensus_core::{hashing, header::Header, BlockLevel};
+use zyanya_hashes::PowHash;
+use zyanya_math::Uint256;
 use spectrex::astrobwtv3;
 
 /// State is an intermediate data structure with pre-computed values to speed up mining.

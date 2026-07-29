@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use spectre_database::{
+use zyanya_database::{
     prelude::{CachedDbItem, DirectDbWriter, StoreError, StoreResult, DB},
     registry::DatabaseStorePrefixes,
 };
 
-use spectre_consensus_core::BlockHashSet;
+use zyanya_consensus_core::BlockHashSet;
 
 /// Reader API for `UtxoIndexTipsStore`.
 pub trait UtxoIndexTipsStoreReader {

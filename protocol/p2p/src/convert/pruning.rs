@@ -1,6 +1,6 @@
 use super::error::ConversionError;
 use crate::pb as protowire;
-use spectre_consensus_core::header::Header;
+use zyanya_consensus_core::header::Header;
 use std::sync::Arc;
 
 // ----------------------------------------------------------------------------

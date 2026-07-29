@@ -1,5 +1,5 @@
 use crate::imports::*;
-use spectre_daemon::SpectredConfig;
+use zyanya_daemon::ZyanyadConfig;
 use workflow_core::task::sleep;
 use workflow_node::process;
 pub use workflow_node::process::Event;
@@ -7,7 +7,7 @@ use workflow_store::fs;
 
 #[derive(Describe, Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd)]
 #[serde(rename_all = "lowercase")]
-pub enum SpectredSettings {
+pub enum ZyanyadSettings {
     #[describe("Specify the binary location")]
     Location,
     #[describe("Toggle logging output")]
@@ -15,12 +15,12 @@ pub enum SpectredSettings {
 }
 
 #[async_trait]
-impl DefaultSettings for SpectredSettings {
+impl DefaultSettings for ZyanyadSettings {
     async fn defaults() -> Vec<(Self, Value)> {
         let mut settings = vec![(Self::Mute, to_value(true).unwrap())];
 
         let root = nw_sys::app::folder();
-        if let Ok(binaries) = spectre_daemon::locate_binaries(&root, "spectred").await {
+        if let Ok(binaries) = zyanya_daemon::locate_binaries(&root, "zyanyad").await {
             if let Some(path) = binaries.first() {
                 settings.push((Self::Location, to_value(path.to_string_lossy().to_string()).unwrap()));
             }
@@ -31,7 +31,7 @@ impl DefaultSettings for SpectredSettings {
 }
 
 pub struct Node {
-    settings: SettingsStore<SpectredSettings>,
+    settings: SettingsStore<ZyanyadSettings>,
     mute: Arc<AtomicBool>,
     is_running: Arc<AtomicBool>,
 }
@@ -39,7 +39,7 @@ pub struct Node {
 impl Default for Node {
     fn default() -> Self {
         Node {
-            settings: SettingsStore::try_new("spectred").expect("Failed to create node settings store"),
+            settings: SettingsStore::try_new("zyanyad").expect("Failed to create node settings store"),
             mute: Arc::new(AtomicBool::new(true)),
             is_running: Arc::new(AtomicBool::new(false)),
         }
@@ -49,27 +49,27 @@ impl Default for Node {
 #[async_trait]
 impl Handler for Node {
     fn verb(&self, ctx: &Arc<dyn Context>) -> Option<&'static str> {
-        if let Ok(ctx) = ctx.clone().downcast_arc::<SpectreCli>() {
-            ctx.daemons().clone().spectred.as_ref().map(|_| "node")
+        if let Ok(ctx) = ctx.clone().downcast_arc::<ZyanyaCli>() {
+            ctx.daemons().clone().zyanyad.as_ref().map(|_| "node")
         } else {
             None
         }
     }
 
     fn help(&self, _ctx: &Arc<dyn Context>) -> &'static str {
-        "Manage the local Spectre node instance."
+        "Manage the local Zyanya node instance."
     }
 
     async fn start(self: Arc<Self>, _ctx: &Arc<dyn Context>) -> cli::Result<()> {
         self.settings.try_load().await.ok();
-        if let Some(mute) = self.settings.get(SpectredSettings::Mute) {
+        if let Some(mute) = self.settings.get(ZyanyadSettings::Mute) {
             self.mute.store(mute, Ordering::Relaxed);
         }
         Ok(())
     }
 
     async fn handle(self: Arc<Self>, ctx: &Arc<dyn Context>, argv: Vec<String>, cmd: &str) -> cli::Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
         self.main(ctx, argv, cmd).await.map_err(|e| e.into())
     }
 }
@@ -79,37 +79,37 @@ impl Node {
         self.is_running.load(Ordering::SeqCst)
     }
 
-    async fn create_config(&self, ctx: &Arc<SpectreCli>) -> Result<SpectredConfig> {
+    async fn create_config(&self, ctx: &Arc<ZyanyaCli>) -> Result<ZyanyadConfig> {
         let location: String = self
             .settings
-            .get(SpectredSettings::Location)
+            .get(ZyanyadSettings::Location)
             .ok_or_else(|| Error::Custom("No miner binary specified, please use `node select` to select a binary.".into()))?;
         let network_id = ctx.wallet().network_id()?;
         // Disabled for prompt update (until progress events are implemented)
         // let mute = self.mute.load(Ordering::SeqCst);
         let mute = false;
-        let config = SpectredConfig::new(location.as_str(), network_id, mute);
+        let config = ZyanyadConfig::new(location.as_str(), network_id, mute);
         Ok(config)
     }
 
-    async fn main(self: Arc<Self>, ctx: Arc<SpectreCli>, mut argv: Vec<String>, cmd: &str) -> Result<()> {
+    async fn main(self: Arc<Self>, ctx: Arc<ZyanyaCli>, mut argv: Vec<String>, cmd: &str) -> Result<()> {
         if argv.is_empty() {
             return self.display_help(ctx, argv).await;
         }
-        let spectred = ctx.daemons().spectred();
+        let zyanyad = ctx.daemons().zyanyad();
         match argv.remove(0).as_str() {
             "start" => {
                 let mute = self.mute.load(Ordering::SeqCst);
                 if mute {
-                    tprintln!(ctx, "Starting Spectre node... {}", style("(logs are muted, use 'node mute' to toggle)").dim());
+                    tprintln!(ctx, "Starting Zyanya node... {}", style("(logs are muted, use 'node mute' to toggle)").dim());
                 } else {
-                    tprintln!(ctx, "Starting Spectre node... {}", style("(use 'node mute' to mute logging)").dim());
+                    tprintln!(ctx, "Starting Zyanya node... {}", style("(use 'node mute' to mute logging)").dim());
                 }
 
                 let wrpc_client = ctx.wallet().try_wrpc_client().ok_or(Error::custom("Unable to start node with non-wRPC client"))?;
 
-                spectred.configure(self.create_config(&ctx).await?).await?;
-                spectred.start().await?;
+                zyanyad.configure(self.create_config(&ctx).await?).await?;
+                zyanyad.start().await?;
 
                 // Temporary setup for auto-connect
                 let url = ctx.wallet().settings().get(WalletSettings::Server);
@@ -138,14 +138,14 @@ impl Node {
                 }
             }
             "stop" => {
-                spectred.stop().await?;
+                zyanyad.stop().await?;
             }
             "restart" => {
-                spectred.configure(self.create_config(&ctx).await?).await?;
-                spectred.restart().await?;
+                zyanyad.configure(self.create_config(&ctx).await?).await?;
+                zyanyad.restart().await?;
             }
             "kill" => {
-                spectred.kill().await?;
+                zyanyad.kill().await?;
             }
             "mute" | "logs" => {
                 let mute = !self.mute.load(Ordering::SeqCst);
@@ -155,10 +155,10 @@ impl Node {
                 } else {
                     tprintln!(ctx, "{}", style("Node logging is now unmuted").dim());
                 }
-                self.settings.set(SpectredSettings::Mute, mute).await?;
+                self.settings.set(ZyanyadSettings::Mute, mute).await?;
             }
             "status" => {
-                let status = spectred.status().await?;
+                let status = zyanyad.status().await?;
                 tprintln!(ctx, "{}", status);
             }
             "select" => {
@@ -167,8 +167,8 @@ impl Node {
                 self.select(ctx, path.is_not_empty().then_some(path)).await?;
             }
             "version" => {
-                spectred.configure(self.create_config(&ctx).await?).await?;
-                let version = spectred.version().await?;
+                zyanyad.configure(self.create_config(&ctx).await?).await?;
+                let version = zyanyad.version().await?;
                 tprintln!(ctx, "{}", version);
             }
             v => {
@@ -181,16 +181,16 @@ impl Node {
         Ok(())
     }
 
-    async fn display_help(self: Arc<Self>, ctx: Arc<SpectreCli>, _argv: Vec<String>) -> Result<()> {
+    async fn display_help(self: Arc<Self>, ctx: Arc<ZyanyaCli>, _argv: Vec<String>) -> Result<()> {
         ctx.term().help(
             &[
-                ("select", "Select the Spectred executable (binary) location"),
-                ("version", "Display the Spectred executable version"),
-                ("start", "Start the local Spectre node instance"),
-                ("stop", "Stop the local Spectre node instance"),
-                ("restart", "Restart the local Spectre node instance"),
-                ("kill", "Kill the local Spectre node instance"),
-                ("status", "Get the status of the local Spectre node instance"),
+                ("select", "Select the Zyanyad executable (binary) location"),
+                ("version", "Display the Zyanyad executable version"),
+                ("start", "Start the local Zyanya node instance"),
+                ("stop", "Stop the local Zyanya node instance"),
+                ("restart", "Restart the local Zyanya node instance"),
+                ("kill", "Kill the local Zyanya node instance"),
+                ("status", "Get the status of the local Zyanya node instance"),
                 ("mute", "Toggle logging output"),
             ],
             None,
@@ -199,20 +199,20 @@ impl Node {
         Ok(())
     }
 
-    async fn select(self: Arc<Self>, ctx: Arc<SpectreCli>, path: Option<String>) -> Result<()> {
+    async fn select(self: Arc<Self>, ctx: Arc<ZyanyaCli>, path: Option<String>) -> Result<()> {
         let root = nw_sys::app::folder();
 
         match path {
             None => {
-                let binaries = spectre_daemon::locate_binaries(root.as_str(), "spectred").await?;
+                let binaries = zyanya_daemon::locate_binaries(root.as_str(), "zyanyad").await?;
 
                 if binaries.is_empty() {
-                    tprintln!(ctx, "No Spectred binaries found.");
+                    tprintln!(ctx, "No Zyanyad binaries found.");
                 } else {
                     let binaries = binaries.iter().map(|p| p.display().to_string()).collect::<Vec<_>>();
-                    if let Some(selection) = ctx.term().select("Please select a Spectred binary", &binaries).await? {
+                    if let Some(selection) = ctx.term().select("Please select a Zyanyad binary", &binaries).await? {
                         tprintln!(ctx, "Selecting: {}", selection);
-                        self.settings.set(SpectredSettings::Location, selection.as_str()).await?;
+                        self.settings.set(ZyanyadSettings::Location, selection.as_str()).await?;
                     } else {
                         tprintln!(ctx, "No selection made.");
                     }
@@ -223,10 +223,10 @@ impl Node {
                     let version = process::version(&path).await?;
                     tprintln!(ctx, "Detected binary version: {}", version);
                     tprintln!(ctx, "Selecting: {path}");
-                    self.settings.set(SpectredSettings::Location, path.as_str()).await?;
+                    self.settings.set(ZyanyadSettings::Location, path.as_str()).await?;
                 } else {
                     twarnln!(ctx, "Destination binary not found, please specify the full path including the binary name.");
-                    twarnln!(ctx, "Example: 'node select /home/user/testnet/spectred'");
+                    twarnln!(ctx, "Example: 'node select /home/user/testnet/zyanyad'");
                     tprintln!(ctx, "No selection made.");
                 }
             }
@@ -235,7 +235,7 @@ impl Node {
         Ok(())
     }
 
-    pub async fn handle_event(&self, ctx: &Arc<SpectreCli>, event: Event) -> Result<()> {
+    pub async fn handle_event(&self, ctx: &Arc<ZyanyaCli>, event: Event) -> Result<()> {
         let term = ctx.term();
 
         match event {
@@ -244,12 +244,12 @@ impl Node {
                 term.refresh_prompt();
             }
             Event::Exit(_code) => {
-                tprintln!(ctx, "Spectred has exited");
+                tprintln!(ctx, "Zyanyad has exited");
                 self.is_running.store(false, Ordering::SeqCst);
                 term.refresh_prompt();
             }
             Event::Error(error) => {
-                tprintln!(ctx, "{}", style(format!("Spectred error: {error}")).red());
+                tprintln!(ctx, "{}", style(format!("Zyanyad error: {error}")).red());
                 self.is_running.store(false, Ordering::SeqCst);
                 term.refresh_prompt();
             }

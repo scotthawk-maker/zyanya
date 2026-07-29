@@ -1,24 +1,24 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, SamplingMode};
 use rand::{thread_rng, Rng};
 use secp256k1::Keypair;
-use spectre_addresses::{Address, Prefix, Version};
-use spectre_consensus::processes::transaction_validator::tx_validation_in_utxo_context::{
+use zyanya_addresses::{Address, Prefix, Version};
+use zyanya_consensus::processes::transaction_validator::tx_validation_in_utxo_context::{
     check_scripts_par_iter, check_scripts_par_iter_pool, check_scripts_sequential,
 };
-use spectre_consensus_core::hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync};
-use spectre_consensus_core::hashing::sighash_type::SIG_HASH_ALL;
-use spectre_consensus_core::subnets::SubnetworkId;
-use spectre_consensus_core::tx::{MutableTransaction, Transaction, TransactionInput, TransactionOutpoint, UtxoEntry};
-use spectre_txscript::caches::Cache;
-use spectre_txscript::pay_to_address_script;
-use spectre_utils::iter::parallelism_in_power_steps;
+use zyanya_consensus_core::hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync};
+use zyanya_consensus_core::hashing::sighash_type::SIG_HASH_ALL;
+use zyanya_consensus_core::subnets::SubnetworkId;
+use zyanya_consensus_core::tx::{MutableTransaction, Transaction, TransactionInput, TransactionOutpoint, UtxoEntry};
+use zyanya_txscript::caches::Cache;
+use zyanya_txscript::pay_to_address_script;
+use zyanya_utils::iter::parallelism_in_power_steps;
 
 fn mock_tx_with_payload(inputs_count: usize, non_uniq_signatures: usize, payload_size: usize) -> (Transaction, Vec<UtxoEntry>) {
     let mut payload = vec![0u8; payload_size];
     thread_rng().fill(&mut payload[..]);
 
     let reused_values = SigHashReusedValuesUnsync::new();
-    let dummy_prev_out = TransactionOutpoint::new(spectre_hashes::Hash::from_u64_word(1), 1);
+    let dummy_prev_out = TransactionOutpoint::new(zyanya_hashes::Hash::from_u64_word(1), 1);
     let mut tx = Transaction::new(
         0,
         vec![],

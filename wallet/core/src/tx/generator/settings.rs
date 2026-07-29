@@ -8,7 +8,7 @@ use crate::imports::*;
 use crate::result::Result;
 use crate::tx::{Fees, PaymentDestination};
 use crate::utxo::{UtxoContext, UtxoEntryReference, UtxoIterator};
-use spectre_addresses::Address;
+use zyanya_addresses::Address;
 use workflow_core::channel::Multiplexer;
 
 pub struct GeneratorSettings {

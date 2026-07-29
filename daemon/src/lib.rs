@@ -2,14 +2,14 @@ pub mod cpu_miner;
 pub mod error;
 pub mod imports;
 pub mod result;
-pub mod spectred;
+pub mod zyanyad;
 
 use std::fmt::Display;
 
 use crate::imports::*;
 pub use crate::result::Result;
 pub use cpu_miner::{CpuMiner, CpuMinerConfig, CpuMinerCtl};
-pub use spectred::{Spectred, SpectredConfig, SpectredCtl};
+pub use zyanyad::{Zyanyad, ZyanyadConfig, ZyanyadCtl};
 use workflow_core::runtime;
 use workflow_node::process::Event as ProcessEvent;
 use workflow_store::fs::*;
@@ -18,8 +18,8 @@ pub static LOCATIONS: &[&str] = &[
     "bin",
     "../target/release",
     "../target/debug",
-    "../../spectre-cpu-miner/target/debug",
-    "../../spectre-cpu-miner/target/release",
+    "../../zyanya-cpu-miner/target/debug",
+    "../../zyanya-cpu-miner/target/release",
     "bin/windows-x64",
     "bin/linux-ia32",
     "bin/linux-x64",
@@ -54,24 +54,24 @@ pub async fn locate_binaries(root: &str, name: &str) -> Result<Vec<PathBuf>> {
 
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
 pub enum DaemonKind {
-    Spectred,
+    Zyanyad,
     CpuMiner,
 }
 
 #[derive(Default)]
 pub struct Daemons {
-    pub spectred: Option<Arc<dyn SpectredCtl + Send + Sync + 'static>>,
-    // pub spectred_automute : Arc<
+    pub zyanyad: Option<Arc<dyn ZyanyadCtl + Send + Sync + 'static>>,
+    // pub zyanyad_automute : Arc<
     pub cpu_miner: Option<Arc<dyn CpuMinerCtl + Send + Sync + 'static>>,
 }
 
 impl Daemons {
     pub fn new() -> Self {
-        Self { spectred: None, cpu_miner: None }
+        Self { zyanyad: None, cpu_miner: None }
     }
 
-    pub fn with_spectred(mut self, spectred: Arc<dyn SpectredCtl + Send + Sync + 'static>) -> Self {
-        self.spectred = Some(spectred);
+    pub fn with_zyanyad(mut self, zyanyad: Arc<dyn ZyanyadCtl + Send + Sync + 'static>) -> Self {
+        self.zyanyad = Some(zyanyad);
         self
     }
 
@@ -80,12 +80,12 @@ impl Daemons {
         self
     }
 
-    pub fn spectred(&self) -> Arc<dyn SpectredCtl + Send + Sync + 'static> {
-        self.spectred.as_ref().expect("accessing Daemons::spectred while spectred option is None").clone()
+    pub fn zyanyad(&self) -> Arc<dyn ZyanyadCtl + Send + Sync + 'static> {
+        self.zyanyad.as_ref().expect("accessing Daemons::zyanyad while zyanyad option is None").clone()
     }
 
-    pub fn try_spectred(&self) -> Option<Arc<dyn SpectredCtl + Send + Sync + 'static>> {
-        self.spectred.clone()
+    pub fn try_zyanyad(&self) -> Option<Arc<dyn ZyanyadCtl + Send + Sync + 'static>> {
+        self.zyanyad.clone()
     }
 
     pub fn cpu_miner(&self) -> Arc<dyn CpuMinerCtl + Send + Sync + 'static> {

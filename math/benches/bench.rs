@@ -5,7 +5,7 @@ use rand_chacha::{
     ChaCha8Rng,
 };
 
-use spectre_math::{construct_uint, Uint3072};
+use zyanya_math::{construct_uint, Uint3072};
 construct_uint!(Uint128, 2);
 construct_uint!(Uint256, 4);
 

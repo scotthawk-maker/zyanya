@@ -1,9 +1,9 @@
 use crate::processes::ghostdag::ordering::SortableBlock;
 use rocksdb::WriteBatch;
-use spectre_database::prelude::StoreResult;
-use spectre_database::prelude::DB;
-use spectre_database::prelude::{BatchDbWriter, CachedDbItem, DirectDbWriter};
-use spectre_database::registry::DatabaseStorePrefixes;
+use zyanya_database::prelude::StoreResult;
+use zyanya_database::prelude::DB;
+use zyanya_database::prelude::{BatchDbWriter, CachedDbItem, DirectDbWriter};
+use zyanya_database::registry::DatabaseStorePrefixes;
 use std::sync::Arc;
 
 /// Reader API for `SelectedTipStore`.

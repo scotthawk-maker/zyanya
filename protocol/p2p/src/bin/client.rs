@@ -1,14 +1,14 @@
-use spectre_core::debug;
-use spectre_p2p_lib::echo::EchoFlowInitializer;
+use zyanya_core::debug;
+use zyanya_p2p_lib::echo::EchoFlowInitializer;
 use std::{sync::Arc, time::Duration};
 
 #[tokio::main]
 async fn main() {
     // [-] - init logger
-    spectre_core::log::init_logger(None, "debug");
+    zyanya_core::log::init_logger(None, "debug");
     // [0] - init p2p-adaptor
     let initializer = Arc::new(EchoFlowInitializer::new());
-    let adaptor = spectre_p2p_lib::Adaptor::client_only(spectre_p2p_lib::Hub::new(), initializer, Default::default());
+    let adaptor = zyanya_p2p_lib::Adaptor::client_only(zyanya_p2p_lib::Hub::new(), initializer, Default::default());
     // [1] - connect 128 peers + flows
     let ip_port = String::from("[::1]:50051");
     for i in 0..1 {

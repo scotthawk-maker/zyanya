@@ -1,3 +1,3 @@
 use crate::notification::Notification;
 
-pub type ConsensusChannelConnection = spectre_notify::connection::ChannelConnection<Notification>;
+pub type ConsensusChannelConnection = zyanya_notify::connection::ChannelConnection<Notification>;

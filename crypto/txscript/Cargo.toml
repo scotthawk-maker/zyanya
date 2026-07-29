@@ -1,6 +1,6 @@
 [package]
-name = "spectre-txscript"
-description = "Spectre txscript engine library"
+name = "zyanya-txscript"
+description = "Zyanya txscript engine library"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -23,12 +23,12 @@ cfg-if.workspace = true
 hexplay.workspace = true
 indexmap.workspace = true
 itertools.workspace = true
-spectre-addresses.workspace = true
-spectre-consensus-core.workspace = true
-spectre-hashes.workspace = true
-spectre-txscript-errors.workspace = true
-spectre-utils.workspace = true
-spectre-wasm-core.workspace = true
+zyanya-addresses.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-hashes.workspace = true
+zyanya-txscript-errors.workspace = true
+zyanya-utils.workspace = true
+zyanya-wasm-core.workspace = true
 log.workspace = true
 parking_lot.workspace = true
 rand.workspace = true

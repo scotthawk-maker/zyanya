@@ -1,6 +1,6 @@
 use async_trait::async_trait;
-use spectre_addresses::Address;
-use spectre_consensus_core::{
+use zyanya_addresses::Address;
+use zyanya_consensus_core::{
     block::Block,
     config::Config,
     hashing::tx::hash,
@@ -8,17 +8,17 @@ use spectre_consensus_core::{
     tx::{MutableTransaction, Transaction, TransactionId, TransactionInput, TransactionOutput},
     ChainPath,
 };
-use spectre_consensus_notify::notification::{self as consensus_notify, Notification as ConsensusNotification};
-use spectre_consensusmanager::{ConsensusManager, ConsensusProxy};
-use spectre_math::Uint256;
-use spectre_mining::model::{owner_txs::OwnerTransactions, TransactionIdSet};
-use spectre_notify::converter::Converter;
-use spectre_rpc_core::{
+use zyanya_consensus_notify::notification::{self as consensus_notify, Notification as ConsensusNotification};
+use zyanya_consensusmanager::{ConsensusManager, ConsensusProxy};
+use zyanya_math::Uint256;
+use zyanya_mining::model::{owner_txs::OwnerTransactions, TransactionIdSet};
+use zyanya_notify::converter::Converter;
+use zyanya_rpc_core::{
     BlockAddedNotification, Notification, RpcAcceptedTransactionIds, RpcBlock, RpcBlockVerboseData, RpcHash, RpcMempoolEntry,
     RpcMempoolEntryByAddress, RpcResult, RpcTransaction, RpcTransactionInput, RpcTransactionOutput, RpcTransactionOutputVerboseData,
     RpcTransactionVerboseData,
 };
-use spectre_txscript::{extract_script_pub_key_address, script_class::ScriptClass};
+use zyanya_txscript::{extract_script_pub_key_address, script_class::ScriptClass};
 use std::{collections::HashMap, fmt::Debug, sync::Arc};
 
 /// Conversion of consensus_core to rpc_core structures
@@ -45,7 +45,7 @@ impl ConsensusConverter {
 
     /// Converts a consensus [`Block`] into an [`RpcBlock`], optionally including transaction verbose data.
     ///
-    /// _GO-SPECTRED: PopulateBlockWithVerboseData_
+    /// _GO-ZYANYAD: PopulateBlockWithVerboseData_
     pub async fn get_block(
         &self,
         consensus: &ConsensusProxy,
@@ -113,7 +113,7 @@ impl ConsensusConverter {
 
     /// Converts a consensus [`Transaction`] into an [`RpcTransaction`], optionally including verbose data.
     ///
-    /// _GO-SPECTRED: PopulateTransactionWithVerboseData
+    /// _GO-ZYANYAD: PopulateTransactionWithVerboseData
     pub fn get_transaction(
         &self,
         consensus: &ConsensusProxy,

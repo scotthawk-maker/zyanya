@@ -1,9 +1,9 @@
 use crate::result::Result;
-use spectre_consensus_core::hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync};
-use spectre_consensus_core::hashing::sighash_type::SIG_HASH_ALL;
-use spectre_consensus_core::tx;
+use zyanya_consensus_core::hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync};
+use zyanya_consensus_core::hashing::sighash_type::SIG_HASH_ALL;
+use zyanya_consensus_core::tx;
 
-pub fn script_hashes(mut mutable_tx: tx::SignableTransaction) -> Result<Vec<spectre_hashes::Hash>> {
+pub fn script_hashes(mut mutable_tx: tx::SignableTransaction) -> Result<Vec<zyanya_hashes::Hash>> {
     let mut list = vec![];
     for i in 0..mutable_tx.tx.inputs.len() {
         mutable_tx.tx.inputs[i].sig_op_count = 1;

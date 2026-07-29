@@ -3,8 +3,8 @@
 use crate::encryption::*;
 use crate::imports::*;
 use base64::{engine::general_purpose, Engine as _};
-use spectre_wasm_core::types::BinaryT;
-use spectre_wasm_core::types::HexString;
+use zyanya_wasm_core::types::BinaryT;
+use zyanya_wasm_core::types::HexString;
 
 /// WASM32 binding for `encryptXChaCha20Poly1305` function.
 /// @returns The encrypted text as a base64 string.

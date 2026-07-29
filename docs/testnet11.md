@@ -1,6 +1,6 @@
 # Testnet 11
 
-_Testnet 11_ is the network where we will launch the first public 10BPS Spectre experiment. This document aims to provide a quick guide for anyone who wants to participate.
+_Testnet 11_ is the network where we will launch the first public 10BPS Zyanya experiment. This document aims to provide a quick guide for anyone who wants to participate.
 
 In the future, Testnet 11 will act as a staging zone for various experiments, allowing us to stress test different approaches and ideas on a global scale with community participation. The approaches we decide to adopt will be stress-tested for longer periods on Testnet 10 before being incorporated into the mainnet.
 
@@ -8,8 +8,8 @@ In the future, Testnet 11 will act as a staging zone for various experiments, al
 
 On the software side, participating requires three components:
 
-1. **_spectred_** - the Spectre client
-2. **_spectre-miner_** - the Spectre CPU miner
+1. **_zyanyad_** - the Zyanya client
+2. **_zyanya-miner_** - the Zyanya CPU miner
 3. **_Rothschild_** - a transaction generator
 
 The Rothschild tool is used to create a wallet, and once the wallet has some coins, Rothschild will continuously create transactions from that wallet back to itself at the prescribed rate.
@@ -38,20 +38,20 @@ We emphasize that **only the included miner should be used** to maintain fairnes
 
 ### Step 1: Set Up a Node
 
-1. Download and extract the [rusty-spectre binaries](https://github.com/spectre-project/rusty-spectre/releases). Alternatively, you can compile it from source by following [these instructions](https://github.com/spectre-project/rusty-spectre/blob/main/README.md). This guide assumes you are using the precompiled binaries. If compiling locally, adjust commands like `<program> <arguments>` to `cargo run --bin <program> --release -- <arguments>`.
+1. Download and extract the [rusty-zyanya binaries](https://github.com/zyanya-project/rusty-zyanya/releases). Alternatively, you can compile it from source by following [these instructions](https://github.com/zyanya-project/rusty-zyanya/blob/main/README.md). This guide assumes you are using the precompiled binaries. If compiling locally, adjust commands like `<program> <arguments>` to `cargo run --bin <program> --release -- <arguments>`.
 
    All commands below should be run from the directory where the binaries were extracted.
 
-2. Start the `spectred` client with `utxoindex` enabled:
+2. Start the `zyanyad` client with `utxoindex` enabled:
 
    ```
-   spectred --testnet --netsuffix=11 --utxoindex
+   zyanyad --testnet --netsuffix=11 --utxoindex
    ```
 
    Be sure not to forget the `--netsuffix=11` flag, as omitting it will connect your node to the mainnet or the default 1 BPS testnet. If you compiled the code yourself, run:
 
    ```
-   cargo run --bin spectred --release -- --testnet --netsuffix=11 --utxoindex
+   cargo run --bin zyanyad --release -- --testnet --netsuffix=11 --utxoindex
    ```
 
    Keep this window open, as closing it will stop the node.
@@ -63,10 +63,10 @@ We emphasize that **only the included miner should be used** to maintain fairnes
 
    ```
    2023-06-25 18:00:58.677+00:00 [INFO ] Connected to RPC
-   2023-06-25 18:00:58.677+00:00 [INFO ] Generated private key aa1c554386218eb28c4bsf6a02e5943799cf951dac7301324d88dec2d0119fce and address spectretest:qzlpwt49f0useql6w0tzpnf8k2symdv5tu2x2pe9r9nvngw8mvx57q0tt9lr5. Send some funds to this address and rerun rothschild with `--private-key aa1c554386218eb28c4bsf6a02e5943799cf951dac7301324d88dec2d0119fce`
+   2023-06-25 18:00:58.677+00:00 [INFO ] Generated private key aa1c554386218eb28c4bsf6a02e5943799cf951dac7301324d88dec2d0119fce and address zyanyatest:qzlpwt49f0useql6w0tzpnf8k2symdv5tu2x2pe9r9nvngw8mvx57q0tt9lr5. Send some funds to this address and rerun rothschild with `--private-key aa1c554386218eb28c4bsf6a02e5943799cf951dac7301324d88dec2d0119fce`
    ```
 
-   Here, the private key is `aa1c554386218eb28c4bsf6a02e5943799cf951dac7301324d88dec2d0119fce`, and the address is `spectretest:qzlpwt49f0useql6w0tzpnf8k2symdv5tu2x2pe9r9nvngw8mvx57q0tt9lr5`.
+   Here, the private key is `aa1c554386218eb28c4bsf6a02e5943799cf951dac7301324d88dec2d0119fce`, and the address is `zyanyatest:qzlpwt49f0useql6w0tzpnf8k2symdv5tu2x2pe9r9nvngw8mvx57q0tt9lr5`.
 
 3. Add some coins to the wallet. You can do this by mining to that wallet (see below) or asking other participants to send coins to your public address in the \#testnet Discord channel.
 
@@ -80,12 +80,12 @@ We emphasize that **only the included miner should be used** to maintain fairnes
 
 ### Step 3: Start Mining
 
-Download `spectre-miner` from the latest [Release](https://github.com/spectre-project/spectre-miner/releases) and run it with the following flags (**this is the only miner that supports Testnet 11**):
+Download `zyanya-miner` from the latest [Release](https://github.com/zyanya-project/zyanya-miner/releases) and run it with the following flags (**this is the only miner that supports Testnet 11**):
 
 ```
-spectre-miner --testnet --mining-address <address> -p 18210 -t 1
+zyanya-miner --testnet --mining-address <address> -p 18210 -t 1
 ```
 
 If you plan to run Rothschild, replace `<address>` with the address of your Rothschild wallet. Wait for the wallet to accumulate coins (about 20 minutes assuming several participants). If you are mining without running Rothschild, you can use any address, like the example provided above.
 
-Keep the Spectred, Rothschild, and miner windows open while they are running. Closing them will stop their respective processes.
+Keep the Zyanyad, Rothschild, and miner windows open while they are running. Closing them will stop their respective processes.

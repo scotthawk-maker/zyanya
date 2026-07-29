@@ -1,5 +1,5 @@
 use crate::{block_template::selector::ALPHA, mempool::model::tx::MempoolTransaction};
-use spectre_consensus_core::tx::Transaction;
+use zyanya_consensus_core::tx::Transaction;
 use std::sync::Arc;
 
 #[derive(Clone, Debug)]
@@ -87,11 +87,11 @@ impl From<&MempoolTransaction> for FeerateTransactionKey {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    use spectre_consensus_core::{
+    use zyanya_consensus_core::{
         subnets::SUBNETWORK_ID_NATIVE,
         tx::{Transaction, TransactionInput, TransactionOutpoint},
     };
-    use spectre_hashes::{HasherBase, TransactionID};
+    use zyanya_hashes::{HasherBase, TransactionID};
     use std::sync::Arc;
 
     fn generate_unique_tx(i: u64) -> Arc<Transaction> {

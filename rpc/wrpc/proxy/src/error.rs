@@ -4,13 +4,13 @@ pub enum Error {
     Other(String),
 
     #[error(transparent)]
-    GrpcApi(#[from] spectre_rpc_core::error::RpcError),
+    GrpcApi(#[from] zyanya_rpc_core::error::RpcError),
 
     #[error(transparent)]
-    GrpcClient(#[from] spectre_grpc_client::error::Error),
+    GrpcClient(#[from] zyanya_grpc_client::error::Error),
 
     #[error(transparent)]
-    Wrpc(#[from] spectre_wrpc_server::error::Error),
+    Wrpc(#[from] zyanya_wrpc_server::error::Error),
 
     #[error(transparent)]
     WebSocket(#[from] workflow_rpc::server::WebSocketError),

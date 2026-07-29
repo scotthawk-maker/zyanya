@@ -1,7 +1,7 @@
 use crate::{flow_context::FlowContext, flow_trait::Flow};
-use spectre_core::debug;
-use spectre_p2p_lib::{
-    common::ProtocolError, dequeue_with_request_id, make_response, pb::spectred_message::Payload, IncomingRoute, Router,
+use zyanya_core::debug;
+use zyanya_p2p_lib::{
+    common::ProtocolError, dequeue_with_request_id, make_response, pb::zyanyad_message::Payload, IncomingRoute, Router,
 };
 use std::sync::Arc;
 

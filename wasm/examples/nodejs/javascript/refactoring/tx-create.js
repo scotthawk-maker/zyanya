@@ -1,6 +1,6 @@
 globalThis.WebSocket = require('websocket').w3cwebsocket; // W3C WebSocket module shim
 
-const spectre = require('../spectre/spectre_wasm');
+const zyanya = require('../zyanya/zyanya_wasm');
 const { parseArgs, guardRpcIsSynced } = require("../utils");
 const {
     RpcClient, UtxoSet, Address, Encoding, UtxoOrdering,
@@ -15,8 +15,8 @@ const {
     minimumTransactionFee,
     adjustTransactionForFee,
     Sequence,
-} = spectre;
-spectre.init_console_panic_hook();
+} = zyanya;
+zyanya.init_console_panic_hook();
 
 (async () => {
     const {
@@ -37,7 +37,7 @@ spectre.init_console_panic_hook();
 
     // let res = await rpc.getBlockTemplate({
     //     extraData:[],
-    //     payAddress:"spectre:qrwee7xc2qw5whq8qzv82qjld6zunwy46lsy3hueej5kvgfwvamhswy03lsyh"
+    //     payAddress:"zyanya:qrwee7xc2qw5whq8qzv82qjld6zunwy46lsy3hueej5kvgfwvamhswy03lsyh"
     // });
     // console.log("res", res.block.header.blueWork);
 
@@ -46,11 +46,11 @@ spectre.init_console_panic_hook();
     const info = await rpc.getInfo();
     console.log("info", info);
 
-    const addr = address ?? "spectretest:qz7ulu4c25dh7fzec9zjyrmlhnkzrg4wmf89q7gzr3gfrsj3uz6xjceef60sd";
+    const addr = address ?? "zyanyatest:qz7ulu4c25dh7fzec9zjyrmlhnkzrg4wmf89q7gzr3gfrsj3uz6xjceef60sd";
 
     const addresses = [
         addr,
-        //new Address("spectretest:qz7ulu4c25dh7fzec9zjyrmlhnkzrg4wmf89q7gzr3gfrsj3uz6xjceef60sd")
+        //new Address("zyanyatest:qz7ulu4c25dh7fzec9zjyrmlhnkzrg4wmf89q7gzr3gfrsj3uz6xjceef60sd")
     ];
 
     console.log("\ngetting UTXOs...", addresses);
@@ -104,10 +104,10 @@ spectre.init_console_panic_hook();
     console.log("utxoEntries:", utxoEntries.items);
 
     // let outputs = [
-    //     new spectre.TransactionOutput(300n, new spectre.ScriptPublicKey(0, keypair3.publicKey)),
+    //     new zyanya.TransactionOutput(300n, new zyanya.ScriptPublicKey(0, keypair3.publicKey)),
     //     {
     //         value: 300n,
-    //         scriptPublicKey : new spectre.ScriptPublicKey(0, keypair3.publicKey)
+    //         scriptPublicKey : new zyanya.ScriptPublicKey(0, keypair3.publicKey)
     //     },
     // ];
 

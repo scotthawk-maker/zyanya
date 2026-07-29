@@ -1,15 +1,15 @@
 use super::rpc_core_mock::RpcCoreMock;
 use crate::{adaptor::Adaptor, manager::Manager};
-use spectre_core::info;
-use spectre_grpc_client::GrpcClient;
-use spectre_notify::scope::{NewBlockTemplateScope, Scope};
-use spectre_rpc_core::api::rpc::RpcApi;
-use spectre_utils::networking::{ContextualNetAddress, NetAddress};
+use zyanya_core::info;
+use zyanya_grpc_client::GrpcClient;
+use zyanya_notify::scope::{NewBlockTemplateScope, Scope};
+use zyanya_rpc_core::api::rpc::RpcApi;
+use zyanya_utils::networking::{ContextualNetAddress, NetAddress};
 use std::sync::Arc;
 
 #[tokio::test]
 async fn test_client_server_sanity_check() {
-    spectre_core::log::try_init_logger("info, spectre_grpc_core=trace, spectre_grpc_server=trace, spectre_grpc_client=trace");
+    zyanya_core::log::try_init_logger("info, zyanya_grpc_core=trace, zyanya_grpc_server=trace, zyanya_grpc_client=trace");
 
     // Create and start a fake core service
     let rpc_core_service = Arc::new(RpcCoreMock::new());
@@ -139,7 +139,7 @@ async fn test_client_server_connections() {
         },
     ];
 
-    spectre_core::log::try_init_logger("info, spectre_grpc_core=trace, spectre_grpc_server=trace, spectre_grpc_client=trace");
+    zyanya_core::log::try_init_logger("info, zyanya_grpc_core=trace, zyanya_grpc_server=trace, zyanya_grpc_client=trace");
     for test in tests {
         test.execute().await;
     }
@@ -150,7 +150,7 @@ async fn test_client_server_connections() {
 
 #[tokio::test]
 async fn test_client_server_notifications() {
-    spectre_core::log::try_init_logger("info, spectre_grpc_core=trace, spectre_grpc_server=trace, spectre_grpc_client=trace");
+    zyanya_core::log::try_init_logger("info, zyanya_grpc_core=trace, zyanya_grpc_server=trace, zyanya_grpc_client=trace");
 
     // Create and start a fake core service
     let rpc_core_service = Arc::new(RpcCoreMock::new());

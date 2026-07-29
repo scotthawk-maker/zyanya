@@ -7,7 +7,7 @@ use crate::imports::*;
 use crate::storage::interface::{StorageStream, TransactionRangeResult};
 use crate::storage::TransactionRecord;
 use crate::storage::{Binding, TransactionKind, TransactionRecordStore};
-use spectre_utils::hex::ToHex;
+use zyanya_utils::hex::ToHex;
 use std::{
     collections::VecDeque,
     path::{Path, PathBuf},

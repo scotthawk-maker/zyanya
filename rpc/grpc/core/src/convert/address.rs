@@ -1,12 +1,12 @@
 use crate::protowire;
 use crate::{from, try_from};
-use spectre_rpc_core::RpcError;
+use zyanya_rpc_core::RpcError;
 
 // ----------------------------------------------------------------------------
 // rpc_core to protowire
 // ----------------------------------------------------------------------------
 
-from!(item: &spectre_rpc_core::RpcBalancesByAddressesEntry, protowire::RpcBalancesByAddressesEntry, {
+from!(item: &zyanya_rpc_core::RpcBalancesByAddressesEntry, protowire::RpcBalancesByAddressesEntry, {
     Self { address: (&item.address).into(), balance: item.balance.unwrap_or_default(), error: None }
 });
 
@@ -14,7 +14,7 @@ from!(item: &spectre_rpc_core::RpcBalancesByAddressesEntry, protowire::RpcBalanc
 // protowire to rpc_core
 // ----------------------------------------------------------------------------
 
-try_from!(item: &protowire::RpcBalancesByAddressesEntry, spectre_rpc_core::RpcBalancesByAddressesEntry, {
+try_from!(item: &protowire::RpcBalancesByAddressesEntry, zyanya_rpc_core::RpcBalancesByAddressesEntry, {
     let balance = if item.error.is_some() { None } else { Some(item.balance) };
     Self { address: item.address.as_str().try_into()?, balance }
 });

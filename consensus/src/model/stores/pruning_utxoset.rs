@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use rocksdb::WriteBatch;
-use spectre_database::prelude::CachePolicy;
-use spectre_database::prelude::StoreResult;
-use spectre_database::prelude::DB;
-use spectre_database::prelude::{BatchDbWriter, CachedDbItem};
-use spectre_database::registry::DatabaseStorePrefixes;
-use spectre_hashes::Hash;
+use zyanya_database::prelude::CachePolicy;
+use zyanya_database::prelude::StoreResult;
+use zyanya_database::prelude::DB;
+use zyanya_database::prelude::{BatchDbWriter, CachedDbItem};
+use zyanya_database::registry::DatabaseStorePrefixes;
+use zyanya_hashes::Hash;
 
 use super::utxo_set::DbUtxoSetStore;
 

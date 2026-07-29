@@ -2,7 +2,7 @@ use std::{collections::HashSet, sync::Arc};
 
 use super::BlockBodyProcessor;
 use crate::errors::{BlockProcessResult, RuleError};
-use spectre_consensus_core::{block::Block, merkle::calc_hash_merkle_root, tx::TransactionOutpoint};
+use zyanya_consensus_core::{block::Block, merkle::calc_hash_merkle_root, tx::TransactionOutpoint};
 
 impl BlockBodyProcessor {
     pub fn validate_body_in_isolation(self: &Arc<Self>, block: &Block) -> BlockProcessResult<u64> {
@@ -133,7 +133,7 @@ mod tests {
         errors::RuleError,
         params::MAINNET_PARAMS,
     };
-    use spectre_consensus_core::{
+    use zyanya_consensus_core::{
         api::{BlockValidationFutures, ConsensusApi},
         block::MutableBlock,
         header::Header,
@@ -141,8 +141,8 @@ mod tests {
         subnets::{SUBNETWORK_ID_COINBASE, SUBNETWORK_ID_NATIVE},
         tx::{scriptvec, ScriptPublicKey, Transaction, TransactionId, TransactionInput, TransactionOutpoint, TransactionOutput},
     };
-    use spectre_core::assert_match;
-    use spectre_hashes::Hash;
+    use zyanya_core::assert_match;
+    use zyanya_hashes::Hash;
 
     fn calc_hash_merkle_root<'a>(txs: impl ExactSizeIterator<Item = &'a Transaction>) -> Hash {
         calc_hash_merkle_root_with_options(txs, false)

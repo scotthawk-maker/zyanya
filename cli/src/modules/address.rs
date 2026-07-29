@@ -6,7 +6,7 @@ pub struct Address;
 
 impl Address {
     async fn main(self: Arc<Self>, ctx: &Arc<dyn Context>, argv: Vec<String>, _cmd: &str) -> Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
 
         if argv.is_empty() {
             let address = ctx.account().await?.receive_address()?.to_string();
@@ -31,7 +31,7 @@ impl Address {
         Ok(())
     }
 
-    async fn display_help(self: Arc<Self>, ctx: Arc<SpectreCli>, _argv: Vec<String>) -> Result<()> {
+    async fn display_help(self: Arc<Self>, ctx: Arc<ZyanyaCli>, _argv: Vec<String>) -> Result<()> {
         ctx.term().help(
             &[("address [new]", "Display the current address or generate a new address for the current wallet account.")],
             None,

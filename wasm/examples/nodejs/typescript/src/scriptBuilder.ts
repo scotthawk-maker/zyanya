@@ -1,4 +1,4 @@
-import { ScriptBuilder, Opcodes, addressFromScriptPublicKey, NetworkType } from "../../../../nodejs/spectre"
+import { ScriptBuilder, Opcodes, addressFromScriptPublicKey, NetworkType } from "../../../../nodejs/zyanya"
 
 // An OpTrue is an always spendable script
 const myScript = new ScriptBuilder()

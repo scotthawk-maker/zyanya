@@ -4,9 +4,9 @@
 
 use crate::imports::*;
 use serde::{Deserialize, Serialize};
-use spectre_addresses::Address;
+use zyanya_addresses::Address;
 
-pub use spectre_consensus_core::tx::TransactionId;
+pub use zyanya_consensus_core::tx::TransactionId;
 
 /// [`UtxoRecord`] represents an incoming transaction UTXO entry
 /// stored within [`TransactionRecord`].

@@ -1,6 +1,6 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use spectre_utils::networking::{ContextualNetAddress, IpAddress, NetAddress, PeerId};
+use zyanya_utils::networking::{ContextualNetAddress, IpAddress, NetAddress, PeerId};
 
 pub type RpcNodeId = PeerId;
 pub type RpcIpAddress = IpAddress;

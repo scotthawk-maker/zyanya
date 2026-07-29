@@ -1,6 +1,6 @@
 [package]
-name = "spectre-consensus-client"
-description = "Spectre consensus client data structures"
+name = "zyanya-consensus-client"
+description = "Zyanya consensus client data structures"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -13,13 +13,13 @@ wasm32-sdk = []
 wasm32-types = []
 
 [dependencies]
-spectre-addresses.workspace = true
-spectre-consensus-core.workspace = true
-spectre-hashes.workspace = true
-spectre-math.workspace = true
-spectre-txscript.workspace = true
-spectre-utils.workspace = true
-spectre-wasm-core.workspace = true
+zyanya-addresses.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-hashes.workspace = true
+zyanya-math.workspace = true
+zyanya-txscript.workspace = true
+zyanya-utils.workspace = true
+zyanya-wasm-core.workspace = true
 
 ahash.workspace = true
 cfg-if.workspace = true

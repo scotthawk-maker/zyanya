@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use crate::{RpcBlock, RpcError, RpcRawBlock, RpcResult, RpcTransaction};
-use spectre_consensus_core::block::{Block, MutableBlock};
+use zyanya_consensus_core::block::{Block, MutableBlock};
 
 // ----------------------------------------------------------------------------
 // consensus_core to rpc_core
@@ -14,7 +14,7 @@ impl From<&Block> for RpcBlock {
         Self {
             header: item.header.as_ref().into(),
             transactions: item.transactions.iter().map(RpcTransaction::from).collect(),
-            // TODO: Implement a populating process inspired from spectred\app\rpc\rpccontext\verbosedata.go
+            // TODO: Implement a populating process inspired from zyanyad\app\rpc\rpccontext\verbosedata.go
             verbose_data: None,
         }
     }
@@ -60,8 +60,8 @@ impl TryFrom<RpcBlock> for Block {
             transactions: Arc::new(
                 item.transactions
                     .into_iter()
-                    .map(spectre_consensus_core::tx::Transaction::try_from)
-                    .collect::<RpcResult<Vec<spectre_consensus_core::tx::Transaction>>>()?,
+                    .map(zyanya_consensus_core::tx::Transaction::try_from)
+                    .collect::<RpcResult<Vec<zyanya_consensus_core::tx::Transaction>>>()?,
             ),
         })
     }
@@ -75,8 +75,8 @@ impl TryFrom<RpcRawBlock> for Block {
             transactions: Arc::new(
                 item.transactions
                     .into_iter()
-                    .map(spectre_consensus_core::tx::Transaction::try_from)
-                    .collect::<RpcResult<Vec<spectre_consensus_core::tx::Transaction>>>()?,
+                    .map(zyanya_consensus_core::tx::Transaction::try_from)
+                    .collect::<RpcResult<Vec<zyanya_consensus_core::tx::Transaction>>>()?,
             ),
         })
     }

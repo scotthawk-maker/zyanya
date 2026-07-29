@@ -1,8 +1,8 @@
 use super::interval::Interval;
 use super::{tree::*, *};
 use crate::model::stores::reachability::{ReachabilityStore, ReachabilityStoreReader};
-use spectre_consensus_core::blockhash;
-use spectre_hashes::Hash;
+use zyanya_consensus_core::blockhash;
+use zyanya_hashes::Hash;
 
 /// Init the reachability store to match the state required by the algorithmic layer.
 /// The function first checks the store for possibly being initialized already.
@@ -269,9 +269,9 @@ mod tests {
     use parking_lot::RwLock;
     use rand::seq::IteratorRandom;
     use rocksdb::WriteBatch;
-    use spectre_consensus_core::blockhash::ORIGIN;
-    use spectre_database::prelude::ConnBuilder;
-    use spectre_database::{create_temp_db, prelude::CachePolicy};
+    use zyanya_consensus_core::blockhash::ORIGIN;
+    use zyanya_database::prelude::ConnBuilder;
+    use zyanya_database::{create_temp_db, prelude::CachePolicy};
     use std::{iter::once, ops::Deref};
 
     #[test]

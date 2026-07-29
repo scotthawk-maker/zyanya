@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use cfg_if::cfg_if;
-use spectre_wallet_macros::declare_typescript_wasm_interface as declare;
+use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
 use wasm_bindgen::prelude::*;
 
 cfg_if! {
@@ -450,8 +450,8 @@ declare! {
     r#"
     /**
      * Emitted by {@link UtxoProcessor} after successfully opening an RPC
-     * connection to the Spectre node. This event contains general information
-     * about the Spectre node.
+     * connection to the Zyanya node. This event contains general information
+     * about the Zyanya node.
      * 
      * @category Wallet Events
      */

@@ -3,7 +3,7 @@ pub mod constants;
 pub mod genesis;
 pub mod params;
 
-use spectre_utils::networking::{ContextualNetAddress, NetAddress};
+use zyanya_utils::networking::{ContextualNetAddress, NetAddress};
 
 #[cfg(feature = "devnet-prealloc")]
 use crate::utxo::utxo_collection::UtxoCollection;

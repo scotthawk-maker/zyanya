@@ -2,8 +2,8 @@ use super::{HeaderProcessingContext, HeaderProcessor};
 use crate::errors::{BlockProcessResult, RuleError, TwoDimVecDisplay};
 use crate::model::services::reachability::ReachabilityService;
 use crate::processes::window::WindowManager;
-use spectre_consensus_core::header::Header;
-use spectre_hashes::Hash;
+use zyanya_consensus_core::header::Header;
+use zyanya_hashes::Hash;
 use std::collections::HashSet;
 
 impl HeaderProcessor {

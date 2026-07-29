@@ -14,8 +14,8 @@ use crate::v5::{
 };
 use crate::{flow_context::FlowContext, flow_trait::Flow};
 
-use spectre_p2p_lib::{Router, SharedIncomingRoute, SpectredMessagePayloadType};
-use spectre_utils::channel;
+use zyanya_p2p_lib::{Router, SharedIncomingRoute, ZyanyadMessagePayloadType};
+use zyanya_utils::channel;
 use std::sync::Arc;
 
 use crate::v6::request_pruning_point_and_anticone::PruningPointAndItsAnticoneRequestsFlow;
@@ -32,106 +32,106 @@ pub fn register(ctx: FlowContext, router: Arc<Router>) -> Vec<Box<dyn Flow>> {
             ctx.clone(),
             router.clone(),
             router.subscribe(vec![
-                SpectredMessagePayloadType::BlockHeaders,
-                SpectredMessagePayloadType::DoneHeaders,
-                SpectredMessagePayloadType::IbdBlockLocatorHighestHash,
-                SpectredMessagePayloadType::IbdBlockLocatorHighestHashNotFound,
-                SpectredMessagePayloadType::BlockWithTrustedDataV4,
-                SpectredMessagePayloadType::DoneBlocksWithTrustedData,
-                SpectredMessagePayloadType::IbdChainBlockLocator,
-                SpectredMessagePayloadType::IbdBlock,
-                SpectredMessagePayloadType::TrustedData,
-                SpectredMessagePayloadType::PruningPoints,
-                SpectredMessagePayloadType::PruningPointProof,
-                SpectredMessagePayloadType::UnexpectedPruningPoint,
-                SpectredMessagePayloadType::PruningPointUtxoSetChunk,
-                SpectredMessagePayloadType::DonePruningPointUtxoSetChunks,
+                ZyanyadMessagePayloadType::BlockHeaders,
+                ZyanyadMessagePayloadType::DoneHeaders,
+                ZyanyadMessagePayloadType::IbdBlockLocatorHighestHash,
+                ZyanyadMessagePayloadType::IbdBlockLocatorHighestHashNotFound,
+                ZyanyadMessagePayloadType::BlockWithTrustedDataV4,
+                ZyanyadMessagePayloadType::DoneBlocksWithTrustedData,
+                ZyanyadMessagePayloadType::IbdChainBlockLocator,
+                ZyanyadMessagePayloadType::IbdBlock,
+                ZyanyadMessagePayloadType::TrustedData,
+                ZyanyadMessagePayloadType::PruningPoints,
+                ZyanyadMessagePayloadType::PruningPointProof,
+                ZyanyadMessagePayloadType::UnexpectedPruningPoint,
+                ZyanyadMessagePayloadType::PruningPointUtxoSetChunk,
+                ZyanyadMessagePayloadType::DonePruningPointUtxoSetChunks,
             ]),
             relay_receiver,
         )),
         Box::new(HandleRelayBlockRequests::new(
             ctx.clone(),
             router.clone(),
-            router.subscribe(vec![SpectredMessagePayloadType::RequestRelayBlocks]),
+            router.subscribe(vec![ZyanyadMessagePayloadType::RequestRelayBlocks]),
         )),
-        Box::new(ReceivePingsFlow::new(ctx.clone(), router.clone(), router.subscribe(vec![SpectredMessagePayloadType::Ping]))),
-        Box::new(SendPingsFlow::new(ctx.clone(), router.clone(), router.subscribe(vec![SpectredMessagePayloadType::Pong]))),
+        Box::new(ReceivePingsFlow::new(ctx.clone(), router.clone(), router.subscribe(vec![ZyanyadMessagePayloadType::Ping]))),
+        Box::new(SendPingsFlow::new(ctx.clone(), router.clone(), router.subscribe(vec![ZyanyadMessagePayloadType::Pong]))),
         Box::new(RequestHeadersFlow::new(
             ctx.clone(),
             router.clone(),
-            router.subscribe(vec![SpectredMessagePayloadType::RequestHeaders, SpectredMessagePayloadType::RequestNextHeaders]),
+            router.subscribe(vec![ZyanyadMessagePayloadType::RequestHeaders, ZyanyadMessagePayloadType::RequestNextHeaders]),
         )),
         Box::new(RequestPruningPointProofFlow::new(
             ctx.clone(),
             router.clone(),
-            router.subscribe(vec![SpectredMessagePayloadType::RequestPruningPointProof]),
+            router.subscribe(vec![ZyanyadMessagePayloadType::RequestPruningPointProof]),
         )),
         Box::new(RequestIbdChainBlockLocatorFlow::new(
             ctx.clone(),
             router.clone(),
-            router.subscribe(vec![SpectredMessagePayloadType::RequestIbdChainBlockLocator]),
+            router.subscribe(vec![ZyanyadMessagePayloadType::RequestIbdChainBlockLocator]),
         )),
         Box::new(PruningPointAndItsAnticoneRequestsFlow::new(
             ctx.clone(),
             router.clone(),
             router.subscribe(vec![
-                SpectredMessagePayloadType::RequestPruningPointAndItsAnticone,
-                SpectredMessagePayloadType::RequestNextPruningPointAndItsAnticoneBlocks,
+                ZyanyadMessagePayloadType::RequestPruningPointAndItsAnticone,
+                ZyanyadMessagePayloadType::RequestNextPruningPointAndItsAnticoneBlocks,
             ]),
         )),
         Box::new(RequestPruningPointUtxoSetFlow::new(
             ctx.clone(),
             router.clone(),
             router.subscribe(vec![
-                SpectredMessagePayloadType::RequestPruningPointUtxoSet,
-                SpectredMessagePayloadType::RequestNextPruningPointUtxoSetChunk,
+                ZyanyadMessagePayloadType::RequestPruningPointUtxoSet,
+                ZyanyadMessagePayloadType::RequestNextPruningPointUtxoSetChunk,
             ]),
         )),
         Box::new(HandleIbdBlockRequests::new(
             ctx.clone(),
             router.clone(),
-            router.subscribe(vec![SpectredMessagePayloadType::RequestIbdBlocks]),
+            router.subscribe(vec![ZyanyadMessagePayloadType::RequestIbdBlocks]),
         )),
         Box::new(HandleAntipastRequests::new(
             ctx.clone(),
             router.clone(),
-            router.subscribe(vec![SpectredMessagePayloadType::RequestAntipast]),
+            router.subscribe(vec![ZyanyadMessagePayloadType::RequestAntipast]),
         )),
         Box::new(RelayTransactionsFlow::new(
             ctx.clone(),
             router.clone(),
             router.subscribe_with_capacity(
-                vec![SpectredMessagePayloadType::InvTransactions],
+                vec![ZyanyadMessagePayloadType::InvTransactions],
                 RelayTransactionsFlow::invs_channel_size(),
             ),
             router.subscribe_with_capacity(
-                vec![SpectredMessagePayloadType::Transaction, SpectredMessagePayloadType::TransactionNotFound],
+                vec![ZyanyadMessagePayloadType::Transaction, ZyanyadMessagePayloadType::TransactionNotFound],
                 RelayTransactionsFlow::txs_channel_size(),
             ),
         )),
         Box::new(RequestTransactionsFlow::new(
             ctx.clone(),
             router.clone(),
-            router.subscribe(vec![SpectredMessagePayloadType::RequestTransactions]),
+            router.subscribe(vec![ZyanyadMessagePayloadType::RequestTransactions]),
         )),
         Box::new(ReceiveAddressesFlow::new(
             ctx.clone(),
             router.clone(),
-            router.subscribe(vec![SpectredMessagePayloadType::Addresses]),
+            router.subscribe(vec![ZyanyadMessagePayloadType::Addresses]),
         )),
         Box::new(SendAddressesFlow::new(
             ctx.clone(),
             router.clone(),
-            router.subscribe(vec![SpectredMessagePayloadType::RequestAddresses]),
+            router.subscribe(vec![ZyanyadMessagePayloadType::RequestAddresses]),
         )),
         Box::new(RequestBlockLocatorFlow::new(
             ctx.clone(),
             router.clone(),
-            router.subscribe(vec![SpectredMessagePayloadType::RequestBlockLocator]),
+            router.subscribe(vec![ZyanyadMessagePayloadType::RequestBlockLocator]),
         )),
     ];
 
-    let invs_route = router.subscribe_with_capacity(vec![SpectredMessagePayloadType::InvRelayBlock], ctx.block_invs_channel_size());
+    let invs_route = router.subscribe_with_capacity(vec![ZyanyadMessagePayloadType::InvRelayBlock], ctx.block_invs_channel_size());
     let shared_invs_route = SharedIncomingRoute::new(invs_route);
 
     let num_relay_flows = (ctx.config.bps() as usize / 2).max(1);
@@ -146,11 +146,11 @@ pub fn register(ctx: FlowContext, router: Arc<Router>) -> Vec<Box<dyn Flow>> {
     }));
 
     // The reject message is handled as a special case by the router
-    // SpectredMessagePayloadType::Reject,
+    // ZyanyadMessagePayloadType::Reject,
 
-    // We do not register the below two messages since they are deprecated also in go-spectre
-    // SpectredMessagePayloadType::BlockWithTrustedData,
-    // SpectredMessagePayloadType::IbdBlockLocator,
+    // We do not register the below two messages since they are deprecated also in go-zyanya
+    // ZyanyadMessagePayloadType::BlockWithTrustedData,
+    // ZyanyadMessagePayloadType::IbdBlockLocator,
 
     flows
 }

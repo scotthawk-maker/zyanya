@@ -1,13 +1,13 @@
 use crate::imports::*;
 
 #[derive(Default, Handler)]
-#[help("Send a Spectre transaction to a public address")]
+#[help("Send a Zyanya transaction to a public address")]
 pub struct Send;
 
 impl Send {
     async fn main(self: Arc<Self>, ctx: &Arc<dyn Context>, argv: Vec<String>, _cmd: &str) -> Result<()> {
         // address, amount, priority fee
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
 
         let account = ctx.wallet().account()?;
 
@@ -20,7 +20,7 @@ impl Send {
         let abortable = Abortable::default();
 
         // get priority fee first.
-        let priority_fee_sompi = try_parse_optional_spectre_as_sompi_i64(argv.get(2))?.unwrap_or(0);
+        let priority_fee_sompi = try_parse_optional_zyanya_as_sompi_i64(argv.get(2))?.unwrap_or(0);
 
         // handle --send-all
         let amount_sompi = if argv.get(1).unwrap() == "--send-all" {
@@ -47,7 +47,7 @@ impl Send {
                 .ok_or_else(|| Error::Custom("Insufficient funds to cover the priority fee.".into()))?
         } else {
             // parse amount if not using --send-all
-            try_parse_required_nonzero_spectre_as_sompi_u64(argv.get(1))?
+            try_parse_required_nonzero_zyanya_as_sompi_u64(argv.get(1))?
         };
 
         let outputs = PaymentOutputs::from((address.clone(), amount_sompi));
@@ -69,7 +69,7 @@ impl Send {
             .await?;
 
         tprintln!(ctx, "Transaction sent - {summary}");
-        tprintln!(ctx, "\nSending {} SPR to {address}, transaction IDs:", sompi_to_spectre_string(amount_sompi));
+        tprintln!(ctx, "\nSending {} ZYAN to {address}, transaction IDs:", sompi_to_zyanya_string(amount_sompi));
         tprintln!(ctx, "\n{}\n", _ids.into_iter().map(|a| a.to_string()).collect::<Vec<_>>().join("\n"));
 
         Ok(())

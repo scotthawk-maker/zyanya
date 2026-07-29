@@ -8,10 +8,10 @@ use crate::result::Result;
 use crate::rpc::DynRpcApi;
 use crate::tx::{DataKind, Generator};
 use crate::utxo::{UtxoContext, UtxoEntryId, UtxoEntryReference};
-use spectre_consensus_core::hashing::sighash_type::SigHashType;
-use spectre_consensus_core::sign::{sign_input, sign_with_multiple_v2, Signed};
-use spectre_consensus_core::tx::{SignableTransaction, Transaction, TransactionId};
-use spectre_rpc_core::{RpcTransaction, RpcTransactionId};
+use zyanya_consensus_core::hashing::sighash_type::SigHashType;
+use zyanya_consensus_core::sign::{sign_input, sign_with_multiple_v2, Signed};
+use zyanya_consensus_core::tx::{SignableTransaction, Transaction, TransactionId};
+use zyanya_rpc_core::{RpcTransaction, RpcTransactionId};
 
 pub(crate) struct PendingTransactionInner {
     /// Generator that produced the transaction

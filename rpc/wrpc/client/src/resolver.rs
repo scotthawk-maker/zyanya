@@ -1,5 +1,5 @@
 //!
-//! Module implementing [`Resolver`] client for obtaining public Spectre wRPC endpoints.
+//! Module implementing [`Resolver`] client for obtaining public Zyanya wRPC endpoints.
 //!
 
 use std::sync::OnceLock;
@@ -82,12 +82,12 @@ impl Inner {
 }
 
 ///
-/// # Resolver - a client for obtaining public Spectre wRPC endpoints.
+/// # Resolver - a client for obtaining public Zyanya wRPC endpoints.
 ///
-/// This client operates against [Spectre Resolver](https://github.com/aspectron/spectre-resolver) service
-/// that provides load-balancing and failover capabilities for Spectre wRPC endpoints. The default
-/// configuration allows access to public Spectre nodes, while custom configurations can be supplied
-/// if you are running your own custom Spectre node cluster.
+/// This client operates against [Zyanya Resolver](https://github.com/aspectron/zyanya-resolver) service
+/// that provides load-balancing and failover capabilities for Zyanya wRPC endpoints. The default
+/// configuration allows access to public Zyanya nodes, while custom configurations can be supplied
+/// if you are running your own custom Zyanya node cluster.
 ///
 #[derive(Debug, Clone)]
 pub struct Resolver {
@@ -152,7 +152,7 @@ impl Resolver {
             }
         });
 
-        format!("{url}/v{CURRENT_VERSION}/spectre/{network_id}/{tls}/wrpc/{encoding}")
+        format!("{url}/v{CURRENT_VERSION}/zyanya/{network_id}/{tls}/wrpc/{encoding}")
     }
 
     // query a single resolver service
@@ -178,12 +178,12 @@ impl Resolver {
         Err(Error::Custom(format!("Failed to connect: {:?}", errors)))
     }
 
-    /// Obtain a Spectre p2p [`NodeDescriptor`] from the resolver based on the supplied [`Encoding`] and [`NetworkId`].
+    /// Obtain a Zyanya p2p [`NodeDescriptor`] from the resolver based on the supplied [`Encoding`] and [`NetworkId`].
     pub async fn get_node(&self, encoding: Encoding, network_id: NetworkId) -> Result<NodeDescriptor> {
         self.fetch(encoding, network_id).await
     }
 
-    /// Returns a Spectre wRPC URL from the resolver based on the supplied [`Encoding`] and [`NetworkId`].
+    /// Returns a Zyanya wRPC URL from the resolver based on the supplied [`Encoding`] and [`NetworkId`].
     pub async fn get_url(&self, encoding: Encoding, network_id: NetworkId) -> Result<String> {
         let nodes = self.fetch(encoding, network_id).await?;
         Ok(nodes.url.clone())

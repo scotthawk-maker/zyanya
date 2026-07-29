@@ -12,7 +12,7 @@ if [ $status -ne 0 ]; then
 fi
 
 declare -a crates=(
-    "spectre-wasm"
+    "zyanya-wasm"
 )
 
 for crate in "${crates[@]}"
@@ -28,11 +28,11 @@ do
 done
 
 declare -a crates=(
-    "spectre-wrpc-wasm"
-    "spectre-wallet-cli-wasm"
-    "spectre-wasm"
-    "spectre-cli"
-    "spectre-daemon"
+    "zyanya-wrpc-wasm"
+    "zyanya-wallet-cli-wasm"
+    "zyanya-wasm"
+    "zyanya-cli"
+    "zyanya-daemon"
 )
 
 for crate in "${crates[@]}"
@@ -55,11 +55,11 @@ declare -a features=(
 
 for feature in "${features[@]}"
 do
-    cargo clippy -p spectre-wasm --target wasm32-unknown-unknown --features $feature
+    cargo clippy -p zyanya-wasm --target wasm32-unknown-unknown --features $feature
     status=$?
     if [ $status -ne 0 ]; then
         echo
-        echo "--> wasm32 check of spectre-wasm --features $feature has failed"
+        echo "--> wasm32 check of zyanya-wasm --features $feature has failed"
         echo
         exit $status
     fi

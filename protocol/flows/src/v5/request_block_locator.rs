@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use spectre_p2p_lib::{
+use zyanya_p2p_lib::{
     common::ProtocolError,
     dequeue_with_request_id, make_response,
-    pb::{spectred_message::Payload, BlockLocatorMessage},
+    pb::{zyanyad_message::Payload, BlockLocatorMessage},
     IncomingRoute, Router,
 };
 

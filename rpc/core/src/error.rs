@@ -2,8 +2,8 @@
 //! [`RpcError`] enum used by RPC primitives.
 //!
 
-use spectre_consensus_core::{subnets::SubnetworkConversionError, tx::TransactionId, utxo::utxo_inquirer::UtxoInquirerError};
-use spectre_utils::networking::IpAddress;
+use zyanya_consensus_core::{subnets::SubnetworkConversionError, tx::TransactionId, utxo::utxo_inquirer::UtxoInquirerError};
+use zyanya_utils::networking::IpAddress;
 use std::{net::AddrParseError, num::TryFromIntError};
 use thiserror::Error;
 use workflow_core::channel::ChannelError;
@@ -88,25 +88,25 @@ pub enum RpcError {
     SubmitBlockError(SubmitBlockRejectReason),
 
     #[error(transparent)]
-    AddressError(#[from] spectre_addresses::AddressError),
+    AddressError(#[from] zyanya_addresses::AddressError),
 
     #[error(transparent)]
-    NetworkTypeError(#[from] spectre_consensus_core::network::NetworkTypeError),
+    NetworkTypeError(#[from] zyanya_consensus_core::network::NetworkTypeError),
 
     #[error(transparent)]
-    NetworkIdError(#[from] spectre_consensus_core::network::NetworkIdError),
+    NetworkIdError(#[from] zyanya_consensus_core::network::NetworkIdError),
 
     #[error(transparent)]
-    NotificationError(#[from] spectre_notify::error::Error),
+    NotificationError(#[from] zyanya_notify::error::Error),
 
     #[error(transparent)]
-    MiningManagerError(#[from] spectre_mining_errors::manager::MiningManagerError),
+    MiningManagerError(#[from] zyanya_mining_errors::manager::MiningManagerError),
 
     #[error(transparent)]
-    ConsensusError(#[from] spectre_consensus_core::errors::consensus::ConsensusError),
+    ConsensusError(#[from] zyanya_consensus_core::errors::consensus::ConsensusError),
 
     #[error(transparent)]
-    ScriptClassError(#[from] spectre_txscript::script_class::Error),
+    ScriptClassError(#[from] zyanya_txscript::script_class::Error),
 
     #[error(transparent)]
     NodeIdError(#[from] uuid::Error),
@@ -133,7 +133,7 @@ pub enum RpcError {
     SerdeWasmBindgen(String),
 
     #[error(transparent)]
-    ConsensusClient(#[from] spectre_consensus_client::error::Error),
+    ConsensusClient(#[from] zyanya_consensus_client::error::Error),
 
     #[error("utxo return address could not be found -> {0}")]
     UtxoReturnAddressNotFound(UtxoInquirerError),

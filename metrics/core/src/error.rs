@@ -1,4 +1,4 @@
-use spectre_rpc_core::RpcError;
+use zyanya_rpc_core::RpcError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

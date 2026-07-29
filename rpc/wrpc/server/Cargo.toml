@@ -1,6 +1,6 @@
 [package]
-name = "spectre-wrpc-server"
-description = "Spectre wRPC server"
+name = "zyanya-wrpc-server"
+description = "Zyanya wRPC server"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -16,14 +16,14 @@ crate-type = ["cdylib", "lib"]
 async-trait.workspace = true
 borsh = { workspace = true, features = ["rc"] }
 futures.workspace = true
-spectre-consensus-core.workspace = true
-spectre-core.workspace = true
-spectre-grpc-client.workspace = true
-spectre-notify.workspace = true
-spectre-rpc-core.workspace = true
-spectre-rpc-macros.workspace = true
-spectre-rpc-service.workspace = true
-spectre-utils.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-core.workspace = true
+zyanya-grpc-client.workspace = true
+zyanya-notify.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-rpc-macros.workspace = true
+zyanya-rpc-service.workspace = true
+zyanya-utils.workspace = true
 log.workspace = true
 num_cpus.workspace = true
 paste.workspace = true

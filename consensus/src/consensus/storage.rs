@@ -20,6 +20,7 @@ use crate::{
         utxo_diffs::DbUtxoDiffsStore,
         utxo_multisets::DbUtxoMultisetsStore,
         virtual_state::{LkgVirtualState, VirtualStores},
+        contract::DbContractStore,
         DB,
     },
     processes::{ghostdag::ordering::SortableBlock, reachability::inquirer as reachability, relations},
@@ -28,9 +29,9 @@ use crate::{
 use super::cache_policy_builder::CachePolicyBuilder as PolicyBuilder;
 use itertools::Itertools;
 use parking_lot::RwLock;
-use spectre_consensus_core::{blockstatus::BlockStatus, BlockHashSet};
-use spectre_database::registry::DatabaseStorePrefixes;
-use spectre_hashes::Hash;
+use zyanya_consensus_core::{blockstatus::BlockStatus, BlockHashSet};
+use zyanya_database::registry::DatabaseStorePrefixes;
+use zyanya_hashes::Hash;
 use std::{ops::DerefMut, sync::Arc};
 
 pub struct ConsensusStorage {
@@ -70,6 +71,9 @@ pub struct ConsensusStorage {
     /// The "last known good" virtual state. To be used by any logic which does not want to wait
     /// for a possible virtual state write to complete but can rather settle with the last known state
     pub lkg_virtual_state: LkgVirtualState,
+
+    // Smart contract store
+    pub contract_store: Arc<DbContractStore>,
 }
 
 impl ConsensusStorage {
@@ -227,6 +231,9 @@ impl ConsensusStorage {
         let virtual_stores =
             Arc::new(RwLock::new(VirtualStores::new(db.clone(), lkg_virtual_state.clone(), utxo_set_builder.build())));
 
+        // Smart contract store
+        let contract_store = Arc::new(DbContractStore::new(db.clone(), PolicyBuilder::new().max_items(1000).build()));
+
         // Ensure that reachability stores are initialized
         reachability::init(reachability_store.write().deref_mut()).unwrap();
         relations::init(reachability_relations_store.write().deref_mut());
@@ -255,6 +262,7 @@ impl ConsensusStorage {
             block_window_cache_for_difficulty,
             block_window_cache_for_past_median_time,
             lkg_virtual_state,
+            contract_store,
         })
     }
 }

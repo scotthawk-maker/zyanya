@@ -1,6 +1,6 @@
 [package]
-name = "spectre-consensus"
-description = "Spectre consensus library"
+name = "zyanya-consensus"
+description = "Zyanya consensus library"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -18,21 +18,22 @@ faster-hex.workspace = true
 futures-util.workspace = true
 indexmap.workspace = true
 itertools.workspace = true
-spectre-addresses.workspace = true
-spectre-consensus-core.workspace = true
-spectre-consensus-notify.workspace = true
-spectre-consensusmanager.workspace = true
-spectre-core.workspace = true
-spectre-database.workspace = true
-spectre-hashes.workspace = true
-spectre-math.workspace = true
-spectre-merkle.workspace = true
-spectre-muhash.workspace = true
-spectre-notify.workspace = true
-spectre-pow.workspace = true
-spectre-txscript.workspace = true
-spectre-txscript-errors.workspace = true
-spectre-utils.workspace = true
+zyanya-addresses.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-notify.workspace = true
+zyanya-consensusmanager.workspace = true
+zyanya-core.workspace = true
+zyanya-database.workspace = true
+zyanya-hashes.workspace = true
+zyanya-math.workspace = true
+zyanya-merkle.workspace = true
+zyanya-muhash.workspace = true
+zyanya-notify.workspace = true
+zyanya-pow.workspace = true
+zyanya-txscript.workspace = true
+zyanya-txscript-errors.workspace = true
+zyanya-utils.workspace = true
+zyanya-vm.workspace = true
 log.workspace = true
 once_cell.workspace = true
 parking_lot.workspace = true
@@ -54,8 +55,8 @@ criterion.workspace = true
 serde_json.workspace = true
 flate2.workspace = true
 rand_distr.workspace = true
-spectre-txscript-errors.workspace = true
-spectre-addresses.workspace = true
+zyanya-txscript-errors.workspace = true
+zyanya-addresses.workspace = true
 
 [[bench]]
 name = "parallel_muhash"
@@ -67,4 +68,4 @@ harness = false
 
 [features]
 html_reports = []
-devnet-prealloc = ["spectre-consensus-core/devnet-prealloc"]
+devnet-prealloc = ["zyanya-consensus-core/devnet-prealloc"]

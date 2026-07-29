@@ -3,16 +3,16 @@ mod mockery {
 
     use crate::{model::*, RpcScriptClass};
     use rand::Rng;
-    use spectre_addresses::{Prefix, Version};
-    use spectre_consensus_core::api::BlockCount;
-    use spectre_consensus_core::network::NetworkType;
-    use spectre_consensus_core::subnets::SubnetworkId;
-    use spectre_consensus_core::tx::ScriptPublicKey;
-    use spectre_hashes::Hash;
-    use spectre_math::Uint192;
-    use spectre_notify::subscription::Command;
-    use spectre_rpc_macros::test_wrpc_serializer as test;
-    use spectre_utils::networking::{ContextualNetAddress, IpAddress, NetAddress};
+    use zyanya_addresses::{Prefix, Version};
+    use zyanya_consensus_core::api::BlockCount;
+    use zyanya_consensus_core::network::NetworkType;
+    use zyanya_consensus_core::subnets::SubnetworkId;
+    use zyanya_consensus_core::tx::ScriptPublicKey;
+    use zyanya_hashes::Hash;
+    use zyanya_math::Uint192;
+    use zyanya_notify::subscription::Command;
+    use zyanya_rpc_macros::test_wrpc_serializer as test;
+    use zyanya_utils::networking::{ContextualNetAddress, IpAddress, NetAddress};
     use std::net::{IpAddr, Ipv4Addr};
     use std::sync::Arc;
     use uuid::Uuid;

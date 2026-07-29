@@ -6,12 +6,12 @@ use std::sync::Arc;
 
 use crate::model::stores::ghostdag;
 
-use spectre_txscript::{
+use zyanya_txscript::{
     caches::{Cache, TxScriptCacheCounters},
     SigCacheKey,
 };
 
-use spectre_consensus_core::{config::params::ForkActivation, mass::MassCalculator};
+use zyanya_consensus_core::{config::params::ForkActivation, mass::MassCalculator};
 
 #[derive(Clone)]
 pub struct TransactionValidator {

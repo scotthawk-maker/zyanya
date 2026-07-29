@@ -6,7 +6,7 @@ import {
     Address,
     Encoding,
     NetworkId,
-} from "../../../../nodejs/spectre";
+} from "../../../../nodejs/zyanya";
 
 /**
  * Helper function to parse command line arguments for running the scripts
@@ -54,7 +54,7 @@ function parseArgs(options = {
         process.exit(0);
     }
 
-    const addressRegex = new RegExp(/(spectre|spectretest):\S+/i);
+    const addressRegex = new RegExp(/(zyanya|zyanyatest):\S+/i);
     const addressArg = values.address ?? positionals.find((positional) => addressRegex.test(positional)) ?? null;
     const destinationAddress = addressArg === null ? null : new Address(addressArg);
 

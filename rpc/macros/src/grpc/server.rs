@@ -14,8 +14,8 @@ struct RpcTable {
     server_ctx: Expr,
     server_ctx_type: Expr,
     connection_ctx_type: Expr,
-    spectred_request_type: Expr,
-    spectred_response_type: Expr,
+    zyanyad_request_type: Expr,
+    zyanyad_response_type: Expr,
     payload_ops: Expr,
     handlers: ExprArray,
 }
@@ -25,15 +25,15 @@ impl Parse for RpcTable {
         let parsed = Punctuated::<Expr, Token![,]>::parse_terminated(input).unwrap();
         if parsed.len() != 7 {
             return Err(Error::new_spanned(parsed,
-                "usage: build_grpc_server_interface!(server_context, ServerContextType, ConnectionType, SpectredRequestType, SpectredResponseType, SpectredPayloadOps, [GetInfo, ..])".to_string()));
+                "usage: build_grpc_server_interface!(server_context, ServerContextType, ConnectionType, ZyanyadRequestType, ZyanyadResponseType, ZyanyadPayloadOps, [GetInfo, ..])".to_string()));
         }
 
         let mut iter = parsed.iter();
         let server_ctx = iter.next().unwrap().clone();
         let server_ctx_type = iter.next().unwrap().clone();
         let connection_ctx_type = iter.next().unwrap().clone();
-        let spectred_request_type = iter.next().unwrap().clone();
-        let spectred_response_type = iter.next().unwrap().clone();
+        let zyanyad_request_type = iter.next().unwrap().clone();
+        let zyanyad_response_type = iter.next().unwrap().clone();
         let payload_ops = iter.next().unwrap().clone();
         let handlers = get_handlers(iter.next().unwrap().clone())?;
 
@@ -41,8 +41,8 @@ impl Parse for RpcTable {
             server_ctx,
             server_ctx_type,
             connection_ctx_type,
-            spectred_request_type,
-            spectred_response_type,
+            zyanyad_request_type,
+            zyanyad_response_type,
             payload_ops,
             handlers,
         })
@@ -55,8 +55,8 @@ impl ToTokens for RpcTable {
         let server_ctx = &self.server_ctx;
         let server_ctx_type = &self.server_ctx_type;
         let connection_ctx_type = &self.connection_ctx_type;
-        let spectred_request_type = &self.spectred_request_type;
-        let spectred_response_type = &self.spectred_response_type;
+        let zyanyad_request_type = &self.zyanyad_request_type;
+        let zyanyad_response_type = &self.zyanyad_response_type;
         let payload_ops = &self.payload_ops;
 
         for handler in self.handlers.elems.iter() {
@@ -67,10 +67,10 @@ impl ToTokens for RpcTable {
                 false => {
                     targets.push(quote! {
                         #payload_ops::#handler => {
-                            let method: Method<#server_ctx_type, #connection_ctx_type, #spectred_request_type, #spectred_response_type> =
-                            Method::new(|server_ctx: #server_ctx_type, _: #connection_ctx_type, request: #spectred_request_type| {
+                            let method: Method<#server_ctx_type, #connection_ctx_type, #zyanyad_request_type, #zyanyad_response_type> =
+                            Method::new(|server_ctx: #server_ctx_type, _: #connection_ctx_type, request: #zyanyad_request_type| {
                                 Box::pin(async move {
-                                    let mut response: #spectred_response_type = match request.payload {
+                                    let mut response: #zyanyad_response_type = match request.payload {
                                         Some(Payload::#request_type(ref request)) => match request.try_into() {
                                             // TODO: RPC-CONNECTION
                                             Ok(request) => server_ctx.core_service.#fn_call(None,request).await.into(),
@@ -91,12 +91,12 @@ impl ToTokens for RpcTable {
                 true => {
                     targets.push(quote! {
                         #payload_ops::#handler => {
-                            let method: Method<#server_ctx_type, #connection_ctx_type, #spectred_request_type, #spectred_response_type> =
-                            Method::new(|server_ctx: #server_ctx_type, connection: #connection_ctx_type, request: #spectred_request_type| {
+                            let method: Method<#server_ctx_type, #connection_ctx_type, #zyanyad_request_type, #zyanyad_response_type> =
+                            Method::new(|server_ctx: #server_ctx_type, connection: #connection_ctx_type, request: #zyanyad_request_type| {
                                 Box::pin(async move {
-                                    let mut response: #spectred_response_type = match request.payload {
+                                    let mut response: #zyanyad_response_type = match request.payload {
                                         Some(Payload::#request_type(ref request)) => {
-                                            match spectre_rpc_core::#fallback_request_type::try_from(request) {
+                                            match zyanya_rpc_core::#fallback_request_type::try_from(request) {
                                                 Ok(request) => {
                                                     let listener_id = connection.get_or_register_listener_id()?;
                                                     let command = request.command;

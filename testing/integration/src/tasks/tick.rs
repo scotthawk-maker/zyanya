@@ -1,7 +1,7 @@
 use crate::tasks::Task;
 use async_trait::async_trait;
-use spectre_core::{task::tick::TickService, warn};
-use spectre_utils::triggers::SingleTrigger;
+use zyanya_core::{task::tick::TickService, warn};
+use zyanya_utils::triggers::SingleTrigger;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 

@@ -4,14 +4,14 @@ globalThis.WebSocket = require('websocket').w3cwebsocket; // W3C WebSocket modul
 
 const path = require('path');
 const fs = require('fs');
-const spectre = require('../../../../nodejs/spectre');
+const zyanya = require('../../../../nodejs/zyanya');
 const {
     Wallet, setDefaultStorageFolder,
     AccountKind, Mnemonic, Resolver,
-    spectreToSompi,
-    sompiToSpectreString,
+    zyanyaToSompi,
+    sompiToZyanyaString,
     Address
-} = spectre;
+} = zyanya;
 
 let storageFolder = path.join(__dirname, '../../../data/wallets').normalize();
 if (!fs.existsSync(storageFolder)) {
@@ -79,7 +79,7 @@ setDefaultStorageFolder(storageFolder);
             list.push({
                 Id: tx.id,
                 Type: tx.data.type,
-                Value: sompiToSpectreString(value(tx)||0)
+                Value: sompiToZyanyaString(value(tx)||0)
             });
             //console.log("tx.data", tx.id, tx.data)
         });
@@ -132,9 +132,9 @@ setDefaultStorageFolder(storageFolder);
                     Object.keys(balance).map(id=>{
                         list.push({
                             Account: id.substring(0, 5)+"...",
-                            Mature: sompiToSpectreString(data.balance.mature),
-                            Pending: sompiToSpectreString(data.balance.pending),
-                            Outgoing: sompiToSpectreString(data.balance.outgoing),
+                            Mature: sompiToZyanyaString(data.balance.mature),
+                            Pending: sompiToZyanyaString(data.balance.pending),
+                            Outgoing: sompiToZyanyaString(data.balance.outgoing),
                             MatureUtxo: data.balance.matureUtxoCount,
                             PendingUtxo: data.balance.pendingUtxoCount,
                             StasisUtxo: data.balance.stasisUtxoCount
@@ -228,24 +228,24 @@ setDefaultStorageFolder(storageFolder);
         // });
         // console.log("sweepResult", sweepResult)
 
-        // Send spectre to address
+        // Send zyanya to address
         let sendResult = await wallet.accountsSend({
             walletSecret,
             accountId: firstAccount.accountId,
-            priorityFeeSompi: spectreToSompi("0.001"),
+            priorityFeeSompi: zyanyaToSompi("0.001"),
             destination:[{
                 address: firstAccount.changeAddress,
-                amount: spectreToSompi("1.5")
+                amount: zyanyaToSompi("1.5")
             }]
         });
         console.log("sendResult", sendResult);
 
-        // Transfer spectre between accounts
+        // Transfer zyanya between accounts
         let transferResult = await wallet.accountsTransfer({
             walletSecret,
             sourceAccountId: firstAccount.accountId,
             destinationAccountId: firstAccount.accountId,
-            transferAmountSompi: spectreToSompi("2.4"),
+            transferAmountSompi: zyanyaToSompi("2.4"),
         });
         console.log("transferResult", transferResult);
 

@@ -1,12 +1,12 @@
 use crate::core::hub::HubEvent;
 use crate::pb::RejectMessage;
-use crate::pb::{spectred_message::Payload as SpectredMessagePayload, SpectredMessage};
-use crate::{common::ProtocolError, SpectredMessagePayloadType};
+use crate::pb::{zyanyad_message::Payload as ZyanyadMessagePayload, ZyanyadMessage};
+use crate::{common::ProtocolError, ZyanyadMessagePayloadType};
 use crate::{make_message, Peer};
 use parking_lot::{Mutex, RwLock};
 use seqlock::SeqLock;
-use spectre_core::{debug, error, info, trace, warn};
-use spectre_utils::networking::PeerId;
+use zyanya_core::{debug, error, info, trace, warn};
+use zyanya_utils::networking::PeerId;
 use std::fmt::{Debug, Display};
 use std::net::SocketAddr;
 use std::ops::{Deref, DerefMut};
@@ -22,7 +22,7 @@ use tonic::Streaming;
 use super::peer::{PeerKey, PeerProperties};
 
 pub struct IncomingRoute {
-    rx: MpscReceiver<SpectredMessage>,
+    rx: MpscReceiver<ZyanyadMessage>,
     id: u32,
 }
 
@@ -33,7 +33,7 @@ pub const BLANK_ROUTE_ID: u32 = 0;
 static ROUTE_ID: AtomicU32 = AtomicU32::new(BLANK_ROUTE_ID + 1);
 
 impl IncomingRoute {
-    pub fn new(rx: MpscReceiver<SpectredMessage>) -> Self {
+    pub fn new(rx: MpscReceiver<ZyanyadMessage>) -> Self {
         let id = ROUTE_ID.fetch_add(1, Ordering::SeqCst);
         Self { rx, id }
     }
@@ -44,7 +44,7 @@ impl IncomingRoute {
 }
 
 impl Deref for IncomingRoute {
-    type Target = MpscReceiver<SpectredMessage>;
+    type Target = MpscReceiver<ZyanyadMessage>;
 
     fn deref(&self) -> &Self::Target {
         &self.rx
@@ -65,7 +65,7 @@ impl SharedIncomingRoute {
         Self(Arc::new(tokio::sync::Mutex::new(incoming_route)))
     }
 
-    pub async fn recv(&mut self) -> Option<SpectredMessage> {
+    pub async fn recv(&mut self) -> Option<ZyanyadMessage> {
         self.0.lock().await.recv().await
     }
 }
@@ -79,11 +79,11 @@ pub enum IncomingRouteOverflowPolicy {
     Disconnect,
 }
 
-impl From<SpectredMessagePayloadType> for IncomingRouteOverflowPolicy {
-    fn from(msg_type: SpectredMessagePayloadType) -> Self {
+impl From<ZyanyadMessagePayloadType> for IncomingRouteOverflowPolicy {
+    fn from(msg_type: ZyanyadMessagePayloadType) -> Self {
         match msg_type {
             // Inv messages are unique in the sense that no harm is done if some of them are dropped
-            SpectredMessagePayloadType::InvTransactions | SpectredMessagePayloadType::InvRelayBlock => {
+            ZyanyadMessagePayloadType::InvTransactions | ZyanyadMessagePayloadType::InvRelayBlock => {
                 IncomingRouteOverflowPolicy::Drop
             }
             _ => IncomingRouteOverflowPolicy::Disconnect,
@@ -129,12 +129,12 @@ pub struct Router {
     connection_started: Instant,
 
     /// Routing map for mapping messages to subscribed flows
-    routing_map_by_type: RwLock<HashMap<SpectredMessagePayloadType, MpscSender<SpectredMessage>>>,
+    routing_map_by_type: RwLock<HashMap<ZyanyadMessagePayloadType, MpscSender<ZyanyadMessage>>>,
 
-    routing_map_by_id: RwLock<HashMap<u32, MpscSender<SpectredMessage>>>,
+    routing_map_by_id: RwLock<HashMap<u32, MpscSender<ZyanyadMessage>>>,
 
     /// The outgoing route for sending messages to this peer
-    outgoing_route: MpscSender<SpectredMessage>,
+    outgoing_route: MpscSender<ZyanyadMessage>,
 
     /// A channel sender for internal event management. Used to send information from each router to a central hub object
     hub_sender: MpscSender<HubEvent>,
@@ -168,10 +168,10 @@ impl From<&Router> for Peer {
     }
 }
 
-fn message_summary(msg: &SpectredMessage) -> impl Debug {
+fn message_summary(msg: &ZyanyadMessage) -> impl Debug {
     // TODO (low priority): display a concise summary of the message. Printing full messages
     // overflows the logs and is hardly useful, hence we currently only return the type
-    msg.payload.as_ref().map(std::convert::Into::<SpectredMessagePayloadType>::into)
+    msg.payload.as_ref().map(std::convert::Into::<ZyanyadMessagePayloadType>::into)
 }
 
 impl Router {
@@ -179,8 +179,8 @@ impl Router {
         net_address: SocketAddr,
         is_outbound: bool,
         hub_sender: MpscSender<HubEvent>,
-        mut incoming_stream: Streaming<SpectredMessage>,
-        outgoing_route: MpscSender<SpectredMessage>,
+        mut incoming_stream: Streaming<ZyanyadMessage>,
+        outgoing_route: MpscSender<ZyanyadMessage>,
     ) -> Arc<Self> {
         let (start_sender, start_receiver) = oneshot_channel();
         let (shutdown_sender, mut shutdown_receiver) = oneshot_channel();
@@ -314,14 +314,14 @@ impl Router {
     /// Subscribe to specific message types.
     ///
     /// This should be used by `ConnectionInitializer` instances to register application-specific flows
-    pub fn subscribe(&self, msg_types: Vec<SpectredMessagePayloadType>) -> IncomingRoute {
+    pub fn subscribe(&self, msg_types: Vec<ZyanyadMessagePayloadType>) -> IncomingRoute {
         self.subscribe_with_capacity(msg_types, Self::incoming_flow_baseline_channel_size())
     }
 
     /// Subscribe to specific message types with a specific channel capacity.
     ///
     /// This should be used by `ConnectionInitializer` instances to register application-specific flows.
-    pub fn subscribe_with_capacity(&self, msg_types: Vec<SpectredMessagePayloadType>, capacity: usize) -> IncomingRoute {
+    pub fn subscribe_with_capacity(&self, msg_types: Vec<ZyanyadMessagePayloadType>, capacity: usize) -> IncomingRoute {
         let (sender, receiver) = mpsc_channel(capacity);
         let incoming_route = IncomingRoute::new(receiver);
         let mut map_by_type = self.routing_map_by_type.write();
@@ -364,15 +364,15 @@ impl Router {
     }
 
     /// Routes a message coming from the network to the corresponding registered flow
-    pub fn route_to_flow(&self, msg: SpectredMessage) -> Result<(), ProtocolError> {
+    pub fn route_to_flow(&self, msg: ZyanyadMessage) -> Result<(), ProtocolError> {
         if msg.payload.is_none() {
             debug!("P2P, Route to flow got empty payload, peer: {}", self);
-            return Err(ProtocolError::Other("received spectred p2p message with empty payload"));
+            return Err(ProtocolError::Other("received zyanyad p2p message with empty payload"));
         }
-        let msg_type: SpectredMessagePayloadType = msg.payload.as_ref().expect("payload was just verified").into();
+        let msg_type: ZyanyadMessagePayloadType = msg.payload.as_ref().expect("payload was just verified").into();
         // Handle the special case of a reject message ending the connection
-        if msg_type == SpectredMessagePayloadType::Reject {
-            let Some(SpectredMessagePayload::Reject(reject)) = msg.payload else { unreachable!() };
+        if msg_type == ZyanyadMessagePayloadType::Reject {
+            let Some(ZyanyadMessagePayload::Reject(reject)) = msg.payload else { unreachable!() };
             return Err(ProtocolError::from_reject_message(reject.reason));
         }
 
@@ -402,8 +402,8 @@ impl Router {
     }
 
     /// Enqueues a locally-originated message to be sent to the network peer
-    pub async fn enqueue(&self, msg: SpectredMessage) -> Result<(), ProtocolError> {
-        assert!(msg.payload.is_some(), "Spectred P2P message should always have a value");
+    pub async fn enqueue(&self, msg: ZyanyadMessage) -> Result<(), ProtocolError> {
+        assert!(msg.payload.is_some(), "Zyanyad P2P message should always have a value");
         match self.outgoing_route.try_send(msg) {
             Ok(_) => Ok(()),
             Err(TrySendError::Closed(_)) => Err(ProtocolError::ConnectionClosed),
@@ -417,7 +417,7 @@ impl Router {
             // Send an explicit reject message for easier tracing of logical bugs causing protocol errors.
             // No need to handle errors since we are closing anyway
             let _ =
-                self.enqueue(make_message!(SpectredMessagePayload::Reject, RejectMessage { reason: err.to_reject_message() })).await;
+                self.enqueue(make_message!(ZyanyadMessagePayload::Reject, RejectMessage { reason: err.to_reject_message() })).await;
         }
     }
 

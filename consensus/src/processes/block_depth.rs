@@ -1,5 +1,5 @@
-use spectre_consensus_core::blockhash::ORIGIN;
-use spectre_hashes::Hash;
+use zyanya_consensus_core::blockhash::ORIGIN;
+use zyanya_hashes::Hash;
 use std::sync::Arc;
 
 use crate::model::{

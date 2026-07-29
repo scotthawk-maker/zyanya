@@ -1,6 +1,6 @@
 use crate::{block::Block, header::Header, subnets::SUBNETWORK_ID_COINBASE, tx::Transaction};
-use spectre_hashes::{Hash, ZERO_HASH};
-use spectre_muhash::EMPTY_MUHASH;
+use zyanya_hashes::{Hash, ZERO_HASH};
+use zyanya_muhash::EMPTY_MUHASH;
 
 /// The constants uniquely representing the genesis block
 #[derive(Clone, Debug)]
@@ -208,7 +208,7 @@ mod tests {
     fn gen_testnet11_genesis() {
         let bps = Testnet11Bps::bps();
         let mut genesis = TESTNET_GENESIS;
-        let target = spectre_math::Uint256::from_compact_target_bits(genesis.bits);
+        let target = zyanya_math::Uint256::from_compact_target_bits(genesis.bits);
         let scaled_target = target * bps / 100;
         let scaled_bits = scaled_target.compact_target_bits();
         genesis.bits = scaled_bits;

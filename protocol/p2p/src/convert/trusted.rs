@@ -1,4 +1,4 @@
-use spectre_consensus_core::trusted::{TrustedGhostdagData, TrustedHeader};
+use zyanya_consensus_core::trusted::{TrustedGhostdagData, TrustedHeader};
 
 use crate::pb as protowire;
 

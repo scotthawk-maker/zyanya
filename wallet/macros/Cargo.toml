@@ -1,5 +1,5 @@
 [package]
-name = "spectre-wallet-macros"
+name = "zyanya-wallet-macros"
 rust-version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -10,7 +10,7 @@ keywords = ["rpc"]
 categories = []
 exclude = ["/.*", "/test"]
 description = """
-Macros for the Spectre Wallet infrastructure
+Macros for the Zyanya Wallet infrastructure
 """
 
 [lib]

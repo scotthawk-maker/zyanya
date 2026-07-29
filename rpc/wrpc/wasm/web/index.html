@@ -1,10 +1,10 @@
 <html>
     <head>
         <script type="module">
-            import * as spectre from './spectre-rpc/spectre-rpc.js';
+            import * as zyanya from './zyanya-rpc/zyanya-rpc.js';
             (async () => {
-                await spectre.default('./spectre-rpc/spectre-rpc_bg.wasm');
-                console.log(spectre.version());
+                await zyanya.default('./zyanya-rpc/zyanya-rpc_bg.wasm');
+                console.log(zyanya.version());
             })();
         </script>
     </head>

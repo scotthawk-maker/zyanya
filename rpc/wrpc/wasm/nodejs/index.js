@@ -1,7 +1,7 @@
 // W3C WebSocket module shim
 globalThis.WebSocket = require('websocket').w3cwebsocket;
 
-let {RpcClient,Encoding,initConsolePanicHook,defer} = require('./spectre-rpc');
+let {RpcClient,Encoding,initConsolePanicHook,defer} = require('./zyanya-rpc');
 initConsolePanicHook();
 
 const MAX_NOTIFICATION = 10;

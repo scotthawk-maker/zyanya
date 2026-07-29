@@ -2,10 +2,10 @@ use crate::address::error::{Error, Result};
 use indexmap::{map::Entry, IndexMap};
 use itertools::Itertools;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use spectre_addresses::{Address, Prefix};
-use spectre_consensus_core::tx::ScriptPublicKey;
-use spectre_core::{debug, trace};
-use spectre_txscript::{extract_script_pub_key_address, pay_to_address_script};
+use zyanya_addresses::{Address, Prefix};
+use zyanya_consensus_core::tx::ScriptPublicKey;
+use zyanya_core::{debug, trace};
+use zyanya_txscript::{extract_script_pub_key_address, pay_to_address_script};
 use std::{
     collections::{hash_map, hash_set, HashMap, HashSet},
     fmt::Display,
@@ -388,7 +388,7 @@ impl Inner {
 ///
 /// #### Implementation design
 ///
-/// Each [`Address`] is stored internally as a [`ScriptPubKey`](spectre_consensus_core::tx::ScriptPublicKey).
+/// Each [`Address`] is stored internally as a [`ScriptPubKey`](zyanya_consensus_core::tx::ScriptPublicKey).
 /// This prevents inter-network duplication and optimizes UTXOs filtering efficiency.
 ///
 /// But consequently the address network prefix gets lost and must be globally provided when querying for addresses by indexes.
@@ -610,11 +610,11 @@ impl<'a> TrackerReadGuard<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use spectre_math::Uint256;
+    use zyanya_math::Uint256;
 
     fn create_addresses(start: usize, count: usize) -> Vec<Address> {
         (start..start + count)
-            .map(|i| Address::new(Prefix::Mainnet, spectre_addresses::Version::PubKey, &Uint256::from_u64(i as u64).to_le_bytes()))
+            .map(|i| Address::new(Prefix::Mainnet, zyanya_addresses::Version::PubKey, &Uint256::from_u64(i as u64).to_le_bytes()))
             .collect()
     }
 

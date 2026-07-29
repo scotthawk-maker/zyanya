@@ -7,7 +7,7 @@ use super::{
     TransactionValidator,
 };
 use crate::constants::LOCK_TIME_THRESHOLD;
-use spectre_consensus_core::tx::Transaction;
+use zyanya_consensus_core::tx::Transaction;
 
 pub(crate) enum LockTimeType {
     Finalized,

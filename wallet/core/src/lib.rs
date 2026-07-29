@@ -1,14 +1,14 @@
 //!
-//! # Spectre Wallet Core
+//! # Zyanya Wallet Core
 //!
-//! Multi-platform Rust framework for Spectre Wallet.
+//! Multi-platform Rust framework for Zyanya Wallet.
 //!
 //! This framework provides a series of APIs and primitives
 //! to simplify building applications that interface with
-//! the Spectre p2p network.
+//! the Zyanya p2p network.
 //!
 //! For key generation and derivation, please see the
-//! [`spectre_wallet_keys`] crate.
+//! [`zyanya_wallet_keys`] crate.
 //!
 //! This crate included are low-level primitives
 //! such as [`UtxoProcessor`](crate::utxo::UtxoProcessor)
@@ -34,43 +34,43 @@
 //! allowed transaction mass.
 //!
 //! Key generation and derivation is available in the
-//! [`spectre_wallet_keys`] crate.
+//! [`zyanya_wallet_keys`] crate.
 //!
 //! The framework can operate
 //! within native Rust applications as well as within NodeJS, Bun
 //! and browser environments via the WASM32 SDK.
 //!
 //! WASM32 SDK documentation is available at:
-//! <https://spectre.aspectron.org/docs/>
+//! <https://zyanya.aspectron.org/docs/>
 //!
 //! For NodeJS JavaScript and TypeScript environments, there are two
 //! available NPM modules:
-//! - <https://www.npmjs.com/package/spectre>
-//! - <https://www.npmjs.com/package/spectre-wasm>
+//! - <https://www.npmjs.com/package/zyanya>
+//! - <https://www.npmjs.com/package/zyanya-wasm>
 //!
 //! NOTE: for security reasons (to mitigate potential upstream vendor
 //! attacks) it is always recommended to build WASM SDK from source or
 //! download pre-built redistributables.
 //!
 //! Latest development builds of the WASM32 SDK can be found at:
-//! <https://aspectron.org/en/projects/spectre-wasm.html>
+//! <https://aspectron.org/en/projects/zyanya-wasm.html>
 //!
-//! The `spectre-wasm` module is a pure WASM32 module that includes
+//! The `zyanya-wasm` module is a pure WASM32 module that includes
 //! the entire wallet framework, but does not support RPC due to an absence
 //! of a native WebSocket in NodeJs environment, while
-//! the `spectre` module includes `websocket` module dependency simulating
+//! the `zyanya` module includes `websocket` module dependency simulating
 //! the W3C WebSocket and thus supports RPC.
 //!
 //! JavaScript examples for using this framework can be found at:
-//! <https://github.com/spectre-project/rusty-spectre/tree/main/wasm/nodejs>
+//! <https://github.com/zyanya-project/rusty-zyanya/tree/main/wasm/nodejs>
 //!
 //! For pre-built browser-compatible WASM32 redistributables of this
-//! framework please see the releases section of the Rusty Spectre
-//! repository at <https://github.com/spectre-project/rusty-spectre/releases>.
+//! framework please see the releases section of the Rusty Zyanya
+//! repository at <https://github.com/zyanya-project/rusty-zyanya/releases>.
 //!
 
 extern crate alloc;
-extern crate self as spectre_wallet_core;
+extern crate self as zyanya_wallet_core;
 
 pub mod account;
 pub mod api;
@@ -106,7 +106,7 @@ pub fn version() -> String {
 
 /// Returns the version of the Wallet framework combined with short git hash.
 pub fn version_with_git_hash() -> String {
-    spectre_utils::git::with_short_hash(env!("CARGO_PKG_VERSION")).to_string()
+    zyanya_utils::git::with_short_hash(env!("CARGO_PKG_VERSION")).to_string()
 }
 
 #[cfg(test)]

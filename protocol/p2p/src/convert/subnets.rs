@@ -1,5 +1,5 @@
 use crate::pb as protowire;
-use spectre_consensus_core::subnets::SubnetworkId;
+use zyanya_consensus_core::subnets::SubnetworkId;
 
 use super::error::ConversionError;
 

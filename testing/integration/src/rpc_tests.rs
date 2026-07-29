@@ -2,22 +2,22 @@ use std::{str::FromStr, sync::Arc, time::Duration};
 
 use crate::common::{client_notify::ChannelNotify, daemon::Daemon};
 use futures_util::future::try_join_all;
-use spectre_addresses::{Address, Prefix, Version};
-use spectre_consensus::params::SIMNET_GENESIS;
-use spectre_consensus_core::{constants::MAX_SOMPI, header::Header, subnets::SubnetworkId, tx::Transaction};
-use spectre_core::{assert_match, info};
-use spectre_grpc_core::ops::SpectredPayloadOps;
-use spectre_hashes::Hash;
-use spectre_notify::{
+use zyanya_addresses::{Address, Prefix, Version};
+use zyanya_consensus::params::SIMNET_GENESIS;
+use zyanya_consensus_core::{constants::MAX_SOMPI, header::Header, subnets::SubnetworkId, tx::Transaction};
+use zyanya_core::{assert_match, info};
+use zyanya_grpc_core::ops::ZyanyadPayloadOps;
+use zyanya_hashes::Hash;
+use zyanya_notify::{
     connection::{ChannelConnection, ChannelType},
     scope::{
         BlockAddedScope, FinalityConflictScope, NewBlockTemplateScope, PruningPointUtxoSetOverrideScope, Scope,
         SinkBlueScoreChangedScope, UtxosChangedScope, VirtualChainChangedScope, VirtualDaaScoreChangedScope,
     },
 };
-use spectre_rpc_core::{api::rpc::RpcApi, model::*, Notification};
-use spectre_utils::{fd_budget, networking::ContextualNetAddress};
-use spectred_lib::args::Args;
+use zyanya_rpc_core::{api::rpc::RpcApi, model::*, Notification};
+use zyanya_utils::{fd_budget, networking::ContextualNetAddress};
+use zyanyad_lib::args::Args;
 use tokio::task::JoinHandle;
 
 #[macro_export]
@@ -36,12 +36,12 @@ macro_rules! tst {
     };
 }
 
-/// `cargo test --release --package spectre-testing-integration --lib -- rpc_tests::sanity_test`
+/// `cargo test --release --package zyanya-testing-integration --lib -- rpc_tests::sanity_test`
 #[tokio::test]
 async fn sanity_test() {
-    spectre_core::log::try_init_logger("info");
+    zyanya_core::log::try_init_logger("info");
     // As we log the panic, we want to set it up after the logger
-    spectre_core::panic::configure_panic();
+    zyanya_core::panic::configure_panic();
 
     let args = Args {
         simnet: true,
@@ -64,10 +64,10 @@ async fn sanity_test() {
     // The intent of this for/match design (emphasizing the absence of an arm with fallback pattern in the match)
     // is to force any implementor of a new RpcApi method to add a matching arm here and to strongly incentivize
     // the adding of an actual sanity test of said new method.
-    for op in SpectredPayloadOps::iter() {
+    for op in ZyanyadPayloadOps::iter() {
         let network_id = daemon.network;
         let task: JoinHandle<()> = match op {
-            SpectredPayloadOps::SubmitBlock => {
+            ZyanyadPayloadOps::SubmitBlock => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     // Register to basic virtual events in order to keep track of block submission
@@ -178,15 +178,15 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetBlockTemplate => {
+            ZyanyadPayloadOps::GetBlockTemplate => {
                 tst!(op, "see SubmitBlock")
             }
 
-            SpectredPayloadOps::GetCurrentBlockColor => {
+            ZyanyadPayloadOps::GetCurrentBlockColor => {
                 tst!(op, "see SubmitBlock")
             }
 
-            SpectredPayloadOps::GetCurrentNetwork => {
+            ZyanyadPayloadOps::GetCurrentNetwork => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response = rpc_client.get_current_network_call(None, GetCurrentNetworkRequest {}).await.unwrap();
@@ -194,7 +194,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetBlock => {
+            ZyanyadPayloadOps::GetBlock => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let result =
@@ -209,7 +209,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetBlocks => {
+            ZyanyadPayloadOps::GetBlocks => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response = rpc_client
@@ -222,11 +222,11 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetInfo => {
+            ZyanyadPayloadOps::GetInfo => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response = rpc_client.get_info_call(None, GetInfoRequest {}).await.unwrap();
-                    assert_eq!(response.server_version, spectre_core::spectred_env::version().to_string());
+                    assert_eq!(response.server_version, zyanya_core::zyanyad_env::version().to_string());
                     assert_eq!(response.mempool_size, 0);
                     assert!(response.is_utxo_indexed);
                     assert!(response.has_message_id);
@@ -234,21 +234,21 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::Shutdown => {
+            ZyanyadPayloadOps::Shutdown => {
                 // This test is purposely left blank since shutdown can only be tested after all other
                 // tests completed
                 tst!(op, "must be run in the end")
             }
 
-            SpectredPayloadOps::GetPeerAddresses => {
+            ZyanyadPayloadOps::GetPeerAddresses => {
                 tst!(op, "see AddPeer, Ban")
             }
 
-            SpectredPayloadOps::GetSink => {
+            ZyanyadPayloadOps::GetSink => {
                 tst!(op, "see SubmitBlock")
             }
 
-            SpectredPayloadOps::GetMempoolEntry => {
+            ZyanyadPayloadOps::GetMempoolEntry => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response_result = rpc_client
@@ -267,7 +267,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetMempoolEntries => {
+            ZyanyadPayloadOps::GetMempoolEntries => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response = rpc_client
@@ -281,7 +281,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetConnectedPeerInfo => {
+            ZyanyadPayloadOps::GetConnectedPeerInfo => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response = rpc_client.get_connected_peer_info_call(None, GetConnectedPeerInfoRequest {}).await.unwrap();
@@ -289,7 +289,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::AddPeer => {
+            ZyanyadPayloadOps::AddPeer => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let peer_address = ContextualNetAddress::from_str("1.2.3.4").unwrap();
@@ -303,7 +303,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::Ban => {
+            ZyanyadPayloadOps::Ban => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let peer_address = ContextualNetAddress::from_str("5.6.7.8").unwrap();
@@ -321,11 +321,11 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::Unban => {
+            ZyanyadPayloadOps::Unban => {
                 tst!(op, "see Ban")
             }
 
-            SpectredPayloadOps::SubmitTransaction => {
+            ZyanyadPayloadOps::SubmitTransaction => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     // Build an erroneous transaction...
@@ -336,7 +336,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::SubmitTransactionReplacement => {
+            ZyanyadPayloadOps::SubmitTransactionReplacement => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     // Build an erroneous transaction...
@@ -347,7 +347,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetSubnetwork => {
+            ZyanyadPayloadOps::GetSubnetwork => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let result =
@@ -358,15 +358,15 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetVirtualChainFromBlock => {
+            ZyanyadPayloadOps::GetVirtualChainFromBlock => {
                 tst!(op, "see SubmitBlock")
             }
 
-            SpectredPayloadOps::GetBlockCount => {
+            ZyanyadPayloadOps::GetBlockCount => {
                 tst!(op, "see SubmitBlock")
             }
 
-            SpectredPayloadOps::GetBlockDagInfo => {
+            ZyanyadPayloadOps::GetBlockDagInfo => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response = rpc_client.get_block_dag_info_call(None, GetBlockDagInfoRequest {}).await.unwrap();
@@ -374,7 +374,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::ResolveFinalityConflict => {
+            ZyanyadPayloadOps::ResolveFinalityConflict => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response_result = rpc_client
@@ -389,7 +389,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetHeaders => {
+            ZyanyadPayloadOps::GetHeaders => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response_result = rpc_client
@@ -401,7 +401,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetUtxosByAddresses => {
+            ZyanyadPayloadOps::GetUtxosByAddresses => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let addresses = vec![Address::new(Prefix::Simnet, Version::PubKey, &[0u8; 32])];
@@ -411,7 +411,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetBalanceByAddress => {
+            ZyanyadPayloadOps::GetBalanceByAddress => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response = rpc_client
@@ -425,7 +425,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetBalancesByAddresses => {
+            ZyanyadPayloadOps::GetBalancesByAddresses => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let addresses = vec![Address::new(Prefix::Simnet, Version::PubKey, &[1u8; 32])];
@@ -443,7 +443,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetSinkBlueScore => {
+            ZyanyadPayloadOps::GetSinkBlueScore => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response = rpc_client.get_sink_blue_score_call(None, GetSinkBlueScoreRequest {}).await.unwrap();
@@ -452,7 +452,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::EstimateNetworkHashesPerSecond => {
+            ZyanyadPayloadOps::EstimateNetworkHashesPerSecond => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response_result = rpc_client
@@ -466,7 +466,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetMempoolEntriesByAddresses => {
+            ZyanyadPayloadOps::GetMempoolEntriesByAddresses => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let addresses = vec![Address::new(Prefix::Simnet, Version::PubKey, &[0u8; 32])];
@@ -484,7 +484,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetCoinSupply => {
+            ZyanyadPayloadOps::GetCoinSupply => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response = rpc_client.get_coin_supply_call(None, GetCoinSupplyRequest {}).await.unwrap();
@@ -493,21 +493,21 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::Ping => {
+            ZyanyadPayloadOps::Ping => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let _ = rpc_client.ping_call(None, PingRequest {}).await.unwrap();
                 })
             }
 
-            SpectredPayloadOps::GetConnections => {
+            ZyanyadPayloadOps::GetConnections => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let _ = rpc_client.get_connections_call(None, GetConnectionsRequest { include_profile_data: true }).await.unwrap();
                 })
             }
 
-            SpectredPayloadOps::GetMetrics => {
+            ZyanyadPayloadOps::GetMetrics => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let get_metrics_call_response = rpc_client
@@ -580,14 +580,14 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetSystemInfo => {
+            ZyanyadPayloadOps::GetSystemInfo => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let _response = rpc_client.get_system_info_call(None, GetSystemInfoRequest {}).await.unwrap();
                 })
             }
 
-            SpectredPayloadOps::GetServerInfo => {
+            ZyanyadPayloadOps::GetServerInfo => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response = rpc_client.get_server_info_call(None, GetServerInfoRequest {}).await.unwrap();
@@ -596,14 +596,14 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetSyncStatus => {
+            ZyanyadPayloadOps::GetSyncStatus => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let _ = rpc_client.get_sync_status_call(None, GetSyncStatusRequest {}).await.unwrap();
                 })
             }
 
-            SpectredPayloadOps::GetDaaScoreTimestampEstimate => {
+            ZyanyadPayloadOps::GetDaaScoreTimestampEstimate => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let results = rpc_client
@@ -629,7 +629,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetFeeEstimate => {
+            ZyanyadPayloadOps::GetFeeEstimate => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response = rpc_client.get_fee_estimate().await.unwrap();
@@ -642,7 +642,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetFeeEstimateExperimental => {
+            ZyanyadPayloadOps::GetFeeEstimateExperimental => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let response = rpc_client.get_fee_estimate_experimental(true).await.unwrap();
@@ -656,14 +656,14 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::GetUtxoReturnAddress => {
+            ZyanyadPayloadOps::GetUtxoReturnAddress => {
                 let rpc_client = client.clone();
                 tst!(op, {
                     let results = rpc_client.get_utxo_return_address(RpcHash::from_bytes([0; 32]), 1000).await;
 
                     assert!(results.is_err_and(|err| {
                         match err {
-                            spectre_rpc_core::RpcError::General(msg) => {
+                            zyanya_rpc_core::RpcError::General(msg) => {
                                 info!("Expected error message: {}", msg);
                                 true
                             }
@@ -673,7 +673,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::NotifyBlockAdded => {
+            ZyanyadPayloadOps::NotifyBlockAdded => {
                 let rpc_client = client.clone();
                 let id = listener_id;
                 tst!(op, {
@@ -681,7 +681,7 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::NotifyNewBlockTemplate => {
+            ZyanyadPayloadOps::NotifyNewBlockTemplate => {
                 let rpc_client = client.clone();
                 let id = listener_id;
                 tst!(op, {
@@ -689,42 +689,42 @@ async fn sanity_test() {
                 })
             }
 
-            SpectredPayloadOps::NotifyFinalityConflict => {
+            ZyanyadPayloadOps::NotifyFinalityConflict => {
                 let rpc_client = client.clone();
                 let id = listener_id;
                 tst!(op, {
                     rpc_client.start_notify(id, FinalityConflictScope {}.into()).await.unwrap();
                 })
             }
-            SpectredPayloadOps::NotifyUtxosChanged => {
+            ZyanyadPayloadOps::NotifyUtxosChanged => {
                 let rpc_client = client.clone();
                 let id = listener_id;
                 tst!(op, {
                     rpc_client.start_notify(id, UtxosChangedScope::new(vec![]).into()).await.unwrap();
                 })
             }
-            SpectredPayloadOps::NotifySinkBlueScoreChanged => {
+            ZyanyadPayloadOps::NotifySinkBlueScoreChanged => {
                 let rpc_client = client.clone();
                 let id = listener_id;
                 tst!(op, {
                     rpc_client.start_notify(id, SinkBlueScoreChangedScope {}.into()).await.unwrap();
                 })
             }
-            SpectredPayloadOps::NotifyPruningPointUtxoSetOverride => {
+            ZyanyadPayloadOps::NotifyPruningPointUtxoSetOverride => {
                 let rpc_client = client.clone();
                 let id = listener_id;
                 tst!(op, {
                     rpc_client.start_notify(id, PruningPointUtxoSetOverrideScope {}.into()).await.unwrap();
                 })
             }
-            SpectredPayloadOps::NotifyVirtualDaaScoreChanged => {
+            ZyanyadPayloadOps::NotifyVirtualDaaScoreChanged => {
                 let rpc_client = client.clone();
                 let id = listener_id;
                 tst!(op, {
                     rpc_client.start_notify(id, VirtualDaaScoreChangedScope {}.into()).await.unwrap();
                 })
             }
-            SpectredPayloadOps::NotifyVirtualChainChanged => {
+            ZyanyadPayloadOps::NotifyVirtualChainChanged => {
                 let rpc_client = client.clone();
                 let id = listener_id;
                 tst!(op, {
@@ -734,14 +734,14 @@ async fn sanity_test() {
                         .unwrap();
                 })
             }
-            SpectredPayloadOps::StopNotifyingUtxosChanged => {
+            ZyanyadPayloadOps::StopNotifyingUtxosChanged => {
                 let rpc_client = client.clone();
                 let id = listener_id;
                 tst!(op, {
                     rpc_client.stop_notify(id, UtxosChangedScope::new(vec![]).into()).await.unwrap();
                 })
             }
-            SpectredPayloadOps::StopNotifyingPruningPointUtxoSetOverride => {
+            ZyanyadPayloadOps::StopNotifyingPruningPointUtxoSetOverride => {
                 let rpc_client = client.clone();
                 let id = listener_id;
                 tst!(op, {

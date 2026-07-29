@@ -1,13 +1,13 @@
 use crate::protowire;
 use crate::{from, try_from};
-use spectre_rpc_core::{FromRpcHex, RpcError, RpcHash, RpcResult, RpcScriptVec, ToRpcHex};
+use zyanya_rpc_core::{FromRpcHex, RpcError, RpcHash, RpcResult, RpcScriptVec, ToRpcHex};
 use std::str::FromStr;
 
 // ----------------------------------------------------------------------------
 // rpc_core to protowire
 // ----------------------------------------------------------------------------
 
-from!(item: &spectre_rpc_core::RpcTransaction, protowire::RpcTransaction, {
+from!(item: &zyanya_rpc_core::RpcTransaction, protowire::RpcTransaction, {
     Self {
         version: item.version.into(),
         inputs: item.inputs.iter().map(protowire::RpcTransactionInput::from).collect(),
@@ -21,7 +21,7 @@ from!(item: &spectre_rpc_core::RpcTransaction, protowire::RpcTransaction, {
     }
 });
 
-from!(item: &spectre_rpc_core::RpcTransactionInput, protowire::RpcTransactionInput, {
+from!(item: &zyanya_rpc_core::RpcTransactionInput, protowire::RpcTransactionInput, {
     Self {
         previous_outpoint: Some((&item.previous_outpoint).into()),
         signature_script: item.signature_script.to_rpc_hex(),
@@ -31,7 +31,7 @@ from!(item: &spectre_rpc_core::RpcTransactionInput, protowire::RpcTransactionInp
     }
 });
 
-from!(item: &spectre_rpc_core::RpcTransactionOutput, protowire::RpcTransactionOutput, {
+from!(item: &zyanya_rpc_core::RpcTransactionOutput, protowire::RpcTransactionOutput, {
     Self {
         amount: item.value,
         script_public_key: Some((&item.script_public_key).into()),
@@ -39,11 +39,11 @@ from!(item: &spectre_rpc_core::RpcTransactionOutput, protowire::RpcTransactionOu
     }
 });
 
-from!(item: &spectre_rpc_core::RpcTransactionOutpoint, protowire::RpcOutpoint, {
+from!(item: &zyanya_rpc_core::RpcTransactionOutpoint, protowire::RpcOutpoint, {
     Self { transaction_id: item.transaction_id.to_string(), index: item.index }
 });
 
-from!(item: &spectre_rpc_core::RpcUtxoEntry, protowire::RpcUtxoEntry, {
+from!(item: &zyanya_rpc_core::RpcUtxoEntry, protowire::RpcUtxoEntry, {
     Self {
         amount: item.amount,
         script_public_key: Some((&item.script_public_key).into()),
@@ -52,11 +52,11 @@ from!(item: &spectre_rpc_core::RpcUtxoEntry, protowire::RpcUtxoEntry, {
     }
 });
 
-from!(item: &spectre_rpc_core::RpcScriptPublicKey, protowire::RpcScriptPublicKey, {
+from!(item: &zyanya_rpc_core::RpcScriptPublicKey, protowire::RpcScriptPublicKey, {
     Self { version: item.version().into(), script_public_key: item.script().to_rpc_hex() }
 });
 
-from!(item: &spectre_rpc_core::RpcTransactionVerboseData, protowire::RpcTransactionVerboseData, {
+from!(item: &zyanya_rpc_core::RpcTransactionVerboseData, protowire::RpcTransactionVerboseData, {
     Self {
         transaction_id: item.transaction_id.to_string(),
         hash: item.hash.to_string(),
@@ -66,23 +66,23 @@ from!(item: &spectre_rpc_core::RpcTransactionVerboseData, protowire::RpcTransact
     }
 });
 
-from!(&spectre_rpc_core::RpcTransactionInputVerboseData, protowire::RpcTransactionInputVerboseData);
+from!(&zyanya_rpc_core::RpcTransactionInputVerboseData, protowire::RpcTransactionInputVerboseData);
 
-from!(item: &spectre_rpc_core::RpcTransactionOutputVerboseData, protowire::RpcTransactionOutputVerboseData, {
+from!(item: &zyanya_rpc_core::RpcTransactionOutputVerboseData, protowire::RpcTransactionOutputVerboseData, {
     Self {
         script_public_key_type: item.script_public_key_type.to_string(),
         script_public_key_address: (&item.script_public_key_address).into(),
     }
 });
 
-from!(item: &spectre_rpc_core::RpcAcceptedTransactionIds, protowire::RpcAcceptedTransactionIds, {
+from!(item: &zyanya_rpc_core::RpcAcceptedTransactionIds, protowire::RpcAcceptedTransactionIds, {
     Self {
         accepting_block_hash: item.accepting_block_hash.to_string(),
         accepted_transaction_ids: item.accepted_transaction_ids.iter().map(|x| x.to_string()).collect(),
     }
 });
 
-from!(item: &spectre_rpc_core::RpcUtxosByAddressesEntry, protowire::RpcUtxosByAddressesEntry, {
+from!(item: &zyanya_rpc_core::RpcUtxosByAddressesEntry, protowire::RpcUtxosByAddressesEntry, {
     Self {
         address: item.address.as_ref().map_or("".to_string(), |x| x.into()),
         outpoint: Some((&item.outpoint).into()),
@@ -94,29 +94,29 @@ from!(item: &spectre_rpc_core::RpcUtxosByAddressesEntry, protowire::RpcUtxosByAd
 // protowire to rpc_core
 // ----------------------------------------------------------------------------
 
-try_from!(item: &protowire::RpcTransaction, spectre_rpc_core::RpcTransaction, {
+try_from!(item: &protowire::RpcTransaction, zyanya_rpc_core::RpcTransaction, {
     Self {
         version: item.version.try_into()?,
         inputs: item
             .inputs
             .iter()
-            .map(spectre_rpc_core::RpcTransactionInput::try_from)
-            .collect::<RpcResult<Vec<spectre_rpc_core::RpcTransactionInput>>>()?,
+            .map(zyanya_rpc_core::RpcTransactionInput::try_from)
+            .collect::<RpcResult<Vec<zyanya_rpc_core::RpcTransactionInput>>>()?,
         outputs: item
             .outputs
             .iter()
-            .map(spectre_rpc_core::RpcTransactionOutput::try_from)
-            .collect::<RpcResult<Vec<spectre_rpc_core::RpcTransactionOutput>>>()?,
+            .map(zyanya_rpc_core::RpcTransactionOutput::try_from)
+            .collect::<RpcResult<Vec<zyanya_rpc_core::RpcTransactionOutput>>>()?,
         lock_time: item.lock_time,
-        subnetwork_id: spectre_rpc_core::RpcSubnetworkId::from_str(&item.subnetwork_id)?,
+        subnetwork_id: zyanya_rpc_core::RpcSubnetworkId::from_str(&item.subnetwork_id)?,
         gas: item.gas,
         payload: Vec::from_rpc_hex(&item.payload)?,
         mass: item.mass,
-        verbose_data: item.verbose_data.as_ref().map(spectre_rpc_core::RpcTransactionVerboseData::try_from).transpose()?,
+        verbose_data: item.verbose_data.as_ref().map(zyanya_rpc_core::RpcTransactionVerboseData::try_from).transpose()?,
     }
 });
 
-try_from!(item: &protowire::RpcTransactionInput, spectre_rpc_core::RpcTransactionInput, {
+try_from!(item: &protowire::RpcTransactionInput, zyanya_rpc_core::RpcTransactionInput, {
     Self {
         previous_outpoint: item
             .previous_outpoint
@@ -126,11 +126,11 @@ try_from!(item: &protowire::RpcTransactionInput, spectre_rpc_core::RpcTransactio
         signature_script: Vec::from_rpc_hex(&item.signature_script)?,
         sequence: item.sequence,
         sig_op_count: item.sig_op_count.try_into()?,
-        verbose_data: item.verbose_data.as_ref().map(spectre_rpc_core::RpcTransactionInputVerboseData::try_from).transpose()?,
+        verbose_data: item.verbose_data.as_ref().map(zyanya_rpc_core::RpcTransactionInputVerboseData::try_from).transpose()?,
     }
 });
 
-try_from!(item: &protowire::RpcTransactionOutput, spectre_rpc_core::RpcTransactionOutput, {
+try_from!(item: &protowire::RpcTransactionOutput, zyanya_rpc_core::RpcTransactionOutput, {
     Self {
         value: item.amount,
         script_public_key: item
@@ -138,15 +138,15 @@ try_from!(item: &protowire::RpcTransactionOutput, spectre_rpc_core::RpcTransacti
             .as_ref()
             .ok_or_else(|| RpcError::MissingRpcFieldError("RpcTransactionOutput".to_string(), "script_public_key".to_string()))?
             .try_into()?,
-        verbose_data: item.verbose_data.as_ref().map(spectre_rpc_core::RpcTransactionOutputVerboseData::try_from).transpose()?,
+        verbose_data: item.verbose_data.as_ref().map(zyanya_rpc_core::RpcTransactionOutputVerboseData::try_from).transpose()?,
     }
 });
 
-try_from!(item: &protowire::RpcOutpoint, spectre_rpc_core::RpcTransactionOutpoint, {
+try_from!(item: &protowire::RpcOutpoint, zyanya_rpc_core::RpcTransactionOutpoint, {
     Self { transaction_id: RpcHash::from_str(&item.transaction_id)?, index: item.index }
 });
 
-try_from!(item: &protowire::RpcUtxoEntry, spectre_rpc_core::RpcUtxoEntry, {
+try_from!(item: &protowire::RpcUtxoEntry, zyanya_rpc_core::RpcUtxoEntry, {
     Self {
         amount: item.amount,
         script_public_key: item
@@ -159,11 +159,11 @@ try_from!(item: &protowire::RpcUtxoEntry, spectre_rpc_core::RpcUtxoEntry, {
     }
 });
 
-try_from!(item: &protowire::RpcScriptPublicKey, spectre_rpc_core::RpcScriptPublicKey, {
+try_from!(item: &protowire::RpcScriptPublicKey, zyanya_rpc_core::RpcScriptPublicKey, {
     Self::new(u16::try_from(item.version)?, RpcScriptVec::from_rpc_hex(item.script_public_key.as_str())?)
 });
 
-try_from!(item: &protowire::RpcTransactionVerboseData, spectre_rpc_core::RpcTransactionVerboseData, {
+try_from!(item: &protowire::RpcTransactionVerboseData, zyanya_rpc_core::RpcTransactionVerboseData, {
     Self {
         transaction_id: RpcHash::from_str(&item.transaction_id)?,
         hash: RpcHash::from_str(&item.hash)?,
@@ -173,23 +173,23 @@ try_from!(item: &protowire::RpcTransactionVerboseData, spectre_rpc_core::RpcTran
     }
 });
 
-try_from!(&protowire::RpcTransactionInputVerboseData, spectre_rpc_core::RpcTransactionInputVerboseData);
+try_from!(&protowire::RpcTransactionInputVerboseData, zyanya_rpc_core::RpcTransactionInputVerboseData);
 
-try_from!(item: &protowire::RpcTransactionOutputVerboseData, spectre_rpc_core::RpcTransactionOutputVerboseData, {
+try_from!(item: &protowire::RpcTransactionOutputVerboseData, zyanya_rpc_core::RpcTransactionOutputVerboseData, {
     Self {
         script_public_key_type: item.script_public_key_type.as_str().try_into()?,
         script_public_key_address: item.script_public_key_address.as_str().try_into()?,
     }
 });
 
-try_from!(item: &protowire::RpcAcceptedTransactionIds, spectre_rpc_core::RpcAcceptedTransactionIds, {
+try_from!(item: &protowire::RpcAcceptedTransactionIds, zyanya_rpc_core::RpcAcceptedTransactionIds, {
     Self {
         accepting_block_hash: RpcHash::from_str(&item.accepting_block_hash)?,
         accepted_transaction_ids: item.accepted_transaction_ids.iter().map(|x| RpcHash::from_str(x)).collect::<Result<Vec<_>, _>>()?,
     }
 });
 
-try_from!(item: &protowire::RpcUtxosByAddressesEntry, spectre_rpc_core::RpcUtxosByAddressesEntry, {
+try_from!(item: &protowire::RpcUtxosByAddressesEntry, zyanya_rpc_core::RpcUtxosByAddressesEntry, {
     let address = if item.address.is_empty() { None } else { Some(item.address.as_str().try_into()?) };
     Self {
         address,

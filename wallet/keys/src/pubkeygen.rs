@@ -5,15 +5,15 @@
 use crate::derivation::gen1::WalletDerivationManager;
 use crate::derivation::traits::WalletDerivationManagerTrait;
 use crate::imports::*;
-use spectre_addresses::AddressArrayT;
-use spectre_consensus_core::network::NetworkType;
+use zyanya_addresses::AddressArrayT;
+use zyanya_consensus_core::network::NetworkType;
 // use crate::xprv::XPrv;
 
 ///
 /// Helper class to generate public keys from an extended public key (XPub)
 /// that has been derived up to the co-signer index.
 ///
-/// Please note that in Spectre master public keys use `kpub` prefix.
+/// Please note that in Zyanya master public keys use `kpub` prefix.
 ///
 /// @see {@link PrivateKeyGenerator}, {@link XPub}, {@link XPrv}, {@link Mnemonic}
 /// @category Wallet SDK

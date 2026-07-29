@@ -1,8 +1,8 @@
 use crate::imports::*;
 use crate::message::*;
-use spectre_wallet_keys::privatekey::PrivateKey;
-use spectre_wallet_keys::publickey::PublicKey;
-use spectre_wasm_core::types::HexString;
+use zyanya_wallet_keys::privatekey::PrivateKey;
+use zyanya_wallet_keys::publickey::PublicKey;
+use zyanya_wasm_core::types::HexString;
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_MESSAGE_TYPES: &'static str = r#"

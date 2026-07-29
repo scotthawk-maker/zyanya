@@ -1,8 +1,8 @@
 use crate::model::stores::relations::RelationsStoreReader;
 use parking_lot::RwLock;
-use spectre_consensus_core::BlockHashSet;
-use spectre_database::prelude::{ReadLock, StoreError, StoreResult};
-use spectre_hashes::Hash;
+use zyanya_consensus_core::BlockHashSet;
+use zyanya_database::prelude::{ReadLock, StoreError, StoreResult};
+use zyanya_hashes::Hash;
 use std::sync::Arc;
 
 /// Multi-threaded block-relations service imp
@@ -19,7 +19,7 @@ impl<T: RelationsStoreReader> MTRelationsService<T> {
 }
 
 impl<T: RelationsStoreReader> RelationsStoreReader for MTRelationsService<T> {
-    fn get_parents(&self, hash: Hash) -> Result<spectre_consensus_core::blockhash::BlockHashes, StoreError> {
+    fn get_parents(&self, hash: Hash) -> Result<zyanya_consensus_core::blockhash::BlockHashes, StoreError> {
         self.store.read()[self.level].get_parents(hash)
     }
 

@@ -1,6 +1,6 @@
 [package]
-name = "spectre-grpc-core"
-description = "Spectre gRPC core"
+name = "zyanya-grpc-core"
+description = "Zyanya gRPC core"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -10,12 +10,12 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-spectre-addresses.workspace = true
-spectre-consensus-core.workspace = true
-spectre-core.workspace = true
-spectre-notify.workspace = true
-spectre-rpc-core.workspace = true
-spectre-utils.workspace = true
+zyanya-addresses.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-core.workspace = true
+zyanya-notify.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-utils.workspace = true
 
 async-channel.workspace = true
 async-stream.workspace = true

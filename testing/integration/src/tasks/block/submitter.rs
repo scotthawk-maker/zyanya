@@ -4,10 +4,10 @@ use crate::{
 };
 use async_channel::Sender;
 use async_trait::async_trait;
-use spectre_core::warn;
-use spectre_grpc_client::ClientPool;
-use spectre_rpc_core::{api::rpc::RpcApi, RpcRawBlock};
-use spectre_utils::triggers::SingleTrigger;
+use zyanya_core::warn;
+use zyanya_grpc_client::ClientPool;
+use zyanya_rpc_core::{api::rpc::RpcApi, RpcRawBlock};
+use zyanya_utils::triggers::SingleTrigger;
 use std::{sync::Arc, time::Duration};
 use tokio::{task::JoinHandle, time::sleep};
 
@@ -39,7 +39,7 @@ impl Task for BlockSubmitterTask {
             loop {
                 match c.submit_block(block.clone(), false).await {
                     Ok(response) => {
-                        assert_eq!(response.report, spectre_rpc_core::SubmitBlockReport::Success);
+                        assert_eq!(response.report, zyanya_rpc_core::SubmitBlockReport::Success);
                         break;
                     }
                     Err(_) => {

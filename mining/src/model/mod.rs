@@ -1,4 +1,4 @@
-use spectre_consensus_core::tx::TransactionId;
+use zyanya_consensus_core::tx::TransactionId;
 use std::collections::HashSet;
 
 pub mod candidate_tx;

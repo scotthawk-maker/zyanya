@@ -32,7 +32,7 @@ impl<const TR: u64> Drop for Stopwatch<TR> {
     fn drop(&mut self) {
         let elapsed = self.start.elapsed();
         if elapsed > Duration::from_millis(TR) {
-            spectre_core::trace!("[{}] Abnormal time: {:#?}", self.name, elapsed);
+            zyanya_core::trace!("[{}] Abnormal time: {:#?}", self.name, elapsed);
         }
     }
 }

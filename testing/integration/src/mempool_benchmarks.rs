@@ -12,18 +12,18 @@ use futures_util::future::join_all;
 use parking_lot::Mutex;
 use rand::thread_rng;
 use rand_distr::{Distribution, Exp};
-use spectre_addresses::Address;
-use spectre_consensus::params::Params;
-use spectre_consensus_core::{constants::SOMPI_PER_SPECTRE, network::NetworkType, tx::Transaction};
-use spectre_core::{debug, info};
-use spectre_notify::{
+use zyanya_addresses::Address;
+use zyanya_consensus::params::Params;
+use zyanya_consensus_core::{constants::SOMPI_PER_ZYANYA, network::NetworkType, tx::Transaction};
+use zyanya_core::{debug, info};
+use zyanya_notify::{
     listener::ListenerId,
     scope::{NewBlockTemplateScope, Scope},
 };
-use spectre_rpc_core::{api::rpc::RpcApi, Notification, RpcError};
-use spectre_txscript::pay_to_address_script;
-use spectre_utils::fd_budget;
-use spectred_lib::args::Args;
+use zyanya_rpc_core::{api::rpc::RpcApi, Notification, RpcError};
+use zyanya_txscript::pay_to_address_script;
+use zyanya_utils::fd_budget;
+use zyanyad_lib::args::Args;
 use std::{
     cmp::max,
     sync::{
@@ -35,13 +35,13 @@ use std::{
 use tokio::join;
 
 /// Run this benchmark with the following command line:
-/// `cargo test --release --package spectre-testing-integration --lib --features devnet-prealloc -- mempool_benchmarks::bench_bbt_latency --exact --nocapture --ignored`
+/// `cargo test --release --package zyanya-testing-integration --lib --features devnet-prealloc -- mempool_benchmarks::bench_bbt_latency --exact --nocapture --ignored`
 #[tokio::test]
 #[ignore = "bmk"]
 async fn bench_bbt_latency() {
-    spectre_core::log::try_init_logger("info,spectre_core::time=debug,spectre_mining::monitor=debug");
+    zyanya_core::log::try_init_logger("info,zyanya_core::time=debug,zyanya_mining::monitor=debug");
     // As we log the panic, we want to set it up after the logger
-    spectre_core::panic::configure_panic();
+    zyanya_core::panic::configure_panic();
 
     // Constants
     const BLOCK_COUNT: usize = usize::MAX;
@@ -77,7 +77,7 @@ async fn bench_bbt_latency() {
     //
     let (prealloc_sk, prealloc_pk) = secp256k1::generate_keypair(&mut thread_rng());
     let prealloc_address =
-        Address::new(NetworkType::Simnet.into(), spectre_addresses::Version::PubKey, &prealloc_pk.x_only_public_key().0.serialize());
+        Address::new(NetworkType::Simnet.into(), zyanya_addresses::Version::PubKey, &prealloc_pk.x_only_public_key().0.serialize());
     let schnorr_key = secp256k1::Keypair::from_secret_key(secp256k1::SECP256K1, &prealloc_sk);
     let spk = pay_to_address_script(&prealloc_address);
 
@@ -87,7 +87,7 @@ async fn bench_bbt_latency() {
         enable_unsynced_mining: true,
         num_prealloc_utxos: Some(TX_LEVEL_WIDTH as u64 * CONTRACT_FACTOR),
         prealloc_address: Some(prealloc_address.to_string()),
-        prealloc_amount: 500 * SOMPI_PER_SPECTRE,
+        prealloc_amount: 500 * SOMPI_PER_ZYANYA,
         block_template_cache_lifetime: Some(0),
         ..Default::default()
     };
@@ -111,7 +111,7 @@ async fn bench_bbt_latency() {
     // Mining key and address
     let (sk, pk) = &secp256k1::generate_keypair(&mut thread_rng());
     let pay_address =
-        Address::new(network.network_type().into(), spectre_addresses::Version::PubKey, &pk.x_only_public_key().0.serialize());
+        Address::new(network.network_type().into(), zyanya_addresses::Version::PubKey, &pk.x_only_public_key().0.serialize());
     debug!("Generated private key {} and address {}", sk.display_secret(), pay_address);
 
     let current_template = Arc::new(Mutex::new(bbt_client.get_block_template(pay_address.clone(), vec![]).await.unwrap()));
@@ -124,9 +124,9 @@ async fn bench_bbt_latency() {
 
     let submit_block_pool = daemon.new_client_pool(SUBMIT_BLOCK_CLIENTS, 100).await;
     let submit_block_pool_tasks = submit_block_pool.start(|c, block| async move {
-        let _sw = spectre_core::time::Stopwatch::<500>::with_threshold("sb");
+        let _sw = zyanya_core::time::Stopwatch::<500>::with_threshold("sb");
         let response = c.submit_block(block, false).await.unwrap();
-        assert_eq!(response.report, spectre_rpc_core::SubmitBlockReport::Success);
+        assert_eq!(response.report, zyanya_rpc_core::SubmitBlockReport::Success);
         false
     });
 
@@ -135,8 +135,8 @@ async fn bench_bbt_latency() {
         match c.submit_transaction(tx.as_ref().into(), false).await {
             Ok(_) => {}
             Err(RpcError::General(msg)) if msg.contains("orphan") => {
-                spectre_core::warn!("\n\n\n{msg}\n\n");
-                spectre_core::warn!("Submitted {} transactions, exiting tx submit loop", i);
+                zyanya_core::warn!("\n\n\n{msg}\n\n");
+                zyanya_core::warn!("Submitted {} transactions, exiting tx submit loop", i);
                 return true;
             }
             Err(e) => panic!("{e}"),
@@ -155,17 +155,17 @@ async fn bench_bbt_latency() {
                     while notification_rx.try_recv().is_ok() {
                         // Drain the channel
                     }
-                    // let _sw = spectre_core::time::Stopwatch::<500>::with_threshold("bbt");
+                    // let _sw = zyanya_core::time::Stopwatch::<500>::with_threshold("bbt");
                     *current_template.lock() = cc.get_block_template(pac.clone(), vec![]).await.unwrap();
                 }
                 _ => panic!(),
             }
             if !exec.load(Ordering::Relaxed) {
-                spectre_core::warn!("Test is over, stopping miner receiver loop");
+                zyanya_core::warn!("Test is over, stopping miner receiver loop");
                 break;
             }
         }
-        spectre_core::warn!("Miner receiver loop task exited");
+        zyanya_core::warn!("Miner receiver loop task exited");
     });
 
     let block_sender = submit_block_pool.sender();
@@ -186,7 +186,7 @@ async fn bench_bbt_latency() {
             let ccc = cc.clone();
             let pac = pay_address.clone();
             tokio::spawn(async move {
-                // let _sw = spectre_core::time::Stopwatch::<500>::with_threshold("bbt");
+                // let _sw = zyanya_core::time::Stopwatch::<500>::with_threshold("bbt");
                 // We used the current template so let's refetch a new template with new txs
                 *ctc.lock() = ccc.get_block_template(pac, vec![]).await.unwrap();
             });
@@ -198,14 +198,14 @@ async fn bench_bbt_latency() {
                 let _ = bs.send(block).await;
             });
             if !exec.load(Ordering::Relaxed) {
-                spectre_core::warn!("Test is over, stopping miner loop");
+                zyanya_core::warn!("Test is over, stopping miner loop");
                 break;
             }
         }
         exec.store(false, Ordering::Relaxed);
         bbt_client.stop_notify(ListenerId::default(), Scope::NewBlockTemplate(NewBlockTemplateScope {})).await.unwrap();
         bbt_client.disconnect().await.unwrap();
-        spectre_core::warn!("Miner loop task exited");
+        zyanya_core::warn!("Miner loop task exited");
     });
 
     let tx_sender = submit_tx_pool.sender();
@@ -250,7 +250,7 @@ async fn bench_bbt_latency() {
             }
         }
 
-        spectre_core::warn!("Tx sender task, waiting for mempool to drain..");
+        zyanya_core::warn!("Tx sender task, waiting for mempool to drain..");
         loop {
             if !exec.load(Ordering::Relaxed) {
                 break;
@@ -263,7 +263,7 @@ async fn bench_bbt_latency() {
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
         exec.store(false, Ordering::Relaxed);
-        spectre_core::warn!("Tx sender task exited");
+        zyanya_core::warn!("Tx sender task exited");
     });
 
     let _ = join!(miner_receiver_task, miner_loop_task, tx_sender_task);
@@ -283,13 +283,13 @@ async fn bench_bbt_latency() {
 }
 
 /// Run this benchmark with the following command line:
-/// `cargo test --release --package spectre-testing-integration --lib --features devnet-prealloc -- mempool_benchmarks::bench_bbt_latency_2 --exact --nocapture --ignored`
+/// `cargo test --release --package zyanya-testing-integration --lib --features devnet-prealloc -- mempool_benchmarks::bench_bbt_latency_2 --exact --nocapture --ignored`
 #[tokio::test]
 #[ignore = "bmk"]
 async fn bench_bbt_latency_2() {
-    spectre_core::log::try_init_logger("info,spectre_core::time=debug,spectre_mining::monitor=debug");
+    zyanya_core::log::try_init_logger("info,zyanya_core::time=debug,zyanya_mining::monitor=debug");
     // As we log the panic, we want to set it up after the logger
-    spectre_core::panic::configure_panic();
+    zyanya_core::panic::configure_panic();
 
     // Constants
     const BLOCK_COUNT: usize = usize::MAX;
@@ -325,7 +325,7 @@ async fn bench_bbt_latency_2() {
     //
     let (prealloc_sk, prealloc_pk) = secp256k1::generate_keypair(&mut thread_rng());
     let prealloc_address =
-        Address::new(NetworkType::Simnet.into(), spectre_addresses::Version::PubKey, &prealloc_pk.x_only_public_key().0.serialize());
+        Address::new(NetworkType::Simnet.into(), zyanya_addresses::Version::PubKey, &prealloc_pk.x_only_public_key().0.serialize());
     let schnorr_key = secp256k1::Keypair::from_secret_key(secp256k1::SECP256K1, &prealloc_sk);
     let spk = pay_to_address_script(&prealloc_address);
 

@@ -5,9 +5,9 @@ use crate::{
 };
 use blake2b_simd::Params;
 use smallvec::SmallVec;
-use spectre_addresses::{Address, Prefix, Version};
-use spectre_consensus_core::tx::{ScriptPublicKey, ScriptVec};
-use spectre_txscript_errors::TxScriptError;
+use zyanya_addresses::{Address, Prefix, Version};
+use zyanya_consensus_core::tx::{ScriptPublicKey, ScriptVec};
+use zyanya_txscript_errors::TxScriptError;
 use std::iter::once;
 
 mod multisig;
@@ -86,7 +86,7 @@ pub fn extract_script_pub_key_address(script_public_key: &ScriptPublicKey, prefi
 pub mod test_helpers {
     use super::*;
     use crate::{opcodes::codes::OpTrue, MAX_TX_IN_SEQUENCE_NUM};
-    use spectre_consensus_core::{
+    use zyanya_consensus_core::{
         constants::TX_VERSION,
         subnets::SUBNETWORK_ID_NATIVE,
         tx::{Transaction, TransactionInput, TransactionOutpoint, TransactionOutput},
@@ -173,7 +173,7 @@ mod tests {
                     ),
                 ),
                 prefix: Prefix::Mainnet,
-                expected_address: Ok("spectre:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v".try_into().unwrap()),
+                expected_address: Ok("zyanya:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v".try_into().unwrap()),
             },
             Test {
                 name: "Testnet PubKeyECDSA script and address",
@@ -184,7 +184,7 @@ mod tests {
                     ),
                 ),
                 prefix: Prefix::Testnet,
-                expected_address: Ok("spectretest:qxaqrlzlf6wes72en3568khahq66wf27tuhfxn5nytkd8tcep2c0vrsed0nf9p3"
+                expected_address: Ok("zyanyatest:qxaqrlzlf6wes72en3568khahq66wf27tuhfxn5nytkd8tcep2c0vrsed0nf9p3"
                     .try_into()
                     .unwrap()),
             },

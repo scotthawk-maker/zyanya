@@ -1,6 +1,6 @@
 [package]
-name = "spectre-index-processor"
-description = "Spectre index processor"
+name = "zyanya-index-processor"
+description = "Zyanya index processor"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -10,16 +10,16 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-spectre-consensus-core.workspace = true
-spectre-consensus-notify.workspace = true
-spectre-consensusmanager.workspace = true
-spectre-core.workspace = true
-spectre-database.workspace = true
-spectre-hashes.workspace = true
-spectre-index-core.workspace = true
-spectre-notify.workspace = true
-spectre-utils.workspace = true
-spectre-utxoindex.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-notify.workspace = true
+zyanya-consensusmanager.workspace = true
+zyanya-core.workspace = true
+zyanya-database.workspace = true
+zyanya-hashes.workspace = true
+zyanya-index-core.workspace = true
+zyanya-notify.workspace = true
+zyanya-utils.workspace = true
+zyanya-utxoindex.workspace = true
 
 async-channel.workspace = true
 async-trait.workspace = true
@@ -32,7 +32,7 @@ tokio = { workspace = true, features = [ "rt-multi-thread", "macros", "signal" ]
 triggered.workspace = true
 
 [dev-dependencies]
-spectre-consensus.workspace = true
+zyanya-consensus.workspace = true
 parking_lot.workspace = true
 tokio = { workspace = true, features = ["rt", "macros"] }
 rand = {workspace = true,  features = [ "small_rng" ]}

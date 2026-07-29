@@ -14,15 +14,15 @@
             } from './resources/utils.js';
 
             // import WASM32 SDK
-            import * as spectre from '../../web/spectre-rpc/spectre.js';
-            let { Resolver, RpcClient, Encoding } = spectre;
+            import * as zyanya from '../../web/zyanya-rpc/zyanya.js';
+            let { Resolver, RpcClient, Encoding } = zyanya;
 
             (async () => {
                 // load WASM32 SDK binaries 
-                await spectre.default('../../web/spectre-rpc/spectre_bg.wasm');
+                await zyanya.default('../../web/zyanya-rpc/zyanya_bg.wasm');
 
                 let networkId = currentNetwork();
-                log(`Connecting to Spectre network...`);
+                log(`Connecting to Zyanya network...`);
                 log(`Selected network is ${networkId.class("network")}...`);
 
                 const rpc = new RpcClient({

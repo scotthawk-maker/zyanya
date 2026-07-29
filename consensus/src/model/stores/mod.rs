@@ -19,9 +19,10 @@ pub mod utxo_diffs;
 pub mod utxo_multisets;
 pub mod utxo_set;
 pub mod virtual_state;
+pub mod contract;
 
-pub use spectre_database;
-pub use spectre_database::prelude::DB;
+pub use zyanya_database;
+pub use zyanya_database::prelude::DB;
 use std::fmt::Display;
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash)]

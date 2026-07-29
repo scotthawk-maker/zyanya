@@ -5,12 +5,12 @@ use itertools::Itertools;
 use parking_lot::Mutex;
 use rand::thread_rng;
 use rand_distr::{Distribution, Exp};
-use spectre_addresses::Address;
-use spectre_core::warn;
-use spectre_grpc_client::GrpcClient;
-use spectre_notify::scope::{Scope, UtxosChangedScope};
-use spectre_rpc_core::api::rpc::RpcApi;
-use spectre_utils::{channel::Channel, triggers::SingleTrigger};
+use zyanya_addresses::Address;
+use zyanya_core::warn;
+use zyanya_grpc_client::GrpcClient;
+use zyanya_notify::scope::{Scope, UtxosChangedScope};
+use zyanya_rpc_core::api::rpc::RpcApi;
+use zyanya_utils::{channel::Channel, triggers::SingleTrigger};
 use std::{cmp::max, collections::HashMap, sync::Arc, time::Duration};
 use tokio::{
     sync::oneshot::{channel as oneshot_channel, Receiver as OneshotReceiver, Sender as OneshotSender},

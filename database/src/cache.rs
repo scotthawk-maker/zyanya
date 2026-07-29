@@ -1,7 +1,7 @@
 use indexmap::IndexMap;
 use parking_lot::RwLock;
 use rand::Rng;
-use spectre_utils::mem_size::{MemMode, MemSizeEstimator};
+use zyanya_utils::mem_size::{MemMode, MemSizeEstimator};
 use std::{collections::hash_map::RandomState, hash::BuildHasher, sync::Arc};
 
 #[derive(Debug, Clone, Copy)]

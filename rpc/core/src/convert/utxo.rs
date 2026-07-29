@@ -2,9 +2,9 @@
 
 use crate::RpcUtxoEntry;
 use crate::RpcUtxosByAddressesEntry;
-use spectre_addresses::Prefix;
-use spectre_index_core::indexed_utxos::UtxoSetByScriptPublicKey;
-use spectre_txscript::extract_script_pub_key_address;
+use zyanya_addresses::Prefix;
+use zyanya_index_core::indexed_utxos::UtxoSetByScriptPublicKey;
+use zyanya_txscript::extract_script_pub_key_address;
 
 // ----------------------------------------------------------------------------
 // index to rpc_core

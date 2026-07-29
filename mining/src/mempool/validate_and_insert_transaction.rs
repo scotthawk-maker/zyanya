@@ -9,12 +9,12 @@ use crate::mempool::{
     tx::{Orphan, Priority, RbfPolicy},
     Mempool,
 };
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     api::ConsensusApi,
     constants::UNACCEPTED_DAA_SCORE,
     tx::{MutableTransaction, Transaction, TransactionId, TransactionOutpoint, UtxoEntry},
 };
-use spectre_core::{debug, info};
+use zyanya_core::{debug, info};
 
 impl Mempool {
     pub(crate) fn pre_validate_and_populate_transaction(
@@ -152,14 +152,14 @@ impl Mempool {
     }
 
     fn validate_transaction_in_context(&self, transaction: &MutableTransaction) -> RuleResult<()> {
-        // TEMP: apply parts of go-spectred mempool dust prevention patch
+        // TEMP: apply parts of go-zyanyad mempool dust prevention patch
         let has_coinbase_input = transaction.entries.iter().any(|e| e.as_ref().unwrap().is_coinbase);
         let num_extra_outs = transaction.tx.outputs.len() as i64 - transaction.tx.inputs.len() as i64;
         if !has_coinbase_input
             && num_extra_outs > 2
-            && transaction.calculated_fee.unwrap() < num_extra_outs as u64 * spectre_consensus_core::constants::SOMPI_PER_SPECTRE
+            && transaction.calculated_fee.unwrap() < num_extra_outs as u64 * zyanya_consensus_core::constants::SOMPI_PER_ZYANYA
         {
-            spectre_core::trace!("Rejected spam tx {} from mempool ({} outputs)", transaction.id(), transaction.tx.outputs.len());
+            zyanya_core::trace!("Rejected spam tx {} from mempool ({} outputs)", transaction.id(), transaction.tx.outputs.len());
             return Err(RuleError::RejectSpamTransaction(transaction.id()));
         }
 

@@ -2,7 +2,7 @@ use self::stop::StopTask;
 use async_trait::async_trait;
 use futures_util::future::join_all;
 use itertools::Itertools;
-use spectre_utils::triggers::SingleTrigger;
+use zyanya_utils::triggers::SingleTrigger;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
 

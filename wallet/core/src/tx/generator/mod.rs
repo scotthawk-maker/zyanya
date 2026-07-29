@@ -1,6 +1,6 @@
 //!
 //! Transaction generator implementation used to construct
-//! Spectre transactions.
+//! Zyanya transactions.
 //!
 
 #[allow(clippy::module_inception)]

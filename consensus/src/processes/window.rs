@@ -8,15 +8,15 @@ use crate::{
     processes::ghostdag::ordering::SortableBlock,
 };
 use once_cell::unsync::Lazy;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     blockhash::BlockHashExtensions,
     config::{genesis::GenesisBlock, params::ForkActivation},
     errors::{block::RuleError, difficulty::DifficultyResult},
     BlockHashSet, BlueWorkType,
 };
-use spectre_hashes::Hash;
-use spectre_math::Uint256;
-use spectre_utils::refs::Refs;
+use zyanya_hashes::Hash;
+use zyanya_math::Uint256;
+use zyanya_utils::refs::Refs;
 use std::{
     cmp::Reverse,
     iter::once,

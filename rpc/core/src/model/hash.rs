@@ -1,1 +1,1 @@
-pub type RpcHash = spectre_hashes::Hash;
+pub type RpcHash = zyanya_hashes::Hash;

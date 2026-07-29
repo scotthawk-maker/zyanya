@@ -5,13 +5,13 @@ use crate::model::{
     stores::{ghostdag::GhostdagStoreReader, reachability::ReachabilityStoreReader, relations::RelationsStoreReader},
 };
 use itertools::Itertools;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     blockhash::BlockHashExtensions,
     errors::traversal::{TraversalError, TraversalResult},
     BlockHashSet, ChainPath,
 };
-use spectre_core::trace;
-use spectre_hashes::Hash;
+use zyanya_core::trace;
+use zyanya_hashes::Hash;
 
 #[derive(Clone)]
 pub struct DagTraversalManager<T: GhostdagStoreReader, U: ReachabilityStoreReader, V: RelationsStoreReader> {

@@ -10,7 +10,7 @@ use crate::{
         tx_validation_in_utxo_context::TxValidationFlags,
     },
 };
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     acceptance_data::{AcceptedTxEntry, MergesetBlockAcceptanceData},
     api::args::TransactionValidationArgs,
     coinbase::*,
@@ -24,10 +24,10 @@ use spectre_consensus_core::{
     },
     BlockHashMap, BlockHashSet, HashMapCustomHasher,
 };
-use spectre_core::{info, trace};
-use spectre_hashes::Hash;
-use spectre_muhash::MuHash;
-use spectre_utils::refs::Refs;
+use zyanya_core::{info, trace};
+use zyanya_hashes::Hash;
+use zyanya_muhash::MuHash;
+use zyanya_utils::refs::Refs;
 
 use rayon::prelude::*;
 use smallvec::{smallvec, SmallVec};
@@ -161,7 +161,7 @@ impl VirtualStateProcessor {
         trace!("correct commitment: {}, {}", header.hash, expected_commitment);
 
         // Verify header accepted_id_merkle_root
-        let expected_accepted_id_merkle_root = spectre_merkle::calc_merkle_root(ctx.accepted_tx_ids.iter().copied());
+        let expected_accepted_id_merkle_root = zyanya_merkle::calc_merkle_root(ctx.accepted_tx_ids.iter().copied());
         if expected_accepted_id_merkle_root != header.accepted_id_merkle_root {
             return Err(BadAcceptedIDMerkleRoot(header.hash, header.accepted_id_merkle_root, expected_accepted_id_merkle_root));
         }

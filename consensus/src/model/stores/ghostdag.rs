@@ -1,23 +1,23 @@
 use crate::processes::ghostdag::ordering::SortableBlock;
-use spectre_consensus_core::trusted::ExternalGhostdagData;
-use spectre_consensus_core::{blockhash::BlockHashes, BlueWorkType};
-use spectre_consensus_core::{BlockHashMap, BlockHasher, BlockLevel, HashMapCustomHasher};
-use spectre_database::prelude::DB;
-use spectre_database::prelude::{BatchDbWriter, CachedDbAccess, DbKey};
-use spectre_database::prelude::{CachePolicy, StoreError};
-use spectre_database::registry::{DatabaseStorePrefixes, SEPARATOR};
-use spectre_hashes::Hash;
+use zyanya_consensus_core::trusted::ExternalGhostdagData;
+use zyanya_consensus_core::{blockhash::BlockHashes, BlueWorkType};
+use zyanya_consensus_core::{BlockHashMap, BlockHasher, BlockLevel, HashMapCustomHasher};
+use zyanya_database::prelude::DB;
+use zyanya_database::prelude::{BatchDbWriter, CachedDbAccess, DbKey};
+use zyanya_database::prelude::{CachePolicy, StoreError};
+use zyanya_database::registry::{DatabaseStorePrefixes, SEPARATOR};
+use zyanya_hashes::Hash;
 
 use itertools::EitherOrBoth::{Both, Left, Right};
 use itertools::Itertools;
 use rocksdb::WriteBatch;
 use serde::{Deserialize, Serialize};
-use spectre_utils::mem_size::MemSizeEstimator;
+use zyanya_utils::mem_size::MemSizeEstimator;
 use std::iter::once;
 use std::{cell::RefCell, sync::Arc};
 
 /// Re-export for convenience
-pub use spectre_consensus_core::{HashKTypeMap, KType};
+pub use zyanya_consensus_core::{HashKTypeMap, KType};
 
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct GhostdagData {
@@ -517,7 +517,7 @@ impl GhostdagStoreReader for MemoryGhostdagStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use spectre_consensus_core::BlockHashSet;
+    use zyanya_consensus_core::BlockHashSet;
 
     #[test]
     fn test_mergeset_iterators() {

@@ -1,9 +1,9 @@
-const spectre = require('../../../../nodejs/spectre');
+const zyanya = require('../../../../nodejs/zyanya');
 const {
     Mnemonic,
-} = spectre;
+} = zyanya;
 
-spectre.initConsolePanicHook();
+zyanya.initConsolePanicHook();
 
 (async () => {
 

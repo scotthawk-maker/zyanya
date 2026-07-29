@@ -2,9 +2,9 @@ use async_channel::unbounded;
 use clap::Parser;
 use futures::{future::try_join_all, Future};
 use itertools::Itertools;
-use simulator::network::SpectreNetworkSimulator;
-use spectre_alloc::init_allocator_with_default_settings;
-use spectre_consensus::{
+use simulator::network::ZyanyaNetworkSimulator;
+use zyanya_alloc::init_allocator_with_default_settings;
+use zyanya_consensus::{
     config::ConfigBuilder,
     consensus::Consensus,
     constants::perf::PerfParams,
@@ -16,27 +16,27 @@ use spectre_consensus::{
     },
     params::{ForkActivation, Params, Testnet11Bps, DEVNET_PARAMS, NETWORK_DELAY_BOUND, TESTNET11_PARAMS},
 };
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     api::ConsensusApi, block::Block, blockstatus::BlockStatus, config::bps::calculate_ghostdag_k, errors::block::BlockProcessResult,
     BlockHashSet, BlockLevel, HashMapCustomHasher,
 };
-use spectre_consensus_notify::root::ConsensusNotificationRoot;
-use spectre_core::{
+use zyanya_consensus_notify::root::ConsensusNotificationRoot;
+use zyanya_core::{
     info,
     task::{service::AsyncService, tick::TickService},
     time::unix_now,
     trace, warn,
 };
-use spectre_database::prelude::ConnBuilder;
-use spectre_database::{create_temp_db, load_existing_db};
-use spectre_hashes::Hash;
-use spectre_perf_monitor::{builder::Builder, counters::CountersSnapshot};
-use spectre_utils::fd_budget;
+use zyanya_database::prelude::ConnBuilder;
+use zyanya_database::{create_temp_db, load_existing_db};
+use zyanya_hashes::Hash;
+use zyanya_perf_monitor::{builder::Builder, counters::CountersSnapshot};
+use zyanya_utils::fd_budget;
 use std::{collections::VecDeque, sync::Arc, time::Duration};
 
 pub mod simulator;
 
-/// Spectre Network Simulator
+/// Zyanya Network Simulator
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -142,15 +142,15 @@ fn main() {
     // Initialize the logger
     cfg_if::cfg_if! {
         if #[cfg(feature = "semaphore-trace")] {
-            spectre_core::log::init_logger(None, &format!("{},{}=debug", args.log_level, spectre_utils::sync::semaphore_module_path()));
+            zyanya_core::log::init_logger(None, &format!("{},{}=debug", args.log_level, zyanya_utils::sync::semaphore_module_path()));
         } else {
-            spectre_core::log::init_logger(None, &args.log_level);
+            zyanya_core::log::init_logger(None, &args.log_level);
         }
     };
 
     // Configure the panic behavior
     // As we log the panic, we want to set it up after the logger
-    spectre_core::panic::configure_panic();
+    zyanya_core::panic::configure_panic();
 
     // Print package name and version
     info!("{} v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
@@ -165,8 +165,8 @@ fn main_impl(mut args: Args) {
         let ts = Arc::new(TickService::new());
 
         let cb = move |counters: CountersSnapshot| {
-            trace!("[{}] {}", spectre_perf_monitor::SERVICE_NAME, counters.to_process_metrics_display());
-            trace!("[{}] {}", spectre_perf_monitor::SERVICE_NAME, counters.to_io_metrics_display());
+            trace!("[{}] {}", zyanya_perf_monitor::SERVICE_NAME, counters.to_process_metrics_display());
+            trace!("[{}] {}", zyanya_perf_monitor::SERVICE_NAME, counters.to_io_metrics_display());
             #[cfg(feature = "heap")]
             trace!("heap stats: {:?}", dhat::HeapStats::get());
         };
@@ -239,7 +239,7 @@ fn main_impl(mut args: Args) {
         (consensus, lifetime)
     } else {
         let until = if args.target_blocks.is_none() { config.genesis.timestamp + args.sim_time * 1000 } else { u64::MAX }; // milliseconds
-        let mut sim = SpectreNetworkSimulator::new(args.delay, args.bps, args.target_blocks, config.clone(), args.output_dir);
+        let mut sim = ZyanyaNetworkSimulator::new(args.delay, args.bps, args.target_blocks, config.clone(), args.output_dir);
         let (consensus, handles, lifetime) = sim
             .init(
                 args.miners,
@@ -292,7 +292,7 @@ fn apply_args_to_consensus_params(args: &Args, params: &mut Params) {
     params.genesis.timestamp = 0;
     if args.testnet11 {
         info!(
-            "Using spectre-testnet-11 configuration (GHOSTDAG K={}, DAA window size={}, Median time window size={})",
+            "Using zyanya-testnet-11 configuration (GHOSTDAG K={}, DAA window size={}, Median time window size={})",
             params.ghostdag_k,
             params.difficulty_window_size(0),
             params.past_median_time_window_size(0),
@@ -457,9 +457,9 @@ mod tests {
         args.tpb = 1;
         args.test_pruning = true;
 
-        spectre_core::log::try_init_logger(&args.log_level);
+        zyanya_core::log::try_init_logger(&args.log_level);
         // As we log the panic, we want to set it up after the logger
-        spectre_core::panic::configure_panic();
+        zyanya_core::panic::configure_panic();
         main_impl(args);
     }
 }

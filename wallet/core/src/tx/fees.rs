@@ -82,7 +82,7 @@ impl TryFrom<&str> for Fees {
         if fee.is_empty() {
             Ok(Fees::None)
         } else {
-            let fee = crate::utils::try_spectre_str_to_sompi_i64(fee)?.unwrap_or(0);
+            let fee = crate::utils::try_zyanya_str_to_sompi_i64(fee)?.unwrap_or(0);
             Ok(Fees::from(fee))
         }
     }

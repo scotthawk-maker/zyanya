@@ -64,11 +64,11 @@ use crate::tx::{
     PendingTransactionStream,
 };
 use crate::utxo::{NetworkParams, UtxoContext, UtxoEntryReference};
-use spectre_consensus_client::UtxoEntry;
-use spectre_consensus_core::constants::UNACCEPTED_DAA_SCORE;
-use spectre_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
-use spectre_consensus_core::tx::{Transaction, TransactionInput, TransactionOutpoint, TransactionOutput};
-use spectre_txscript::pay_to_address_script;
+use zyanya_consensus_client::UtxoEntry;
+use zyanya_consensus_core::constants::UNACCEPTED_DAA_SCORE;
+use zyanya_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
+use zyanya_consensus_core::tx::{Transaction, TransactionInput, TransactionOutpoint, TransactionOutput};
+use zyanya_txscript::pay_to_address_script;
 use std::collections::VecDeque;
 
 use super::SignerT;

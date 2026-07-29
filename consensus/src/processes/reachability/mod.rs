@@ -5,7 +5,7 @@ mod reindex;
 pub mod tests;
 mod tree;
 
-use spectre_database::prelude::StoreError;
+use zyanya_database::prelude::StoreError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

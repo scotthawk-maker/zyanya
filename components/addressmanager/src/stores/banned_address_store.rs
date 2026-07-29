@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
-use spectre_database::{
+use zyanya_database::{
     prelude::{CachePolicy, StoreError, StoreResult},
     prelude::{CachedDbAccess, DirectDbWriter, DB},
     registry::DatabaseStorePrefixes,
 };
-use spectre_utils::mem_size::MemSizeEstimator;
+use zyanya_utils::mem_size::MemSizeEstimator;
 use std::net::{IpAddr, Ipv6Addr};
 use std::{error::Error, fmt::Display, sync::Arc};
 

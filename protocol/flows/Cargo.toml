@@ -1,6 +1,6 @@
 [package]
-name = "spectre-p2p-flows"
-description = "Spectre p2p flows"
+name = "zyanya-p2p-flows"
+description = "Zyanya p2p flows"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -10,19 +10,19 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-spectre-core.workspace = true
-spectre-consensus-core.workspace = true
-spectre-consensus-notify.workspace = true
-spectre-p2p-lib.workspace = true
-spectre-utils.workspace = true
-spectre-utils-tower.workspace = true
-spectre-hashes.workspace = true
-spectre-muhash.workspace = true
-spectre-connectionmanager.workspace = true
-spectre-addressmanager.workspace = true
-spectre-consensusmanager.workspace = true
-spectre-mining.workspace = true
-spectre-notify.workspace = true
+zyanya-core.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-notify.workspace = true
+zyanya-p2p-lib.workspace = true
+zyanya-utils.workspace = true
+zyanya-utils-tower.workspace = true
+zyanya-hashes.workspace = true
+zyanya-muhash.workspace = true
+zyanya-connectionmanager.workspace = true
+zyanya-addressmanager.workspace = true
+zyanya-consensusmanager.workspace = true
+zyanya-mining.workspace = true
+zyanya-notify.workspace = true
 
 async-trait.workspace = true
 futures = { workspace = true, features = ["alloc"] }

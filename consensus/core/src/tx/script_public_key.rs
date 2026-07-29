@@ -7,7 +7,7 @@ use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
 };
 use smallvec::SmallVec;
-use spectre_utils::{
+use zyanya_utils::{
     hex::{FromHex, ToHex},
     serde_bytes::FromHexVisitor,
 };
@@ -47,7 +47,7 @@ export interface IScriptPublicKey {
 }
 "#;
 
-/// Represents a Spectred ScriptPublicKey
+/// Represents a Zyanyad ScriptPublicKey
 /// @category Consensus
 #[derive(Default, PartialEq, Eq, Clone, Hash, CastFromJs)]
 #[wasm_bindgen(inspectable)]
@@ -126,7 +126,7 @@ impl<'de> Deserialize<'de> for ScriptPublicKey {
             // as serialization will never produce objects.
             // - review multiple integer mappings (are they all needed?)
             // - consider manual marshaling of RPC data structures
-            // (which is now possible due to the introduction of the spectre-consensus-wasm crate)
+            // (which is now possible due to the introduction of the zyanya-consensus-wasm crate)
             #[cfg(target_arch = "wasm32")]
             fn visit_i32<E>(self, v: i32) -> Result<Self::Value, E>
             where

@@ -78,8 +78,8 @@ pub fn try_init_logger(filters: &str) {
 #[macro_export]
 macro_rules! trace {
     ($($t:tt)*) => {
-        if spectre_core::log::workflow_log::log_level_enabled(log::Level::Trace) {
-            spectre_core::log::workflow_log::impls::trace_impl(None, &format_args!($($t)*));
+        if zyanya_core::log::workflow_log::log_level_enabled(log::Level::Trace) {
+            zyanya_core::log::workflow_log::impls::trace_impl(None, &format_args!($($t)*));
         }
     };
 }
@@ -96,8 +96,8 @@ macro_rules! trace {
 #[macro_export]
 macro_rules! debug {
     ($($t:tt)*) => (
-        if spectre_core::log::workflow_log::log_level_enabled(log::Level::Debug) {
-            spectre_core::log::workflow_log::impls::debug_impl(None, &format_args!($($t)*));
+        if zyanya_core::log::workflow_log::log_level_enabled(log::Level::Debug) {
+            zyanya_core::log::workflow_log::impls::debug_impl(None, &format_args!($($t)*));
         }
     )
 }
@@ -114,8 +114,8 @@ macro_rules! debug {
 #[macro_export]
 macro_rules! info {
     ($($t:tt)*) => (
-        if spectre_core::log::workflow_log::log_level_enabled(log::Level::Info) {
-            spectre_core::log::workflow_log::impls::info_impl(None, &format_args!($($t)*));
+        if zyanya_core::log::workflow_log::log_level_enabled(log::Level::Info) {
+            zyanya_core::log::workflow_log::impls::info_impl(None, &format_args!($($t)*));
         }
     )
 }
@@ -132,8 +132,8 @@ macro_rules! info {
 #[macro_export]
 macro_rules! warn {
     ($($t:tt)*) => (
-        if spectre_core::log::workflow_log::log_level_enabled(log::Level::Warn) {
-            spectre_core::log::workflow_log::impls::warn_impl(None, &format_args!($($t)*));
+        if zyanya_core::log::workflow_log::log_level_enabled(log::Level::Warn) {
+            zyanya_core::log::workflow_log::impls::warn_impl(None, &format_args!($($t)*));
         }
     )
 }
@@ -150,8 +150,8 @@ macro_rules! warn {
 #[macro_export]
 macro_rules! error {
     ($($t:tt)*) => (
-        if spectre_core::log::workflow_log::log_level_enabled(log::Level::Error) {
-            spectre_core::log::workflow_log::impls::error_impl(None, &format_args!($($t)*));
+        if zyanya_core::log::workflow_log::log_level_enabled(log::Level::Error) {
+            zyanya_core::log::workflow_log::impls::error_impl(None, &format_args!($($t)*));
         }
     )
 }

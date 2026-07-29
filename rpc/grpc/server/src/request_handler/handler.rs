@@ -1,29 +1,29 @@
 use super::{
     handler_trait::Handler,
-    interface::{DynSpectredMethod, Interface},
+    interface::{DynZyanyadMethod, Interface},
 };
 use crate::{
     connection::{Connection, IncomingRoute},
     connection_handler::ServerContext,
     error::GrpcServerResult,
 };
-use spectre_core::debug;
-use spectre_grpc_core::{
-    ops::SpectredPayloadOps,
-    protowire::{SpectredRequest, SpectredResponse},
+use zyanya_core::debug;
+use zyanya_grpc_core::{
+    ops::ZyanyadPayloadOps,
+    protowire::{ZyanyadRequest, ZyanyadResponse},
 };
 
 pub struct RequestHandler {
-    rpc_op: SpectredPayloadOps,
+    rpc_op: ZyanyadPayloadOps,
     incoming_route: IncomingRoute,
     server_ctx: ServerContext,
-    method: DynSpectredMethod,
+    method: DynZyanyadMethod,
     connection: Connection,
 }
 
 impl RequestHandler {
     pub fn new(
-        rpc_op: SpectredPayloadOps,
+        rpc_op: ZyanyadPayloadOps,
         incoming_route: IncomingRoute,
         server_context: ServerContext,
         interface: &Interface,
@@ -33,7 +33,7 @@ impl RequestHandler {
         Self { rpc_op, incoming_route, server_ctx: server_context, method, connection }
     }
 
-    pub async fn handle_request(&self, request: SpectredRequest) -> GrpcServerResult<SpectredResponse> {
+    pub async fn handle_request(&self, request: ZyanyadRequest) -> GrpcServerResult<ZyanyadResponse> {
         let id = request.id;
         let mut response = self.method.call(self.server_ctx.clone(), self.connection.clone(), request).await?;
         response.id = id;

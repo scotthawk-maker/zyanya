@@ -1,8 +1,8 @@
 use crate::{opcodes, MAX_SCRIPT_PUBLIC_KEY_VERSION};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use spectre_addresses::Version;
-use spectre_consensus_core::tx::{ScriptPublicKey, ScriptPublicKeyVersion};
+use zyanya_addresses::Version;
+use zyanya_consensus_core::tx::{ScriptPublicKey, ScriptPublicKeyVersion};
 use std::{
     fmt::{Display, Formatter},
     str::FromStr,
@@ -140,7 +140,7 @@ impl From<Version> for ScriptClass {
 
 #[cfg(test)]
 mod tests {
-    use spectre_consensus_core::tx::ScriptVec;
+    use zyanya_consensus_core::tx::ScriptVec;
 
     use super::*;
 

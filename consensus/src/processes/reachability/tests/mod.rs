@@ -15,12 +15,12 @@ use crate::{
     },
 };
 use itertools::Itertools;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     blockhash::{BlockHashExtensions, BlockHashes, ORIGIN},
     BlockHashMap, BlockHashSet,
 };
-use spectre_database::prelude::{DirectWriter, StoreError};
-use spectre_hashes::Hash;
+use zyanya_database::prelude::{DirectWriter, StoreError};
+use zyanya_hashes::Hash;
 use std::collections::{
     hash_map::Entry::{Occupied, Vacant},
     VecDeque,

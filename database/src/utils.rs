@@ -41,20 +41,20 @@ impl Drop for DbLifetime {
     }
 }
 
-pub fn get_spectre_tempdir() -> TempDir {
+pub fn get_zyanya_tempdir() -> TempDir {
     let global_tempdir = std::env::temp_dir();
-    let spectre_tempdir = global_tempdir.join("rusty-spectre");
-    std::fs::create_dir_all(spectre_tempdir.as_path()).unwrap();
-    let db_tempdir = tempfile::tempdir_in(spectre_tempdir.as_path()).unwrap();
+    let zyanya_tempdir = global_tempdir.join("rusty-zyanya");
+    std::fs::create_dir_all(zyanya_tempdir.as_path()).unwrap();
+    let db_tempdir = tempfile::tempdir_in(zyanya_tempdir.as_path()).unwrap();
     db_tempdir
 }
 
-/// Creates a DB within a temp directory under `<OS SPECIFIC TEMP DIR>/spectre-rust`
+/// Creates a DB within a temp directory under `<OS SPECIFIC TEMP DIR>/zyanya-rust`
 /// Callers must keep the `TempDbLifetime` guard for as long as they wish the DB to exist.
 #[macro_export]
 macro_rules! create_temp_db {
     ($conn_builder: expr) => {{
-        let db_tempdir = $crate::utils::get_spectre_tempdir();
+        let db_tempdir = $crate::utils::get_zyanya_tempdir();
         let db_path = db_tempdir.path().to_owned();
         let db = $conn_builder.with_db_path(db_path).build().unwrap();
         ($crate::utils::DbLifetime::new(db_tempdir, std::sync::Arc::downgrade(&db)), db)

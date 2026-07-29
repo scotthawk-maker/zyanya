@@ -2,13 +2,13 @@ use crate::model::{CirculatingSupply, CirculatingSupplyDiff};
 #[cfg(test)]
 use rand::Rng;
 use rand::{rngs::SmallRng, SeedableRng};
-use spectre_consensus::test_helpers::*;
-use spectre_consensus_core::{
+use zyanya_consensus::test_helpers::*;
+use zyanya_consensus_core::{
     tx::ScriptPublicKey,
     utxo::{utxo_collection::UtxoCollection, utxo_diff::UtxoDiff},
     BlockHashSet, HashMapCustomHasher,
 };
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 use std::sync::Arc;
 
 pub struct VirtualChangeEmulator {

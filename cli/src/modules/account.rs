@@ -1,6 +1,6 @@
-use spectre_wallet_core::account::BIP32_ACCOUNT_KIND;
-use spectre_wallet_core::account::LEGACY_ACCOUNT_KIND;
-use spectre_wallet_core::account::MULTISIG_ACCOUNT_KIND;
+use zyanya_wallet_core::account::BIP32_ACCOUNT_KIND;
+use zyanya_wallet_core::account::LEGACY_ACCOUNT_KIND;
+use zyanya_wallet_core::account::MULTISIG_ACCOUNT_KIND;
 
 use crate::imports::*;
 use crate::wizards;
@@ -11,7 +11,7 @@ pub struct Account;
 
 impl Account {
     async fn main(self: Arc<Self>, ctx: &Arc<dyn Context>, mut argv: Vec<String>, _cmd: &str) -> Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
         let wallet = ctx.wallet();
 
         if !wallet.is_open() {
@@ -68,14 +68,14 @@ impl Account {
                     tprintln!(ctx, "");
                     ctx.term().help(
                         &[
-                            ("account import legacy-data", "Import Spectre Desktop keydata file or Spectre Network Web Wallet: https://wallet.spectre-network.org/ data on the same domain"),
+                            ("account import legacy-data", "Import Zyanya Desktop keydata file or Zyanya Network Web Wallet: https://wallet.zyanya-network.org/ data on the same domain"),
                             (
                                 "account import mnemonic bip32",
-                                "Import Bip32 (12 or 24 word mnemonics used by spectrewallet, spectre-mobile etc.)",
+                                "Import Bip32 (12 or 24 word mnemonics used by zyanyawallet, zyanya-mobile etc.)",
                             ),
                             (
                                 "account import mnemonic legacy",
-                                "Import accounts 12 word mnemonic used by legacy applications (Spectre Desktop and Spectre Network Web Wallet: https://wallet.spectre-network.org/)",
+                                "Import accounts 12 word mnemonic used by legacy applications (Zyanya Desktop and Zyanya Network Web Wallet: https://wallet.zyanya-network.org/)",
                             ),
                             (
                                 "account import mnemonic multisig [additional keys]",
@@ -118,17 +118,17 @@ impl Account {
                                         if let Some(txid) = txid {
                                             tprintln!(
                                                 ctx_,
-                                                "Scan detected {} SPR at index {}; transfer txid: {}",
-                                                sompi_to_spectre_string(balance),
+                                                "Scan detected {} ZYAN at index {}; transfer txid: {}",
+                                                sompi_to_zyanya_string(balance),
                                                 processed,
                                                 txid
                                             );
                                         } else if processed > 0 {
                                             tprintln!(
                                                 ctx_,
-                                                "Scanned {} derivations, found {} SPR",
+                                                "Scanned {} derivations, found {} ZYAN",
                                                 processed,
-                                                sompi_to_spectre_string(balance)
+                                                sompi_to_zyanya_string(balance)
                                             );
                                         } else {
                                             tprintln!(ctx_, "Please wait... scanning for account UTXOs...");
@@ -139,14 +139,14 @@ impl Account {
                         } else if application_runtime::is_web() {
                             return Err("Web wallet storage not found at this domain name".into());
                         } else {
-                            return Err("Spectre Desktop keydata file not found".into());
+                            return Err("Zyanya Desktop keydata file not found".into());
                         }
                     }
                     "mnemonic" => {
                         if argv.is_empty() {
                             tprintln!(ctx, "Usage: 'account import mnemonic <bip32|legacy|multisig>'");
                             tprintln!(ctx, "Please specify the mnemonic type");
-                            tprintln!(ctx, "Please use 'legacy' for 12-word Spectre Desktop and Spectre Network Web Wallet: https://wallet.spectre-network.org/ mnemonics\r\n");
+                            tprintln!(ctx, "Please use 'legacy' for 12-word Zyanya Desktop and Zyanya Network Web Wallet: https://wallet.zyanya-network.org/ mnemonics\r\n");
                             return Ok(());
                         }
 
@@ -243,14 +243,14 @@ impl Account {
         Ok(())
     }
 
-    async fn display_help(self: Arc<Self>, ctx: Arc<SpectreCli>, _argv: Vec<String>) -> Result<()> {
+    async fn display_help(self: Arc<Self>, ctx: Arc<ZyanyaCli>, _argv: Vec<String>) -> Result<()> {
         ctx.term().help(
             &[
                 ("create [<type>] [<name>]", "Create a new account (types: 'bip32' (default), 'legacy', 'multisig')"),
                 (
                     "import <import-type> [<key-type> [extra keys]]",
                     "Import accounts from a private key using 24 or 12 word mnemonic or legacy data \
-                (Spectre Desktop and Spectre Network Web Wallet: https://wallet.spectre-network.org/). Use 'account import' for additional help.",
+                (Zyanya Desktop and Zyanya Network Web Wallet: https://wallet.zyanya-network.org/). Use 'account import' for additional help.",
                 ),
                 ("name <name>", "Name or rename the selected account (use 'remove' to remove the name"),
                 ("scan [<derivations>] or scan [<start>] [<derivations>]", "Scan extended address derivation chain (legacy accounts)"),
@@ -268,7 +268,7 @@ impl Account {
 
     async fn derivation_scan(
         self: &Arc<Self>,
-        ctx: &Arc<SpectreCli>,
+        ctx: &Arc<ZyanyaCli>,
         start: usize,
         count: usize,
         window: usize,
@@ -295,13 +295,13 @@ impl Account {
                     if let Some(txid) = txid {
                         tprintln!(
                             ctx_,
-                            "Scan detected {} SPR at index {}; transfer txid: {}",
-                            sompi_to_spectre_string(balance),
+                            "Scan detected {} ZYAN at index {}; transfer txid: {}",
+                            sompi_to_zyanya_string(balance),
                             processed,
                             txid
                         );
                     } else {
-                        tprintln!(ctx_, "Scanned {} derivations, found {} SPR", processed, sompi_to_spectre_string(balance));
+                        tprintln!(ctx_, "Scanned {} derivations, found {} ZYAN", processed, sompi_to_zyanya_string(balance));
                     }
                 })),
             )

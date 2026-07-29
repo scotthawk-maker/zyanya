@@ -7,7 +7,7 @@ pub struct Wallet;
 
 impl Wallet {
     async fn main(self: Arc<Self>, ctx: &Arc<dyn Context>, mut argv: Vec<String>, cmd: &str) -> Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
 
         let guard = ctx.wallet().guard();
         let guard = guard.lock().await;
@@ -95,7 +95,7 @@ impl Wallet {
         Ok(())
     }
 
-    async fn display_help(self: Arc<Self>, ctx: Arc<SpectreCli>, _argv: Vec<String>) -> Result<()> {
+    async fn display_help(self: Arc<Self>, ctx: Arc<ZyanyaCli>, _argv: Vec<String>) -> Result<()> {
         ctx.term().help(
             &[
                 ("list", "List available local wallet files."),
@@ -103,7 +103,7 @@ impl Wallet {
                 (
                     "import [<name>]",
                     "Create a wallet from an existing mnemonic (BIP32 only). \n\n\
-                    To import legacy wallets (Spectre Desktop or web wallet), please create \
+                    To import legacy wallets (Zyanya Desktop or web wallet), please create \
                     a new BIP32 wallet and use the 'account import' command. \
                     Legacy wallets can only be imported as accounts.\n",
                 ),

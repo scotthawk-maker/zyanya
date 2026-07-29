@@ -1,5 +1,5 @@
 use crate::prelude::DbKey;
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

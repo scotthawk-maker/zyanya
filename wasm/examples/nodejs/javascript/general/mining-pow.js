@@ -1,6 +1,6 @@
-const spectre = require('../../../../nodejs/spectre');
+const zyanya = require('../../../../nodejs/zyanya');
 const {parseArgs} = require("../utils");
-spectre.initConsolePanicHook();
+zyanya.initConsolePanicHook();
 
 (async () => {
     const {} = parseArgs();
@@ -11,7 +11,7 @@ spectre.initConsolePanicHook();
         "b000000000000002" +
         "c000000000000003");
     console.log("blueWork:", blueWork);
-    const header = new spectre.Header({
+    const header = new zyanya.Header({
         version: 0,
         parentsByLevel: [["0000000000000000000000000000000000000000000000000000000000000000"]],
         hashMerkleRoot: "5510d0c31d6ae3491d6ce8af8e1048c3f287d9c47e4361bd21a9a5fb033a0c1a",
@@ -33,7 +33,7 @@ spectre.initConsolePanicHook();
     console.log("header.blueWork.toString(16):", header.blueWork.toString(16));
 
     console.log("creating PoW");
-    const pow = new spectre.PoW(header);
+    const pow = new zyanya.PoW(header);
     const nonce = BigInt("0xffffffffffffffff");
     console.log("nonce:", nonce);
     const [a, v] = pow.checkWork(nonce);

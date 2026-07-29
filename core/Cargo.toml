@@ -1,6 +1,6 @@
 [package]
-name = "spectre-core"
-description = "Spectre core"
+name = "zyanya-core"
+description = "Zyanya core"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true

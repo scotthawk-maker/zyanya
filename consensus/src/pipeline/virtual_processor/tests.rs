@@ -1,5 +1,5 @@
 use crate::{consensus::test_consensus::TestConsensus, model::services::reachability::ReachabilityService};
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     api::ConsensusApi,
     block::{Block, BlockTemplate, MutableBlock, TemplateBuildMode, TemplateTransactionSelector},
     blockhash,
@@ -9,7 +9,7 @@ use spectre_consensus_core::{
     tx::{ScriptPublicKey, ScriptVec, Transaction},
     BlockHashSet,
 };
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 use std::{collections::VecDeque, thread::JoinHandle};
 
 struct OnetimeTxSelector {
@@ -27,7 +27,7 @@ impl TemplateTransactionSelector for OnetimeTxSelector {
         self.txs.take().unwrap()
     }
 
-    fn reject_selection(&mut self, _tx_id: spectre_consensus_core::tx::TransactionId) {
+    fn reject_selection(&mut self, _tx_id: zyanya_consensus_core::tx::TransactionId) {
         unimplemented!()
     }
 
@@ -198,7 +198,7 @@ async fn antichain_merge_test() {
 
 #[tokio::test]
 async fn basic_utxo_disqualified_test() {
-    spectre_core::log::try_init_logger("info");
+    zyanya_core::log::try_init_logger("info");
     let config = ConfigBuilder::new(MAINNET_PARAMS)
         .skip_proof_of_work()
         .edit_consensus_params(|p| {
@@ -230,7 +230,7 @@ async fn basic_utxo_disqualified_test() {
 async fn double_search_disqualified_test() {
     // TODO: add non-coinbase transactions and concurrency in order to complicate the test
 
-    spectre_core::log::try_init_logger("info");
+    zyanya_core::log::try_init_logger("info");
     let config = ConfigBuilder::new(MAINNET_PARAMS)
         .skip_proof_of_work()
         .edit_consensus_params(|p| {

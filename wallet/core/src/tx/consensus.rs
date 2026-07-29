@@ -3,8 +3,8 @@
 //! on the network type or address prefix.
 //!
 
-use spectre_addresses::{Address, Prefix};
-use spectre_consensus_core::{
+use zyanya_addresses::{Address, Prefix};
+use zyanya_consensus_core::{
     config::params::{Params, DEVNET_PARAMS, MAINNET_PARAMS, SIMNET_PARAMS, TESTNET_PARAMS},
     network::NetworkType,
 };

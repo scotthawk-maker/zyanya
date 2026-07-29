@@ -3,13 +3,13 @@ use crate::constants;
 use crate::errors::{BlockProcessResult, RuleError};
 use crate::model::services::reachability::ReachabilityService;
 use crate::model::stores::statuses::StatusesStoreReader;
-use spectre_consensus_core::blockhash::BlockHashExtensions;
-use spectre_consensus_core::blockstatus::BlockStatus::StatusInvalid;
-use spectre_consensus_core::header::Header;
-use spectre_consensus_core::BlockLevel;
-use spectre_core::time::unix_now;
-use spectre_database::prelude::StoreResultExtensions;
-use spectre_pow::calc_level_from_pow;
+use zyanya_consensus_core::blockhash::BlockHashExtensions;
+use zyanya_consensus_core::blockstatus::BlockStatus::StatusInvalid;
+use zyanya_consensus_core::header::Header;
+use zyanya_consensus_core::BlockLevel;
+use zyanya_core::time::unix_now;
+use zyanya_database::prelude::StoreResultExtensions;
+use zyanya_pow::calc_level_from_pow;
 
 impl HeaderProcessor {
     /// Validates the header in isolation including pow check against header declared bits.
@@ -99,7 +99,7 @@ impl HeaderProcessor {
     }
 
     fn check_pow_and_calc_block_level(&self, header: &Header) -> BlockProcessResult<BlockLevel> {
-        let state = spectre_pow::State::new(header);
+        let state = zyanya_pow::State::new(header);
         let (passed, pow) = state.check_pow(header.nonce);
         if passed || self.skip_proof_of_work {
             Ok(calc_level_from_pow(pow, self.max_block_level))

@@ -1,6 +1,6 @@
 [package]
-name = "spectre-wrpc-wasm"
-description = "Spectre wRPC WASM client"
+name = "zyanya-wrpc-wasm"
+description = "Zyanya wRPC WASM client"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -10,7 +10,7 @@ license.workspace = true
 repository.workspace = true
 
 [features]
-wasm32-sdk = ["spectre-wrpc-client/wasm32-sdk"]
+wasm32-sdk = ["zyanya-wrpc-client/wasm32-sdk"]
 default = []
 
 [lib]
@@ -20,15 +20,15 @@ crate-type = ["cdylib", "lib"]
 ahash.workspace = true
 async-std.workspace = true
 cfg-if.workspace = true
-spectre-addresses.workspace = true
-spectre-consensus-core.workspace = true
-spectre-consensus-client.workspace = true
-spectre-consensus-wasm.workspace = true
-spectre-notify.workspace = true
-spectre-wrpc-client.workspace = true
-spectre-rpc-core.workspace = true
-spectre-rpc-macros.workspace = true
-spectre-wasm-core.workspace = true
+zyanya-addresses.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-client.workspace = true
+zyanya-consensus-wasm.workspace = true
+zyanya-notify.workspace = true
+zyanya-wrpc-client.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-rpc-macros.workspace = true
+zyanya-wasm-core.workspace = true
 serde_json.workspace = true
 serde-wasm-bindgen.workspace = true
 serde.workspace = true

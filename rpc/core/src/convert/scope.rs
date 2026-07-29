@@ -5,7 +5,7 @@ use crate::{
     NotifySinkBlueScoreChangedRequest, NotifyUtxosChangedRequest, NotifyVirtualChainChangedRequest,
     NotifyVirtualDaaScoreChangedRequest,
 };
-use spectre_notify::scope::*;
+use zyanya_notify::scope::*;
 
 macro_rules! into_scope {
     ($variant:tt) => {

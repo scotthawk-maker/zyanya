@@ -7,7 +7,7 @@ use std::{
 
 use itertools::Itertools;
 use rocksdb::WriteBatch;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     blockhash::{BlockHashes, ORIGIN},
     errors::pruning::{PruningImportError, PruningImportResult},
     header::Header,
@@ -15,10 +15,10 @@ use spectre_consensus_core::{
     trusted::TrustedBlock,
     BlockHashMap, BlockHashSet, BlockLevel, HashMapCustomHasher,
 };
-use spectre_core::{debug, info, trace};
-use spectre_hashes::Hash;
-use spectre_pow::calc_block_level;
-use spectre_utils::{binary_heap::BinaryHeapExtensions, vec::VecExtensions};
+use zyanya_core::{debug, info, trace};
+use zyanya_hashes::Hash;
+use zyanya_pow::calc_block_level;
+use zyanya_utils::{binary_heap::BinaryHeapExtensions, vec::VecExtensions};
 
 use crate::{
     model::{

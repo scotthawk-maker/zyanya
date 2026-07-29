@@ -9,14 +9,14 @@ pub const LOCK_TIME_THRESHOLD: u64 = 500_000_000_000;
 /// MAX_SCRIPT_PUBLIC_KEY_VERSION is the current latest supported public key script version.
 pub const MAX_SCRIPT_PUBLIC_KEY_VERSION: u16 = 0;
 
-/// SompiPerSpectre is the number of sompi in one spectre (1 SPR).
-pub const SOMPI_PER_SPECTRE: u64 = 100_000_000;
+/// SompiPerZyanya is the number of sompi in one zyanya (1 ZYAN).
+pub const SOMPI_PER_ZYANYA: u64 = 100_000_000;
 
-/// The parameter for scaling inverse SPR value to mass units (KIP-0009)
-pub const STORAGE_MASS_PARAMETER: u64 = SOMPI_PER_SPECTRE * 10_000;
+/// The parameter for scaling inverse ZYAN value to mass units (KIP-0009)
+pub const STORAGE_MASS_PARAMETER: u64 = SOMPI_PER_ZYANYA * 10_000;
 
 /// MaxSompi is the maximum transaction amount allowed in sompi.
-pub const MAX_SOMPI: u64 = 1_161_000_000 * SOMPI_PER_SPECTRE;
+pub const MAX_SOMPI: u64 = 1_161_000_000 * SOMPI_PER_ZYANYA;
 
 // MAX_TX_IN_SEQUENCE_NUM is the maximum sequence number the sequence field
 // of a transaction input can be.

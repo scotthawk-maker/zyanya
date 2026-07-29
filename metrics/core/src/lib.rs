@@ -6,7 +6,7 @@ pub use data::{Metric, MetricGroup, MetricsData, MetricsSnapshot};
 
 use crate::result::Result;
 use futures::{pin_mut, select, FutureExt, StreamExt};
-use spectre_rpc_core::api::rpc::RpcApi;
+use zyanya_rpc_core::api::rpc::RpcApi;
 use std::{
     future::Future,
     pin::Pin,

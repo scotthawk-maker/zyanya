@@ -1,6 +1,6 @@
 use crate::tx::consensus as core;
-use spectre_addresses::Address;
-use spectre_consensus_core::{config::params::Params, network::NetworkType};
+use zyanya_addresses::Address;
+use zyanya_consensus_core::{config::params::Params, network::NetworkType};
 use wasm_bindgen::prelude::*;
 
 ///

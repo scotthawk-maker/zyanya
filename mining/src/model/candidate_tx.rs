@@ -1,5 +1,5 @@
 use crate::FeerateTransactionKey;
-use spectre_consensus_core::tx::Transaction;
+use zyanya_consensus_core::tx::Transaction;
 use std::sync::Arc;
 
 /// Transaction with additional metadata needed in order to be a candidate

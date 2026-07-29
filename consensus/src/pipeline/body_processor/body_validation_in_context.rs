@@ -11,9 +11,9 @@ use crate::{
     },
 };
 use once_cell::unsync::Lazy;
-use spectre_consensus_core::block::Block;
-use spectre_database::prelude::StoreResultExtensions;
-use spectre_hashes::Hash;
+use zyanya_consensus_core::block::Block;
+use zyanya_database::prelude::StoreResultExtensions;
+use zyanya_hashes::Hash;
 use std::sync::Arc;
 
 impl BlockBodyProcessor {
@@ -92,14 +92,14 @@ mod tests {
         params::DEVNET_PARAMS,
         processes::{transaction_validator::errors::TxRuleError, window::WindowManager},
     };
-    use spectre_consensus_core::{
+    use zyanya_consensus_core::{
         api::ConsensusApi,
         merkle::calc_hash_merkle_root as calc_hash_merkle_root_with_options,
         subnets::SUBNETWORK_ID_NATIVE,
         tx::{Transaction, TransactionInput, TransactionOutpoint},
     };
-    use spectre_core::assert_match;
-    use spectre_hashes::Hash;
+    use zyanya_core::assert_match;
+    use zyanya_hashes::Hash;
 
     fn calc_hash_merkle_root<'a>(txs: impl ExactSizeIterator<Item = &'a Transaction>) -> Hash {
         calc_hash_merkle_root_with_options(txs, false)
@@ -131,7 +131,7 @@ mod tests {
             block.header.hash_merkle_root = calc_hash_merkle_root(block.transactions.iter());
 
             assert_match!(
-                consensus.validate_and_insert_block(block.clone().to_immutable()).virtual_state_task.await, Err(RuleError::WrongSubsidy(expected,_)) if expected == 1500000000);
+                consensus.validate_and_insert_block(block.clone().to_immutable()).virtual_state_task.await, Err(RuleError::WrongSubsidy(expected,_)) if expected == 5000000000);
 
             // The second time we send an invalid block we expect it to be a known invalid.
             assert_match!(

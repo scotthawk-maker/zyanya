@@ -6,7 +6,7 @@ use crate::account::Inner;
 use crate::derivation::{AddressDerivationManager, AddressDerivationManagerTrait};
 use crate::imports::*;
 
-pub const BIP32_WATCH_ACCOUNT_KIND: &str = "spectre-bip32-watch-standard";
+pub const BIP32_WATCH_ACCOUNT_KIND: &str = "zyanya-bip32-watch-standard";
 
 pub struct Ctor {}
 
@@ -17,7 +17,7 @@ impl Factory for Ctor {
     }
 
     fn description(&self) -> String {
-        "Spectre Core bip32-watch Account".to_string()
+        "Zyanya Core bip32-watch Account".to_string()
     }
 
     async fn try_load(

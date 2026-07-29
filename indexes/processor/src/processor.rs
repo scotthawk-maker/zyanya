@@ -3,18 +3,18 @@ use crate::{
     IDENT,
 };
 use async_trait::async_trait;
-use spectre_consensus_notify::{notification as consensus_notification, notification::Notification as ConsensusNotification};
-use spectre_core::{debug, trace};
-use spectre_index_core::notification::{Notification, PruningPointUtxoSetOverrideNotification, UtxosChangedNotification};
-use spectre_notify::{
+use zyanya_consensus_notify::{notification as consensus_notification, notification::Notification as ConsensusNotification};
+use zyanya_core::{debug, trace};
+use zyanya_index_core::notification::{Notification, PruningPointUtxoSetOverrideNotification, UtxosChangedNotification};
+use zyanya_notify::{
     collector::{Collector, CollectorNotificationReceiver},
     error::Result,
     events::EventType,
     notification::Notification as NotificationTrait,
     notifier::DynNotify,
 };
-use spectre_utils::triggers::SingleTrigger;
-use spectre_utxoindex::api::UtxoIndexProxy;
+use zyanya_utils::triggers::SingleTrigger;
+use zyanya_utxoindex::api::UtxoIndexProxy;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
@@ -130,14 +130,14 @@ mod tests {
     use super::*;
     use async_channel::{unbounded, Receiver, Sender};
     use rand::{rngs::SmallRng, SeedableRng};
-    use spectre_consensus::{config::Config, consensus::test_consensus::TestConsensus, params::DEVNET_PARAMS, test_helpers::*};
-    use spectre_consensus_core::utxo::{utxo_collection::UtxoCollection, utxo_diff::UtxoDiff};
-    use spectre_consensusmanager::ConsensusManager;
-    use spectre_database::create_temp_db;
-    use spectre_database::prelude::ConnBuilder;
-    use spectre_database::utils::DbLifetime;
-    use spectre_notify::notifier::test_helpers::NotifyMock;
-    use spectre_utxoindex::UtxoIndex;
+    use zyanya_consensus::{config::Config, consensus::test_consensus::TestConsensus, params::DEVNET_PARAMS, test_helpers::*};
+    use zyanya_consensus_core::utxo::{utxo_collection::UtxoCollection, utxo_diff::UtxoDiff};
+    use zyanya_consensusmanager::ConsensusManager;
+    use zyanya_database::create_temp_db;
+    use zyanya_database::prelude::ConnBuilder;
+    use zyanya_database::utils::DbLifetime;
+    use zyanya_notify::notifier::test_helpers::NotifyMock;
+    use zyanya_utxoindex::UtxoIndex;
     use std::sync::Arc;
 
     // TODO: rewrite with Simnet, when possible.

@@ -9,10 +9,10 @@ const {
     Generator,
     UtxoProcessor,
     UtxoContext,
-    spectreToSompi,
+    zyanyaToSompi,
     createTransactions,
     initConsolePanicHook
-} = require('../../../../nodejs/spectre');
+} = require('../../../../nodejs/zyanya');
 
 initConsolePanicHook();
 
@@ -66,13 +66,13 @@ const { encoding, networkId, address : destinationAddress } = require("../utils"
     await context.trackAddresses([sourceAddress]);
 
     // 7) Check balance, if there are enough funds, send a transaction
-    if (context.balance.mature > spectreToSompi(0.2) + 1000n) {
+    if (context.balance.mature > zyanyaToSompi(0.2) + 1000n) {
         console.log("Sending transaction");
 
         let generator = new Generator({
             entries : context,
-            outputs: [{address, amount : spectreToSompi(0.2)}],
-            priorityFee: spectreToSompi(0.0001),
+            outputs: [{address, amount : zyanyaToSompi(0.2)}],
+            priorityFee: zyanyaToSompi(0.0001),
             changeAddress: sourceAddress,
         });
 

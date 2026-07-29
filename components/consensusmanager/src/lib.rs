@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use parking_lot::RwLock;
-use spectre_consensus_core::api::{ConsensusApi, DynConsensus};
-use spectre_core::{core::Core, debug, service::Service};
+use zyanya_consensus_core::api::{ConsensusApi, DynConsensus};
+use zyanya_core::{core::Core, debug, service::Service};
 use std::{collections::VecDeque, ops::Deref, sync::Arc, thread::JoinHandle};
 
 mod batch;

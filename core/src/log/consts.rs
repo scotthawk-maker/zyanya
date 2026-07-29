@@ -1,7 +1,7 @@
 pub const DEFAULT_LOGGER_ENV: &str = "RUST_LOG";
 
-pub const LOG_FILE_NAME: &str = "rusty-spectre.log";
-pub const ERR_LOG_FILE_NAME: &str = "rusty-spectre_err.log";
+pub const LOG_FILE_NAME: &str = "rusty-zyanya.log";
+pub const ERR_LOG_FILE_NAME: &str = "rusty-zyanya_err.log";
 
 pub const LOG_ARCHIVE_SUFFIX: &str = ".{}.gz";
 

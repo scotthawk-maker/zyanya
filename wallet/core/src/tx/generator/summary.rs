@@ -8,8 +8,8 @@
 use crate::utils::*;
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use spectre_consensus_core::network::{NetworkId, NetworkType};
-use spectre_consensus_core::tx::TransactionId;
+use zyanya_consensus_core::network::{NetworkId, NetworkType};
+use zyanya_consensus_core::tx::TransactionId;
 use std::fmt;
 
 #[derive(Clone, Debug, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
@@ -65,9 +65,9 @@ impl fmt::Display for GeneratorSummary {
             write!(
                 f,
                 "Amount: {}  Fees: {}  Total: {}  UTXOs: {}  {}",
-                sompi_to_spectre_string_with_suffix(final_transaction_amount, &self.network_id),
-                sompi_to_spectre_string_with_suffix(self.aggregated_fees, &self.network_id),
-                sompi_to_spectre_string_with_suffix(total, &self.network_id),
+                sompi_to_zyanya_string_with_suffix(final_transaction_amount, &self.network_id),
+                sompi_to_zyanya_string_with_suffix(self.aggregated_fees, &self.network_id),
+                sompi_to_zyanya_string_with_suffix(total, &self.network_id),
                 self.aggregated_utxos,
                 transactions
             )?;
@@ -75,7 +75,7 @@ impl fmt::Display for GeneratorSummary {
             write!(
                 f,
                 "Fees: {}  UTXOs: {}  {}",
-                sompi_to_spectre_string_with_suffix(self.aggregated_fees, &self.network_id),
+                sompi_to_zyanya_string_with_suffix(self.aggregated_fees, &self.network_id),
                 self.aggregated_utxos,
                 transactions
             )?;

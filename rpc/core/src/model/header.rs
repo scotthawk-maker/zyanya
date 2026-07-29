@@ -1,7 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use spectre_consensus_core::{header::Header, BlueWorkType};
-use spectre_hashes::Hash;
+use zyanya_consensus_core::{header::Header, BlueWorkType};
+use zyanya_hashes::Hash;
 use workflow_serializer::prelude::*;
 
 /// Raw Rpc header type - without a cached header hash.

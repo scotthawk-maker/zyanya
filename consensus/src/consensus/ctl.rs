@@ -1,7 +1,7 @@
 use super::{factory::MultiConsensusManagementStore, Consensus};
 use parking_lot::RwLock;
-use spectre_consensusmanager::ConsensusCtl;
-use spectre_database::prelude::DB;
+use zyanya_consensusmanager::ConsensusCtl;
+use zyanya_database::prelude::DB;
 use std::{
     path::PathBuf,
     sync::{Arc, Weak},

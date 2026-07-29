@@ -1,6 +1,6 @@
 [package]
-name = "spectre-consensus-wasm"
-description = "Spectre consensus core WASM bindings"
+name = "zyanya-consensus-wasm"
+description = "Zyanya consensus core WASM bindings"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -14,12 +14,12 @@ wasm32-sdk = []
 wasm32-types = []
 
 [dependencies]
-spectre-consensus-core.workspace = true
-spectre-consensus-client.workspace = true
-spectre-addresses.workspace = true
-spectre-txscript.workspace = true
-spectre-hashes.workspace = true
-spectre-utils.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-client.workspace = true
+zyanya-addresses.workspace = true
+zyanya-txscript.workspace = true
+zyanya-hashes.workspace = true
+zyanya-utils.workspace = true
 
 cfg-if.workspace = true
 faster-hex.workspace = true

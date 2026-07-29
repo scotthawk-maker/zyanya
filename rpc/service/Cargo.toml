@@ -1,6 +1,6 @@
 [package]
-name = "spectre-rpc-service"
-description = "Spectre RPC service"
+name = "zyanya-rpc-service"
+description = "Zyanya RPC service"
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -10,24 +10,26 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-spectre-addresses.workspace = true
-spectre-consensus-core.workspace = true
-spectre-consensus-notify.workspace = true
-spectre-consensusmanager.workspace = true
-spectre-core.workspace = true
-spectre-hashes.workspace = true
-spectre-index-core.workspace = true
-spectre-math.workspace = true
-spectre-mining.workspace = true
-spectre-notify.workspace = true
-spectre-p2p-flows.workspace = true
-spectre-p2p-lib.workspace = true
-spectre-perf-monitor.workspace = true
-spectre-rpc-core.workspace = true
-spectre-txscript.workspace = true
-spectre-utils.workspace = true
-spectre-utils-tower.workspace = true
-spectre-utxoindex.workspace = true
+zyanya-addresses.workspace = true
+zyanya-consensus.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-notify.workspace = true
+zyanya-consensusmanager.workspace = true
+zyanya-vm.workspace = true
+zyanya-core.workspace = true
+zyanya-hashes.workspace = true
+zyanya-index-core.workspace = true
+zyanya-math.workspace = true
+zyanya-mining.workspace = true
+zyanya-notify.workspace = true
+zyanya-p2p-flows.workspace = true
+zyanya-p2p-lib.workspace = true
+zyanya-perf-monitor.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-txscript.workspace = true
+zyanya-utils.workspace = true
+zyanya-utils-tower.workspace = true
+zyanya-utxoindex.workspace = true
 
 async-trait.workspace = true
 log.workspace = true

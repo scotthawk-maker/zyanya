@@ -2,8 +2,8 @@ use super::GrpcClient;
 use async_channel::{SendError, Sender};
 use futures_util::Future;
 use itertools::Itertools;
-use spectre_core::trace;
-use spectre_utils::{any::type_name_short, channel::Channel, triggers::SingleTrigger};
+use zyanya_core::trace;
+use zyanya_utils::{any::type_name_short, channel::Channel, triggers::SingleTrigger};
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc,

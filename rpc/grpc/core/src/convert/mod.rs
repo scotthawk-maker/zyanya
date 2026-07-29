@@ -8,5 +8,5 @@ pub mod message;
 pub mod metrics;
 pub mod notification;
 pub mod peer;
-pub mod spectred;
+pub mod zyanyad;
 pub mod tx;

@@ -1,4 +1,4 @@
-extern crate self as spectre_cli;
+extern crate self as zyanya_cli;
 
 mod cli;
 pub mod error;
@@ -12,5 +12,5 @@ pub mod result;
 pub mod utils;
 mod wizards;
 
-pub use cli::{spectre_cli, Options, SpectreCli, TerminalOptions, TerminalTarget};
+pub use cli::{zyanya_cli, Options, ZyanyaCli, TerminalOptions, TerminalTarget};
 pub use workflow_terminal::Terminal;

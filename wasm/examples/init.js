@@ -1,7 +1,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { Mnemonic, XPrv, PublicKeyGenerator } = require('../nodejs/spectre');
+const { Mnemonic, XPrv, PublicKeyGenerator } = require('../nodejs/zyanya');
 const { parseArgs } = require('node:util');
 const { create } = require('domain');
 

@@ -1,6 +1,6 @@
 pub use wasm_bindgen::prelude::*;
 
-/// Spectre Transaction Script Opcodes
+/// Zyanya Transaction Script Opcodes
 /// @see {@link ScriptBuilder}
 /// @category Consensus
 #[wasm_bindgen]

@@ -7,7 +7,7 @@ use crate::{
     BlueWorkType,
 };
 use itertools::Itertools;
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 use thiserror::Error;
 
 #[derive(Clone, Debug)]

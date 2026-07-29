@@ -1,7 +1,7 @@
 [package]
-name = "spectre-wallet-core"
-description = "Spectre wallet library"
-keywords = ["spectre", "wallet"]
+name = "zyanya-wallet-core"
+description = "Zyanya wallet library"
+keywords = ["zyanya", "wallet"]
 rust-version.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -13,14 +13,14 @@ repository.workspace = true
 [features]
 multi-user = []
 wasm32-keygen = [
-    # "spectre-consensus-wasm/wasm32-types",
+    # "zyanya-consensus-wasm/wasm32-types",
 ]
 wasm32-core = [
-    "spectre-consensus-wasm/wasm32-sdk",
-    "spectre-consensus-core/wasm32-sdk",
-    "spectre-wrpc-client/wasm32-sdk",
-    "spectre-wrpc-wasm/wasm32-sdk",
-    "spectre-wasm-core/wasm32-sdk",
+    "zyanya-consensus-wasm/wasm32-sdk",
+    "zyanya-consensus-core/wasm32-sdk",
+    "zyanya-wrpc-client/wasm32-sdk",
+    "zyanya-wrpc-wasm/wasm32-sdk",
+    "zyanya-wasm-core/wasm32-sdk",
 ]
 wasm32-sdk = [
     "wasm32-core"
@@ -56,25 +56,25 @@ heapless.workspace = true
 hmac.workspace = true
 itertools.workspace = true
 js-sys.workspace = true
-spectre-addresses.workspace = true
-spectre-bip32.workspace = true
-spectre-consensus-client.workspace = true
-spectre-consensus-core.workspace = true
-spectre-consensus-wasm.workspace = true
-spectre-core.workspace = true
-spectre-hashes.workspace = true
-spectre-metrics-core.workspace = true
-spectre-notify.workspace = true
-spectre-rpc-core.workspace = true
-spectre-txscript-errors.workspace = true
-spectre-txscript.workspace = true
-spectre-utils.workspace = true
-spectre-wallet-keys.workspace = true
-spectre-wallet-macros.workspace = true
-spectre-wallet-psst.workspace = true
-spectre-wasm-core.workspace = true
-spectre-wrpc-client.workspace = true
-spectre-wrpc-wasm.workspace = true
+zyanya-addresses.workspace = true
+zyanya-bip32.workspace = true
+zyanya-consensus-client.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-wasm.workspace = true
+zyanya-core.workspace = true
+zyanya-hashes.workspace = true
+zyanya-metrics-core.workspace = true
+zyanya-notify.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-txscript-errors.workspace = true
+zyanya-txscript.workspace = true
+zyanya-utils.workspace = true
+zyanya-wallet-keys.workspace = true
+zyanya-wallet-macros.workspace = true
+zyanya-wallet-psst.workspace = true
+zyanya-wasm-core.workspace = true
+zyanya-wrpc-client.workspace = true
+zyanya-wrpc-wasm.workspace = true
 md-5.workspace = true
 pad.workspace = true
 pbkdf2.workspace = true

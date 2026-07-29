@@ -7,7 +7,7 @@
 
 use crate::imports::*;
 use crate::tx::{Fees, GeneratorSummary, PaymentDestination};
-use spectre_addresses::Address;
+use zyanya_addresses::Address;
 
 #[derive(Clone, Debug, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[serde(rename_all = "camelCase")]

@@ -1,5 +1,5 @@
 use crate::pb as protowire;
-use spectre_consensus_core::tx::{TransactionOutpoint, UtxoEntry};
+use zyanya_consensus_core::tx::{TransactionOutpoint, UtxoEntry};
 
 // ----------------------------------------------------------------------------
 // consensus_core to protowire

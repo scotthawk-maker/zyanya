@@ -1,19 +1,19 @@
 use crate::protowire;
 use crate::{from, try_from};
-use spectre_rpc_core::RpcError;
+use zyanya_rpc_core::RpcError;
 
 // ----------------------------------------------------------------------------
 // rpc_core to protowire
 // ----------------------------------------------------------------------------
 
-from!(item: &spectre_rpc_core::RpcFeerateBucket, protowire::RpcFeerateBucket, {
+from!(item: &zyanya_rpc_core::RpcFeerateBucket, protowire::RpcFeerateBucket, {
     Self {
         feerate: item.feerate,
         estimated_seconds: item.estimated_seconds,
     }
 });
 
-from!(item: &spectre_rpc_core::RpcFeeEstimate, protowire::RpcFeeEstimate, {
+from!(item: &zyanya_rpc_core::RpcFeeEstimate, protowire::RpcFeeEstimate, {
     Self {
         priority_bucket: Some((&item.priority_bucket).into()),
         normal_buckets: item.normal_buckets.iter().map(|b| b.into()).collect(),
@@ -21,7 +21,7 @@ from!(item: &spectre_rpc_core::RpcFeeEstimate, protowire::RpcFeeEstimate, {
     }
 });
 
-from!(item: &spectre_rpc_core::RpcFeeEstimateVerboseExperimentalData, protowire::RpcFeeEstimateVerboseExperimentalData, {
+from!(item: &zyanya_rpc_core::RpcFeeEstimateVerboseExperimentalData, protowire::RpcFeeEstimateVerboseExperimentalData, {
     Self {
         network_mass_per_second: item.network_mass_per_second,
         mempool_ready_transactions_count: item.mempool_ready_transactions_count,
@@ -36,14 +36,14 @@ from!(item: &spectre_rpc_core::RpcFeeEstimateVerboseExperimentalData, protowire:
 // protowire to rpc_core
 // ----------------------------------------------------------------------------
 
-try_from!(item: &protowire::RpcFeerateBucket, spectre_rpc_core::RpcFeerateBucket, {
+try_from!(item: &protowire::RpcFeerateBucket, zyanya_rpc_core::RpcFeerateBucket, {
     Self {
         feerate: item.feerate,
         estimated_seconds: item.estimated_seconds,
     }
 });
 
-try_from!(item: &protowire::RpcFeeEstimate, spectre_rpc_core::RpcFeeEstimate, {
+try_from!(item: &protowire::RpcFeeEstimate, zyanya_rpc_core::RpcFeeEstimate, {
     Self {
         priority_bucket: item.priority_bucket
             .as_ref()
@@ -54,7 +54,7 @@ try_from!(item: &protowire::RpcFeeEstimate, spectre_rpc_core::RpcFeeEstimate, {
     }
 });
 
-try_from!(item: &protowire::RpcFeeEstimateVerboseExperimentalData, spectre_rpc_core::RpcFeeEstimateVerboseExperimentalData, {
+try_from!(item: &protowire::RpcFeeEstimateVerboseExperimentalData, zyanya_rpc_core::RpcFeeEstimateVerboseExperimentalData, {
     Self {
         network_mass_per_second: item.network_mass_per_second,
         mempool_ready_transactions_count: item.mempool_ready_transactions_count,

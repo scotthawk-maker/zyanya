@@ -1,4 +1,4 @@
-use spectre_consensus_core::errors::{block::RuleError, coinbase::CoinbaseError};
+use zyanya_consensus_core::errors::{block::RuleError, coinbase::CoinbaseError};
 use thiserror::Error;
 
 #[derive(Error, Debug, Clone)]

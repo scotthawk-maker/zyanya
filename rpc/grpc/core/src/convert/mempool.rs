@@ -1,16 +1,16 @@
 use crate::protowire;
 use crate::{from, try_from};
-use spectre_rpc_core::RpcError;
+use zyanya_rpc_core::RpcError;
 
 // ----------------------------------------------------------------------------
 // rpc_core to protowire
 // ----------------------------------------------------------------------------
 
-from!(item: &spectre_rpc_core::RpcMempoolEntry, protowire::RpcMempoolEntry, {
+from!(item: &zyanya_rpc_core::RpcMempoolEntry, protowire::RpcMempoolEntry, {
     Self { fee: item.fee, transaction: Some((&item.transaction).into()), is_orphan: item.is_orphan }
 });
 
-from!(item: &spectre_rpc_core::RpcMempoolEntryByAddress, protowire::RpcMempoolEntryByAddress, {
+from!(item: &zyanya_rpc_core::RpcMempoolEntryByAddress, protowire::RpcMempoolEntryByAddress, {
     Self {
         address: (&item.address).into(),
         sending: item.sending.iter().map(|x| x.into()).collect::<Vec<_>>(),
@@ -22,7 +22,7 @@ from!(item: &spectre_rpc_core::RpcMempoolEntryByAddress, protowire::RpcMempoolEn
 // protowire to rpc_core
 // ----------------------------------------------------------------------------
 
-try_from!(item: &protowire::RpcMempoolEntry, spectre_rpc_core::RpcMempoolEntry, {
+try_from!(item: &protowire::RpcMempoolEntry, zyanya_rpc_core::RpcMempoolEntry, {
     Self::new(
         item.fee,
         item.transaction
@@ -33,7 +33,7 @@ try_from!(item: &protowire::RpcMempoolEntry, spectre_rpc_core::RpcMempoolEntry, 
     )
 });
 
-try_from!(item: &protowire::RpcMempoolEntryByAddress, spectre_rpc_core::RpcMempoolEntryByAddress, {
+try_from!(item: &protowire::RpcMempoolEntryByAddress, zyanya_rpc_core::RpcMempoolEntryByAddress, {
     Self::new(
         item.address.as_str().try_into()?,
         item.sending.iter().map(|x| x.try_into()).collect::<Result<Vec<_>, _>>()?,

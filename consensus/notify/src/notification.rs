@@ -1,7 +1,7 @@
 use derive_more::Display;
-use spectre_consensus_core::{acceptance_data::AcceptanceData, block::Block, utxo::utxo_diff::UtxoDiff};
-use spectre_hashes::Hash;
-use spectre_notify::{
+use zyanya_consensus_core::{acceptance_data::AcceptanceData, block::Block, utxo::utxo_diff::UtxoDiff};
+use zyanya_hashes::Hash;
+use zyanya_notify::{
     events::EventType,
     full_featured,
     notification::Notification as NotificationTrait,

@@ -1,5 +1,5 @@
 use rand::Rng;
-use spectre_core::{time::Stopwatch, trace};
+use zyanya_core::{time::Stopwatch, trace};
 use std::collections::HashMap;
 
 use crate::model::candidate_tx::CandidateTransaction;
@@ -8,7 +8,7 @@ use super::{
     model::tx::{CandidateList, SelectableTransaction, SelectableTransactions, TransactionIndex},
     policy::Policy,
 };
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     block::TemplateTransactionSelector,
     subnets::SubnetworkId,
     tx::{Transaction, TransactionId},
@@ -260,13 +260,13 @@ impl TemplateTransactionSelector for RebalancingWeightedTransactionSelector {
 mod tests {
     use super::*;
     use itertools::Itertools;
-    use spectre_consensus_core::{
-        constants::{MAX_TX_IN_SEQUENCE_NUM, SOMPI_PER_SPECTRE, TX_VERSION},
+    use zyanya_consensus_core::{
+        constants::{MAX_TX_IN_SEQUENCE_NUM, SOMPI_PER_ZYANYA, TX_VERSION},
         mass::transaction_estimated_serialized_size,
         subnets::SUBNETWORK_ID_NATIVE,
         tx::{Transaction, TransactionId, TransactionInput, TransactionOutpoint, TransactionOutput},
     };
-    use spectre_txscript::{pay_to_script_hash_signature_script, test_helpers::op_true_script};
+    use zyanya_txscript::{pay_to_script_hash_signature_script, test_helpers::op_true_script};
     use std::{collections::HashSet, sync::Arc};
 
     use crate::{
@@ -282,7 +282,7 @@ mod tests {
         const TX_INITIAL_COUNT: usize = 1_000;
 
         // Create a vector of transactions differing by output value so they have unique ids
-        let transactions = (0..TX_INITIAL_COUNT).map(|i| create_transaction(SOMPI_PER_SPECTRE * (i + 1) as u64)).collect_vec();
+        let transactions = (0..TX_INITIAL_COUNT).map(|i| create_transaction(SOMPI_PER_ZYANYA * (i + 1) as u64)).collect_vec();
         let masses: HashMap<_, _> = transactions.iter().map(|tx| (tx.tx.id(), tx.calculated_mass)).collect();
         let sequence: SequenceSelectorInput =
             transactions.iter().map(|tx| SequenceSelectorTransaction::new(tx.tx.clone(), tx.calculated_mass)).collect();

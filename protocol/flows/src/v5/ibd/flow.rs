@@ -6,28 +6,28 @@ use crate::{
     },
 };
 use futures::future::{join_all, select, try_join_all, Either};
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     api::BlockValidationFuture,
     block::Block,
     header::Header,
     pruning::{PruningPointProof, PruningPointsList, PruningProofMetadata},
     BlockHashSet,
 };
-use spectre_consensusmanager::{spawn_blocking, ConsensusProxy, StagingConsensus};
-use spectre_core::{debug, info, time::unix_now, warn};
-use spectre_hashes::Hash;
-use spectre_muhash::MuHash;
-use spectre_p2p_lib::{
+use zyanya_consensusmanager::{spawn_blocking, ConsensusProxy, StagingConsensus};
+use zyanya_core::{debug, info, time::unix_now, warn};
+use zyanya_hashes::Hash;
+use zyanya_muhash::MuHash;
+use zyanya_p2p_lib::{
     common::ProtocolError,
     convert::model::trusted::TrustedDataPackage,
     dequeue_with_timeout, make_message,
     pb::{
-        spectred_message::Payload, RequestAntipastMessage, RequestHeadersMessage, RequestIbdBlocksMessage,
+        zyanyad_message::Payload, RequestAntipastMessage, RequestHeadersMessage, RequestIbdBlocksMessage,
         RequestPruningPointAndItsAnticoneMessage, RequestPruningPointProofMessage, RequestPruningPointUtxoSetMessage,
     },
     IncomingRoute, Router,
 };
-use spectre_utils::channel::JobReceiver;
+use zyanya_utils::channel::JobReceiver;
 use std::{
     sync::Arc,
     time::{Duration, Instant},

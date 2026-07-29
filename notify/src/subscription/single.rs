@@ -11,9 +11,9 @@ use crate::{
 };
 use itertools::Itertools;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use spectre_addresses::{Address, Prefix};
-use spectre_consensus_core::tx::ScriptPublicKey;
-use spectre_core::trace;
+use zyanya_addresses::{Address, Prefix};
+use zyanya_consensus_core::tx::ScriptPublicKey;
+use zyanya_core::trace;
 use std::{
     collections::hash_set,
     fmt::{Debug, Display},

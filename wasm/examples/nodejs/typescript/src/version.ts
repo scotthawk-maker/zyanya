@@ -1,3 +1,3 @@
-import { version } from "../../../../nodejs/spectre";
+import { version } from "../../../../nodejs/zyanya";
 
 console.log("version:", version());

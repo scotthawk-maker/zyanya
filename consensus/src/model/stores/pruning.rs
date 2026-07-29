@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use rocksdb::WriteBatch;
 use serde::{Deserialize, Serialize};
-use spectre_database::prelude::StoreResult;
-use spectre_database::prelude::DB;
-use spectre_database::prelude::{BatchDbWriter, CachedDbItem, DirectDbWriter};
-use spectre_database::registry::DatabaseStorePrefixes;
-use spectre_hashes::Hash;
+use zyanya_database::prelude::StoreResult;
+use zyanya_database::prelude::DB;
+use zyanya_database::prelude::{BatchDbWriter, CachedDbItem, DirectDbWriter};
+use zyanya_database::registry::DatabaseStorePrefixes;
+use zyanya_hashes::Hash;
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct PruningPointInfo {

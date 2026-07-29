@@ -1,10 +1,10 @@
 use super::{error::ConversionError, option::TryIntoOptionEx};
 use crate::pb as protowire;
-use spectre_consensus_core::{
+use zyanya_consensus_core::{
     subnets::SubnetworkId,
     tx::{ScriptPublicKey, Transaction, TransactionId, TransactionInput, TransactionOutpoint, TransactionOutput, UtxoEntry},
 };
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 
 // ----------------------------------------------------------------------------
 // consensus_core to protowire

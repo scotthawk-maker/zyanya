@@ -3,7 +3,7 @@ use crate::{cache::CachePolicy, db::DB, errors::StoreError};
 use super::prelude::{Cache, DbKey, DbWriter};
 use rocksdb::{Direction, IterateBounds, IteratorMode, ReadOptions};
 use serde::{de::DeserializeOwned, Serialize};
-use spectre_utils::mem_size::MemSizeEstimator;
+use zyanya_utils::mem_size::MemSizeEstimator;
 use std::{collections::hash_map::RandomState, error::Error, hash::BuildHasher, sync::Arc};
 
 /// A concurrent DB store access with typed caching.
@@ -225,7 +225,7 @@ mod tests {
         prelude::{BatchDbWriter, ConnBuilder, DirectDbWriter},
     };
     use rocksdb::WriteBatch;
-    use spectre_hashes::Hash;
+    use zyanya_hashes::Hash;
 
     #[test]
     fn test_delete_all() {

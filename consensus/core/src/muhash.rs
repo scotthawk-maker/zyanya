@@ -2,8 +2,8 @@ use crate::{
     hashing::HasherExtensions,
     tx::{TransactionOutpoint, UtxoEntry, VerifiableTransaction},
 };
-use spectre_hashes::HasherBase;
-use spectre_muhash::MuHash;
+use zyanya_hashes::HasherBase;
+use zyanya_muhash::MuHash;
 
 pub trait MuHashExtensions {
     fn add_transaction(&mut self, tx: &impl VerifiableTransaction, block_daa_score: u64);

@@ -1,14 +1,14 @@
-use crate::cli::SpectreCli;
+use crate::cli::ZyanyaCli;
 use crate::imports::*;
 use crate::result::Result;
-use spectre_bip32::{Language, Mnemonic, WordCount};
-use spectre_wallet_core::account::MULTISIG_ACCOUNT_KIND;
-// use spectre_wallet_core::runtime::wallet::AccountCreateArgsBip32;
-// use spectre_wallet_core::runtime::{PrvKeyDataArgs, PrvKeyDataCreateArgs};
-// use spectre_wallet_core::storage::AccountKind;
+use zyanya_bip32::{Language, Mnemonic, WordCount};
+use zyanya_wallet_core::account::MULTISIG_ACCOUNT_KIND;
+// use zyanya_wallet_core::runtime::wallet::AccountCreateArgsBip32;
+// use zyanya_wallet_core::runtime::{PrvKeyDataArgs, PrvKeyDataCreateArgs};
+// use zyanya_wallet_core::storage::AccountKind;
 
 pub(crate) async fn create(
-    ctx: &Arc<SpectreCli>,
+    ctx: &Arc<ZyanyaCli>,
     prv_key_data_info: Arc<PrvKeyDataInfo>,
     account_kind: AccountKind,
     name: Option<&str>,
@@ -54,7 +54,7 @@ pub(crate) async fn create(
     Ok(())
 }
 
-async fn create_multisig(ctx: &Arc<SpectreCli>, account_name: Option<String>, mnemonic_phrase_word_count: WordCount) -> Result<()> {
+async fn create_multisig(ctx: &Arc<ZyanyaCli>, account_name: Option<String>, mnemonic_phrase_word_count: WordCount) -> Result<()> {
     let term = ctx.term();
     let wallet = ctx.wallet();
     let (wallet_secret, _) = ctx.ask_wallet_secret(None).await?;
@@ -86,7 +86,7 @@ async fn create_multisig(ctx: &Arc<SpectreCli>, account_name: Option<String>, mn
     Ok(())
 }
 
-pub(crate) async fn bip32_watch(ctx: &Arc<SpectreCli>, name: Option<&str>) -> Result<()> {
+pub(crate) async fn bip32_watch(ctx: &Arc<ZyanyaCli>, name: Option<&str>) -> Result<()> {
     let term = ctx.term();
     let wallet = ctx.wallet();
 
@@ -113,7 +113,7 @@ pub(crate) async fn bip32_watch(ctx: &Arc<SpectreCli>, name: Option<&str>) -> Re
     Ok(())
 }
 
-pub(crate) async fn multisig_watch(ctx: &Arc<SpectreCli>, name: Option<&str>) -> Result<()> {
+pub(crate) async fn multisig_watch(ctx: &Arc<ZyanyaCli>, name: Option<&str>) -> Result<()> {
     let term = ctx.term();
 
     let account_name = if let Some(name) = name {

@@ -5,16 +5,16 @@ use crate::{
     root::ConsensusNotificationRoot,
 };
 use async_channel::Receiver;
-use spectre_core::{
+use zyanya_core::{
     task::service::{AsyncService, AsyncServiceError, AsyncServiceFuture},
     trace, warn,
 };
-use spectre_notify::{
+use zyanya_notify::{
     events::{EventSwitches, EVENT_TYPE_ARRAY},
     subscriber::Subscriber,
     subscription::{context::SubscriptionContext, MutationPolicies, UtxosChangedMutationPolicy},
 };
-use spectre_utils::triggers::SingleTrigger;
+use zyanya_utils::triggers::SingleTrigger;
 use std::sync::Arc;
 
 const NOTIFY_SERVICE: &str = "notify-service";

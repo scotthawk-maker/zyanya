@@ -2,8 +2,8 @@
 //! General-purpose Id traits used by storage data collections.
 //!
 
-use spectre_consensus_core::tx::TransactionId;
-use spectre_utils::hex::ToHex;
+use zyanya_consensus_core::tx::TransactionId;
+use zyanya_utils::hex::ToHex;
 use std::cmp::Eq;
 use std::fmt::Debug;
 use std::hash::Hash;

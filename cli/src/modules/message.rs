@@ -1,7 +1,7 @@
-use spectre_addresses::Version;
-use spectre_bip32::secp256k1::XOnlyPublicKey;
-use spectre_wallet_core::message::SignMessageOptions;
-use spectre_wallet_core::{
+use zyanya_addresses::Version;
+use zyanya_bip32::secp256k1::XOnlyPublicKey;
+use zyanya_wallet_core::message::SignMessageOptions;
+use zyanya_wallet_core::{
     account::{BIP32_ACCOUNT_KIND, KEYPAIR_ACCOUNT_KIND},
     message::{sign_message, verify_message, PersonalMessage},
 };
@@ -22,13 +22,13 @@ impl Handler for Message {
     }
 
     async fn handle(self: Arc<Self>, ctx: &Arc<dyn Context>, argv: Vec<String>, cmd: &str) -> cli::Result<()> {
-        let ctx = ctx.clone().downcast_arc::<SpectreCli>()?;
+        let ctx = ctx.clone().downcast_arc::<ZyanyaCli>()?;
         self.main(ctx, argv, cmd).await.map_err(|e| e.into())
     }
 }
 
 impl Message {
-    async fn main(self: Arc<Self>, ctx: Arc<SpectreCli>, argv: Vec<String>, _cmd: &str) -> Result<()> {
+    async fn main(self: Arc<Self>, ctx: Arc<ZyanyaCli>, argv: Vec<String>, _cmd: &str) -> Result<()> {
         if argv.is_empty() {
             return self.display_help(ctx, argv).await;
         }
@@ -39,22 +39,22 @@ impl Message {
                     return self.display_help(ctx, argv).await;
                 }
 
-                let spectre_address = argv[1].as_str();
+                let zyanya_address = argv[1].as_str();
                 let asked_message = ctx.term().ask(false, "Message: ").await?;
                 let message = asked_message.as_str();
 
-                self.sign(ctx, spectre_address, message).await?;
+                self.sign(ctx, zyanya_address, message).await?;
             }
             "verify" => {
                 if argv.len() != 3 {
                     return self.display_help(ctx, argv).await;
                 }
-                let spectre_address = argv[1].as_str();
+                let zyanya_address = argv[1].as_str();
                 let signature = argv[2].as_str();
                 let asked_message = ctx.term().ask(false, "Message: ").await?;
                 let message = asked_message.as_str();
 
-                self.verify(ctx, spectre_address, signature, message).await?;
+                self.verify(ctx, zyanya_address, signature, message).await?;
             }
             v => {
                 tprintln!(ctx, "Unknown command: '{v}'\r\n");
@@ -65,15 +65,15 @@ impl Message {
         Ok(())
     }
 
-    async fn display_help(self: Arc<Self>, ctx: Arc<SpectreCli>, _argv: Vec<String>) -> Result<()> {
+    async fn display_help(self: Arc<Self>, ctx: Arc<ZyanyaCli>, _argv: Vec<String>) -> Result<()> {
         ctx.term().help(
             &[
                 (
-                    "sign <spectre_address>",
+                    "sign <zyanya_address>",
                     "Sign a message using the private key associated with the given address. The message will be prompted.",
                 ),
                 (
-                    "verify <spectre_address> <signature>",
+                    "verify <zyanya_address> <signature>",
                     "Verify the provided signature against the message and the given address. The message will be prompted.",
                 ),
             ],
@@ -83,14 +83,14 @@ impl Message {
         Ok(())
     }
 
-    async fn sign(self: Arc<Self>, ctx: Arc<SpectreCli>, spectre_address: &str, message: &str) -> Result<()> {
-        let spectre_address = Address::try_from(spectre_address)?;
-        if spectre_address.version != Version::PubKey {
+    async fn sign(self: Arc<Self>, ctx: Arc<ZyanyaCli>, zyanya_address: &str, message: &str) -> Result<()> {
+        let zyanya_address = Address::try_from(zyanya_address)?;
+        if zyanya_address.version != Version::PubKey {
             return Err(Error::custom("Unsupported address for message signing. Only PubKey addresses are supported."));
         }
 
         let pm = PersonalMessage(message);
-        let privkey = self.get_address_private_key(&ctx, spectre_address).await?;
+        let privkey = self.get_address_private_key(&ctx, zyanya_address).await?;
         let sign_options = SignMessageOptions { no_aux_rand: false };
 
         let sig_result = sign_message(&pm, &privkey, &sign_options);
@@ -105,13 +105,13 @@ impl Message {
         }
     }
 
-    async fn verify(self: Arc<Self>, ctx: Arc<SpectreCli>, spectre_address: &str, signature: &str, message: &str) -> Result<()> {
-        let spectre_address = Address::try_from(spectre_address)?;
-        if spectre_address.version != Version::PubKey {
+    async fn verify(self: Arc<Self>, ctx: Arc<ZyanyaCli>, zyanya_address: &str, signature: &str, message: &str) -> Result<()> {
+        let zyanya_address = Address::try_from(zyanya_address)?;
+        if zyanya_address.version != Version::PubKey {
             return Err(Error::custom("Unsupported address for message verification. Only PubKey addresses are supported."));
         }
 
-        let pubkey = XOnlyPublicKey::from_slice(&spectre_address.payload[0..32]).unwrap();
+        let pubkey = XOnlyPublicKey::from_slice(&zyanya_address.payload[0..32]).unwrap();
 
         let mut signature_hex = [0u8; 64];
         faster_hex::hex_decode(signature.as_bytes(), &mut signature_hex)?;
@@ -131,7 +131,7 @@ impl Message {
         Ok(())
     }
 
-    async fn get_address_private_key(self: Arc<Self>, ctx: &Arc<SpectreCli>, spectre_address: Address) -> Result<[u8; 32]> {
+    async fn get_address_private_key(self: Arc<Self>, ctx: &Arc<ZyanyaCli>, zyanya_address: Address) -> Result<[u8; 32]> {
         let account = ctx.wallet().account()?;
 
         match account.account_kind().as_ref() {
@@ -140,10 +140,10 @@ impl Message {
                 let keydata = account.prv_key_data(wallet_secret).await?;
                 let account = account.clone().as_derivation_capable().expect("Account should support derivation.");
 
-                let (receive, change) = account.derivation().addresses_indexes(&[&spectre_address])?;
+                let (receive, change) = account.derivation().addresses_indexes(&[&zyanya_address])?;
                 let private_keys = account.create_private_keys(&keydata, &payment_secret, &receive, &change)?;
                 for (address, private_key) in private_keys {
-                    if spectre_address == *address {
+                    if zyanya_address == *address {
                         return Ok(private_key.secret_bytes());
                     }
                 }

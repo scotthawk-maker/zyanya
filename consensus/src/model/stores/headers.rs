@@ -2,13 +2,13 @@ use std::sync::Arc;
 
 use rocksdb::WriteBatch;
 use serde::{Deserialize, Serialize};
-use spectre_consensus_core::{header::Header, BlockHasher, BlockLevel};
-use spectre_database::prelude::{BatchDbWriter, CachedDbAccess};
-use spectre_database::prelude::{CachePolicy, DB};
-use spectre_database::prelude::{StoreError, StoreResult};
-use spectre_database::registry::DatabaseStorePrefixes;
-use spectre_hashes::Hash;
-use spectre_utils::mem_size::MemSizeEstimator;
+use zyanya_consensus_core::{header::Header, BlockHasher, BlockLevel};
+use zyanya_database::prelude::{BatchDbWriter, CachedDbAccess};
+use zyanya_database::prelude::{CachePolicy, DB};
+use zyanya_database::prelude::{StoreError, StoreResult};
+use zyanya_database::registry::DatabaseStorePrefixes;
+use zyanya_hashes::Hash;
+use zyanya_utils::mem_size::MemSizeEstimator;
 
 pub trait HeaderStoreReader {
     fn get_daa_score(&self, hash: Hash) -> Result<u64, StoreError>;

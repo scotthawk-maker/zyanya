@@ -5,10 +5,10 @@ use crate::converter::feerate_estimate::{FeeEstimateConverter, FeeEstimateVerbos
 use crate::converter::{consensus::ConsensusConverter, index::IndexConverter, protocol::ProtocolConverter};
 use crate::service::NetworkType::{Mainnet, Testnet};
 use async_trait::async_trait;
-use spectre_consensus_core::api::counters::ProcessingCounters;
-use spectre_consensus_core::errors::block::RuleError;
-use spectre_consensus_core::utxo::utxo_inquirer::UtxoInquirerError;
-use spectre_consensus_core::{
+use zyanya_consensus_core::api::counters::ProcessingCounters;
+use zyanya_consensus_core::errors::block::RuleError;
+use zyanya_consensus_core::utxo::utxo_inquirer::UtxoInquirerError;
+use zyanya_consensus_core::{
     block::Block,
     coinbase::MinerData,
     config::Config,
@@ -16,33 +16,33 @@ use spectre_consensus_core::{
     network::NetworkType,
     tx::{Transaction, COINBASE_TRANSACTION_INDEX},
 };
-use spectre_consensus_notify::{
+use zyanya_consensus_notify::{
     notifier::ConsensusNotifier,
     {connection::ConsensusChannelConnection, notification::Notification as ConsensusNotification},
 };
-use spectre_consensusmanager::ConsensusManager;
-use spectre_core::time::unix_now;
-use spectre_core::{
+use zyanya_consensusmanager::ConsensusManager;
+use zyanya_core::time::unix_now;
+use zyanya_core::{
     core::Core,
     debug,
     signals::Shutdown,
-    spectred_env::version,
+    zyanyad_env::version,
     task::service::{AsyncService, AsyncServiceError, AsyncServiceFuture},
     task::tick::TickService,
     trace, warn,
 };
-use spectre_index_core::indexed_utxos::BalanceByScriptPublicKey;
-use spectre_index_core::{
+use zyanya_index_core::indexed_utxos::BalanceByScriptPublicKey;
+use zyanya_index_core::{
     connection::IndexChannelConnection, indexed_utxos::UtxoSetByScriptPublicKey, notification::Notification as IndexNotification,
     notifier::IndexNotifier,
 };
-use spectre_mining::feerate::FeeEstimateVerbose;
-use spectre_mining::model::tx_query::TransactionQuery;
-use spectre_mining::{manager::MiningManagerProxy, mempool::tx::Orphan};
-use spectre_notify::listener::ListenerLifespan;
-use spectre_notify::subscription::context::SubscriptionContext;
-use spectre_notify::subscription::{MutationPolicies, UtxosChangedMutationPolicy};
-use spectre_notify::{
+use zyanya_mining::feerate::FeeEstimateVerbose;
+use zyanya_mining::model::tx_query::TransactionQuery;
+use zyanya_mining::{manager::MiningManagerProxy, mempool::tx::Orphan};
+use zyanya_notify::listener::ListenerLifespan;
+use zyanya_notify::subscription::context::SubscriptionContext;
+use zyanya_notify::subscription::{MutationPolicies, UtxosChangedMutationPolicy};
+use zyanya_notify::{
     collector::DynCollector,
     connection::ChannelType,
     events::{EventSwitches, EventType, EVENT_TYPE_ARRAY},
@@ -51,10 +51,10 @@ use spectre_notify::{
     scope::Scope,
     subscriber::{Subscriber, SubscriptionManager},
 };
-use spectre_p2p_flows::flow_context::FlowContext;
-use spectre_p2p_lib::common::ProtocolError;
-use spectre_perf_monitor::{counters::CountersSnapshot, Monitor as PerfMonitor};
-use spectre_rpc_core::{
+use zyanya_p2p_flows::flow_context::FlowContext;
+use zyanya_p2p_lib::common::ProtocolError;
+use zyanya_perf_monitor::{counters::CountersSnapshot, Monitor as PerfMonitor};
+use zyanya_rpc_core::{
     api::{
         connection::DynRpcConnection,
         ops::{RPC_API_REVISION, RPC_API_VERSION},
@@ -64,12 +64,12 @@ use spectre_rpc_core::{
     notify::connection::ChannelConnection,
     Notification, RpcError, RpcResult,
 };
-use spectre_txscript::{extract_script_pub_key_address, pay_to_address_script};
-use spectre_utils::expiring_cache::ExpiringCache;
-use spectre_utils::sysinfo::SystemInfo;
-use spectre_utils::{channel::Channel, triggers::SingleTrigger};
-use spectre_utils_tower::counters::TowerConnectionCounters;
-use spectre_utxoindex::api::UtxoIndexProxy;
+use zyanya_txscript::{extract_script_pub_key_address, pay_to_address_script};
+use zyanya_utils::expiring_cache::ExpiringCache;
+use zyanya_utils::sysinfo::SystemInfo;
+use zyanya_utils::{channel::Channel, triggers::SingleTrigger};
+use zyanya_utils_tower::counters::TowerConnectionCounters;
+use zyanya_utxoindex::api::UtxoIndexProxy;
 use std::time::Duration;
 use std::{
     collections::HashMap,
@@ -80,7 +80,7 @@ use std::{
 use tokio::join;
 use workflow_rpc::server::WebSocketCounters as WrpcServerCounters;
 
-/// A service implementing the Rpc API at spectre_rpc_core level.
+/// A service implementing the Rpc API at zyanya_rpc_core level.
 ///
 /// Collects notifications from the consensus and forwards them to
 /// actual protocol-featured services. Thanks to the subscription pattern,
@@ -118,7 +118,7 @@ pub struct RpcCoreService {
     grpc_tower_counters: Arc<TowerConnectionCounters>,
     system_info: SystemInfo,
     fee_estimate_cache: ExpiringCache<RpcFeeEstimate>,
-    fee_estimate_verbose_cache: ExpiringCache<spectre_mining::errors::MiningManagerResult<GetFeeEstimateExperimentalResponse>>,
+    fee_estimate_verbose_cache: ExpiringCache<zyanya_mining::errors::MiningManagerResult<GetFeeEstimateExperimentalResponse>>,
 }
 
 const RPC_CORE: &str = "rpc-core";
@@ -364,11 +364,11 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
 
         // Make sure the pay address prefix matches the config network type
         if request.pay_address.prefix != self.config.prefix() {
-            return Err(spectre_addresses::AddressError::InvalidPrefix(request.pay_address.prefix.to_string()))?;
+            return Err(zyanya_addresses::AddressError::InvalidPrefix(request.pay_address.prefix.to_string()))?;
         }
 
         // Build block template
-        let script_public_key = spectre_txscript::pay_to_address_script(&request.pay_address);
+        let script_public_key = zyanya_txscript::pay_to_address_script(&request.pay_address);
         let extra_data = version().as_bytes().iter().chain(once(&(b'/'))).chain(&request.extra_data).cloned().collect::<Vec<_>>();
         let miner_data: MinerData = MinerData::new(script_public_key, extra_data);
         let session = self.consensus_manager.consensus().unguarded_session();
@@ -581,6 +581,217 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
         _: GetCurrentNetworkRequest,
     ) -> RpcResult<GetCurrentNetworkResponse> {
         Ok(GetCurrentNetworkResponse::new(*self.config.net))
+    }
+
+    async fn deploy_contract_call(
+        &self,
+        _connection: Option<&DynRpcConnection>,
+        request: DeployContractRequest,
+    ) -> RpcResult<DeployContractResponse> {
+        let payload = zyanya_consensus_core::tx::ContractPayload::Deploy(zyanya_consensus_core::tx::DeployContractPayload {
+            bytecode: request.bytecode.clone(),
+            max_gas: request.max_gas,
+            gas_price: request.gas_price,
+            deposit_amount: request.deposit_amount,
+        });
+        let payload_bytes = payload.to_bytes().map_err(|e| RpcError::General(e.to_string()))?;
+
+        let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos() as u64;
+        let tx = zyanya_consensus_core::tx::Transaction::new(
+            1,
+            vec![],
+            vec![],
+            nonce,
+            zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
+            request.max_gas,
+            payload_bytes,
+        );
+
+        let contract_address = zyanya_consensus::model::stores::contract::derive_contract_address(&tx.id(), 0);
+
+        let mut cache = zyanya_consensus::model::stores::contract::ContractStateCache::new();
+        let processor = zyanya_consensus::model::stores::contract::ContractProcessor::new();
+
+        let outcome = processor.process_contract_tx(&tx, &mut cache);
+        let (gas_used, success) = outcome.map(|o| (o.gas_used, o.success)).unwrap_or((0, false));
+
+        if success {
+            let session = self.consensus_manager.consensus().unguarded_session();
+            for (addr, code) in cache.code {
+                let hash_addr = zyanya_hashes::Hash::from_bytes(addr);
+                let _ = session.write_contract_code(hash_addr, code);
+            }
+            for ((addr, key), val) in cache.storage {
+                let _ = session.write_contract_storage(addr, key, val);
+            }
+        }
+
+        Ok(DeployContractResponse {
+            contract_address,
+            transaction_id: tx.id(),
+            gas_used,
+            success,
+        })
+    }
+
+    async fn invoke_contract_call(
+        &self,
+        _connection: Option<&DynRpcConnection>,
+        request: InvokeContractRequest,
+    ) -> RpcResult<InvokeContractResponse> {
+        let session = self.consensus_manager.consensus().unguarded_session();
+        let bytecode = session.get_contract_code(request.contract_address).unwrap_or_default();
+
+        let payload = zyanya_consensus_core::tx::ContractPayload::Invoke(zyanya_consensus_core::tx::InvokeContractPayload {
+            contract_address: request.contract_address,
+            entry_point: request.entry_point,
+            parameters: request.parameters.clone(),
+            max_gas: request.max_gas,
+            gas_price: request.gas_price,
+            deposit_amount: request.deposit_amount,
+        });
+        let payload_bytes = payload.to_bytes().map_err(|e| RpcError::General(e.to_string()))?;
+
+        let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos() as u64;
+        let tx = zyanya_consensus_core::tx::Transaction::new(
+            1,
+            vec![],
+            vec![],
+            nonce,
+            zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
+            request.max_gas,
+            payload_bytes,
+        );
+
+        let mut cache = zyanya_consensus::model::stores::contract::ContractStateCache::new();
+        let session_clone = session.clone();
+        cache.fallback_storage = Some(std::sync::Arc::new(move |addr, key| {
+            session_clone.get_contract_storage(addr, key).unwrap_or(0)
+        }));
+        let addr_bytes: [u8; 32] = request.contract_address.as_bytes().try_into().unwrap();
+        if !bytecode.is_empty() {
+            cache.code.insert(addr_bytes, bytecode);
+        }
+
+        let processor = zyanya_consensus::model::stores::contract::ContractProcessor::new();
+
+        let outcome = processor.process_contract_tx(&tx, &mut cache);
+        let (gas_used, return_value, success) = outcome
+            .map(|o| (o.gas_used, o.return_value, o.success))
+            .unwrap_or((0, None, false));
+
+        if success {
+            for (addr, code) in cache.code {
+                let hash_addr = zyanya_hashes::Hash::from_bytes(addr);
+                let _ = session.write_contract_code(hash_addr, code);
+            }
+            for ((addr, key), val) in cache.storage {
+                let _ = session.write_contract_storage(addr, key, val);
+            }
+        }
+
+        Ok(InvokeContractResponse {
+            transaction_id: tx.id(),
+            gas_used,
+            return_value,
+            success,
+        })
+    }
+
+    async fn get_contract_state_call(
+        &self,
+        _connection: Option<&DynRpcConnection>,
+        request: GetContractStateRequest,
+    ) -> RpcResult<GetContractStateResponse> {
+        let addr_bytes: [u8; 32] = request.contract_address.as_bytes().try_into().unwrap();
+        let session = self.consensus_manager.consensus().unguarded_session();
+        let val = session.get_contract_storage(addr_bytes, request.key).unwrap_or(0);
+        Ok(GetContractStateResponse { value: val })
+    }
+
+    async fn get_contract_code_call(
+        &self,
+        _connection: Option<&DynRpcConnection>,
+        request: GetContractCodeRequest,
+    ) -> RpcResult<GetContractCodeResponse> {
+        let session = self.consensus_manager.consensus().unguarded_session();
+        let code = session.get_contract_code(request.contract_address).unwrap_or_default();
+        Ok(GetContractCodeResponse { bytecode: code })
+    }
+
+    async fn call_contract_call(
+        &self,
+        _connection: Option<&DynRpcConnection>,
+        request: CallContractRequest,
+    ) -> RpcResult<CallContractResponse> {
+        let session = self.consensus_manager.consensus().unguarded_session();
+        let bytecode = match session.get_contract_code(request.contract_address) {
+            Ok(code) if !code.is_empty() => code,
+            _ => return Ok(CallContractResponse { return_value: None, gas_used: 0, success: false }),
+        };
+
+        let opcodes = match zyanya_vm::OpCode::deserialize_slice(&bytecode) {
+            Ok(ops) => ops,
+            Err(_) => return Ok(CallContractResponse { return_value: None, gas_used: 0, success: false }),
+        };
+
+        struct RpcDbStateBackend<'a> {
+            session: &'a zyanya_consensusmanager::ConsensusSessionOwned,
+            cache: zyanya_consensus::model::stores::contract::ContractStateCache,
+        }
+
+        impl<'a> zyanya_vm::StateBackend for RpcDbStateBackend<'a> {
+            fn sload(&self, contract_address: &[u8; 32], key: u64) -> Result<u64, zyanya_vm::VMError> {
+                if let Some(val) = self.cache.storage.get(&(*contract_address, key)) {
+                    return Ok(*val);
+                }
+                Ok(self.session.get_contract_storage(*contract_address, key).unwrap_or(0))
+            }
+
+            fn sstore(&mut self, contract_address: &[u8; 32], key: u64, value: u64) -> Result<(), zyanya_vm::VMError> {
+                self.cache.storage.insert((*contract_address, key), value);
+                Ok(())
+            }
+
+            fn get_code(&self, contract_address: &[u8; 32]) -> Result<Vec<u8>, zyanya_vm::VMError> {
+                if let Some(code) = self.cache.code.get(contract_address) {
+                    return Ok(code.clone());
+                }
+                let hash_addr = zyanya_hashes::Hash::from_bytes(*contract_address);
+                self.session.get_contract_code(hash_addr).map_err(|e| zyanya_vm::VMError::StorageError(e.to_string()))
+            }
+        }
+
+        let mut vm = zyanya_vm::VM::new(request.max_gas);
+        let mut state = RpcDbStateBackend {
+            session: &session,
+            cache: zyanya_consensus::model::stores::contract::ContractStateCache::new(),
+        };
+        let addr_bytes: [u8; 32] = request.contract_address.as_bytes().try_into().unwrap();
+
+        if request.calldata.is_empty() {
+            let _ = vm.stack.push(0);
+        } else {
+            for chunk in request.calldata.chunks_exact(8) {
+                if let Ok(arr) = chunk.try_into() {
+                    let val = u64::from_le_bytes(arr);
+                    let _ = vm.stack.push(val);
+                }
+            }
+        }
+
+        match vm.execute_stateful(&opcodes, &addr_bytes, &mut state) {
+            Ok(res) => Ok(CallContractResponse {
+                return_value: res.return_value,
+                gas_used: res.gas_used,
+                success: true,
+            }),
+            Err(_) => Ok(CallContractResponse {
+                return_value: None,
+                gas_used: request.max_gas,
+                success: false,
+            }),
+        }
     }
 
     async fn get_subnetwork_call(
@@ -870,7 +1081,7 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
 
         // In the previous golang implementation the convention for virtual was the following const.
         // In the current implementation, consensus behaves the same when it gets a None instead.
-        const LEGACY_VIRTUAL: spectre_hashes::Hash = spectre_hashes::Hash::from_bytes([0xff; spectre_hashes::HASH_SIZE]);
+        const LEGACY_VIRTUAL: zyanya_hashes::Hash = zyanya_hashes::Hash::from_bytes([0xff; zyanya_hashes::HASH_SIZE]);
         let mut start_hash = request.start_hash;
         if let Some(start) = start_hash {
             if start == LEGACY_VIRTUAL {
@@ -1225,5 +1436,30 @@ impl AsyncService for RpcCoreService {
             trace!("{} stopped", Self::IDENT);
             Ok(())
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use zyanya_vm::OpCode;
+
+    #[test]
+    fn test_adder_contract_bytecode_encoding() {
+        // Adder contract: PUSH 42, PUSH 100, PUSH 200, ADD, SSTORE, RETURN
+        let opcodes = vec![
+            OpCode::Push(42),
+            OpCode::Push(100),
+            OpCode::Push(200),
+            OpCode::Add,
+            OpCode::SStore,
+            OpCode::Return,
+        ];
+        let bytecode = OpCode::serialize_slice(&opcodes);
+        let hex_str = faster_hex::hex_string(&bytecode);
+        assert_eq!(hex_str, "022a0000000000000002640000000000000002c8000000000000001051f0");
+
+        let decoded = OpCode::deserialize_slice(&bytecode).unwrap();
+        assert_eq!(decoded, opcodes);
     }
 }

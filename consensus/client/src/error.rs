@@ -16,7 +16,7 @@ pub enum Error {
     Wasm(#[from] workflow_wasm::error::Error),
 
     #[error(transparent)]
-    ScriptBuilder(#[from] spectre_txscript::script_builder::ScriptBuilderError),
+    ScriptBuilder(#[from] zyanya_txscript::script_builder::ScriptBuilderError),
 
     #[error("{0}")]
     ParseInt(#[from] std::num::ParseIntError),
@@ -31,16 +31,16 @@ pub enum Error {
     Secp256k1(#[from] secp256k1::Error),
 
     #[error(transparent)]
-    Sign(#[from] spectre_consensus_core::sign::Error),
+    Sign(#[from] zyanya_consensus_core::sign::Error),
 
     #[error(transparent)]
     SerdeWasmBindgen(JsErrorData),
 
     #[error(transparent)]
-    Address(#[from] spectre_addresses::AddressError),
+    Address(#[from] zyanya_addresses::AddressError),
 
     #[error(transparent)]
-    NetworkType(#[from] spectre_consensus_core::network::NetworkTypeError),
+    NetworkType(#[from] zyanya_consensus_core::network::NetworkTypeError),
 
     #[error("Error converting property `{0}`: {1}")]
     Convert(&'static str, String),

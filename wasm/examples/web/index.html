@@ -35,9 +35,9 @@
         <div class="banner">
             <img src="resources/ferris.svg" height="44px" />
             <img src="resources/wasm.svg" height="44px" />
-            <img src="resources/spectre.svg" height="44px" />
+            <img src="resources/zyanya.svg" height="44px" />
         </div>
-        Rusty Spectre WASM32 SDK v<span id="version"></span><br>&nbsp;<br>
+        Rusty Zyanya WASM32 SDK v<span id="version"></span><br>&nbsp;<br>
         Packages:<br>
         <ul id="packages"></ul>
         Examples:
@@ -58,7 +58,7 @@
                 <p>Try running <code>python3 -m http.server</code> and navigating to <a href="http://localhost:8000/index.html">http://localhost:8000/</a></p>
                 <p>If using Rust, install http server by running: <code>cargo install http-server</code>,<br>
                 then run <code>http-server</code> and navigate to <a href="http://localhost:7878/index.html">http://localhost:7878/</a></p>
-                <p>Make sure to run HTTP server from the root of the <code>spectre-wasm32-sdk</code> folder.</p>
+                <p>Make sure to run HTTP server from the root of the <code>zyanya-wasm32-sdk</code> folder.</p>
             `;
         } else {
             if (!window.packageSizes) {
@@ -66,10 +66,10 @@
             }
             let el = document.getElementById("packages");
             Object.entries({
-                "spectre-keygen": ["KeyGen","Key & Address Generation only"],
-                "spectre-rpc": ["RPC","RPC only"],
-                "spectre-core": ["Core","RPC + Key & Address Generation + Wallet SDK"],
-                "spectre": ["SDK","Full SDK + Integrated Wallet"],
+                "zyanya-keygen": ["KeyGen","Key & Address Generation only"],
+                "zyanya-rpc": ["RPC","RPC only"],
+                "zyanya-core": ["Core","RPC + Key & Address Generation + Wallet SDK"],
+                "zyanya": ["SDK","Full SDK + Integrated Wallet"],
             }).forEach(([ident,[name,descr]]) => {
                 let size = packageSizes[ident] ? `${packageSizes[ident]}` : "";
                 el.innerHTML += `<li>WASM32 ${name} Package ${" ".repeat(6-name.length)}${size} - ${descr} - <a href="../../docs/${ident}/index.html" target="_blank">Docs</a></li>`;
@@ -78,12 +78,12 @@
         }
     </script>
     <script type="module">
-        import * as spectre from '../../web/spectre-core/spectre.js';
+        import * as zyanya from '../../web/zyanya-core/zyanya.js';
         (async () => {
-            await spectre.default('../../web/spectre-core/spectre_bg.wasm');
-            console.log("spectre", spectre);
-            console.log("version", spectre.version());
-            document.getElementById("version").innerText = spectre.version();
+            await zyanya.default('../../web/zyanya-core/zyanya_bg.wasm');
+            console.log("zyanya", zyanya);
+            console.log("version", zyanya.version());
+            document.getElementById("version").innerText = zyanya.version();
         })();
     </script>
 </html>

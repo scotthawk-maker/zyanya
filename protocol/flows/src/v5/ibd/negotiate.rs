@@ -1,14 +1,14 @@
 use std::time::Duration;
 
 use super::IbdFlow;
-use spectre_consensus_core::blockstatus::BlockStatus;
-use spectre_consensusmanager::ConsensusProxy;
-use spectre_core::{debug, warn};
-use spectre_hashes::Hash;
-use spectre_p2p_lib::{
+use zyanya_consensus_core::blockstatus::BlockStatus;
+use zyanya_consensusmanager::ConsensusProxy;
+use zyanya_core::{debug, warn};
+use zyanya_hashes::Hash;
+use zyanya_p2p_lib::{
     common::{ProtocolError, DEFAULT_TIMEOUT},
     dequeue_with_timeout, make_message,
-    pb::{spectred_message::Payload, RequestIbdChainBlockLocatorMessage},
+    pb::{zyanyad_message::Payload, RequestIbdChainBlockLocatorMessage},
 };
 
 pub struct ChainNegotiationOutput {

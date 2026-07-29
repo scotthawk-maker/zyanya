@@ -1,17 +1,17 @@
-use spectre_core::debug;
-use spectre_p2p_lib::echo::EchoFlowInitializer;
-use spectre_utils::networking::NetAddress;
+use zyanya_core::debug;
+use zyanya_p2p_lib::echo::EchoFlowInitializer;
+use zyanya_utils::networking::NetAddress;
 use std::{str::FromStr, sync::Arc, time::Duration};
 
 #[tokio::main]
 async fn main() {
     // [-] - init logger
-    spectre_core::log::init_logger(None, "debug");
+    zyanya_core::log::init_logger(None, "debug");
     // [0] - init p2p-adaptor - server side
     let ip_port = NetAddress::from_str("[::1]:50051").unwrap();
     let initializer = Arc::new(EchoFlowInitializer::new());
     let adaptor =
-        spectre_p2p_lib::Adaptor::bidirectional(ip_port, spectre_p2p_lib::Hub::new(), initializer, Default::default()).unwrap();
+        zyanya_p2p_lib::Adaptor::bidirectional(ip_port, zyanya_p2p_lib::Hub::new(), initializer, Default::default()).unwrap();
     // [1] - connect to a few peers
     let ip_port = String::from("[::1]:18111");
     for i in 0..1 {

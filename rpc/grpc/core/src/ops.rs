@@ -1,5 +1,5 @@
-use crate::protowire::{spectred_request::Payload as RequestPayload, spectred_response::Payload as ResponsePayload, *};
-use spectre_rpc_core::RpcError;
+use crate::protowire::{zyanyad_request::Payload as RequestPayload, zyanyad_response::Payload as ResponsePayload, *};
+use zyanya_rpc_core::RpcError;
 use workflow_core::enums::Describe;
 
 macro_rules! payload_type_enum {
@@ -46,7 +46,7 @@ macro_rules! payload_type_enum {
 payload_type_enum! {
 #[repr(u8)]
 #[derive(Describe, Debug, Copy, Clone, Eq, Hash, PartialEq)]
-pub enum SpectredPayloadOps {
+pub enum ZyanyadPayloadOps {
     SubmitBlock = 0,
     GetBlockTemplate,
     GetCurrentNetwork,
@@ -88,6 +88,11 @@ pub enum SpectredPayloadOps {
     GetFeeEstimateExperimental,
     GetCurrentBlockColor,
     GetUtxoReturnAddress,
+    DeployContract,
+    InvokeContract,
+    GetContractState,
+    GetContractCode,
+    CallContract,
 
     // Subscription commands for starting/stopping notifications
     NotifyBlockAdded,
@@ -105,6 +110,6 @@ pub enum SpectredPayloadOps {
 
     // Please note:
     // Notification payloads existing in ResponsePayload are not considered valid ops.
-    // The conversion from a notification ResponsePayload into SpectredPayloadOps fails.
+    // The conversion from a notification ResponsePayload into ZyanyadPayloadOps fails.
 }
 }

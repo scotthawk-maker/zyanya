@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use futures_util::future::join_all;
-use spectre_utils::sync::rwlock::{RfRwLock, RfRwLockOwnedReadGuard, RfRwLockOwnedWriteGuard};
+use zyanya_utils::sync::rwlock::{RfRwLock, RfRwLockOwnedReadGuard, RfRwLockOwnedWriteGuard};
 use std::sync::Arc;
 use tokio::sync::{OwnedRwLockWriteGuard as OwnedTokioRwLockWriteGuard, RwLock as TokioRwLock};
 

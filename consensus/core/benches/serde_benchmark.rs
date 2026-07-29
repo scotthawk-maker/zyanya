@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use smallvec::smallvec;
-use spectre_consensus_core::subnets::SUBNETWORK_ID_COINBASE;
-use spectre_consensus_core::tx::{
+use zyanya_consensus_core::subnets::SUBNETWORK_ID_COINBASE;
+use zyanya_consensus_core::tx::{
     ScriptPublicKey, Transaction, TransactionId, TransactionInput, TransactionOutpoint, TransactionOutput,
 };
 use std::time::{Duration, Instant};

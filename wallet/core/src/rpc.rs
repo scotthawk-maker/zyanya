@@ -4,18 +4,18 @@
 
 use std::sync::Arc;
 
-pub use spectre_rpc_core::api::ctl::RpcCtl;
-pub use spectre_rpc_core::api::rpc::RpcApi;
-pub use spectre_rpc_core::notify::mode::NotificationMode;
-pub use spectre_wrpc_client::client::{ConnectOptions, ConnectStrategy};
-pub use spectre_wrpc_client::Resolver;
-pub use spectre_wrpc_client::WrpcEncoding;
+pub use zyanya_rpc_core::api::ctl::RpcCtl;
+pub use zyanya_rpc_core::api::rpc::RpcApi;
+pub use zyanya_rpc_core::notify::mode::NotificationMode;
+pub use zyanya_wrpc_client::client::{ConnectOptions, ConnectStrategy};
+pub use zyanya_wrpc_client::Resolver;
+pub use zyanya_wrpc_client::WrpcEncoding;
 
 /// Type alias for [`dyn RpcApi`](RpcApi).
 pub type DynRpcApi = dyn RpcApi;
-/// Type alias for a concrete [`Channel`](spectre_utils::channel::Channel)
-/// used for handling RPC [`Notification`](spectre_rpc_core::Notification) events.
-pub type NotificationChannel = spectre_utils::channel::Channel<spectre_rpc_core::Notification>;
+/// Type alias for a concrete [`Channel`](zyanya_utils::channel::Channel)
+/// used for handling RPC [`Notification`](zyanya_rpc_core::Notification) events.
+pub type NotificationChannel = zyanya_utils::channel::Channel<zyanya_rpc_core::Notification>;
 
 /// RPC adaptor class that holds the [`RpcApi`]
 /// and [`RpcCtl`] instances.

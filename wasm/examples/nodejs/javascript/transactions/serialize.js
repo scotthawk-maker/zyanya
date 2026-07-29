@@ -6,7 +6,7 @@ const {
     XPrv,
     PrivateKeyGenerator,
     payToAddressScript,
-} = require('../../../../nodejs/spectre');
+} = require('../../../../nodejs/zyanya');
 
 
 (async () => {
@@ -33,7 +33,7 @@ const {
     const { transactions, summary } = await createTransactions({
         entries,
         outputs: [{
-            address: 'spectre:qpamkvhgh0kzx50gwvvp5xs8ktmqutcy3dfs9dc3w7lm9rq0zs76vf959mmrp',
+            address: 'zyanya:qpamkvhgh0kzx50gwvvp5xs8ktmqutcy3dfs9dc3w7lm9rq0zs76vf959mmrp',
             amount: 400000000n
         }],
         changeAddress: address,

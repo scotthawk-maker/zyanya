@@ -1,1 +1,1 @@
-pub type RpcSubnetworkId = spectre_consensus_core::subnets::SubnetworkId;
+pub type RpcSubnetworkId = zyanya_consensus_core::subnets::SubnetworkId;

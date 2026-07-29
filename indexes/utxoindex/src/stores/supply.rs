@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use spectre_database::{
+use zyanya_database::{
     prelude::{CachedDbItem, DirectDbWriter, StoreResult, DB},
     registry::DatabaseStorePrefixes,
 };

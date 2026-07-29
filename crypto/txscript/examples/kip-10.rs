@@ -1,7 +1,7 @@
 use rand::thread_rng;
 use secp256k1::Keypair;
-use spectre_addresses::{Address, Prefix, Version};
-use spectre_consensus_core::{
+use zyanya_addresses::{Address, Prefix, Version};
+use zyanya_consensus_core::{
     hashing::{
         sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync},
         sighash_type::SIG_HASH_ALL,
@@ -11,7 +11,7 @@ use spectre_consensus_core::{
         TransactionOutput, UtxoEntry, VerifiableTransaction,
     },
 };
-use spectre_txscript::{
+use zyanya_txscript::{
     caches::Cache,
     opcodes::codes::{
         OpCheckSig, OpCheckSigVerify, OpDup, OpElse, OpEndIf, OpEqualVerify, OpFalse, OpGreaterThanOrEqual, OpIf, OpSub, OpTrue,
@@ -21,9 +21,9 @@ use spectre_txscript::{
     script_builder::{ScriptBuilder, ScriptBuilderResult},
     TxScriptEngine,
 };
-use spectre_txscript_errors::TxScriptError::{EvalFalse, VerifyError};
+use zyanya_txscript_errors::TxScriptError::{EvalFalse, VerifyError};
 
-/// Main function to execute all Spectre transaction script scenarios.
+/// Main function to execute all Zyanya transaction script scenarios.
 ///
 /// # Returns
 ///
@@ -38,7 +38,7 @@ fn main() -> ScriptBuilderResult<()> {
 
 /// # Standard Threshold Scenario
 ///
-/// This scenario demonstrates the use of custom opcodes and script execution within the Spectre blockchain ecosystem.
+/// This scenario demonstrates the use of custom opcodes and script execution within the Zyanya blockchain ecosystem.
 /// There are two main cases:
 ///
 /// 1. **Owner case:** The script checks if the input is used by the owner and verifies the owner's signature.
@@ -528,7 +528,7 @@ fn threshold_scenario_limited_2_times() -> ScriptBuilderResult<()> {
 
 /// # Shared Secret Scenario
 ///
-/// This scenario demonstrates the use of a shared secret within the Spectre blockchain ecosystem.
+/// This scenario demonstrates the use of a shared secret within the Zyanya blockchain ecosystem.
 /// Instead of using a threshold value, it checks the shared secret and the signature associated with it.
 ///
 /// ## Key Features:

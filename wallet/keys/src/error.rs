@@ -2,7 +2,7 @@
 //! Error types used by the wallet framework.
 //!
 
-use spectre_bip32::Error as BIP32Error;
+use zyanya_bip32::Error as BIP32Error;
 use std::sync::PoisonError;
 use thiserror::Error;
 use wasm_bindgen::JsValue;
@@ -59,10 +59,10 @@ pub enum Error {
     InvalidPublicKeyArray,
 
     #[error(transparent)]
-    NetworkId(#[from] spectre_consensus_core::network::NetworkIdError),
+    NetworkId(#[from] zyanya_consensus_core::network::NetworkIdError),
 
     #[error(transparent)]
-    NetworkType(#[from] spectre_consensus_core::network::NetworkTypeError),
+    NetworkType(#[from] zyanya_consensus_core::network::NetworkTypeError),
 
     #[error("Invalid UTF-8 sequence")]
     Utf8(#[from] std::str::Utf8Error),

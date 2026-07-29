@@ -2,7 +2,7 @@ use crate::api::message::*;
 use crate::api::traits::*;
 use crate::imports::*;
 use crate::result::Result;
-use spectre_wallet_macros::declare_wasm_handlers;
+use zyanya_wallet_macros::declare_wasm_handlers;
 
 pub mod extensions;
 pub mod message;

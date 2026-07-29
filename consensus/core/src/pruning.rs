@@ -3,7 +3,7 @@ use crate::{
     trusted::{TrustedGhostdagData, TrustedHeader},
     BlueWorkType,
 };
-use spectre_hashes::Hash;
+use zyanya_hashes::Hash;
 use std::sync::Arc;
 
 pub type PruningPointProof = Vec<Vec<Arc<Header>>>;

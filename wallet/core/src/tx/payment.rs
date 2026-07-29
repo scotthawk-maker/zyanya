@@ -3,8 +3,8 @@
 //!
 
 use crate::imports::*;
-use spectre_consensus_client::{TransactionOutput, TransactionOutputInner};
-use spectre_txscript::pay_to_address_script;
+use zyanya_consensus_client::{TransactionOutput, TransactionOutputInner};
+use zyanya_txscript::pay_to_address_script;
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_PAYMENT_OUTPUTS: &'static str = r#"
@@ -18,7 +18,7 @@ const TS_PAYMENT_OUTPUTS: &'static str = r#"
 export interface IPaymentOutput {
     /**
      * Destination address. The address prefix must match the network
-     * you are transacting on (e.g. `spectre:` for mainnet, `spectretest:` for testnet, etc).
+     * you are transacting on (e.g. `zyanya:` for mainnet, `zyanyatest:` for testnet, etc).
      */
     address: Address | string;
     /**

@@ -4,8 +4,8 @@
 
 use super::UtxoRecord;
 use crate::imports::*;
-use spectre_consensus_core::tx::Transaction;
-pub use spectre_consensus_core::tx::TransactionId;
+use zyanya_consensus_core::tx::Transaction;
+pub use zyanya_consensus_core::tx::TransactionId;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "data")]

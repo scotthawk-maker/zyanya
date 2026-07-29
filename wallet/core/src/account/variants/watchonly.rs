@@ -6,7 +6,7 @@ use crate::account::Inner;
 use crate::derivation::{AddressDerivationManager, AddressDerivationManagerTrait};
 use crate::imports::*;
 
-pub const WATCH_ONLY_ACCOUNT_KIND: &str = "spectre-watch-only-standard";
+pub const WATCH_ONLY_ACCOUNT_KIND: &str = "zyanya-watch-only-standard";
 
 pub struct Ctor {}
 
@@ -17,7 +17,7 @@ impl Factory for Ctor {
     }
 
     fn description(&self) -> String {
-        "Spectre Core watch-only Account".to_string()
+        "Zyanya Core watch-only Account".to_string()
     }
 
     async fn try_load(

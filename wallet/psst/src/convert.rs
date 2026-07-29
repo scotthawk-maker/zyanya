@@ -1,15 +1,15 @@
 //!
 //! Conversion functions for converting between
-//! the [`spectre_consensus_client`], [`spectre_consensus_core`]
-//! and [`spectre_wallet_psst`](crate) types.
+//! the [`zyanya_consensus_client`], [`zyanya_consensus_core`]
+//! and [`zyanya_wallet_psst`](crate) types.
 //!
 
 use crate::error::Error;
 use crate::input::{Input, InputBuilder};
 use crate::output::{Output, OutputBuilder};
 use crate::psst::{Global, Inner};
-use spectre_consensus_client::{Transaction, TransactionInput, TransactionInputInner, TransactionOutput, TransactionOutputInner};
-use spectre_consensus_core::tx as cctx;
+use zyanya_consensus_client::{Transaction, TransactionInput, TransactionInputInner, TransactionOutput, TransactionOutputInner};
+use zyanya_consensus_core::tx as cctx;
 
 impl TryFrom<Transaction> for Inner {
     type Error = Error;

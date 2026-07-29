@@ -4,10 +4,10 @@ use crate::imports::*;
 use crate::result::Result;
 use crate::utxo as native;
 use crate::wasm::notify::{UtxoProcessorEventTarget, UtxoProcessorNotificationCallback, UtxoProcessorNotificationTypeOrCallback};
-use spectre_consensus_core::network::NetworkIdT;
-use spectre_wallet_macros::declare_typescript_wasm_interface as declare;
-use spectre_wasm_core::events::{get_event_targets, Sink};
-use spectre_wrpc_wasm::RpcClient;
+use zyanya_consensus_core::network::NetworkIdT;
+use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
+use zyanya_wasm_core::events::{get_event_targets, Sink};
+use zyanya_wrpc_wasm::RpcClient;
 use workflow_log::log_error;
 
 declare! {
@@ -79,7 +79,7 @@ cfg_if! {
 ///
 /// UtxoProcessor class is the main coordinator that manages UTXO processing
 /// between multiple UtxoContext instances. It acts as a bridge between the
-/// Spectre node RPC connection, address subscriptions and UtxoContext instances.
+/// Zyanya node RPC connection, address subscriptions and UtxoContext instances.
 ///
 /// @see {@link IUtxoProcessorArgs},
 /// {@link UtxoContext},

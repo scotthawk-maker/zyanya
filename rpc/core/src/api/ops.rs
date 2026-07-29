@@ -4,7 +4,7 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use spectre_notify::events::EventType;
+use zyanya_notify::events::EventType;
 use workflow_core::enums::Describe;
 
 /// API version. Change in this value should result
@@ -68,13 +68,13 @@ pub enum RpcApiOps {
     GetServerInfo = 114,
     /// Get the current sync status of the node
     GetSyncStatus = 115,
-    /// Returns the network this Spectred is connected to (Mainnet, Testnet)
+    /// Returns the network this Zyanyad is connected to (Mainnet, Testnet)
     GetCurrentNetwork = 116,
     /// Extracts a block out of the request message and attempts to add it to the DAG Returns an empty response or an error message
     SubmitBlock = 117,
     /// Returns a "template" by which a miner can mine a new block
     GetBlockTemplate = 118,
-    /// Returns a list of all the addresses (IP, port) this Spectred knows and a list of all addresses that are currently banned by this Spectred
+    /// Returns a list of all the addresses (IP, port) this Zyanyad knows and a list of all addresses that are currently banned by this Zyanyad
     GetPeerAddresses = 119,
     /// Returns the hash of the current selected tip block of the DAG
     GetSink = 120,
@@ -82,9 +82,9 @@ pub enum RpcApiOps {
     GetMempoolEntry = 121,
     /// Get a snapshot of the node's mempool
     GetMempoolEntries = 122,
-    /// Returns a list of the peers currently connected to this Spectred, along with some statistics on them
+    /// Returns a list of the peers currently connected to this Zyanyad, along with some statistics on them
     GetConnectedPeerInfo = 123,
-    /// Instructs Spectred to connect to a given IP address.
+    /// Instructs Zyanyad to connect to a given IP address.
     AddPeer = 124,
     /// Extracts a transaction out of the request message and attempts to add it to the mempool Returns an empty response or an error message
     SubmitTransaction = 125,
@@ -138,6 +138,16 @@ pub enum RpcApiOps {
     GetCurrentBlockColor = 149,
     /// Get UTXO Return Addresses
     GetUtxoReturnAddress = 150,
+    /// Deploy smart contract
+    DeployContract = 160,
+    /// Invoke smart contract
+    InvokeContract = 161,
+    /// Query contract storage key
+    GetContractState = 162,
+    /// Query contract bytecode
+    GetContractCode = 163,
+    /// Read-only execution of contract
+    CallContract = 164,
 }
 
 impl RpcApiOps {
