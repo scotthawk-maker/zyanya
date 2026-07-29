@@ -177,6 +177,38 @@ pub async fn api_dex_reserves_post_handler(
     }
 }
 
+pub async fn api_contracts_handler(State(client): State<Arc<RpcClientManager>>) -> Response {
+    match client.get_contracts().await {
+        Ok(contracts) => Json(contracts).into_response(),
+        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+pub async fn api_tokens_handler(State(client): State<Arc<RpcClientManager>>) -> Response {
+    match client.get_tokens().await {
+        Ok(tokens) => Json(tokens).into_response(),
+        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+pub async fn api_dex_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Query(query): Query<DexReservesQuery>,
+) -> Response {
+    if let Some(dex) = query.dex.or(query.dexAddress) {
+        if !dex.is_empty() {
+            match client.get_dex_reserves(&dex).await {
+                Ok(res) => return Json(res).into_response(),
+                Err(err) => return (StatusCode::NOT_FOUND, Json(serde_json::json!({ "error": err }))).into_response(),
+            }
+        }
+    }
+    match client.get_dexes().await {
+        Ok(dexes) => Json(dexes).into_response(),
+        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
 #[derive(Deserialize)]
 pub struct DeployContractReq {
     pub bytecode: String,

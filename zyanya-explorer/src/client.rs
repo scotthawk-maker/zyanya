@@ -106,6 +106,43 @@ pub struct TokenInfo {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContractSummary {
+    pub address: String,
+    pub bytecode_size: usize,
+    pub deploy_tx_id: String,
+    pub first_seen_block: String,
+    pub contract_type: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TokenSummary {
+    pub contract_address: String,
+    pub total_supply: u64,
+    pub owner_address: u64,
+    pub name: String,
+    pub symbol: String,
+    pub bytecode_size: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(non_snake_case)]
+pub struct DexSummary {
+    pub address: String,
+    pub reserveA: u64,
+    pub reserveB: u64,
+    pub totalLPSupply: u64,
+    pub price: f64,
+}
+
+pub fn derive_contract_address(deploy_tx_id: &RpcHash, index: u32) -> RpcHash {
+    use zyanya_hashes::{HasherBase, TransactionSigningHash};
+    let mut hasher = TransactionSigningHash::new();
+    hasher.update(deploy_tx_id.as_bytes());
+    hasher.update(index.to_le_bytes());
+    hasher.finalize()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DagNode {
     pub hash: String,
     pub short_hash: String,
@@ -571,6 +608,133 @@ impl RpcClientManager {
             "bytecode": hex_str,
             "size_bytes": bytecode.len()
         }))
+    }
+
+    pub async fn get_contracts(&self) -> Result<Vec<ContractSummary>, String> {
+        let client = self.ensure_connected().await?;
+        let dag_info = client.get_block_dag_info().await.map_err(|e| e.to_string())?;
+
+        let mut known_addresses: std::collections::HashSet<String> = std::collections::HashSet::new();
+        // Seed known contracts on chain (DEX + GHOST token)
+        known_addresses.insert("3d208f19ac8ee260ba85c939526b1562470098ce651281e5a1f08a68475bf483".to_string());
+        known_addresses.insert("cef968ca5d9ea40d306224efb988b2b408d3c751f8b8baea10c1e7caafb4fe40".to_string());
+
+        let mut current_hash = dag_info.sink;
+        let mut visited = std::collections::HashSet::new();
+
+        for _ in 0..500 {
+            if visited.contains(&current_hash) {
+                break;
+            }
+            visited.insert(current_hash);
+
+            if let Ok(block) = client.get_block(current_hash, true).await {
+                for tx in &block.transactions {
+                    let subnetwork_id = tx.subnetwork_id.to_string();
+                    let is_contract_subnetwork = subnetwork_id.ends_with("03") || subnetwork_id.contains("030000");
+                    if is_contract_subnetwork && !tx.payload.is_empty() {
+                        let tx_id_str = tx.verbose_data.as_ref()
+                            .map(|v| v.transaction_id.to_string())
+                            .unwrap_or_default();
+                        if let Ok(tx_hash) = RpcHash::from_str(&tx_id_str) {
+                            let derived_addr = derive_contract_address(&tx_hash, 0);
+                            known_addresses.insert(derived_addr.to_string());
+                        }
+                    }
+                }
+
+                let selected_parent = block.verbose_data.as_ref()
+                    .map(|v| v.selected_parent_hash.to_string())
+                    .unwrap_or_default();
+                if selected_parent.is_empty() || selected_parent == "0000000000000000000000000000000000000000000000000000000000000000" {
+                    break;
+                }
+                if let Ok(next_hash) = RpcHash::from_str(&selected_parent) {
+                    current_hash = next_hash;
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+
+        let mut contracts = Vec::new();
+        for addr in known_addresses {
+            if let Ok(info) = self.get_contract_code(&addr).await {
+                if info.bytecode_size > 0 {
+                    let k0 = self.get_contract_state_key(&addr, 0).await.unwrap_or(0);
+                    let k1 = self.get_contract_state_key(&addr, 1).await.unwrap_or(0);
+                    let k2 = self.get_contract_state_key(&addr, 2).await.unwrap_or(0);
+
+                    let contract_type = if k0 > 0 && k1 > 0 && k2 > 0 {
+                        "DEX".to_string()
+                    } else if k0 > 0 {
+                        "Token".to_string()
+                    } else {
+                        "Contract".to_string()
+                    };
+
+                    contracts.push(ContractSummary {
+                        address: addr,
+                        bytecode_size: info.bytecode_size,
+                        deploy_tx_id: info.deploy_tx_id,
+                        first_seen_block: info.first_seen_block,
+                        contract_type,
+                    });
+                }
+            }
+        }
+
+        contracts.sort_by(|a, b| a.contract_type.cmp(&b.contract_type).then_with(|| a.address.cmp(&b.address)));
+        Ok(contracts)
+    }
+
+    pub async fn get_tokens(&self) -> Result<Vec<TokenSummary>, String> {
+        let contracts = self.get_contracts().await?;
+        let mut tokens = Vec::new();
+
+        for c in contracts {
+            if c.contract_type == "Token" {
+                let k0 = self.get_contract_state_key(&c.address, 0).await.unwrap_or(0);
+                let k1 = self.get_contract_state_key(&c.address, 1).await.unwrap_or(0);
+
+                tokens.push(TokenSummary {
+                    contract_address: c.address.clone(),
+                    total_supply: k0,
+                    owner_address: k1,
+                    name: "GHOST Token".to_string(),
+                    symbol: "GHOST".to_string(),
+                    bytecode_size: c.bytecode_size,
+                });
+            }
+        }
+
+        Ok(tokens)
+    }
+
+    pub async fn get_dexes(&self) -> Result<Vec<DexSummary>, String> {
+        let contracts = self.get_contracts().await?;
+        let mut dexes = Vec::new();
+
+        for c in contracts {
+            if c.contract_type == "DEX" {
+                let k0 = self.get_contract_state_key(&c.address, 0).await.unwrap_or(0);
+                let k1 = self.get_contract_state_key(&c.address, 1).await.unwrap_or(0);
+                let k2 = self.get_contract_state_key(&c.address, 2).await.unwrap_or(0);
+
+                let price = if k0 > 0 { k1 as f64 / k0 as f64 } else { 0.0 };
+                dexes.push(DexSummary {
+                    address: c.address.clone(),
+                    reserveA: k0,
+                    reserveB: k1,
+                    totalLPSupply: k2,
+                    price,
+                });
+            }
+        }
+
+        Ok(dexes)
     }
 }
 

@@ -606,6 +606,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             <button class="nav-btn mono active" onclick="switchTab('dashboard')">DASHBOARD</button>
             <button class="nav-btn mono" onclick="switchTab('contracts')">CONTRACTS</button>
             <button class="nav-btn mono" onclick="switchTab('tokens')">TOKENS</button>
+            <button class="nav-btn mono" onclick="switchTab('dex')">DEX</button>
             <button class="nav-btn mono" onclick="switchTab('dag')">DAG GRAPH</button>
             <a href="/tools" class="nav-btn mono" style="text-decoration: none;">WEBMCP TOOLS</a>
             <a href="/" class="nav-btn mono" style="text-decoration: none;">WEBSITE</a>
@@ -668,12 +669,37 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
         <div id="tab-contracts" class="tab-content">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title mono">SMART CONTRACTS (ZCL VM)</h3>
+                    <h3 class="card-title mono">DEPLOYED SMART CONTRACTS (ZCL VM)</h3>
+                    <span class="mono" style="font-size: 0.8rem; color: #708090;">Auto-indexed on-chain</span>
                 </div>
                 <p style="color: #A0B0BC; margin-bottom: 1rem;">
-                    Contracts deployed on Zyanya feature 50% gas burn deflationary mechanics and state key storage.
+                    Contracts deployed on Zyanya feature 50% gas burn deflationary mechanics, bytecode inspection, and key storage.
                 </p>
-                <div id="contracts-container"></div>
+                <div id="contracts-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="mono">CONTRACT ADDRESS</th>
+                                <th class="mono">TYPE</th>
+                                <th class="mono">BYTECODE SIZE</th>
+                                <th class="mono">STATUS</th>
+                                <th class="mono">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contracts-tbody">
+                            <tr><td colspan="5" style="text-align:center;">Loading deployed contracts...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card" style="background:#050810; margin-top: 1.5rem;">
+                <h4 class="mono" style="color:var(--accent-spectral);">Query Contract Storage State Inspector</h4>
+                <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+                    <input type="text" id="contract-addr-input" class="search-input mono" placeholder="Contract Address...">
+                    <input type="text" id="contract-key-input" class="search-input mono" style="max-width:150px;" placeholder="Key (e.g. 0)">
+                    <button class="search-btn mono" onclick="queryContractState()">QUERY STATE</button>
+                </div>
+                <div id="contract-query-result" style="margin-top:1rem;" class="mono"></div>
             </div>
         </div>
 
@@ -681,11 +707,56 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title mono">NATIVE CUSTOM TOKENS</h3>
+                    <span class="mono" style="font-size: 0.8rem; color: #708090;">ZCL VM Token Standard</span>
                 </div>
                 <p style="color: #A0B0BC; margin-bottom: 1rem;">
                     ERC-20 style custom tokens deployed on-chain with total supply and key holder balances.
                 </p>
-                <div id="tokens-container"></div>
+                <div id="tokens-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="mono">TOKEN ADDRESS</th>
+                                <th class="mono">NAME / SYMBOL</th>
+                                <th class="mono">TOTAL SUPPLY</th>
+                                <th class="mono">BYTECODE SIZE</th>
+                                <th class="mono">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tokens-tbody">
+                            <tr><td colspan="5" style="text-align:center;">Loading tokens...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-dex" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mono">ON-CHAIN DEX AMM POOLS</h3>
+                    <span class="mono" style="font-size: 0.8rem; color: #708090;">Constant Product AMM</span>
+                </div>
+                <p style="color: #A0B0BC; margin-bottom: 1rem;">
+                    Automated market maker pools pairing ZYAN with custom tokens (GHOST). Reserves stored at Key 0 (ZYAN) and Key 1 (GHOST).
+                </p>
+                <div id="dex-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="mono">DEX POOL ADDRESS</th>
+                                <th class="mono">RESERVE A (ZYAN)</th>
+                                <th class="mono">RESERVE B (GHOST)</th>
+                                <th class="mono">TOTAL LP SUPPLY</th>
+                                <th class="mono">IMPLIED PRICE</th>
+                                <th class="mono">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dex-tbody">
+                            <tr><td colspan="6" style="text-align:center;">Loading DEX pools...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -719,11 +790,12 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + name).classList.add('active');
-            event.target.classList.add('active');
+            if (window.event && window.event.target) window.event.target.classList.add('active');
             closeDetail();
 
             if (name === 'contracts') loadContracts();
             if (name === 'tokens') loadTokens();
+            if (name === 'dex') loadDex();
             if (name === 'dag') loadDag();
         }
 
@@ -812,15 +884,29 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
         }
 
         async function loadContracts() {
-            document.getElementById('contracts-container').innerHTML = '<div class="card" style="background:#050810;">' +
-                '<h4 class="mono" style="color:var(--accent-spectral);">Query Contract State Inspector</h4>' +
-                '<div style="display:flex; gap:0.5rem; margin-top:0.75rem;">' +
-                    '<input type="text" id="contract-addr-input" class="search-input mono" placeholder="Contract Address (e.g. 0000000000000000000000000000000000000000000000000000000000000000)">' +
-                    '<input type="text" id="contract-key-input" class="search-input mono" style="max-width:150px;" placeholder="Key (e.g. 0)">' +
-                    '<button class="search-btn mono" onclick="queryContractState()">QUERY STATE</button>' +
-                '</div>' +
-                '<div id="contract-query-result" style="margin-top:1rem;" class="mono"></div>' +
-            '</div>';
+            try {
+                const res = await fetch('/api/contracts');
+                const contracts = await res.json();
+                let html = '';
+                if (!Array.isArray(contracts) || contracts.length === 0) {
+                    html = '<tr><td colspan="5" style="text-align:center; color:#A0B0BC;">No deployed contracts found</td></tr>';
+                } else {
+                    contracts.forEach(c => {
+                        const tagClass = c.contract_type === 'DEX' ? 'tag-liquid' : 'tag-vested';
+                        const shortAddr = c.address.substring(0, 12) + '...' + c.address.substring(c.address.length - 8);
+                        html += '<tr>' +
+                            '<td><a href="#" class="link mono" onclick="viewContract(\'' + c.address + '\')">' + shortAddr + '</a></td>' +
+                            '<td><span class="tag ' + tagClass + '">' + c.contract_type + '</span></td>' +
+                            '<td class="mono">' + c.bytecode_size.toLocaleString() + ' bytes</td>' +
+                            '<td class="mono" style="color:#7EC8D3;">' + c.first_seen_block + '</td>' +
+                            '<td><button class="nav-btn mono" style="padding:0.25rem 0.6rem; font-size:0.75rem;" onclick="viewContract(\'' + c.address + '\')">INSPECT</button></td>' +
+                        '</tr>';
+                    });
+                }
+                document.getElementById('contracts-tbody').innerHTML = html;
+            } catch (err) {
+                console.error(err);
+            }
         }
 
         async function queryContractState() {
@@ -837,73 +923,119 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
         }
 
         async function loadTokens() {
-            document.getElementById('tokens-container').innerHTML = '<div class="card" style="background:#050810;">' +
-                '<h4 class="mono" style="color:var(--accent-spectral);">Reference Token Contract Standard</h4>' +
-                '<p style="margin-top:0.5rem; color:#A0B0BC;">' +
-                    'Tokens deployed using <code class="mono">zyanya-query deploy-token</code> store total supply at Key 0 and owner balance at Key 1.' +
-                '</p>' +
-            '</div>';
-        }
-
-        async function loadDag() {
             try {
-                const res = await fetch('/api/dag');
-                const data = await res.json();
-                const svg = document.getElementById('dag-svg');
-                svg.innerHTML = '';
-
-                const width = svg.clientWidth || 800;
-                const height = 380;
-                const nodes = data.nodes;
-
-                nodes.forEach((n, i) => {
-                    const x = width - 60 - (i * 45);
-                    const y = height / 2 + (Math.sin(i * 0.8) * 60);
-
-                    if (i < nodes.length - 1) {
-                        const nextX = width - 60 - ((i + 1) * 45);
-                        const nextY = height / 2 + (Math.sin((i + 1) * 0.8) * 60);
-                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        line.setAttribute('x1', x);
-                        line.setAttribute('y1', y);
-                        line.setAttribute('x2', nextX);
-                        line.setAttribute('y2', nextY);
-                        line.setAttribute('stroke', '#7EC8D3');
-                        line.setAttribute('stroke-width', '1.5');
-                        line.setAttribute('opacity', '0.4');
-                        line.setAttribute('stroke-dasharray', '3,3');
-                        svg.appendChild(line);
-                    }
-
-                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    circle.setAttribute('cx', x);
-                    circle.setAttribute('cy', y);
-                    circle.setAttribute('r', '14');
-                    circle.setAttribute('fill', n.is_chain_block ? '#0D3B50' : '#0A0F1C');
-                    circle.setAttribute('stroke', '#7EC8D3');
-                    circle.setAttribute('stroke-width', '2');
-                    circle.setAttribute('cursor', 'pointer');
-                    circle.onclick = () => viewBlock(n.hash);
-                    svg.appendChild(circle);
-
-                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    text.setAttribute('x', x);
-                    text.setAttribute('y', y + 4);
-                    text.setAttribute('font-size', '9');
-                    text.setAttribute('fill', '#7EC8D3');
-                    text.setAttribute('text-anchor', 'middle');
-                    text.setAttribute('font-family', 'monospace');
-                    text.textContent = n.blue_score;
-                    svg.appendChild(text);
-                });
+                const res = await fetch('/api/tokens');
+                const tokens = await res.json();
+                let html = '';
+                if (!Array.isArray(tokens) || tokens.length === 0) {
+                    html = '<tr><td colspan="5" style="text-align:center; color:#A0B0BC;">No active tokens found</td></tr>';
+                } else {
+                    tokens.forEach(t => {
+                        const shortAddr = t.contract_address.substring(0, 12) + '...' + t.contract_address.substring(t.contract_address.length - 8);
+                        html += '<tr>' +
+                            '<td><a href="#" class="link mono" onclick="viewContract(\'' + t.contract_address + '\')">' + shortAddr + '</a></td>' +
+                            '<td class="mono" style="color:#7EC8D3; font-weight:bold;">' + t.name + ' (' + t.symbol + ')</td>' +
+                            '<td class="mono">' + t.total_supply.toLocaleString() + ' ' + t.symbol + '</td>' +
+                            '<td class="mono">' + t.bytecode_size.toLocaleString() + ' bytes</td>' +
+                            '<td><a href="/tools" class="nav-btn mono" style="padding:0.25rem 0.6rem; font-size:0.75rem; text-decoration:none;">TRANSFER</a></td>' +
+                        '</tr>';
+                    });
+                }
+                document.getElementById('tokens-tbody').innerHTML = html;
             } catch (err) {
                 console.error(err);
             }
         }
 
-        function performSearch() {
+        async function loadDex() {
+            try {
+                const res = await fetch('/api/dex');
+                const dexes = await res.json();
+                let html = '';
+                const list = Array.isArray(dexes) ? dexes : [dexes];
+                if (list.length === 0) {
+                    html = '<tr><td colspan="6" style="text-align:center; color:#A0B0BC;">No DEX pools active</td></tr>';
+                } else {
+                    list.forEach(d => {
+                        const addr = d.address || d.dex;
+                        const shortAddr = addr ? (addr.substring(0, 12) + '...' + addr.substring(addr.length - 8)) : '---';
+                        const priceVal = d.price ? d.price : (d.reserveA ? (d.reserveB / d.reserveA) : 0.0);
+                        const priceStr = priceVal > 0 ? priceVal.toFixed(4) + ' GHOST/ZYAN' : '---';
+                        html += '<tr>' +
+                            '<td><a href="#" class="link mono" onclick="viewContract(\'' + addr + '\')">' + shortAddr + '</a></td>' +
+                            '<td class="mono" style="color:#7EC8D3;">' + (d.reserveA || 0).toLocaleString() + ' ZYAN</td>' +
+                            '<td class="mono" style="color:#FF4D4D;">' + (d.reserveB || 0).toLocaleString() + ' GHOST</td>' +
+                            '<td class="mono">' + (d.totalLPSupply || 0).toLocaleString() + ' LP</td>' +
+                            '<td class="mono" style="font-weight:bold; color:#7EC8D3;">' + priceStr + '</td>' +
+                            '<td><a href="/tools" class="nav-btn mono" style="padding:0.25rem 0.6rem; font-size:0.75rem; text-decoration:none;">SWAP ON DEX</a></td>' +
+                        '</tr>';
+                    });
+                }
+                document.getElementById('dex-tbody').innerHTML = html;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function viewContract(address) {
+            if (!address) return;
+            try {
+                const codeRes = await fetch('/api/contract/' + address + '/code');
+                const code = await codeRes.json();
+                
+                const k0Res = await fetch('/api/contract/' + address + '/state?key=0');
+                const k0 = await k0Res.json();
+                const k1Res = await fetch('/api/contract/' + address + '/state?key=1');
+                const k1 = await k1Res.json();
+                const k2Res = await fetch('/api/contract/' + address + '/state?key=2');
+                const k2 = await k2Res.json();
+
+                document.getElementById('detail-title').innerText = 'CONTRACT DETAIL: ' + address.substring(0, 16) + '...';
+
+                let bodyHtml = '<div style="margin-bottom:1.5rem;" class="mono">' +
+                        '<p><strong>Address:</strong> ' + address + '</p>' +
+                        '<p><strong>Bytecode Size:</strong> ' + (code.bytecode_size || 0) + ' bytes</p>' +
+                        '<p><strong>Deploy Tx:</strong> ' + (code.deploy_tx_id || 'On-chain') + '</p>' +
+                        '<p><strong>Status:</strong> <span style="color:#7EC8D3;">Active</span></p>' +
+                    '</div>' +
+                    '<h4 class="mono" style="color:var(--accent-spectral); margin: 1rem 0 0.5rem;">KEY STORAGE STATE</h4>' +
+                    '<table style="margin-bottom:1.5rem;">' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<th class="mono">STORAGE KEY</th>' +
+                                '<th class="mono">VALUE</th>' +
+                                '<th class="mono">DESCRIPTION</th>' +
+                            '</tr>' +
+                        '</thead>' +
+                        '<tbody>' +
+                            '<tr><td class="mono">Key 0</td><td class="mono" style="color:#7EC8D3;">' + (k0.value || 0) + '</td><td>Total Supply / Reserve A</td></tr>' +
+                            '<tr><td class="mono">Key 1</td><td class="mono" style="color:#7EC8D3;">' + (k1.value || 0) + '</td><td>Owner Balance / Reserve B</td></tr>' +
+                            '<tr><td class="mono">Key 2</td><td class="mono" style="color:#7EC8D3;">' + (k2.value || 0) + '</td><td>Total LP Supply / State</td></tr>' +
+                        '</tbody>' +
+                    '</table>' +
+                    '<h4 class="mono" style="color:var(--accent-spectral); margin: 1rem 0 0.5rem;">BYTECODE (HEX)</h4>' +
+                    '<div style="background:#050810; padding:1rem; border-radius:4px; border:1px solid rgba(126,200,211,0.2); word-break:break-all; max-height:200px; overflow-y:auto;" class="mono">' +
+                        (code.bytecode_hex || 'No bytecode') +
+                    '</div>';
+
+                document.getElementById('detail-body').innerHTML = bodyHtml;
+                document.getElementById('detail-modal').style.display = 'block';
+                window.scrollTo({ top: document.getElementById('detail-modal').offsetTop - 100, behavior: 'smooth' });
+            } catch (err) {
+                alert('Error loading contract detail: ' + err);
+            }
+        }
+
+        async function performSearch() {
             const query = document.getElementById('search-input').value.trim();
             if (query.length === 64) {
+                try {
+                    const res = await fetch('/api/contract/' + query + '/code');
+                    const code = await res.json();
+                    if (code && code.bytecode_size > 0) {
+                        return viewContract(query);
+                    }
+                } catch(e){}
                 viewBlock(query);
             } else if (query) {
                 alert('Please enter a 64-character hex hash/address');
