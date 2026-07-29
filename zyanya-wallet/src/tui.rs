@@ -2,7 +2,7 @@ use std::io::{self, Write};
 use std::str::FromStr;
 use zyanya_consensus_core::constants::SOMPI_PER_ZYANYA;
 use zyanya_rpc_core::api::rpc::RpcApi;
-use crate::key_management::WalletKeypair;
+use crate::key_management::{display_mnemonic, WalletKeypair};
 use crate::wallet_ops::WalletOps;
 
 pub struct WalletTui {
@@ -390,18 +390,40 @@ impl WalletTui {
 
     async fn view_new_address(&mut self) {
         println!("\n--- [7] Generate New Address / Keypair ---");
-        let new_key = WalletKeypair::generate();
+        println!("  [1] BIP-39 24-Word Mnemonic (Standard)");
+        println!("  [2] Raw 64-char Hex Keypair");
+        let choice = Self::read_input("Select key generation mode [1-2, default: 1]: ");
+
+        let (new_key, phrase_opt) = if choice.trim() == "2" {
+            (WalletKeypair::generate(), None)
+        } else {
+            let passphrase_input = Self::read_input("Enter optional BIP-39 passphrase (leave blank for none): ");
+            let passphrase = if passphrase_input.is_empty() { None } else { Some(passphrase_input.as_str()) };
+            match WalletKeypair::generate_mnemonic(passphrase) {
+                Ok((key, phrase)) => (key, Some(phrase)),
+                Err(e) => {
+                    println!("Error generating BIP-39 mnemonic: {}", e);
+                    self.wait_keypress();
+                    return;
+                }
+            }
+        };
+
+        if let Some(ref phrase) = phrase_opt {
+            display_mnemonic(phrase);
+        }
+
         println!("New Address:   {}", new_key.address);
         println!("New SecretKey: {}", new_key.secret_hex());
 
-        let save = Self::read_input("Save this keypair as active wallet? (y/N): ");
+        let save = Self::read_input("\nSave this keypair as active wallet? (y/N): ");
         if save.to_lowercase() == "y" {
             self.ops.keypair = new_key;
             let path = WalletKeypair::default_key_path();
             if let Err(e) = self.ops.keypair.save_to_file(&path) {
                 println!("Warning: Failed to save to {}: {}", path.display(), e);
             } else {
-                println!("Saved to {}", path.display());
+                println!("Saved derived hex key to {}", path.display());
             }
         }
         println!("\nPress Enter to return...");
@@ -409,15 +431,20 @@ impl WalletTui {
     }
 
     async fn view_load_address(&mut self) {
-        println!("\n--- [8] Load Keypair from File or Hex ---");
-        let input = Self::read_input("Enter Private Key Hex or File Path: ");
+        println!("\n--- [8] Load Keypair from Mnemonic, Hex, or File ---");
+        let input = Self::read_input("Enter 24-word Mnemonic, Private Key Hex, or File Path: ");
         if input.is_empty() {
             println!("Cancelled.");
             self.wait_keypress();
             return;
         }
 
-        let key_result = if input.len() == 64 || input.len() == 66 {
+        let words_count = input.split_whitespace().count();
+        let key_result = if words_count >= 12 {
+            let passphrase_input = Self::read_input("Enter optional BIP-39 passphrase (leave blank for none): ");
+            let passphrase = if passphrase_input.is_empty() { None } else { Some(passphrase_input.as_str()) };
+            WalletKeypair::from_mnemonic(&input, passphrase)
+        } else if input.len() == 64 || input.len() == 66 {
             WalletKeypair::from_secret_hex(&input)
         } else {
             WalletKeypair::load_from_file(std::path::Path::new(&input))

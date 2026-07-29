@@ -16,6 +16,7 @@ path = "src/main.rs"
 
 [dependencies]
 zyanya-addresses.workspace = true
+zyanya-bip32.workspace = true
 zyanya-consensus-core.workspace = true
 zyanya-grpc-client.workspace = true
 zyanya-hashes.workspace = true

@@ -9,7 +9,7 @@ use std::str::FromStr;
 use zyanya_consensus_core::constants::SOMPI_PER_ZYANYA;
 use zyanya_rpc_core::api::rpc::RpcApi;
 
-use key_management::WalletKeypair;
+use key_management::{display_mnemonic, WalletKeypair};
 use tui::WalletTui;
 use wallet_ops::WalletOps;
 
@@ -33,9 +33,21 @@ struct Cli {
     #[arg(long)]
     secret_key: Option<String>,
 
-    /// Action: Generate a new keypair and exit
+    /// Action: Generate a new raw hex keypair and exit
     #[arg(long)]
     generate_key: bool,
+
+    /// Action: Generate a new 24-word BIP-39 mnemonic seed phrase keypair
+    #[arg(long)]
+    generate_mnemonic: bool,
+
+    /// Action: Import/restore wallet from a 24-word BIP-39 mnemonic phrase
+    #[arg(long)]
+    import_mnemonic: Option<String>,
+
+    /// Optional 25th word / passphrase for BIP-39 mnemonic seed derivation
+    #[arg(long)]
+    passphrase: Option<String>,
 
     /// Action: Query ZYAN balance for wallet address
     #[arg(long)]
@@ -78,10 +90,10 @@ struct Cli {
 async fn main() -> ExitCode {
     let cli = Cli::parse();
 
-    // 1. Generate key CLI command
+    // 1. Generate key CLI command (raw hex)
     if cli.generate_key {
         let keypair = WalletKeypair::generate();
-        println!("Generated New Zyanya Keypair:");
+        println!("Generated New Zyanya Raw Hex Keypair:");
         println!("  Address:   {}", keypair.address);
         println!("  SecretKey: {}", keypair.secret_hex());
 
@@ -93,12 +105,47 @@ async fn main() -> ExitCode {
         return ExitCode::SUCCESS;
     }
 
+    // 2. Generate BIP-39 Mnemonic CLI command
+    if cli.generate_mnemonic {
+        match WalletKeypair::generate_mnemonic(cli.passphrase.as_deref()) {
+            Ok((keypair, phrase)) => {
+                display_mnemonic(&phrase);
+                println!("Derived Keypair Details:");
+                println!("  Address:   {}", keypair.address);
+                println!("  SecretKey: {}", keypair.secret_hex());
+
+                let save_path = cli.keyfile.unwrap_or_else(WalletKeypair::default_key_path);
+                match keypair.save_to_file(&save_path) {
+                    Ok(_) => println!("Saved derived hex key to {}", save_path.display()),
+                    Err(e) => eprintln!("Error saving keypair: {}", e),
+                }
+            }
+            Err(e) => {
+                eprintln!("Error generating BIP-39 mnemonic: {}", e);
+                return ExitCode::FAILURE;
+            }
+        }
+        return ExitCode::SUCCESS;
+    }
+
     // Load or generate keypair
     let keypair = if let Some(ref hex) = cli.secret_key {
         match WalletKeypair::from_secret_hex(hex) {
             Ok(k) => k,
             Err(e) => {
                 eprintln!("Error parsing secret key hex: {}", e);
+                return ExitCode::FAILURE;
+            }
+        }
+    } else if let Some(ref phrase) = cli.import_mnemonic {
+        match WalletKeypair::from_mnemonic(phrase, cli.passphrase.as_deref()) {
+            Ok(k) => {
+                let save_path = cli.keyfile.clone().unwrap_or_else(WalletKeypair::default_key_path);
+                let _ = k.save_to_file(&save_path);
+                k
+            }
+            Err(e) => {
+                eprintln!("Error restoring wallet from BIP-39 mnemonic: {}", e);
                 return ExitCode::FAILURE;
             }
         }
@@ -113,14 +160,33 @@ async fn main() -> ExitCode {
                 }
             }
         } else {
-            // Auto-generate if no keyfile exists
-            let k = WalletKeypair::generate();
-            let _ = k.save_to_file(&key_path);
-            k
+            // Auto-generate via BIP-39 mnemonic if no keyfile exists
+            match WalletKeypair::generate_mnemonic(None) {
+                Ok((k, phrase)) => {
+                    display_mnemonic(&phrase);
+                    let _ = k.save_to_file(&key_path);
+                    k
+                }
+                Err(_) => {
+                    let k = WalletKeypair::generate();
+                    let _ = k.save_to_file(&key_path);
+                    k
+                }
+            }
         }
     };
 
     let mut ops = WalletOps::new(keypair, cli.rpcserver.clone());
+
+    // If standalone --import-mnemonic command (without action flags)
+    if cli.import_mnemonic.is_some() && !cli.balance && !cli.send_zyan && !cli.swap_dex && !cli.demo {
+        println!("Successfully Restored Wallet from BIP-39 Mnemonic:");
+        println!("  Address:   {}", ops.keypair.address);
+        println!("  SecretKey: {}", ops.keypair.secret_hex());
+        let save_path = cli.keyfile.unwrap_or_else(WalletKeypair::default_key_path);
+        println!("Saved derived hex key to {}", save_path.display());
+        return ExitCode::SUCCESS;
+    }
 
     // 2. Automated Live Demo
     if cli.demo {
@@ -250,12 +316,48 @@ async fn run_live_demo(ops: &mut WalletOps) -> ExitCode {
     println!("                      ZYANYA WALLET LIVE DEMO EXECUTION                        ");
     println!("================================================================================");
 
-    // Step 1: Key Management
-    println!("\n[STEP 1] Key Management");
-    let demo_wallet = WalletKeypair::generate();
-    println!("  Generated User Keypair:");
+    // Step 1: BIP-39 Key Management & Verification
+    println!("\n[STEP 1] BIP-39 Mnemonic Key Management & Restoration Test");
+    let (demo_wallet, mnemonic_phrase) = match WalletKeypair::generate_mnemonic(Some("zyanya_passphrase_demo")) {
+        Ok(res) => res,
+        Err(e) => {
+            eprintln!("  Failed to generate BIP-39 mnemonic: {}", e);
+            return ExitCode::FAILURE;
+        }
+    };
+
+    println!("  Generated 24-word BIP-39 Seed Phrase:");
+    display_mnemonic(&mnemonic_phrase);
+
+    println!("  Generated Wallet Keypair:");
     println!("    Address:   {}", demo_wallet.address);
     println!("    SecretKey: {}", demo_wallet.secret_hex());
+
+    // Verify restore from mnemonic
+    let restored_wallet = match WalletKeypair::from_mnemonic(&mnemonic_phrase, Some("zyanya_passphrase_demo")) {
+        Ok(w) => w,
+        Err(e) => {
+            eprintln!("  Failed to import BIP-39 mnemonic: {}", e);
+            return ExitCode::FAILURE;
+        }
+    };
+
+    println!("\n  Restoring Wallet from Mnemonic Phrase...");
+    println!("    Restored Address:   {}", restored_wallet.address);
+    println!("    Restored SecretKey: {}", restored_wallet.secret_hex());
+
+    assert_eq!(
+        demo_wallet.address.to_string(),
+        restored_wallet.address.to_string(),
+        "Restored address must match generated address!"
+    );
+    assert_eq!(
+        demo_wallet.secret_hex(),
+        restored_wallet.secret_hex(),
+        "Restored secret key must match generated secret key!"
+    );
+    println!("  [SUCCESS] BIP-39 Mnemonic Restoration Verified: Addresses match 100%!\n");
+
     ops.keypair = demo_wallet.clone();
 
     let client = match ops.connect_rpc().await {
