@@ -170,8 +170,11 @@ impl Daemon {
 
     pub async fn start(&mut self) -> GrpcClient {
         self.run();
-        // Wait for the node to initialize before connecting to RPC
-        tokio::time::sleep(Duration::from_secs(1)).await;
+        // Wait for the node gRPC server to start before connecting
+        tokio::select! {
+            _ = self.grpc_server_started.clone() => {},
+            _ = tokio::time::sleep(Duration::from_secs(5)) => {},
+        }
         self.new_client().await
     }
 

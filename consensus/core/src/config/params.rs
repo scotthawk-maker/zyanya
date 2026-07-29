@@ -452,12 +452,12 @@ pub const TESTNET_PARAMS: Params = Params {
     pre_deflationary_phase_base_subsidy: 5_000_000_000,
     coinbase_maturity: 100,
     skip_proof_of_work: false,
-    max_block_level: 250,
+    max_block_level: 225,
     pruning_proof_m: 1000,
 
     payload_activation: ForkActivation::never(),
     runtime_sig_op_counting: ForkActivation::never(),
-    net_magic: [0x54, 0x45, 0x53, 0x54], // ASCII: "TEST"
+    net_magic: [0x5A, 0x59, 0x4E, 0x54], // ASCII: "ZYNT"
 };
 
 pub const TESTNET11_PARAMS: Params = Params {
@@ -670,5 +670,35 @@ mod tests {
         assert_eq!(genesis_txs.len(), 1);
         assert!(genesis_txs[0].outputs.is_empty(), "Genesis transaction must have ZERO outputs (zero premine)");
         assert!(params.genesis.coinbase_payload.ends_with(b"ZYAN-MAINNET"), "Genesis payload must contain mainnet magic");
+    }
+
+    #[test]
+    fn test_testnet_params_and_zero_premine_genesis() {
+        let params = TESTNET_PARAMS;
+
+        // 1. Network identification & magic
+        assert_eq!(params.net.network_type, NetworkType::Testnet);
+        assert_eq!(params.net.suffix, Some(10));
+        assert_eq!(params.net_magic, [0x5A, 0x59, 0x4E, 0x54], "Testnet magic must be 'ZYNT'");
+        assert_ne!(params.net_magic, MAINNET_PARAMS.net_magic, "Testnet magic must be isolated from mainnet");
+        assert_ne!(params.net_magic, DEVNET_PARAMS.net_magic, "Testnet magic must be isolated from devnet");
+
+        // 2. Ports
+        assert_eq!(params.net.default_p2p_port(), 18211);
+        assert_eq!(params.net.default_rpc_port(), 18210);
+        assert_eq!(params.net.default_borsh_rpc_port(), 19210);
+        assert_eq!(params.net.default_json_rpc_port(), 20210);
+
+        // 3. Consensus params
+        assert_eq!(params.ghostdag_k, 18, "GhostDAG K must be 18");
+        assert_eq!(params.bps(), 1, "BPS must be 1");
+        assert_eq!(params.deflationary_phase_daa_score, 604_800, "Deflationary phase must be 1 week (604,800 DAA score)");
+        assert_eq!(params.pre_deflationary_phase_base_subsidy, 5_000_000_000, "Base subsidy must be 50 ZYAN (5,000,000,000 sompi)");
+
+        // 4. Genesis verification (zero premine fair start)
+        let genesis_txs = params.genesis.build_genesis_transactions();
+        assert_eq!(genesis_txs.len(), 1);
+        assert!(genesis_txs[0].outputs.is_empty(), "Genesis transaction must have ZERO outputs (zero premine)");
+        assert!(params.genesis.coinbase_payload.ends_with(b"ZYNT-TESTNET"), "Genesis payload must contain testnet magic payload");
     }
 }

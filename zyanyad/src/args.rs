@@ -110,7 +110,7 @@ impl Default for Args {
             max_tracked_addresses: 0,
             enable_unsynced_mining: false,
             enable_mainnet_mining: true,
-            mainnet: true,
+            mainnet: false,
             testnet: false,
             testnet_suffix: 10,
             devnet: false,
@@ -413,33 +413,39 @@ impl Args {
             })?;
         }
 
-        let args = Args {
-            appdir: m.get_one::<String>("appdir").cloned().or(defaults.appdir),
-            logdir: m.get_one::<String>("logdir").cloned().or(defaults.logdir),
-            no_log_files: arg_match_unwrap_or::<bool>(&m, "nologfiles", defaults.no_log_files),
-            rpclisten: m.get_one::<ContextualNetAddress>("rpclisten").cloned().or(defaults.rpclisten),
-            rpclisten_borsh: m.get_one::<WrpcNetAddress>("rpclisten-borsh").cloned().or(defaults.rpclisten_borsh),
-            rpclisten_json: m.get_one::<WrpcNetAddress>("rpclisten-json").cloned().or(defaults.rpclisten_json),
-            unsafe_rpc: arg_match_unwrap_or::<bool>(&m, "unsaferpc", defaults.unsafe_rpc),
-            wrpc_verbose: false,
-            log_level: arg_match_unwrap_or::<String>(&m, "log_level", defaults.log_level),
-            async_threads: arg_match_unwrap_or::<usize>(&m, "async_threads", defaults.async_threads),
-            connect_peers: arg_match_many_unwrap_or::<ContextualNetAddress>(&m, "connect-peers", defaults.connect_peers),
-            add_peers: arg_match_many_unwrap_or::<ContextualNetAddress>(&m, "add-peers", defaults.add_peers),
-            listen: m.get_one::<ContextualNetAddress>("listen").cloned().or(defaults.listen),
-            outbound_target: arg_match_unwrap_or::<usize>(&m, "outpeers", defaults.outbound_target),
-            inbound_limit: arg_match_unwrap_or::<usize>(&m, "maxinpeers", defaults.inbound_limit),
-            rpc_max_clients: arg_match_unwrap_or::<usize>(&m, "rpcmaxclients", defaults.rpc_max_clients),
-            max_tracked_addresses: arg_match_unwrap_or::<usize>(&m, "max-tracked-addresses", defaults.max_tracked_addresses),
-            reset_db: arg_match_unwrap_or::<bool>(&m, "reset-db", defaults.reset_db),
-            enable_unsynced_mining: arg_match_unwrap_or::<bool>(&m, "enable-unsynced-mining", defaults.enable_unsynced_mining),
-            enable_mainnet_mining: arg_match_unwrap_or::<bool>(&m, "enable-mainnet-mining", defaults.enable_mainnet_mining),
-            utxoindex: arg_match_unwrap_or::<bool>(&m, "utxoindex", defaults.utxoindex),
-            mainnet: arg_match_unwrap_or::<bool>(&m, "mainnet", defaults.mainnet),
-            testnet: arg_match_unwrap_or::<bool>(&m, "testnet", defaults.testnet),
-            testnet_suffix: arg_match_unwrap_or::<u32>(&m, "netsuffix", defaults.testnet_suffix),
-            devnet: arg_match_unwrap_or::<bool>(&m, "devnet", defaults.devnet),
-            simnet: arg_match_unwrap_or::<bool>(&m, "simnet", defaults.simnet),
+        let testnet = arg_match_unwrap_or::<bool>(&m, "testnet", defaults.testnet);
+        let devnet = arg_match_unwrap_or::<bool>(&m, "devnet", defaults.devnet);
+        let simnet = arg_match_unwrap_or::<bool>(&m, "simnet", defaults.simnet);
+        let mainnet = arg_match_unwrap_or::<bool>(&m, "mainnet", defaults.mainnet);
+        let testnet_suffix = arg_match_unwrap_or::<u32>(&m, "netsuffix", defaults.testnet_suffix);
+
+            let args = Args {
+                appdir: m.get_one::<String>("appdir").cloned().or(defaults.appdir),
+                logdir: m.get_one::<String>("logdir").cloned().or(defaults.logdir),
+                no_log_files: arg_match_unwrap_or::<bool>(&m, "nologfiles", defaults.no_log_files),
+                rpclisten: m.get_one::<ContextualNetAddress>("rpclisten").cloned().or(defaults.rpclisten),
+                rpclisten_borsh: m.get_one::<WrpcNetAddress>("rpclisten-borsh").cloned().or(defaults.rpclisten_borsh),
+                rpclisten_json: m.get_one::<WrpcNetAddress>("rpclisten-json").cloned().or(defaults.rpclisten_json),
+                unsafe_rpc: arg_match_unwrap_or::<bool>(&m, "unsaferpc", defaults.unsafe_rpc),
+                wrpc_verbose: false,
+                log_level: arg_match_unwrap_or::<String>(&m, "log_level", defaults.log_level),
+                async_threads: arg_match_unwrap_or::<usize>(&m, "async_threads", defaults.async_threads),
+                connect_peers: arg_match_many_unwrap_or::<ContextualNetAddress>(&m, "connect-peers", defaults.connect_peers),
+                add_peers: arg_match_many_unwrap_or::<ContextualNetAddress>(&m, "add-peers", defaults.add_peers),
+                listen: m.get_one::<ContextualNetAddress>("listen").cloned().or(defaults.listen),
+                outbound_target: arg_match_unwrap_or::<usize>(&m, "outpeers", defaults.outbound_target),
+                inbound_limit: arg_match_unwrap_or::<usize>(&m, "maxinpeers", defaults.inbound_limit),
+                rpc_max_clients: arg_match_unwrap_or::<usize>(&m, "rpcmaxclients", defaults.rpc_max_clients),
+                max_tracked_addresses: arg_match_unwrap_or::<usize>(&m, "max-tracked-addresses", defaults.max_tracked_addresses),
+                reset_db: arg_match_unwrap_or::<bool>(&m, "reset-db", defaults.reset_db),
+                enable_unsynced_mining: arg_match_unwrap_or::<bool>(&m, "enable-unsynced-mining", defaults.enable_unsynced_mining),
+                enable_mainnet_mining: arg_match_unwrap_or::<bool>(&m, "enable-mainnet-mining", defaults.enable_mainnet_mining),
+                utxoindex: arg_match_unwrap_or::<bool>(&m, "utxoindex", defaults.utxoindex),
+                mainnet,
+                testnet,
+                testnet_suffix,
+                devnet,
+                simnet,
             archival: arg_match_unwrap_or::<bool>(&m, "archival", defaults.archival),
             sanity: arg_match_unwrap_or::<bool>(&m, "sanity", defaults.sanity),
             yes: arg_match_unwrap_or::<bool>(&m, "yes", defaults.yes),
@@ -566,3 +572,26 @@ fn arg_match_many_unwrap_or<T: Clone + Send + Sync + 'static>(m: &clap::ArgMatch
   -s, --service=                            Service command {install, remove, start, stop}
       --nogrpc                              Don't initialize the gRPC server
 */
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_args_network_resolution() {
+        let args = Args::parse(["zyanyad"]).unwrap();
+        assert_eq!(args.network(), NetworkId::new(NetworkType::Mainnet));
+
+        let args = Args::parse(["zyanyad", "--testnet"]).unwrap();
+        assert_eq!(args.network(), NetworkId::with_suffix(NetworkType::Testnet, 10));
+
+        let args = Args::parse(["zyanyad", "--devnet"]).unwrap();
+        assert_eq!(args.network(), NetworkId::new(NetworkType::Devnet));
+
+        let args = Args::parse(["zyanyad", "--simnet"]).unwrap();
+        assert_eq!(args.network(), NetworkId::new(NetworkType::Simnet));
+
+        let args = Args::parse(["zyanyad", "--mainnet"]).unwrap();
+        assert_eq!(args.network(), NetworkId::new(NetworkType::Mainnet));
+    }
+}
