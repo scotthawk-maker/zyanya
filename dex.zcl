@@ -1,0 +1,130 @@
+// Zyanya DEX Contract in Zyanya Contract Language (ZCL)
+// Constant-product AMM (x * y = k with 0.3% swap fee)
+//
+// Storage Layout:
+// Key 0: reserveA (Reserve of Token A / ZYAN)
+// Key 1: reserveB (Reserve of Token B / GHOST)
+// Key 2: totalLPSupply (Total LP tokens minted)
+// Key (caller + 10): LP balance for caller
+
+contract DEX {
+    // Entry point 0: Constructor / Initialization (takes 0 params)
+    fn init() {
+        return 0;
+    }
+
+    // Entry point 1: addLiquidity(caller, amountA, amountB)
+    fn addLiquidity(caller, amountA, amountB) {
+        let resA = sload(0);
+        let resB = sload(1);
+        let totalLP = sload(2);
+        let minted = 0;
+
+        if (totalLP == 0) {
+            minted = amountA + amountB;
+        } else {
+            let lpA = (amountA * totalLP) / resA;
+            let lpB = (amountB * totalLP) / resB;
+            if (lpA < lpB) {
+                minted = lpA;
+            } else {
+                minted = lpB;
+            }
+        }
+
+        sstore(0, resA + amountA);
+        sstore(1, resB + amountB);
+        sstore(2, totalLP + minted);
+
+        let lpKey = caller + 10;
+        let userLP = sload(lpKey);
+        sstore(lpKey, userLP + minted);
+
+        return minted;
+    }
+
+    // Entry point 2: swap(tokenIn, amountIn)
+    // tokenIn: 0 for Token A (ZYAN), 1 for Token B (GHOST)
+    // Formula with 0.3% fee: amountOut = (reserveOut * amountIn * 997) / (reserveIn * 1000 + amountIn * 997)
+    fn swap(tokenIn, amountIn) {
+        let resA = sload(0);
+        let resB = sload(1);
+        let amountOut = 0;
+
+        if (tokenIn == 0) {
+            let num = resB * amountIn * 997;
+            let den = resA * 1000 + amountIn * 997;
+            amountOut = num / den;
+
+            sstore(0, resA + amountIn);
+            sstore(1, resB - amountOut);
+        } else {
+            let num = resA * amountIn * 997;
+            let den = resB * 1000 + amountIn * 997;
+            amountOut = num / den;
+
+            sstore(1, resB + amountIn);
+            sstore(0, resA - amountOut);
+        }
+
+        return amountOut;
+    }
+
+    // Entry point 3: removeLiquidity(caller, lpAmount)
+    fn removeLiquidity(caller, lpAmount) {
+        let totalLP = sload(2);
+        let lpKey = caller + 10;
+        let userLP = sload(lpKey);
+
+        if (userLP < lpAmount) {
+            return 0;
+        }
+        if (totalLP == 0) {
+            return 0;
+        }
+
+        let resA = sload(0);
+        let resB = sload(1);
+
+        let amountA = (lpAmount * resA) / totalLP;
+        let amountB = (lpAmount * resB) / totalLP;
+
+        sstore(0, resA - amountA);
+        sstore(1, resB - amountB);
+        sstore(2, totalLP - lpAmount);
+        sstore(lpKey, userLP - lpAmount);
+
+        return amountA;
+    }
+
+    // Entry point 4: getReserves() -> returns reserveA
+    fn getReserves() {
+        return sload(0);
+    }
+
+    // Entry point 5: getReserveB() -> returns reserveB
+    fn getReserveB() {
+        return sload(1);
+    }
+
+    // Entry point 6: getPrice() -> returns price ratio (resA * 1000 / resB)
+    fn getPrice() {
+        let resA = sload(0);
+        let resB = sload(1);
+        if (resB == 0) {
+            return 0;
+        }
+        return (resA * 1000) / resB;
+    }
+
+    // Entry point 7: getLiquidity(caller) -> returns caller's LP balance
+    fn getLiquidity(caller) {
+        let lpKey = caller + 10;
+        return sload(lpKey);
+    }
+
+    // Entry point 8: getTotalLPSupply() -> returns total LP supply
+    fn getTotalLPSupply() {
+        return sload(2);
+    }
+}

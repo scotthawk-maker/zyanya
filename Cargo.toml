@@ -62,6 +62,8 @@ members = [
     "utils/alloc",
     "zyanya-query",
     "zyanya-vm",
+    "zyanya-explorer",
+    "zyanya-wallet",
 ]
 
 [workspace.package]
@@ -141,6 +143,7 @@ zyanyad = { version = "0.3.17", path = "zyanyad" }
 zyanya-alloc = { version = "0.3.17", path = "utils/alloc" }
 zyanya-query = { version = "0.3.17", path = "zyanya-query" }
 zyanya-vm = { version = "0.3.17", path = "zyanya-vm" }
+zyanya-explorer = { version = "0.3.17", path = "zyanya-explorer" }
 
 # external
 aes = "0.8.3"

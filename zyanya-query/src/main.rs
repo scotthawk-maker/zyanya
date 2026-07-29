@@ -250,10 +250,125 @@ enum Commands {
         #[arg(long, default_value_t = 1)]
         gas_price: u64,
         /// Deposit amount
+        /// Deposit amount
         #[arg(long, default_value_t = 0)]
         deposit: u64,
     },
+
+    /// Create a new DEX contract for token pair A and B
+    #[command(name = "dex-create")]
+    DexCreate {
+        /// Token A address (or name)
+        #[arg(long, default_value = "")]
+        token_a: String,
+        /// Token B address (or name)
+        #[arg(long, default_value = "")]
+        token_b: String,
+        /// Path to ZCL source file
+        #[arg(long, default_value = "dex.zcl")]
+        source: String,
+        /// Maximum gas limit
+        #[arg(long, default_value_t = 100000)]
+        gas: u64,
+        /// Gas price
+        #[arg(long, default_value_t = 1)]
+        gas_price: u64,
+        /// Deposit amount
+        #[arg(long, default_value_t = 0)]
+        deposit: u64,
+    },
+
+    /// Add liquidity to DEX pool
+    #[command(name = "dex-add-liquidity")]
+    DexAddLiquidity {
+        /// Target DEX contract address
+        #[arg(long)]
+        dex: String,
+        /// Amount of Token A to deposit
+        #[arg(long)]
+        amount_a: u64,
+        /// Amount of Token B to deposit
+        #[arg(long)]
+        amount_b: u64,
+        /// Caller ID / storage key
+        #[arg(long, default_value = "10")]
+        caller: String,
+        /// Maximum gas limit
+        #[arg(long, default_value_t = 100000)]
+        gas: u64,
+        /// Gas price
+        #[arg(long, default_value_t = 1)]
+        gas_price: u64,
+        /// Deposit amount
+        #[arg(long, default_value_t = 0)]
+        deposit: u64,
+    },
+
+    /// Swap tokens in DEX pool
+    #[command(name = "dex-swap")]
+    DexSwap {
+        /// Target DEX contract address
+        #[arg(long)]
+        dex: String,
+        /// Token to swap in: 'a', 'b', '0', or '1'
+        #[arg(long)]
+        token_in: String,
+        /// Amount of input token to swap
+        #[arg(long)]
+        amount_in: u64,
+        /// Maximum gas limit
+        #[arg(long, default_value_t = 100000)]
+        gas: u64,
+        /// Gas price
+        #[arg(long, default_value_t = 1)]
+        gas_price: u64,
+        /// Deposit amount
+        #[arg(long, default_value_t = 0)]
+        deposit: u64,
+    },
+
+    /// Remove liquidity from DEX pool
+    #[command(name = "dex-remove-liquidity")]
+    DexRemoveLiquidity {
+        /// Target DEX contract address
+        #[arg(long)]
+        dex: String,
+        /// LP token amount to burn
+        #[arg(long)]
+        lp_amount: u64,
+        /// Caller ID / storage key
+        #[arg(long, default_value = "10")]
+        caller: String,
+        /// Maximum gas limit
+        #[arg(long, default_value_t = 100000)]
+        gas: u64,
+        /// Gas price
+        #[arg(long, default_value_t = 1)]
+        gas_price: u64,
+        /// Deposit amount
+        #[arg(long, default_value_t = 0)]
+        deposit: u64,
+    },
+
+    /// Query DEX reserves
+    #[command(name = "dex-reserves")]
+    DexReserves {
+        /// Target DEX contract address
+        #[arg(long)]
+        dex: String,
+    },
+
+    /// Query DEX price ratio
+    #[command(name = "dex-price")]
+    DexPrice {
+        /// Target DEX contract address
+        #[arg(long)]
+        dex: String,
+    },
 }
+
+const DEFAULT_DEX_ZCL: &str = include_str!("../../dex.zcl");
+
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -466,6 +581,75 @@ async fn run_query(client: &GrpcClient, command: Commands) -> Result<String, Box
             let parameters = vec![to_u64, amount];
             let res = client.invoke_contract(contract_address, 3, parameters, gas, gas_price, deposit).await?;
             serde_json::to_value(&res)?
+        }
+        Commands::DexCreate { token_a, token_b, source, gas, gas_price, deposit } => {
+            let content = match std::fs::read_to_string(&source) {
+                Ok(c) => c,
+                Err(_) => DEFAULT_DEX_ZCL.to_string(),
+            };
+            let bytecode = zyanya_vm::Compiler::compile(&content)?;
+            let res = client.deploy_contract(bytecode, gas, gas_price, deposit).await?;
+            serde_json::json!({
+                "contractAddress": res.contract_address,
+                "transactionId": res.transaction_id,
+                "tokenA": token_a,
+                "tokenB": token_b,
+                "gasUsed": res.gas_used,
+                "success": res.success
+            })
+        }
+        Commands::DexAddLiquidity { dex, amount_a, amount_b, caller, gas, gas_price, deposit } => {
+            let contract_address = RpcHash::from_str(&dex)?;
+            let caller_u64 = parse_u64_key(&caller)?;
+            let parameters = vec![caller_u64, amount_a, amount_b];
+            let res = client.invoke_contract(contract_address, 1, parameters, gas, gas_price, deposit).await?;
+            serde_json::to_value(&res)?
+        }
+        Commands::DexSwap { dex, token_in, amount_in, gas, gas_price, deposit } => {
+            let contract_address = RpcHash::from_str(&dex)?;
+            let token_in_val: u64 = match token_in.to_lowercase().as_str() {
+                "a" | "0" | "zyan" => 0,
+                "b" | "1" | "ghost" => 1,
+                _ => token_in.parse::<u64>().unwrap_or(0),
+            };
+            let parameters = vec![token_in_val, amount_in];
+            let res = client.invoke_contract(contract_address, 2, parameters, gas, gas_price, deposit).await?;
+            serde_json::to_value(&res)?
+        }
+        Commands::DexRemoveLiquidity { dex, lp_amount, caller, gas, gas_price, deposit } => {
+            let contract_address = RpcHash::from_str(&dex)?;
+            let caller_u64 = parse_u64_key(&caller)?;
+            let parameters = vec![caller_u64, lp_amount];
+            let res = client.invoke_contract(contract_address, 3, parameters, gas, gas_price, deposit).await?;
+            serde_json::to_value(&res)?
+        }
+        Commands::DexReserves { dex } => {
+            let contract_address = RpcHash::from_str(&dex)?;
+            let res_a = client.get_contract_state(contract_address, 0).await?;
+            let res_b = client.get_contract_state(contract_address, 1).await?;
+            let total_lp = client.get_contract_state(contract_address, 2).await?;
+            serde_json::json!({
+                "dex": dex,
+                "reserveA": res_a.value,
+                "reserveB": res_b.value,
+                "totalLPSupply": total_lp.value
+            })
+        }
+        Commands::DexPrice { dex } => {
+            let contract_address = RpcHash::from_str(&dex)?;
+            let res_a = client.get_contract_state(contract_address, 0).await?;
+            let res_b = client.get_contract_state(contract_address, 1).await?;
+            let r_a = res_a.value as f64;
+            let r_b = res_b.value as f64;
+            let price_a_per_b = if r_b > 0.0 { r_a / r_b } else { 0.0 };
+            let price_b_per_a = if r_a > 0.0 { r_b / r_a } else { 0.0 };
+            serde_json::json!({
+                "dex": dex,
+                "reserveA": res_a.value,
+                "reserveB": res_b.value,
+                "priceRatioAperB": price_a_per_b,
+                "priceRatioBperA": price_b_per_a
+            })
         }
     };
 
