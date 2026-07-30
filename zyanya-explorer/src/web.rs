@@ -664,7 +664,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title mono">RECENT BLOCKS</h3>
-                    <span class="mono" style="font-size: 0.8rem; color: #708090;">Auto-refreshing live devnet</span>
+                    <span class="mono" style="font-size: 0.8rem; color: #708090;">Auto-refreshing live chain &bull; last updated <span id="last-updated">&hellip;</span></span>
                 </div>
                 <table>
                     <thead>
@@ -844,6 +844,8 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                     '</tr>';
                 });
                 document.getElementById('blocks-tbody').innerHTML = html;
+                const lu = document.getElementById('last-updated');
+                if (lu) lu.innerText = new Date().toLocaleTimeString();
             } catch (err) {
                 console.error(err);
             }
@@ -1061,7 +1063,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
         }
 
         loadDashboard();
-        setInterval(loadDashboard, 10000);
+        setInterval(loadDashboard, 3000);
     </script>
     <script src="/webmcp.js"></script>
 </body>
