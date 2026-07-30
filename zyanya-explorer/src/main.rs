@@ -80,6 +80,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/", get(landing_handler))
         .route("/explorer", get(explorer_handler))
         .route("/tools", get(tools_handler))
+        .route("/testnet", get(testnet_handler))
+        .route("/future", get(future_handler))
         .route("/webmcp.js", get(webmcp_js_handler))
         .route("/brand/:asset", get(brand_asset_handler))
         .route("/api/info", get(api_info_handler))

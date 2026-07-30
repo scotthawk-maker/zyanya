@@ -26,6 +26,14 @@ pub async fn tools_handler() -> Html<&'static str> {
     Html(TOOLS_HTML)
 }
 
+pub async fn testnet_handler() -> Html<&'static str> {
+    Html(TESTNET_HTML)
+}
+
+pub async fn future_handler() -> Html<&'static str> {
+    Html(FUTURE_HTML)
+}
+
 pub async fn webmcp_js_handler() -> Response {
     ([(header::CONTENT_TYPE, "application/javascript")], WEBMCP_SCRIPT).into_response()
 }

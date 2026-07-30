@@ -340,8 +340,9 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
             <nav>
                 <a href="#pillars">Pillars</a>
                 <a href="#economics">Economics</a>
-                <a href="#join">Join Testnet</a>
+                <a href="/testnet">Testnet</a>
                 <a href="/explorer" target="_blank">Explorer</a>
+                <a href="/future">Roadmap</a>
                 <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" class="mono" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
@@ -1911,3 +1912,148 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
 </body>
 </html>
 "###;
+
+pub const TESTNET_HTML: &str = r###"<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Zyanya Testnet — All-in-One Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--void:#0A0F1C;--shadow-teal:#0D3B50;--spectral-blue:#7EC8D3;--text:#E0E0E0;--burn:#FF4D4D;--font-mono:'Fira Code',monospace}
+*{box-sizing:border-box;margin:0;padding:0}html,body{background:var(--void);color:var(--text);font-family:var(--font-mono);line-height:1.6}
+.container{max-width:900px;margin:0 auto;padding:0 20px}
+header{display:flex;justify-content:center;align-items:center;padding:2rem 0;border-bottom:1px solid var(--shadow-teal)}
+nav a{color:var(--spectral-blue);text-decoration:none;margin-left:1.5rem;font-weight:600;font-size:.95rem}
+.top-logo{text-align:center;margin:2rem 0 1rem}.top-logo svg{max-width:520px;width:100%;height:auto}
+main{padding:2rem 0 4rem}section{margin-bottom:4rem;text-align:center}
+h1{font-size:2rem;color:var(--spectral-blue);margin-bottom:.5rem}h2{font-size:1.6rem;margin-bottom:1.5rem;text-transform:uppercase;letter-spacing:2px}
+h4{color:var(--spectral-blue);margin:2rem 0 .5rem;text-align:left;font-size:1.1rem}p{text-align:left;margin-bottom:1rem}
+.code-block{background:var(--void);border:1px solid var(--shadow-teal);border-radius:4px;padding:1rem;text-align:left;overflow-x:auto;margin:1rem 0}
+code{font-family:var(--font-mono);font-size:.9rem;color:var(--spectral-blue);white-space:pre}
+.callout{background:rgba(13,59,80,.4);border:1px solid var(--shadow-teal);border-radius:8px;padding:1rem 1.5rem;margin:1.5rem auto;text-align:left}
+.callout strong{color:var(--spectral-blue)}
+a{color:var(--spectral-blue)}.btn{display:inline-block;padding:.8rem 1.8rem;border-radius:4px;font-weight:600;text-decoration:none;margin:.5rem}
+.btn-primary{background:var(--spectral-blue);color:var(--void)}.btn-secondary{border:2px solid var(--shadow-teal);color:var(--text)}
+footer{text-align:center;padding:2rem 0;border-top:1px solid var(--shadow-teal);color:rgba(224,224,224,.5);font-size:.85rem}
+.choice{display:flex;gap:2rem;flex-wrap:wrap;justify-content:center;margin:1.5rem 0}
+.choice>div{flex:1;min-width:280px;text-align:left;background:rgba(13,59,80,.25);border:1px solid var(--shadow-teal);border-radius:8px;padding:1.5rem}
+.badge{display:inline-block;font-size:.7rem;padding:.2rem .5rem;border-radius:3px;text-transform:uppercase;letter-spacing:1px;margin-left:.5rem}
+.badge-live{background:var(--spectral-blue);color:var(--void)}.badge-planned{background:transparent;border:1px solid var(--text);color:var(--text)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;text-align:left}
+.card{background:var(--shadow-teal);padding:1.5rem;border-radius:8px;border:1px solid rgba(126,200,211,.2)}
+.card h3{color:var(--spectral-blue);margin-bottom:.5rem}
+</style></head><body>
+<div class="container"><header><nav>
+<a href="/">Home</a><a href="/explorer" target="_blank">Explorer</a><a href="/testnet">Testnet</a><a href="/future">Roadmap</a><a href="https://github.com/scotthawk-maker/zyanya" target="_blank">GitHub</a>
+</nav></header>
+<div class="top-logo"><div id="logo-container"></div></div>
+<main>
+<section><h1>Join the Zyanya Testnet</h1><p style="text-align:center;max-width:640px;margin:0 auto 1.5rem">One flow — run a node, get a wallet, mine, and transact. Testnet coins have no value; break things and tell us what you find.</p></section>
+
+<div class="callout"><strong>Prerequisite:</strong> an IPv6-enabled connection. Zyanya is IPv6-native — the seed, the explorer, and the P2P layer all speak IPv6. See the <a href="/#ipv6-safety">IPv6 safety guide</a> to harden your node first.</div>
+
+<section><h2>1 · Download</h2>
+<p>Grab the binaries from the GitHub release — Windows zip or Linux tarball (includes zyanyad, zyanya-wallet, zyanya-miner, zyanya-query, gen-address + this README).</p>
+<a class="btn btn-primary" href="https://github.com/scotthawk-maker/zyanya/releases/tag/v0.3.17-testnet" target="_blank">Download from GitHub</a></section>
+
+<section><h2>2 · Run a full node</h2>
+<p>Syns the chain and connects to the public seed over IPv6. <code>--enable-unsynced-mining</code> lets it accept blocks while still syncing.</p>
+<div class="code-block"><code>zyanyad --testnet \
+  --connect=[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18211 \
+  --enable-unsynced-mining</code></div>
+<p style="text-align:center;color:rgba(224,224,224,.6)">Or run it in Docker — see the README.</p></section>
+
+<section><h2>3 · Get a wallet address</h2>
+<p>On first run the wallet auto-generates a 24-word BIP-39 mnemonic, derives a <code>zyanyatest:</code> address, and saves it to <code>~/.zyanya/wallet.key</code> — then drops you into the TUI.</p>
+<div class="code-block"><code>zyanya-wallet --testnet</code></div>
+<p><strong>Write down the 24 words.</strong> For an optional 25th-word passphrase, create explicitly: <code>zyanya-wallet --testnet --generate-mnemonic --passphrase "your 25th word"</code>. (Just need a mining address fast? <code>gen-address --testnet</code> prints one without the full wallet.)</p></section>
+
+<section><h2>4 · Mine — solo or pool</h2>
+<p>Choose your mode. Point the miner at <em>your local node</em> (127.0.0.1, not the seed) with your address. <code>--cpu-percent 25</code> keeps your CPU sane.</p>
+<div class="choice">
+<div><h4 style="margin-top:0">⛏️ Solo</h4>
+<div class="code-block"><code>zyanya-miner --testnet \
+  --mine-when-not-synced --cpu-percent 25 \
+  --zyanyad-address=127.0.0.1 --port=18210 \
+  --mining-address=zyanyatest:YOUR_ADDRESS</code></div>
+<p style="margin:0">Mines directly to your node. Rewards go straight to your wallet.</p></div>
+<div><h4 style="margin-top:0">🏊 Pool (Stratum)</h4>
+<div class="code-block"><code>zyanya-miner --testnet --cpu-percent 25 \
+  --pool=[pool-ipv6]:3334</code></div>
+<p style="margin:0">Connects to a Zyanya Stratum pool. (Run your own with <code>zyanya-pool</code>.)</p></div>
+</div></section>
+
+<section><h2>5 · Check balance &amp; send</h2>
+<p>Back in the wallet TUI: <code>[1]</code> balances, <code>[2]</code> send ZYAN, <code>[5]</code> swap on the DEX. Or use the CLI.</p>
+<div class="code-block"><code>zyanya-wallet --testnet --balance
+zyanya-wallet --testnet --send-zyan --to zyanyatest:RECIPIENT --amount 10</code></div></section>
+
+<div class="callout"><strong>Heads-up — 100-block maturity:</strong> mined rewards can't be spent until 100 blocks confirm. The wallet automatically skips immature coinbase UTXOs, so just wait ~100 blocks after mining before the balance is spendable.</div>
+</main>
+<footer><p>The ghost in the IPv6 machine. Forever, always. &bull; <a href="/">zyanya.scottcloudhawk.org</a></p></footer>
+</div>
+<script>fetch('/brand/zyanya-logo.svg').then(r=>r.text()).then(t=>{document.getElementById('logo-container').innerHTML=t;});</script>
+</body></html>"###;
+
+pub const FUTURE_HTML: &str = r###"<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Zyanya — Roadmap &amp; Features</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--void:#0A0F1C;--shadow-teal:#0D3B50;--spectral-blue:#7EC8D3;--text:#E0E0E0;--burn:#FF4D4D;--font-mono:'Fira Code',monospace}
+*{box-sizing:border-box;margin:0;padding:0}html,body{background:var(--void);color:var(--text);font-family:var(--font-mono);line-height:1.6}
+.container{max-width:1000px;margin:0 auto;padding:0 20px}
+header{display:flex;justify-content:center;align-items:center;padding:2rem 0;border-bottom:1px solid var(--shadow-teal)}
+nav a{color:var(--spectral-blue);text-decoration:none;margin-left:1.5rem;font-weight:600;font-size:.95rem}
+.top-logo{text-align:center;margin:2rem 0 1rem}.top-logo svg{max-width:520px;width:100%;height:auto}
+main{padding:2rem 0 4rem}section{margin-bottom:4rem;text-align:center}
+h1{font-size:2rem;color:var(--spectral-blue);margin-bottom:.5rem}h2{font-size:1.6rem;margin-bottom:2rem;text-transform:uppercase;letter-spacing:2px}
+p{text-align:left;margin-bottom:1rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;text-align:left}
+.card{background:var(--shadow-teal);padding:1.75rem;border-radius:8px;border:1px solid rgba(126,200,211,.2)}
+.card h3{color:var(--spectral-blue);margin-bottom:.4rem;font-size:1.1rem;display:flex;align-items:center;justify-content:space-between}
+.card p{color:rgba(224,224,224,.8);font-size:.92rem;margin:0}
+.badge{font-size:.65rem;padding:.2rem .5rem;border-radius:3px;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.badge-live{background:var(--spectral-blue);color:var(--void)}.badge-planned{background:transparent;border:1px solid var(--text);color:var(--text)}
+.phase{list-style:none;padding:0;max-width:760px;margin:0 auto;text-align:left}
+.phase li{padding:1.25rem 1.25rem 1.25rem 3.5rem;margin-bottom:1rem;background:var(--shadow-teal);border-radius:8px;border-left:3px solid var(--spectral-blue);position:relative}
+.phase li::before{content:"Phase 0" counter(phase-counter);counter-increment:phase-counter;position:absolute;left:-12px;top:50%;transform:translateY(-50%) rotate(-90deg);color:var(--spectral-blue);font-size:.75rem;font-weight:600}
+.phase{counter-reset:phase-counter}.phase strong{display:block;margin-bottom:.3rem}
+footer{text-align:center;padding:2rem 0;border-top:1px solid var(--shadow-teal);color:rgba(224,224,224,.5);font-size:.85rem}
+a{color:var(--spectral-blue)}
+</style></head><body>
+<div class="container"><header><nav>
+<a href="/">Home</a><a href="/explorer" target="_blank">Explorer</a><a href="/testnet">Testnet</a><a href="/future">Roadmap</a><a href="https://github.com/scotthawk-maker/zyanya" target="_blank">GitHub</a>
+</nav></header>
+<div class="top-logo"><div id="logo-container"></div></div>
+<main>
+<section><h1>The Path Forward</h1><p style="text-align:center;max-width:640px;margin:0 auto 1.5rem">What's live on testnet today, and what's planned. The ghost is awake — more is coming.</p></section>
+
+<section><h2>Live on testnet</h2>
+<div class="grid">
+<div class="card"><h3>⛏️ CPU Mining <span class="badge badge-live">Live</span></h3><p>Solo mining to your own node, or Stratum pool mining via <code>zyanya-pool</code>. Adjustable hashrate (<code>--cpu-percent</code>), mines while syncing.</p></div>
+<div class="card"><h3>🪙 Creating Tokens <span class="badge badge-live">Live</span></h3><p>Deploy custom tokens via the ZCL smart-contract VM. The GHOST token ships as the reference. Mint, transfer, and hold — all on-chain.</p></div>
+<div class="card"><h3>🔄 The DEX <span class="badge badge-live">Live</span></h3><p>Swap ZYAN ↔ tokens in an on-chain liquidity pool. Add liquidity, set reserves, trade — the demo contract is live on testnet.</p></div>
+<div class="card"><h3>📜 Smart Contracts <span class="badge badge-live">Live</span></h3><p>The <code>zyanya-vm</code>: an opcode VM + the ZCL compiler. Deploy contracts, invoke entry points, store state — deterministic consensus execution.</p></div>
+<div class="card"><h3>🤖 Agent-Native (Web MCP) <span class="badge badge-live">Live</span></h3><p>The block explorer exposes a Web MCP — agents read chain state, query blocks, and (with the write flag) deploy/invoke contracts directly.</p></div>
+<div class="card"><h3>👛 The Wallet <span class="badge badge-live">Live</span></h3><p>BIP-39 24-word (+ optional passphrase) TUI wallet. Send ZYAN, send tokens, swap on the DEX, view history. Secret-masked by default.</p></div>
+</div></section>
+
+<section><h2>Planned</h2>
+<div class="grid">
+<div class="card"><h3>🔒 Staking <span class="badge badge-planned">Planned</span></h3><p>Stake ZYAN to participate in network consensus/governance and earn rewards. Design in progress — details as the protocol matures.</p></div>
+<div class="card"><h3>🚀 Mainnet Launch <span class="badge badge-planned">Planned</span></h3><p>Genesis mined silently, stability monitored, then the public reveal. Zero premine, fair launch.</p></div>
+<div class="card"><h3>🌐 More <span class="badge badge-planned">Planned</span></h3><p>Hardened tooling, broader agent integrations, and whatever the IPv6 + ghost community asks for. The testnet is where we shake it out.</p></div>
+</div></section>
+
+<section><h2>The four phases</h2>
+<ol class="phase">
+<li><strong>Ghost in the Machine</strong><span style="color:rgba(224,224,224,.7)">Public testnet hardening — protocol improvements, bug fixes, network stability with the community. (Now.)</span></li>
+<li><strong>Dark Launch</strong><span style="color:rgba(224,224,224,.7)">Mainnet genesis mined silently; initial stability monitoring by the core team.</span></li>
+<li><strong>Prepare Optics</strong><span style="color:rgba(224,224,224,.7)">Finalize docs, exchange integrations, and communications. Ready for the public reveal.</span></li>
+<li><strong>The r/IPv6 Signal</strong><span style="color:rgba(224,224,224,.7)">Public announcement to the wider technical community, starting with the IPv6 pioneers.</span></li>
+</ol></section>
+</main>
+<footer><p>The ghost in the IPv6 machine. Forever, always. &bull; <a href="/">zyanya.scottcloudhawk.org</a></p></footer>
+</div>
+<script>fetch('/brand/zyanya-logo.svg').then(r=>r.text()).then(t=>{document.getElementById('logo-container').innerHTML=t;});</script>
+</body></html>"###;
