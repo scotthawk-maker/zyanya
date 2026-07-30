@@ -10,14 +10,18 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zyanya — The Ghost in the IPv6 Machine</title>
+    <title>Zyanya: The Ghost in the IPv6 Machine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-base: #0A0F1C;
-            --bg-shadow: #0D3B50;
-            --accent-spectral: #7EC8D3;
-            --text-main: #E0E0E0;
+            --void: #0A0F1C;
+            --shadow-teal: #0D3B50;
+            --spectral-blue: #7EC8D3;
+            --text-color: #E0E0E0;
             --burn-red: #FF4D4D;
+            --font-mono: 'Fira Code', monospace;
         }
 
         * {
@@ -26,415 +30,429 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
             padding: 0;
         }
 
-        body {
-            background-color: var(--bg-base);
-            color: var(--text-main);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        html, body {
+            background-color: var(--void);
+            color: var(--text-color);
+            font-family: var(--font-mono);
+            font-size: 16px;
             line-height: 1.6;
             overflow-x: hidden;
         }
 
-        .mono {
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        /* Ambient Glow & Grid */
         .grid-bg {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: 
-                radial-gradient(circle at 50% 30%, rgba(13, 59, 80, 0.35) 0%, transparent 70%),
-                linear-gradient(rgba(126, 200, 211, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(126, 200, 211, 0.03) 1px, transparent 1px);
-            background-size: 100% 100%, 40px 40px, 40px 40px;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image:
+                linear-gradient(to right, rgba(13, 59, 80, 0.3) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(13, 59, 80, 0.3) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -2;
+        }
+
+        .grid-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, rgba(13, 59, 80, 0.2), var(--void) 70%);
             z-index: -1;
-            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.5rem 3rem;
-            border-bottom: 1px solid rgba(126, 200, 211, 0.15);
-            background: rgba(10, 15, 28, 0.85);
-            backdrop-filter: blur(12px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--shadow-teal);
         }
 
-        .brand-logo {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            text-decoration: none;
-        }
-
-        .brand-logo svg {
-            height: 38px;
+        #logo-container svg {
+            height: 40px;
             width: auto;
         }
 
-        .ipv6-badge {
-            background: rgba(126, 200, 211, 0.1);
-            border: 1px solid var(--accent-spectral);
-            color: var(--accent-spectral);
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-            box-shadow: 0 0 10px rgba(126, 200, 211, 0.2);
-        }
-
-        nav {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
         nav a {
-            color: var(--text-main);
+            color: var(--spectral-blue);
             text-decoration: none;
-            font-size: 0.95rem;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
+            margin-left: 2rem;
+            font-weight: 600;
+            transition: color 0.3s ease;
         }
 
         nav a:hover {
-            color: var(--accent-spectral);
-            text-shadow: 0 0 8px rgba(126, 200, 211, 0.6);
+            color: var(--text-color);
+            text-shadow: 0 0 5px var(--spectral-blue);
         }
 
-        .btn {
-            background: rgba(13, 59, 80, 0.5);
-            border: 1px solid var(--accent-spectral);
-            color: var(--accent-spectral);
-            padding: 0.75rem 1.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 600;
-            letter-spacing: 2px;
-            transition: all 0.3s ease;
-            display: inline-block;
+        main {
+            padding: 4rem 0;
         }
 
-        .btn:hover {
-            background: var(--accent-spectral);
-            color: var(--bg-base);
-            box-shadow: 0 0 20px rgba(126, 200, 211, 0.5);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        /* Hero */
-        .hero {
-            padding: 5rem 0 4rem;
+        section {
+            margin-bottom: 6rem;
             text-align: center;
         }
 
-        .hero-banner-wrap {
-            margin: 0 auto 2.5rem;
-            max-width: 900px;
-            border: 1px solid rgba(126, 200, 211, 0.2);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(13, 59, 80, 0.5);
-            background: rgba(10, 15, 28, 0.6);
+        #hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
         }
 
-        .hero-banner-wrap img, .hero-banner-wrap svg {
+        #banner-container {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        #banner-container svg {
             width: 100%;
             height: auto;
-            display: block;
         }
 
-        .pitch {
-            font-size: 1.25rem;
-            max-width: 800px;
-            margin: 0 auto 2.5rem;
-            color: #B0C4CE;
-            line-height: 1.8;
-            font-weight: 300;
-        }
-
-        .pitch strong {
-            color: var(--accent-spectral);
+        h1 {
+            font-size: 1.8rem;
             font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--spectral-blue);
         }
 
-        .hero-cta {
+        #hero p {
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin-bottom: 2.5rem;
+        }
+
+        .cta-buttons {
             display: flex;
             gap: 1.5rem;
             justify-content: center;
         }
 
-        /* Pillars Section */
-        .section-title {
-            text-align: center;
-            font-size: 1.8rem;
-            letter-spacing: 4px;
-            color: var(--accent-spectral);
-            margin: 4rem 0 2.5rem;
-            text-shadow: 0 0 10px rgba(126, 200, 211, 0.3);
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.8rem;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
 
-        .pillars-grid {
+        .btn-primary {
+            background-color: var(--spectral-blue);
+            color: var(--void);
+        }
+
+        .btn-primary:hover {
+            background-color: transparent;
+            color: var(--spectral-blue);
+            border-color: var(--spectral-blue);
+            box-shadow: 0 0 10px var(--spectral-blue);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 2px solid var(--shadow-teal);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--shadow-teal);
+            color: var(--text-color);
+            box-shadow: 0 0 10px var(--shadow-teal);
+        }
+        
+        #status-banner {
+            margin-top: -2rem;
+            margin-bottom: 4rem;
+            padding: 1rem 1.5rem;
+            background-color: rgba(13, 59, 80, 0.5);
+            border: 1px solid var(--shadow-teal);
+            border-radius: 8px;
+            display: inline-block;
+            font-size: 1rem;
+        }
+
+        #status-banner a {
+            color: var(--spectral-blue);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        #status-banner a:hover {
+            text-decoration: underline;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--text-color);
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .grid-3 {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-            margin-bottom: 5rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+            text-align: left;
         }
 
         .card {
-            background: rgba(13, 59, 80, 0.25);
-            border: 1px solid rgba(126, 200, 211, 0.2);
+            background-color: var(--shadow-teal);
+            padding: 2.5rem;
             border-radius: 8px;
-            padding: 2.5rem 2rem;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(6px);
+            border: 1px solid rgba(126, 200, 211, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .card:hover {
             transform: translateY(-5px);
-            border-color: var(--accent-spectral);
-            box-shadow: 0 10px 30px rgba(13, 59, 80, 0.6);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
-
-        .card-icon {
-            width: 60px;
-            height: 60px;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-title {
+        
+        .card h3 {
             font-size: 1.2rem;
-            letter-spacing: 2px;
-            color: var(--accent-spectral);
+            margin-bottom: 1rem;
+            color: var(--spectral-blue);
+        }
+
+        .icon-container svg {
+            height: 32px;
+            width: 32px;
+            margin-right: 1rem;
+            fill: var(--spectral-blue);
+        }
+        
+        #economics .icon-container {
+            display: flex;
+            align-items: center;
             margin-bottom: 1rem;
         }
-
-        .card-desc {
-            color: #A0B0BC;
-            font-size: 0.95rem;
-            line-height: 1.7;
-        }
-
-        /* Features & Economics */
-        .two-col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 3rem;
-            margin-bottom: 5rem;
-        }
-
-        @media (max-width: 850px) {
-            .two-col { grid-template-columns: 1fr; }
-        }
-
-        .feature-item {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .feature-bullet {
-            color: var(--accent-spectral);
-            font-size: 1.2rem;
-        }
-
-        .burn-badge {
-            color: var(--burn-red);
-            border: 1px solid var(--burn-red);
-            padding: 0.1rem 0.4rem;
-            border-radius: 3px;
-            font-size: 0.75rem;
-            margin-left: 0.5rem;
-        }
-
-        /* How to Join */
-        .join-box {
-            background: rgba(10, 15, 28, 0.9);
-            border: 1px solid var(--accent-spectral);
-            border-radius: 8px;
-            padding: 3rem;
-            margin-bottom: 5rem;
-            box-shadow: 0 0 30px rgba(126, 200, 211, 0.1);
-        }
-
+        
+        #economics h3 { margin-bottom: 0; }
+        
         .code-block {
-            background: #050810;
-            border: 1px solid rgba(126, 200, 211, 0.3);
-            padding: 1.25rem;
-            border-radius: 6px;
-            color: var(--accent-spectral);
-            font-size: 0.9rem;
+            background-color: var(--void);
+            color: var(--text-color);
+            padding: 1.5rem;
+            border-radius: 4px;
+            text-align: left;
             overflow-x: auto;
-            margin-top: 1rem;
+            border: 1px solid var(--shadow-teal);
+            margin: 1.5rem 0;
+        }
+
+        code {
+            font-family: var(--font-mono);
+        }
+
+        #join p {
+            max-width: 800px;
+            margin: 0 auto 2rem auto;
+        }
+
+        #join a {
+            color: var(--spectral-blue);
+        }
+
+        #roadmap ol {
+            list-style: none;
+            counter-reset: phase-counter;
+            padding: 0;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: left;
+        }
+        
+        #roadmap li {
+            counter-increment: phase-counter;
+            position: relative;
+            padding: 1.5rem 1.5rem 1.5rem 4rem;
+            margin-bottom: 1.5rem;
+            background-color: var(--shadow-teal);
+            border-radius: 8px;
+            border-left: 3px solid var(--spectral-blue);
+        }
+
+        #roadmap li::before {
+            content: "Phase " counter(phase-counter, decimal-leading-zero);
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+            color: var(--spectral-blue);
+            font-weight: 600;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        #roadmap strong {
+            display: block;
+            color: var(--text-color);
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
         }
 
         footer {
-            border-top: 1px solid rgba(126, 200, 211, 0.15);
-            padding: 3rem 0;
             text-align: center;
-            color: #708090;
-            font-size: 0.85rem;
+            padding: 3rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid var(--shadow-teal);
+            font-size: 0.9rem;
+            color: rgba(224, 224, 224, 0.6);
         }
+        
+        .burn-red { color: var(--burn-red); }
     </style>
 </head>
 <body>
     <div class="grid-bg"></div>
+    <div class="container">
+        <header>
+            <div id="logo-container"><!-- SVG will be injected here --></div>
+            <nav>
+                <a href="#pillars">Pillars</a>
+                <a href="#economics">Economics</a>
+                <a href="#join">Join Testnet</a>
+                <a href="https://testnet.zyanya.scottcloudhawk.org/" target="_blank">Explorer</a>
+            </nav>
+        </header>
 
-    <header>
-        <a href="/" class="brand-logo">
-            <div id="logo-container"></div>
-        </a>
-        <div class="ipv6-badge mono">[::]:8098 • IPv6-ONLY</div>
-        <nav>
-            <a href="#pillars" class="mono">PILLARS</a>
-            <a href="#economics" class="mono">ECONOMICS</a>
-            <a href="#join" class="mono">JOIN</a>
-            <a href="/tools" class="mono">WEBMCP TOOLS</a>
-            <a href="/explorer" class="btn mono">BLOCK EXPLORER</a>
-        </nav>
-    </header>
+        <main>
+            <section id="hero">
+                <div id="banner-container"><!-- SVG will be injected here --></div>
+                <h1>The ghost in the IPv6 machine.</h1>
+                <p>Zyanya is an IPv6-native, agent-native blockchain built on Spectre/GhostDAG. No gateways. No translators. Just pure, end-to-end decentralized consensus over the next-generation internet.</p>
+                <div class="cta-buttons">
+                    <a href="https://testnet.zyanya.scottcloudhawk.org/" target="_blank" class="btn btn-primary">LAUNCH EXPLORER</a>
+                    <a href="#join" class="btn btn-secondary">JOIN THE TESTNET</a>
+                </div>
+            </section>
 
-    <main class="container">
-        <section class="hero">
-            <div class="hero-banner-wrap" id="banner-container"></div>
+            <section id="status-banner">
+                <p>🟣 Public testnet is LIVE &mdash; 3 nodes, 15,000+ blocks, and mining over IPv6. <a href="https://testnet.zyanya.scottcloudhawk.org/" target="_blank">Explore the testnet &rarr;</a></p>
+            </section>
+
+            <section id="pillars">
+                <h2>THE THREE PILLARS</h2>
+                <div class="grid-3">
+                    <div class="card">
+                        <h3>I. THE GHOST</h3>
+                        <p>Built on Spectre, a blockDAG protocol. Achieves high throughput and low confirmation times without sacrificing decentralization. Blocks are never orphaned; they are woven into the directed acyclic graph of the ledger.</p>
+                    </div>
+                    <div class="card">
+                        <h3>II. THE SECRET</h3>
+                        <p>IPv6-native. The protocol speaks IPv6 from the ground up, shedding the legacy constraints of IPv4. This is a commitment to the future of the internet, unlocking a vast, un-NAT-ed address space for true peer-to-peer communication.</p>
+                    </div>
+                    <div class="card">
+                        <h3>III. THE FOREVER</h3>
+                        <p>Designed for longevity. A slow-burn emission schedule with time-locked vesting for the foundation, combined with a permanent 50% gas fee burn, creates a deflationary, sustainable economic model for the long term.</p>
+                    </div>
+                </div>
+            </section>
             
-            <p class="pitch">
-                <strong>Zyanya</strong> is the pure IPv6-native blockchain. Built with Spectre/GhostDAG consensus for parallel block DAG resolution. Zero NAT. Zero port forwarding. Every node is a first-class citizen with direct peer-to-peer reachability.
-            </p>
-
-            <div class="hero-cta">
-                <a href="/explorer" class="btn mono">LAUNCH BLOCK EXPLORER</a>
-                <a href="#join" class="btn mono" style="border-color: #0D3B50; color: #E0E0E0;">JOIN DEVNET</a>
-            </div>
-        </section>
-
-        <h2 class="section-title mono" id="pillars">THE THREE PILLARS</h2>
-        <div class="pillars-grid">
-            <div class="card">
-                <div class="card-icon" id="icon-coin"></div>
-                <h3 class="card-title mono">I. THE GHOST</h3>
-                <p class="card-desc">
-                    GhostDAG consensus parallel block resolution. High transaction throughput with instant DAG finality, eliminating orphan blocks and securing the chain against 51% reorgs.
-                </p>
-            </div>
-            <div class="card">
-                <div class="card-icon" id="icon-token"></div>
-                <h3 class="card-title mono">II. THE SECRET</h3>
-                <p class="card-desc">
-                    Pure IPv6 subnet architecture. No middleboxes, no relay nodes, no NAT traversal hacks. Direct global IPv6 connectivity for total network decentralization.
-                </p>
-            </div>
-            <div class="card">
-                <div class="card-icon" id="icon-burn"></div>
-                <h3 class="card-title mono">III. THE FOREVER</h3>
-                <p class="card-desc">
-                    Eternally locked coinbase vesting. 50% liquid + 50% CSV-locked vested outputs over 12 months. Miners remain long-term aligned with sustainable tokenomics.
-                </p>
-            </div>
-        </div>
-
-        <div class="two-col" id="economics">
-            <div class="card">
-                <h3 class="card-title mono" style="margin-bottom: 1.5rem;">PROTOCOL FEATURES</h3>
-                <div class="feature-item">
-                    <span class="feature-bullet">•</span>
-                    <div>
-                        <strong>Deflationary Smart Contracts <span class="burn-badge mono">50% BURN</span></strong>
-                        <p class="card-desc">50% of gas fees consumed during ZCL contract execution are permanently destroyed.</p>
+            <section id="economics">
+                <h2>ECONOMICS</h2>
+                <div class="grid-3">
+                     <div class="card">
+                        <div class="icon-container" id="icon-coin"><h3>Total Supply</h3></div>
+                        <p>2.1 billion ZYA. A fixed supply, ensuring predictable scarcity. No pre-mine. The genesis block starts a fair launch for all participants.</p>
+                    </div>
+                     <div class="card">
+                        <div class="icon-container" id="icon-token"><h3>Vesting Schedule</h3></div>
+                        <p>A 10% foundation allocation is locked in a 10-year linear vesting contract. This aligns long-term incentives and ensures sustained development.</p>
+                    </div>
+                     <div class="card">
+                        <div class="icon-container" id="icon-burn"><h3><span class="burn-red">The Burn</span></h3></div>
+                        <p>50% of all transaction fees are permanently burned. This deflationary pressure rewards long-term holders and increases the network's value over time.</p>
                     </div>
                 </div>
-                <div class="feature-item">
-                    <span class="feature-bullet">•</span>
-                    <div>
-                        <strong>ZCL Contract Language & VM</strong>
-                        <p class="card-desc">Assembly-compiled stack-based VM with native persistent storage operations (<code class="mono">SSTORE</code> / <code class="mono">SLOAD</code>).</p>
-                    </div>
-                </div>
-                <div class="feature-item">
-                    <span class="feature-bullet">•</span>
-                    <div>
-                        <strong>Custom Reference Tokens</strong>
-                        <p class="card-desc">Native ERC-20 style token minting, transfers, and supply tracking out of the box.</p>
-                    </div>
-                </div>
-            </div>
+            </section>
 
-            <div class="card">
-                <h3 class="card-title mono" style="margin-bottom: 1.5rem;">COIN ECONOMICS</h3>
-                <div class="feature-item">
-                    <span class="feature-bullet">•</span>
-                    <div>
-                        <strong>Block Subsidy: 50 ZYAN / Block</strong>
-                        <p class="card-desc">25.0 ZYAN (50%) liquid payout directly to miner's address.</p>
-                    </div>
+            <section id="join">
+                <h2>HOW TO JOIN THE TESTNET</h2>
+                <p>An IPv6-enabled connection is required. Download the latest distribution (Docker image, Windows binaries, and README) from the seed node to get started.</p>
+                <p><a href="http://[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:8097/" target="_blank">Download Distribution Here</a></p>
+                
+                <h4>1. Run a Full Node & Mine</h4>
+                <p>Use the `zyanyad` daemon. The `--connect` flag points to the seed node, and `--enable-unsynced-mining` lets you start mining immediately.</p>
+                <div class="code-block">
+                    <code>zyanyad --testnet --connect=[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18211 --enable-unsynced-mining</code>
                 </div>
-                <div class="feature-item">
-                    <span class="feature-bullet">•</span>
-                    <div>
-                        <strong>12-Month Vesting Schedule</strong>
-                        <p class="card-desc">25.0 ZYAN (50%) locked across 12 monthly relative lock-time CSV outputs.</p>
-                    </div>
-                </div>
-                <div class="feature-item">
-                    <span class="feature-bullet">•</span>
-                    <div>
-                        <strong>CPU-Mineable Proof-of-Work</strong>
-                        <p class="card-desc">Designed for broad hardware participation and decentralized consensus voting.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="join-box" id="join">
-            <h2 class="card-title mono" style="font-size: 1.5rem; margin-bottom: 1rem;">HOW TO JOIN THE DEVNET</h2>
-            <p style="color: #A0B0BC; margin-bottom: 1.5rem;">
-                Zyanya is bound strictly over IPv6. Connect your node directly to the seed address below:
-            </p>
-            <div class="mono" style="color: var(--accent-spectral); margin-bottom: 1rem;">
-                <strong>SEED IPV6 NODE:</strong> 2606:8ac0:2615:79aa:5a47:caff:fe7b:d473
-            </div>
-            
-            <div class="code-block mono">
-# Connect node to devnet seed<br>
-zyanyad --devnet --outpeers=8 --addpeer=2606:8ac0:2615:79aa:5a47:caff:fe7b:d473<br><br>
-# Query chain state over gRPC<br>
-zyanya-query --rpcserver="[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18610" get-info
-            </div>
-        </div>
-    </main>
+                <h4>2. Query the Network</h4>
+                <p>Use the `zyanya-query` tool to interact with your node's RPC server. The testnet seed also runs a public RPC endpoint.</p>
+                <div class="code-block">
+                    <code>zyanya-query --testnet --rpcserver [2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18210 get-dag-info</code>
+                </div>
+            </section>
 
-    <footer>
-        <div class="container">
-            <p class="mono">ZYANYA PROTOCOL • THE GHOST IN THE IPv6 MACHINE • FOREVER. ALWAYS.</p>
-            <p style="margin-top: 0.5rem; opacity: 0.6;">Served exclusively over IPv6 sockets on port 8098. Pure P2P positioning verified.</p>
-        </div>
-    </footer>
+            <section id="roadmap">
+                <h2>THE PATH FORWARD</h2>
+                <ol>
+                    <li>
+                        <strong>Phase 01: Ghost in the Machine</strong>
+                        <span>Public testnet hardening. Protocol improvements, bug fixes, and network stability testing with the community.</span>
+                    </li>
+                    <li>
+                        <strong>Phase 02: Dark Launch</strong>
+                        <span>Mainnet genesis block is mined and the network is deployed silently. Initial stability monitoring by the core team.</span>
+                    </li>
+                    <li>
+                        <strong>Phase 03: Prepare Optics</strong>
+                        <span>Finalize public documentation, exchange integrations, and communication materials. Prepare for the public reveal.</span>
+                    </li>
+                    <li>
+                        <strong>Phase 04: The r/IPv6 Signal</strong>
+                        <span>Public announcement and invitation to the wider technical community, starting with the IPv6 pioneers.</span>
+                    </li>
+                </ol>
+            </section>
+
+        </main>
+
+        <footer>
+            <p>The ghost in the IPv6 machine. Forever, always.</p>
+            <p>&copy; 2024 Zyanya Project. All rights reserved.</p>
+        </footer>
+    </div>
 
     <script>
-        fetch('/brand/zyanya-logo.svg').then(r => r.text()).then(html => {
-            document.getElementById('logo-container').innerHTML = html;
-        });
-        fetch('/brand/zyanya-hero-banner.svg').then(r => r.text()).then(html => {
-            document.getElementById('banner-container').innerHTML = html;
-        });
-        fetch('/brand/zyan-coin.svg').then(r => r.text()).then(html => {
-            document.getElementById('icon-coin').innerHTML = html;
-        });
-        fetch('/brand/ghost-token.svg').then(r => r.text()).then(html => {
-            document.getElementById('icon-token').innerHTML = html;
-        });
-        fetch('/brand/gas-burn-icon.svg').then(r => r.text()).then(html => {
-            document.getElementById('icon-burn').innerHTML = html;
+        // Fetches brand SVGs and injects them into the page.
+        // This keeps the HTML clean and allows for easy SVG management.
+        document.addEventListener('DOMContentLoaded', () => {
+            const fetchAndInject = (id, url) => {
+                const container = document.getElementById(id);
+                if (!container) return;
+                fetch(url)
+                    .then(response => response.text())
+                    .then(svgText => {
+                        container.innerHTML = svgText;
+                    })
+                    .catch(error => console.error(`Failed to load SVG ${url}:`, error));
+            };
+
+            fetchAndInject('logo-container', '/brand/zyanya-logo.svg');
+            fetchAndInject('banner-container', '/brand/zyanya-hero-banner.svg');
+            fetchAndInject('icon-coin', '/brand/icon-coin.svg');
+            fetchAndInject('icon-token', '/brand/icon-token.svg');
+            fetchAndInject('icon-burn', '/brand/icon-burn.svg');
         });
     </script>
     <script src="/webmcp.js"></script>
