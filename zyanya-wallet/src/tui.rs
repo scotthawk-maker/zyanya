@@ -4,17 +4,20 @@ use zyanya_consensus_core::constants::SOMPI_PER_ZYANYA;
 use zyanya_rpc_core::api::rpc::RpcApi;
 use crate::key_management::{display_mnemonic, WalletKeypair};
 use crate::wallet_ops::WalletOps;
+use zyanya_addresses::Prefix;
 
 pub struct WalletTui {
     ops: WalletOps,
+    prefix: Prefix,
     ghost_token_contract: Option<String>,
     dex_contract: Option<String>,
 }
 
 impl WalletTui {
-    pub fn new(ops: WalletOps) -> Self {
+    pub fn new(ops: WalletOps, prefix: Prefix) -> Self {
         Self {
             ops,
+            prefix,
             ghost_token_contract: None,
             dex_contract: None,
         }
@@ -395,11 +398,11 @@ impl WalletTui {
         let choice = Self::read_input("Select key generation mode [1-2, default: 1]: ");
 
         let (new_key, phrase_opt) = if choice.trim() == "2" {
-            (WalletKeypair::generate(), None)
+            (WalletKeypair::generate(self.prefix), None)
         } else {
             let passphrase_input = Self::read_input("Enter optional BIP-39 passphrase (leave blank for none): ");
             let passphrase = if passphrase_input.is_empty() { None } else { Some(passphrase_input.as_str()) };
-            match WalletKeypair::generate_mnemonic(passphrase) {
+            match WalletKeypair::generate_mnemonic(passphrase, self.prefix) {
                 Ok((key, phrase)) => (key, Some(phrase)),
                 Err(e) => {
                     println!("Error generating BIP-39 mnemonic: {}", e);
@@ -443,11 +446,11 @@ impl WalletTui {
         let key_result = if words_count >= 12 {
             let passphrase_input = Self::read_input("Enter optional BIP-39 passphrase (leave blank for none): ");
             let passphrase = if passphrase_input.is_empty() { None } else { Some(passphrase_input.as_str()) };
-            WalletKeypair::from_mnemonic(&input, passphrase)
+            WalletKeypair::from_mnemonic(&input, passphrase, self.prefix)
         } else if input.len() == 64 || input.len() == 66 {
-            WalletKeypair::from_secret_hex(&input)
+            WalletKeypair::from_secret_hex(&input, self.prefix)
         } else {
-            WalletKeypair::load_from_file(std::path::Path::new(&input))
+            WalletKeypair::load_from_file(std::path::Path::new(&input), self.prefix)
         };
 
         match key_result {

@@ -20,7 +20,7 @@ use zyanya_txscript::pay_to_address_script;
 
 use crate::key_management::WalletKeypair;
 
-pub const DEFAULT_FEE_SOMPI: u64 = 1_000; // 1,000 sompi fee
+pub const DEFAULT_FEE_SOMPI: u64 = 10_000; // 10,000 sompi fee (covers the node's minimum mass-based fee)
 pub const DEFAULT_GAS_LIMIT: u64 = 100_000;
 pub const DEFAULT_GAS_PRICE: u64 = 1;
 
@@ -191,11 +191,16 @@ impl WalletOps {
             });
         }
 
-        // Select UTXOs
+        // Select UTXOs (skip immature coinbase UTXOs — the coinbase maturity is 100 blocks)
+        let current_daa = client.get_block_dag_info().await.map_err(|e| WalletOpsError::Rpc(e.to_string()))?.virtual_daa_score;
         let mut selected_utxos = Vec::new();
         let mut selected_amount = 0u64;
 
         for (op, entry) in utxos {
+            // Skip immature coinbase UTXOs (mined < 100 blocks ago — not spendable yet)
+            if entry.is_coinbase && current_daa.saturating_sub(entry.block_daa_score) < 100 {
+                continue;
+            }
             selected_amount += entry.amount;
             selected_utxos.push((op, entry));
             if selected_amount >= required {
@@ -451,10 +456,11 @@ impl WalletOps {
 mod tests {
     use super::*;
     use crate::key_management::WalletKeypair;
+    use zyanya_addresses::Prefix;
 
     #[test]
     fn test_holder_u64_derivation() {
-        let keypair = WalletKeypair::generate();
+        let keypair = WalletKeypair::generate(Prefix::Devnet);
         let holder = WalletOps::holder_u64(&keypair.address);
         assert!(holder > 0);
     }

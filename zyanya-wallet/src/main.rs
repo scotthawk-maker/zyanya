@@ -96,30 +96,48 @@ struct Cli {
     /// Action: Run automated live demo (generate key, check balance, send ZYAN, DEX swap)
     #[arg(long)]
     demo: bool,
+
+    /// Overwrite an existing wallet key file when generating/importing (default: refuse to clobber)
+    #[arg(long, default_value_t = false)]
+    force: bool,
+}
+
+/// Save a keypair to disk, refusing to overwrite an existing file unless `force` is set.
+/// The generated key/address/mnemonic are already printed by the caller, so the user can
+/// still recover or save manually if we decline to write.
+fn save_key_guarded(keypair: &WalletKeypair, path: &std::path::Path, force: bool) {
+    if path.exists() && !force {
+        eprintln!("\u{26a0}\u{fe0f}  Refusing to overwrite existing key file: {}", path.display());
+        eprintln!("    The key shown above was NOT saved. To overwrite, re-run with --force,");
+        eprintln!("    or save to a different path with --keyfile <PATH>.");
+        return;
+    }
+    match keypair.save_to_file(path) {
+        Ok(_) => println!("Saved key to {}", path.display()),
+        Err(e) => eprintln!("Error saving keypair: {}", e),
+    }
 }
 
 #[tokio::main]
 async fn main() -> ExitCode {
     let cli = Cli::parse();
+    let prefix = if cli.testnet { zyanya_addresses::Prefix::Testnet } else if cli.devnet { zyanya_addresses::Prefix::Devnet } else { zyanya_addresses::Prefix::Mainnet };
 
     // 1. Generate key CLI command (raw hex)
     if cli.generate_key {
-        let keypair = WalletKeypair::generate();
+        let keypair = WalletKeypair::generate(prefix);
         println!("Generated New Zyanya Raw Hex Keypair:");
         println!("  Address:   {}", keypair.address);
         println!("  SecretKey: {}", keypair.secret_hex());
 
         let save_path = cli.keyfile.unwrap_or_else(WalletKeypair::default_key_path);
-        match keypair.save_to_file(&save_path) {
-            Ok(_) => println!("Saved to {}", save_path.display()),
-            Err(e) => eprintln!("Error saving keypair: {}", e),
-        }
+        save_key_guarded(&keypair, &save_path, cli.force);
         return ExitCode::SUCCESS;
     }
 
     // 2. Generate BIP-39 Mnemonic CLI command
     if cli.generate_mnemonic {
-        match WalletKeypair::generate_mnemonic(cli.passphrase.as_deref()) {
+        match WalletKeypair::generate_mnemonic(cli.passphrase.as_deref(), prefix) {
             Ok((keypair, phrase)) => {
                 display_mnemonic(&phrase);
                 println!("Derived Keypair Details:");
@@ -127,10 +145,7 @@ async fn main() -> ExitCode {
                 println!("  SecretKey: {}", keypair.secret_hex());
 
                 let save_path = cli.keyfile.unwrap_or_else(WalletKeypair::default_key_path);
-                match keypair.save_to_file(&save_path) {
-                    Ok(_) => println!("Saved derived hex key to {}", save_path.display()),
-                    Err(e) => eprintln!("Error saving keypair: {}", e),
-                }
+                save_key_guarded(&keypair, &save_path, cli.force);
             }
             Err(e) => {
                 eprintln!("Error generating BIP-39 mnemonic: {}", e);
@@ -142,7 +157,7 @@ async fn main() -> ExitCode {
 
     // Load or generate keypair
     let keypair = if let Some(ref hex) = cli.secret_key {
-        match WalletKeypair::from_secret_hex(hex) {
+        match WalletKeypair::from_secret_hex(hex, prefix) {
             Ok(k) => k,
             Err(e) => {
                 eprintln!("Error parsing secret key hex: {}", e);
@@ -150,10 +165,10 @@ async fn main() -> ExitCode {
             }
         }
     } else if let Some(ref phrase) = cli.import_mnemonic {
-        match WalletKeypair::from_mnemonic(phrase, cli.passphrase.as_deref()) {
+        match WalletKeypair::from_mnemonic(phrase, cli.passphrase.as_deref(), prefix) {
             Ok(k) => {
                 let save_path = cli.keyfile.clone().unwrap_or_else(WalletKeypair::default_key_path);
-                let _ = k.save_to_file(&save_path);
+                save_key_guarded(&k, &save_path, cli.force);
                 k
             }
             Err(e) => {
@@ -164,7 +179,7 @@ async fn main() -> ExitCode {
     } else {
         let key_path = cli.keyfile.clone().unwrap_or_else(WalletKeypair::default_key_path);
         if key_path.exists() {
-            match WalletKeypair::load_from_file(&key_path) {
+            match WalletKeypair::load_from_file(&key_path, prefix) {
                 Ok(k) => k,
                 Err(e) => {
                     eprintln!("Error loading key from {}: {}", key_path.display(), e);
@@ -173,14 +188,14 @@ async fn main() -> ExitCode {
             }
         } else {
             // Auto-generate via BIP-39 mnemonic if no keyfile exists
-            match WalletKeypair::generate_mnemonic(None) {
+            match WalletKeypair::generate_mnemonic(None, prefix) {
                 Ok((k, phrase)) => {
                     display_mnemonic(&phrase);
                     let _ = k.save_to_file(&key_path);
                     k
                 }
                 Err(_) => {
-                    let k = WalletKeypair::generate();
+                    let k = WalletKeypair::generate(prefix);
                     let _ = k.save_to_file(&key_path);
                     k
                 }
@@ -204,7 +219,7 @@ async fn main() -> ExitCode {
 
     // 2. Automated Live Demo
     if cli.demo {
-        return run_live_demo(&mut ops).await;
+        return run_live_demo(&mut ops, prefix).await;
     }
 
     // 3. Single CLI Actions
@@ -318,21 +333,21 @@ async fn main() -> ExitCode {
 
     // 4. Default: Launch Interactive TUI
     println!("Launching Zyanya TUI Wallet...");
-    let mut tui = WalletTui::new(ops);
+    let mut tui = WalletTui::new(ops, prefix);
     tui.run().await;
 
     ExitCode::SUCCESS
 }
 
 /// Run automated live demo flow
-async fn run_live_demo(ops: &mut WalletOps) -> ExitCode {
+async fn run_live_demo(ops: &mut WalletOps, prefix: zyanya_addresses::Prefix) -> ExitCode {
     println!("================================================================================");
     println!("                      ZYANYA WALLET LIVE DEMO EXECUTION                        ");
     println!("================================================================================");
 
     // Step 1: BIP-39 Key Management & Verification
     println!("\n[STEP 1] BIP-39 Mnemonic Key Management & Restoration Test");
-    let (demo_wallet, mnemonic_phrase) = match WalletKeypair::generate_mnemonic(Some("zyanya_passphrase_demo")) {
+    let (demo_wallet, mnemonic_phrase) = match WalletKeypair::generate_mnemonic(Some("zyanya_passphrase_demo"), prefix) {
         Ok(res) => res,
         Err(e) => {
             eprintln!("  Failed to generate BIP-39 mnemonic: {}", e);
@@ -348,7 +363,7 @@ async fn run_live_demo(ops: &mut WalletOps) -> ExitCode {
     println!("    SecretKey: {}", demo_wallet.secret_hex());
 
     // Verify restore from mnemonic
-    let restored_wallet = match WalletKeypair::from_mnemonic(&mnemonic_phrase, Some("zyanya_passphrase_demo")) {
+    let restored_wallet = match WalletKeypair::from_mnemonic(&mnemonic_phrase, Some("zyanya_passphrase_demo"), prefix) {
         Ok(w) => w,
         Err(e) => {
             eprintln!("  Failed to import BIP-39 mnemonic: {}", e);
@@ -447,7 +462,7 @@ async fn run_live_demo(ops: &mut WalletOps) -> ExitCode {
 
     // Step 6: Send ZYAN
     println!("\n[STEP 6] Send ZYAN Transfer");
-    let recipient_key = WalletKeypair::generate();
+    let recipient_key = WalletKeypair::generate(prefix);
     println!("  Recipient Address: {}", recipient_key.address);
 
     if bal >= 100 * SOMPI_PER_ZYANYA {

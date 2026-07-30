@@ -43,12 +43,12 @@ impl std::fmt::Debug for WalletKeypair {
 
 impl WalletKeypair {
     /// Construct WalletKeypair from a secp256k1 SecretKey
-    pub fn from_secret_key(secret_key: SecretKey) -> Self {
+    pub fn from_secret_key(secret_key: SecretKey, prefix: Prefix) -> Self {
         let secp = Secp256k1::new();
         let public_key = PublicKey::from_secret_key(&secp, &secret_key);
         let (xonly_pubkey, _) = public_key.x_only_public_key();
         let payload = xonly_pubkey.serialize();
-        let address = Address::new(Prefix::Devnet, Version::PubKey, &payload);
+        let address = Address::new(prefix, Version::PubKey, &payload);
 
         Self {
             secret_key,
@@ -58,17 +58,17 @@ impl WalletKeypair {
         }
     }
 
-    /// Generate a brand new random keypair with Prefix::Devnet ("zyanyadev:...")
-    pub fn generate() -> Self {
+    /// Generate a brand new random keypair with the given prefix
+    pub fn generate(prefix: Prefix) -> Self {
         let secp = Secp256k1::new();
         let mut rng = OsRng;
         let (secret_key, _) = secp.generate_keypair(&mut rng);
-        Self::from_secret_key(secret_key)
+        Self::from_secret_key(secret_key, prefix)
     }
 
     /// Generate a brand new 24-word BIP-39 mnemonic phrase and derive the secp256k1 keypair.
     /// Returns (WalletKeypair, 24_word_mnemonic_string).
-    pub fn generate_mnemonic(passphrase: Option<&str>) -> Result<(Self, String), KeyManagementError> {
+    pub fn generate_mnemonic(passphrase: Option<&str>, prefix: Prefix) -> Result<(Self, String), KeyManagementError> {
         let mnemonic = Mnemonic::random(WordCount::Words24, Language::English)
             .map_err(|e| KeyManagementError::InvalidMnemonic(e.to_string()))?;
         let phrase = mnemonic.phrase().to_string();
@@ -76,11 +76,11 @@ impl WalletKeypair {
         let xprv = ExtendedPrivateKey::<SecretKey>::new(seed)
             .map_err(|e| KeyManagementError::InvalidMnemonic(e.to_string()))?;
         let secret_key = *xprv.private_key();
-        Ok((Self::from_secret_key(secret_key), phrase))
+        Ok((Self::from_secret_key(secret_key, prefix), phrase))
     }
 
     /// Restore a keypair from a 24-word BIP-39 mnemonic phrase (+ optional passphrase).
-    pub fn from_mnemonic(phrase: &str, passphrase: Option<&str>) -> Result<Self, KeyManagementError> {
+    pub fn from_mnemonic(phrase: &str, passphrase: Option<&str>, prefix: Prefix) -> Result<Self, KeyManagementError> {
         let clean_phrase = phrase.split_whitespace().collect::<Vec<_>>().join(" ");
         let mnemonic = Mnemonic::new(&clean_phrase, Language::English)
             .map_err(|e| KeyManagementError::InvalidMnemonic(e.to_string()))?;
@@ -88,18 +88,18 @@ impl WalletKeypair {
         let xprv = ExtendedPrivateKey::<SecretKey>::new(seed)
             .map_err(|e| KeyManagementError::InvalidMnemonic(e.to_string()))?;
         let secret_key = *xprv.private_key();
-        Ok(Self::from_secret_key(secret_key))
+        Ok(Self::from_secret_key(secret_key, prefix))
     }
 
     /// Load a keypair from a 64-character hex secret key string
-    pub fn from_secret_hex(hex_str: &str) -> Result<Self, KeyManagementError> {
+    pub fn from_secret_hex(hex_str: &str, prefix: Prefix) -> Result<Self, KeyManagementError> {
         let clean = hex_str.trim().trim_start_matches("0x");
         let mut bytes = [0u8; 32];
         faster_hex::hex_decode(clean.as_bytes(), &mut bytes)
             .map_err(|e| KeyManagementError::InvalidHex(e.to_string()))?;
 
         let secret_key = SecretKey::from_slice(&bytes)?;
-        Ok(Self::from_secret_key(secret_key))
+        Ok(Self::from_secret_key(secret_key, prefix))
     }
 
     /// Get secret key in hex format
@@ -127,9 +127,9 @@ impl WalletKeypair {
     }
 
     /// Load private key from file
-    pub fn load_from_file(path: &Path) -> Result<Self, KeyManagementError> {
+    pub fn load_from_file(path: &Path, prefix: Prefix) -> Result<Self, KeyManagementError> {
         let content = fs::read_to_string(path)?;
-        Self::from_secret_hex(&content)
+        Self::from_secret_hex(&content, prefix)
     }
 
     /// Sign a transaction using this wallet's private key (Schnorr signature)
@@ -176,49 +176,49 @@ mod tests {
 
     #[test]
     fn test_key_generation_and_serialization() {
-        let wallet = WalletKeypair::generate();
+        let wallet = WalletKeypair::generate(Prefix::Devnet);
         assert!(wallet.address.to_string().starts_with("zyanyadev:"));
         let hex = wallet.secret_hex();
         assert_eq!(hex.len(), 64);
 
-        let restored = WalletKeypair::from_secret_hex(&hex).unwrap();
+        let restored = WalletKeypair::from_secret_hex(&hex, Prefix::Devnet).unwrap();
         assert_eq!(wallet.address.to_string(), restored.address.to_string());
     }
 
     #[test]
     fn test_bip39_mnemonic_generation_and_import() {
         // Test generating mnemonic
-        let (wallet, phrase) = WalletKeypair::generate_mnemonic(None).unwrap();
+        let (wallet, phrase) = WalletKeypair::generate_mnemonic(None, Prefix::Devnet).unwrap();
         let words: Vec<&str> = phrase.split_whitespace().collect();
         assert_eq!(words.len(), 24, "Generated mnemonic must have 24 words");
 
         // Test restoring from mnemonic
-        let restored = WalletKeypair::from_mnemonic(&phrase, None).unwrap();
+        let restored = WalletKeypair::from_mnemonic(&phrase, None, Prefix::Devnet).unwrap();
         assert_eq!(wallet.address.to_string(), restored.address.to_string());
         assert_eq!(wallet.secret_hex(), restored.secret_hex());
     }
 
     #[test]
     fn test_bip39_passphrase_derivation() {
-        let (wallet, phrase) = WalletKeypair::generate_mnemonic(Some("secret123")).unwrap();
+        let (wallet, phrase) = WalletKeypair::generate_mnemonic(Some("secret123"), Prefix::Devnet).unwrap();
         
         // Importing with matching passphrase gives same address
-        let restored_same = WalletKeypair::from_mnemonic(&phrase, Some("secret123")).unwrap();
+        let restored_same = WalletKeypair::from_mnemonic(&phrase, Some("secret123"), Prefix::Devnet).unwrap();
         assert_eq!(wallet.address.to_string(), restored_same.address.to_string());
 
         // Importing without passphrase or different passphrase gives different address
-        let restored_different = WalletKeypair::from_mnemonic(&phrase, None).unwrap();
+        let restored_different = WalletKeypair::from_mnemonic(&phrase, None, Prefix::Devnet).unwrap();
         assert_ne!(wallet.address.to_string(), restored_different.address.to_string());
     }
 
     #[test]
     fn test_save_and_load_file() {
-        let (wallet, _phrase) = WalletKeypair::generate_mnemonic(None).unwrap();
+        let (wallet, _phrase) = WalletKeypair::generate_mnemonic(None, Prefix::Devnet).unwrap();
         let temp_dir = std::env::temp_dir();
         let file_path = temp_dir.join("test_zyanya_wallet_mnemonic.key");
 
         wallet.save_to_file(&file_path).unwrap();
-        let loaded = WalletKeypair::load_from_file(&file_path).unwrap();
+        let loaded = WalletKeypair::load_from_file(&file_path, Prefix::Devnet).unwrap();
 
         assert_eq!(wallet.address.to_string(), loaded.address.to_string());
         assert_eq!(wallet.secret_hex(), loaded.secret_hex());
