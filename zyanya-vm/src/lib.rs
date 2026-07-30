@@ -69,6 +69,21 @@ mod tests {
     }
 
     #[test]
+    fn test_arithmetic_overflow() {
+        let mut vm = VM::new(1000);
+        let program = vec![OpCode::Push(u64::MAX), OpCode::Push(1), OpCode::Add];
+        assert_eq!(vm.execute(&program), Err(VMError::ArithmeticOverflow));
+
+        let mut vm = VM::new(1000);
+        let program = vec![OpCode::Push(0), OpCode::Push(1), OpCode::Sub];
+        assert_eq!(vm.execute(&program), Err(VMError::ArithmeticOverflow));
+
+        let mut vm = VM::new(1000);
+        let program = vec![OpCode::Push(u64::MAX), OpCode::Push(2), OpCode::Mul];
+        assert_eq!(vm.execute(&program), Err(VMError::ArithmeticOverflow));
+    }
+
+    #[test]
     fn test_logic_and_comparison_opcodes() {
         let mut vm = VM::new(1000);
         let program = vec![

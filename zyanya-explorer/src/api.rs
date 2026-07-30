@@ -83,9 +83,14 @@ pub async fn api_contract_state_handler(
     Path(address): Path<String>,
     Query(query): Query<StateQuery>,
 ) -> Response {
-    let key_val = query.key.as_deref()
-        .map(|k| k.trim_start_matches("0x").parse::<u64>().unwrap_or(0))
-        .unwrap_or(0);
+    let key_val = query.key.as_deref().map(|k| {
+        let clean = k.trim();
+        if let Some(rest) = clean.strip_prefix("0x").or_else(|| clean.strip_prefix("0X")) {
+            u64::from_str_radix(rest, 16).unwrap_or(0)
+        } else {
+            clean.parse::<u64>().unwrap_or(0)
+        }
+    }).unwrap_or(0);
 
     match client.get_contract_state_key(&address, key_val).await {
         Ok(val) => Json(serde_json::json!({
@@ -97,9 +102,23 @@ pub async fn api_contract_state_handler(
     }
 }
 
-pub async fn api_dag_handler(State(client): State<Arc<RpcClientManager>>) -> Response {
-    match client.get_dag_graph(20).await {
-        Ok(dag) => Json(dag).into_response(),
+#[derive(Deserialize)]
+pub struct PaginationQuery {
+    pub limit: Option<usize>,
+    pub offset: Option<usize>,
+}
+
+pub async fn api_dag_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Query(pagination): Query<PaginationQuery>,
+) -> Response {
+    let limit = pagination.limit.unwrap_or(20).min(100);
+    let offset = pagination.offset.unwrap_or(0);
+    match client.get_dag_graph(limit + offset).await {
+        Ok(mut dag) => {
+            dag.nodes = dag.nodes.into_iter().skip(offset).take(limit).collect();
+            Json(dag).into_response()
+        }
         Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": err }))).into_response(),
     }
 }
@@ -177,16 +196,32 @@ pub async fn api_dex_reserves_post_handler(
     }
 }
 
-pub async fn api_contracts_handler(State(client): State<Arc<RpcClientManager>>) -> Response {
+pub async fn api_contracts_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Query(pagination): Query<PaginationQuery>,
+) -> Response {
+    let limit = pagination.limit.unwrap_or(20).min(100);
+    let offset = pagination.offset.unwrap_or(0);
     match client.get_contracts().await {
-        Ok(contracts) => Json(contracts).into_response(),
+        Ok(contracts) => {
+            let paginated: Vec<_> = contracts.into_iter().skip(offset).take(limit).collect();
+            Json(paginated).into_response()
+        }
         Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": err }))).into_response(),
     }
 }
 
-pub async fn api_tokens_handler(State(client): State<Arc<RpcClientManager>>) -> Response {
+pub async fn api_tokens_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Query(pagination): Query<PaginationQuery>,
+) -> Response {
+    let limit = pagination.limit.unwrap_or(20).min(100);
+    let offset = pagination.offset.unwrap_or(0);
     match client.get_tokens().await {
-        Ok(tokens) => Json(tokens).into_response(),
+        Ok(tokens) => {
+            let paginated: Vec<_> = tokens.into_iter().skip(offset).take(limit).collect();
+            Json(paginated).into_response()
+        }
         Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": err }))).into_response(),
     }
 }
@@ -209,6 +244,23 @@ pub async fn api_dex_handler(
     }
 }
 
+fn check_write_enabled() -> Result<(), Response> {
+    let enabled = std::env::var("ZYANYA_EXPLORER_ENABLE_WRITE")
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false);
+
+    if !enabled {
+        Err((
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({
+                "error": "State-changing RPC endpoints are disabled on public explorer deployments. Set ZYANYA_EXPLORER_ENABLE_WRITE=1 to enable."
+            })),
+        ).into_response())
+    } else {
+        Ok(())
+    }
+}
+
 #[derive(Deserialize)]
 pub struct DeployContractReq {
     pub bytecode: String,
@@ -219,6 +271,9 @@ pub async fn api_deploy_contract_handler(
     State(client): State<Arc<RpcClientManager>>,
     Json(payload): Json<DeployContractReq>,
 ) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
     let gas = payload.gas.unwrap_or(100000);
     match client.deploy_contract(&payload.bytecode, gas).await {
         Ok(res) => Json(res).into_response(),
@@ -241,6 +296,9 @@ pub async fn api_invoke_contract_handler(
     State(client): State<Arc<RpcClientManager>>,
     Json(payload): Json<InvokeContractReq>,
 ) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
     let address = payload.contract_address.or(payload.address).unwrap_or_default();
     if address.is_empty() {
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Missing contract address" }))).into_response();
@@ -269,6 +327,9 @@ pub async fn api_call_contract_handler(
     State(client): State<Arc<RpcClientManager>>,
     Json(payload): Json<CallContractReq>,
 ) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
     let address = payload.contract_address.or(payload.address).unwrap_or_default();
     if address.is_empty() {
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Missing contract address" }))).into_response();
@@ -294,6 +355,9 @@ pub async fn api_deploy_token_handler(
     State(client): State<Arc<RpcClientManager>>,
     Json(payload): Json<DeployTokenReq>,
 ) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
     let name = payload.name.as_deref().unwrap_or("Token");
     let owner = payload.owner.as_deref().unwrap_or("1");
     let gas = payload.gas.unwrap_or(100000);
@@ -319,6 +383,9 @@ pub async fn api_token_transfer_handler(
     State(client): State<Arc<RpcClientManager>>,
     Json(payload): Json<TokenTransferReq>,
 ) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
     let token = payload.token_address.or(payload.tokenAddress).or(payload.token).unwrap_or_default();
     if token.is_empty() {
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Missing token address" }))).into_response();
@@ -348,6 +415,9 @@ pub async fn api_swap_on_dex_handler(
     State(client): State<Arc<RpcClientManager>>,
     Json(payload): Json<SwapOnDexReq>,
 ) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
     let dex = payload.dex_address.or(payload.dexAddress).or(payload.dex).unwrap_or_default();
     if dex.is_empty() {
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Missing DEX address" }))).into_response();

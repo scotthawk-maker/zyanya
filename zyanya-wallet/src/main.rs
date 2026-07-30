@@ -100,6 +100,10 @@ struct Cli {
     /// Overwrite an existing wallet key file when generating/importing (default: refuse to clobber)
     #[arg(long, default_value_t = false)]
     force: bool,
+
+    /// Print private secret key to terminal output (default: false / hidden for security)
+    #[arg(long, default_value_t = false)]
+    show_secret: bool,
 }
 
 /// Save a keypair to disk, refusing to overwrite an existing file unless `force` is set.
@@ -128,7 +132,9 @@ async fn main() -> ExitCode {
         let keypair = WalletKeypair::generate(prefix);
         println!("Generated New Zyanya Raw Hex Keypair:");
         println!("  Address:   {}", keypair.address);
-        println!("  SecretKey: {}", keypair.secret_hex());
+        if cli.show_secret {
+            println!("  SecretKey: {}", keypair.secret_hex());
+        }
 
         let save_path = cli.keyfile.unwrap_or_else(WalletKeypair::default_key_path);
         save_key_guarded(&keypair, &save_path, cli.force);
@@ -142,7 +148,9 @@ async fn main() -> ExitCode {
                 display_mnemonic(&phrase);
                 println!("Derived Keypair Details:");
                 println!("  Address:   {}", keypair.address);
-                println!("  SecretKey: {}", keypair.secret_hex());
+                if cli.show_secret {
+                    println!("  SecretKey: {}", keypair.secret_hex());
+                }
 
                 let save_path = cli.keyfile.unwrap_or_else(WalletKeypair::default_key_path);
                 save_key_guarded(&keypair, &save_path, cli.force);
@@ -211,7 +219,9 @@ async fn main() -> ExitCode {
     if cli.import_mnemonic.is_some() && !cli.balance && !cli.send_zyan && !cli.swap_dex && !cli.demo {
         println!("Successfully Restored Wallet from BIP-39 Mnemonic:");
         println!("  Address:   {}", ops.keypair.address);
-        println!("  SecretKey: {}", ops.keypair.secret_hex());
+        if cli.show_secret {
+            println!("  SecretKey: {}", ops.keypair.secret_hex());
+        }
         let save_path = cli.keyfile.unwrap_or_else(WalletKeypair::default_key_path);
         println!("Saved derived hex key to {}", save_path.display());
         return ExitCode::SUCCESS;
@@ -219,7 +229,7 @@ async fn main() -> ExitCode {
 
     // 2. Automated Live Demo
     if cli.demo {
-        return run_live_demo(&mut ops, prefix).await;
+        return run_live_demo(&mut ops, prefix, cli.show_secret).await;
     }
 
     // 3. Single CLI Actions
@@ -262,7 +272,13 @@ async fn main() -> ExitCode {
                 return ExitCode::FAILURE;
             }
         };
-        let amount_sompi = (zyan_val * SOMPI_PER_ZYANYA as f64) as u64;
+        let amount_sompi = match key_management::parse_zyan_to_sompi(&format!("{:.8}", zyan_val)) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("Error parsing amount: {}", e);
+                return ExitCode::FAILURE;
+            }
+        };
 
         let client = match ops.connect_rpc().await {
             Ok(c) => c,
@@ -340,7 +356,7 @@ async fn main() -> ExitCode {
 }
 
 /// Run automated live demo flow
-async fn run_live_demo(ops: &mut WalletOps, prefix: zyanya_addresses::Prefix) -> ExitCode {
+async fn run_live_demo(ops: &mut WalletOps, prefix: zyanya_addresses::Prefix, show_secret: bool) -> ExitCode {
     println!("================================================================================");
     println!("                      ZYANYA WALLET LIVE DEMO EXECUTION                        ");
     println!("================================================================================");
@@ -360,7 +376,9 @@ async fn run_live_demo(ops: &mut WalletOps, prefix: zyanya_addresses::Prefix) ->
 
     println!("  Generated Wallet Keypair:");
     println!("    Address:   {}", demo_wallet.address);
-    println!("    SecretKey: {}", demo_wallet.secret_hex());
+    if show_secret {
+        println!("    SecretKey: {}", demo_wallet.secret_hex());
+    }
 
     // Verify restore from mnemonic
     let restored_wallet = match WalletKeypair::from_mnemonic(&mnemonic_phrase, Some("zyanya_passphrase_demo"), prefix) {
@@ -373,7 +391,9 @@ async fn run_live_demo(ops: &mut WalletOps, prefix: zyanya_addresses::Prefix) ->
 
     println!("\n  Restoring Wallet from Mnemonic Phrase...");
     println!("    Restored Address:   {}", restored_wallet.address);
-    println!("    Restored SecretKey: {}", restored_wallet.secret_hex());
+    if show_secret {
+        println!("    Restored SecretKey: {}", restored_wallet.secret_hex());
+    }
 
     assert_eq!(
         demo_wallet.address.to_string(),

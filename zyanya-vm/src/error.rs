@@ -8,6 +8,9 @@ pub enum VMError {
     #[error("Stack underflow")]
     StackUnderflow,
 
+    #[error("Arithmetic overflow")]
+    ArithmeticOverflow,
+
     #[error("Stack overflow (max depth: {0})")]
     StackOverflow(usize),
 

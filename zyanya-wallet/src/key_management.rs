@@ -123,6 +123,14 @@ impl WalletKeypair {
         }
         let content = format!("{}\n", self.secret_hex());
         fs::write(path, content)?;
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let perms = fs::Permissions::from_mode(0o600);
+            fs::set_permissions(path, perms)?;
+        }
+
         Ok(())
     }
 
@@ -168,6 +176,45 @@ pub fn display_mnemonic(phrase: &str) {
     println!("--------------------------------------------------------------------------------");
     println!("Write down these 24 words. They are your wallet. Anyone with these words controls your ZYAN. Never share them.");
     println!("================================================================================\n");
+}
+
+/// Parse a decimal string representing ZYAN (e.g. "0.1", "10.5", "10") into integer sompi (8 decimal places).
+pub fn parse_zyan_to_sompi(s: &str) -> Result<u64, String> {
+    use zyanya_consensus_core::constants::SOMPI_PER_ZYANYA;
+    let s = s.trim();
+    if s.is_empty() {
+        return Err("Empty amount".to_string());
+    }
+    let parts: Vec<&str> = s.split('.').collect();
+    if parts.len() > 2 {
+        return Err("Invalid decimal format".to_string());
+    }
+
+    let whole_str = parts[0];
+    let whole: u64 = if whole_str.is_empty() {
+        0
+    } else {
+        whole_str.parse::<u64>().map_err(|e| format!("Invalid whole part: {}", e))?
+    };
+
+    let mut sompi = whole.checked_mul(SOMPI_PER_ZYANYA).ok_or_else(|| "Amount too large".to_string())?;
+
+    if parts.len() == 2 {
+        let frac_str = parts[1];
+        if !frac_str.is_empty() {
+            if frac_str.len() > 8 {
+                return Err("Too many decimal places (max 8)".to_string());
+            }
+            if !frac_str.chars().all(|c| c.is_ascii_digit()) {
+                return Err("Invalid characters in fractional part".to_string());
+            }
+            let padded = format!("{:0<8}", frac_str);
+            let frac_val: u64 = padded.parse().map_err(|e| format!("Invalid fraction part: {}", e))?;
+            sompi = sompi.checked_add(frac_val).ok_or_else(|| "Amount too large".to_string())?;
+        }
+    }
+
+    Ok(sompi)
 }
 
 #[cfg(test)]

@@ -146,16 +146,15 @@ impl WalletTui {
         }
 
         let amount_str = Self::read_input("Enter Amount in ZYAN (e.g. 10.5): ");
-        let zyan_val: f64 = match amount_str.parse() {
+        let amount_sompi = match crate::key_management::parse_zyan_to_sompi(&amount_str) {
             Ok(v) => v,
-            Err(_) => {
-                println!("Invalid amount.");
+            Err(e) => {
+                println!("Invalid amount: {}", e);
                 self.wait_keypress();
                 return;
             }
         };
-
-        let amount_sompi = (zyan_val * SOMPI_PER_ZYANYA as f64) as u64;
+        let zyan_val = amount_sompi as f64 / SOMPI_PER_ZYANYA as f64;
         println!("\nConfirm Send:");
         println!("  To:     {}", recipient);
         println!("  Amount: {} ZYAN ({} sompi)", zyan_val, amount_sompi);

@@ -86,19 +86,22 @@ impl VM {
                 OpCode::Add => {
                     let b = self.stack.pop()?;
                     let a = self.stack.pop()?;
-                    self.stack.push(a.wrapping_add(b))?;
+                    let res = a.checked_add(b).ok_or(VMError::ArithmeticOverflow)?;
+                    self.stack.push(res)?;
                     self.pc += 1;
                 }
                 OpCode::Sub => {
                     let b = self.stack.pop()?;
                     let a = self.stack.pop()?;
-                    self.stack.push(a.wrapping_sub(b))?;
+                    let res = a.checked_sub(b).ok_or(VMError::ArithmeticOverflow)?;
+                    self.stack.push(res)?;
                     self.pc += 1;
                 }
                 OpCode::Mul => {
                     let b = self.stack.pop()?;
                     let a = self.stack.pop()?;
-                    self.stack.push(a.wrapping_mul(b))?;
+                    let res = a.checked_mul(b).ok_or(VMError::ArithmeticOverflow)?;
+                    self.stack.push(res)?;
                     self.pc += 1;
                 }
                 OpCode::Div => {
@@ -122,6 +125,8 @@ impl VM {
                 OpCode::Pow => {
                     let b = self.stack.pop()?;
                     let a = self.stack.pop()?;
+                    let extra_gas = 1 + (b as u64 / 32);
+                    self.gas_meter.consume(extra_gas)?;
                     self.stack.push(a.wrapping_pow(b as u32))?;
                     self.pc += 1;
                 }
