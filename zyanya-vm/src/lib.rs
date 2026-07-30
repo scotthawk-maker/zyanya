@@ -1,4 +1,5 @@
 pub mod assembler;
+pub mod bonding_curve_token;
 pub mod compiler;
 pub mod error;
 pub mod gas;

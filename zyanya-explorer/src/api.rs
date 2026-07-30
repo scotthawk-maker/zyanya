@@ -14,6 +14,44 @@ pub struct StateQuery {
     pub key: Option<String>,
 }
 
+pub async fn launch_handler() -> Html<&'static str> {
+    Html(LAUNCH_HTML)
+}
+
+pub async fn token_handler() -> Html<&'static str> {
+    Html(TOKEN_HTML)
+}
+
+pub async fn token_metadata_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Path(address): Path<String>,
+) -> Response {
+    match client.get_token_metadata(&address).await {
+        Some(meta) => Json(meta).into_response(),
+        None => (StatusCode::NOT_FOUND, Json(serde_json::json!({ "error": "Metadata not found" }))).into_response(),
+    }
+}
+
+pub async fn token_icon_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Path(filename): Path<String>,
+) -> Response {
+    let safe_filename = std::path::Path::new(&filename)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("default.png");
+
+    let file_path = std::path::Path::new(&client.icons_dir).join(safe_filename);
+    if file_path.exists() {
+        match std::fs::read(&file_path) {
+            Ok(bytes) => ([(header::CONTENT_TYPE, "image/png")], bytes).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, format!("Read error: {}", e)).into_response(),
+        }
+    } else {
+        (StatusCode::NOT_FOUND, "Icon not found").into_response()
+    }
+}
+
 pub async fn landing_handler() -> Html<&'static str> {
     Html(LANDING_HTML)
 }
@@ -354,9 +392,16 @@ pub async fn api_call_contract_handler(
 #[derive(Deserialize)]
 pub struct DeployTokenReq {
     pub name: Option<String>,
-    pub supply: u64,
+    pub symbol: Option<String>,
+    pub supply: Option<u64>,
     pub owner: Option<String>,
     pub gas: Option<u64>,
+    pub description: Option<String>,
+    pub twitter: Option<String>,
+    pub telegram: Option<String>,
+    pub website: Option<String>,
+    pub icon_base64: Option<String>,
+    pub slope: Option<u64>,
 }
 
 pub async fn api_deploy_token_handler(
@@ -367,9 +412,25 @@ pub async fn api_deploy_token_handler(
         return resp;
     }
     let name = payload.name.as_deref().unwrap_or("Token");
+    let symbol = payload.symbol.as_deref().unwrap_or("TKN");
+    let supply = payload.supply.unwrap_or(1_000_000);
     let owner = payload.owner.as_deref().unwrap_or("1");
     let gas = payload.gas.unwrap_or(100000);
-    match client.deploy_token(name, payload.supply, owner, gas).await {
+    let slope = payload.slope.unwrap_or(1);
+
+    match client.deploy_bonding_curve_token(
+        name,
+        symbol,
+        supply,
+        owner,
+        slope,
+        gas,
+        payload.description,
+        payload.twitter,
+        payload.telegram,
+        payload.website,
+        payload.icon_base64,
+    ).await {
         Ok(res) => Json(res).into_response(),
         Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
     }

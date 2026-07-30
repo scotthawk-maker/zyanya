@@ -1,0 +1,72 @@
+// Bonding Curve Token Contract in Zyanya Contract Language (ZCL)
+// Storage Layout:
+// Key 0: Total Supply
+// Key 1: Slope
+// Key 2: Reserve
+// Key <address>: Holder Balance
+
+contract BondingCurveToken {
+    // Entry point 0: Init(slope)
+    fn init(slope) {
+        sstore(1, slope);
+        sstore(0, 0);
+        sstore(2, 0);
+        return 1;
+    }
+
+    // Entry point 1: Transfer(from, to, amount)
+    fn transfer(from, to, amount) {
+        let from_bal = sload(from);
+        if (from_bal < amount) {
+            return 0;
+        }
+        sstore(from, from_bal - amount);
+        let to_bal = sload(to);
+        sstore(to, to_bal + amount);
+        return 1;
+    }
+
+    // Entry point 2: BalanceOf(holder)
+    fn balance_of(holder) {
+        return sload(holder);
+    }
+
+    // Entry point 3: TotalSupply()
+    fn total_supply() {
+        return sload(0);
+    }
+
+    // Entry point 4: Buy(caller, tokens_to_mint)
+    fn buy(caller, tokens_to_mint) {
+        let slope = sload(1);
+        let cost = slope * tokens_to_mint;
+        let supply = sload(0);
+        sstore(0, supply + tokens_to_mint);
+        let reserve = sload(2);
+        sstore(2, reserve + cost);
+        let user_bal = sload(caller);
+        sstore(caller, user_bal + tokens_to_mint);
+        return tokens_to_mint;
+    }
+
+    // Entry point 5: Sell(caller, tokens_in)
+    fn sell(caller, tokens_in) {
+        let user_bal = sload(caller);
+        if (user_bal < tokens_in) {
+            return 0;
+        }
+        sstore(caller, user_bal - tokens_in);
+        let slope = sload(1);
+        let refund = slope * tokens_in;
+        let supply = sload(0);
+        sstore(0, supply - tokens_in);
+        let reserve = sload(2);
+        sstore(2, reserve - refund);
+        return refund;
+    }
+
+    // Entry point 6: Price()
+    fn price() {
+        return sload(1);
+    }
+}

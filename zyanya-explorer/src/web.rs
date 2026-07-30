@@ -2057,3 +2057,493 @@ a{color:var(--spectral-blue)}
 </div>
 <script>fetch('/brand/zyanya-logo.svg').then(r=>r.text()).then(t=>{document.getElementById('logo-container').innerHTML=t;});</script>
 </body></html>"###;
+
+pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyanya Launch - Pump.fun-style Token Launcher</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --void: #0A0F1C;
+            --shadow-teal: #0D3B50;
+            --spectral-blue: #7EC8D3;
+            --text-color: #E0E0E0;
+            --burn-red: #FF4D4D;
+            --accent-green: #00FFAA;
+            --font-mono: 'Fira Code', monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            background-color: var(--void);
+            color: var(--text-color);
+            font-family: var(--font-mono);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.5rem 0; border-bottom: 1px solid var(--shadow-teal);
+        }
+        .logo-wrap { display: flex; align-items: center; text-decoration: none; gap: 10px; }
+        nav a {
+            color: var(--spectral-blue); text-decoration: none; margin-left: 1.2rem;
+            font-weight: 600; font-size: 0.9rem; transition: color 0.2s;
+        }
+        nav a:hover, nav a.active { color: #fff; text-shadow: 0 0 8px var(--spectral-blue); }
+        main { padding: 3rem 0; }
+        .hero-title { font-size: 2.2rem; color: var(--spectral-blue); margin-bottom: 0.5rem; text-align: center; }
+        .hero-subtitle { text-align: center; color: rgba(224,224,224,0.7); margin-bottom: 2.5rem; }
+        .card {
+            background: var(--shadow-teal); padding: 2rem; border-radius: 12px;
+            border: 1px solid rgba(126,200,211,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-group.full { grid-column: span 2; }
+        label { color: var(--spectral-blue); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        input, textarea {
+            background: rgba(10, 15, 28, 0.8); border: 1px solid rgba(126,200,211,0.3);
+            color: #fff; font-family: var(--font-mono); padding: 0.75rem 1rem; border-radius: 6px;
+            font-size: 0.95rem; outline: none; transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus { border-color: var(--spectral-blue); box-shadow: 0 0 8px rgba(126,200,211,0.3); }
+        textarea { resize: vertical; min-height: 90px; }
+        .btn-launch {
+            grid-column: span 2; background: linear-gradient(135deg, var(--spectral-blue), #4a90e2);
+            color: var(--void); font-family: var(--font-mono); font-weight: 700; font-size: 1.1rem;
+            padding: 1rem; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase;
+            letter-spacing: 2px; transition: transform 0.2s, box-shadow 0.2s; margin-top: 1rem;
+        }
+        .btn-launch:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(126,200,211,0.6); }
+        #status-msg { margin-top: 1.5rem; text-align: center; }
+        footer { text-align: center; padding: 2rem 0; color: rgba(224,224,224,0.5); border-top: 1px solid var(--shadow-teal); margin-top: 4rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="/" class="logo-wrap">
+                <span style="font-size: 1.4rem; font-weight: 700; color: var(--spectral-blue); letter-spacing: 2px;">ZYANYA</span>
+                <span style="font-size: 0.85rem; color: rgba(224,224,224,0.6);">[LAUNCH]</span>
+            </a>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/explorer">Explorer</a>
+                <a href="/launch" class="active">Launch Token</a>
+                <a href="/tools">Tools</a>
+            </nav>
+        </header>
+        <main>
+            <h1 class="hero-title">🚀 Bonding Curve Token Launcher</h1>
+            <p class="hero-subtitle">Launch your token instantly on Zyanya. Instant bonding curve pricing on-chain.</p>
+            
+            <div class="card">
+                <form id="launchForm" onsubmit="handleLaunch(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="name">Token Name *</label>
+                            <input type="text" id="name" placeholder="e.g. Spectral Ghost" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="symbol">Ticker Symbol *</label>
+                            <input type="text" id="symbol" placeholder="e.g. GHOST" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="supply">Initial Reserve Supply</label>
+                            <input type="number" id="supply" value="1000000" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="slope">Bonding Curve Slope (Price Multiplier)</label>
+                            <input type="number" id="slope" value="1" min="1">
+                        </div>
+                        <div class="form-group full">
+                            <label for="description">Description</label>
+                            <textarea id="description" placeholder="What is this token about?"></textarea>
+                        </div>
+                        <div class="form-group full">
+                            <label for="iconFile">Token Icon (PNG / Image)</label>
+                            <input type="file" id="iconFile" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label for="twitter">Twitter / X URL</label>
+                            <input type="text" id="twitter" placeholder="https://x.com/yourtoken">
+                        </div>
+                        <div class="form-group">
+                            <label for="telegram">Telegram URL</label>
+                            <input type="text" id="telegram" placeholder="https://t.me/yourtoken">
+                        </div>
+                        <div class="form-group full">
+                            <label for="website">Website URL</label>
+                            <input type="text" id="website" placeholder="https://yourtoken.io">
+                        </div>
+                        <button type="submit" class="btn-launch">DEPLOY TOKEN</button>
+                    </div>
+                </form>
+                <div id="status-msg"></div>
+            </div>
+        </main>
+        <footer>
+            <p>The ghost in the IPv6 machine. &bull; <a href="/">zyanya.scottcloudhawk.org</a></p>
+        </footer>
+    </div>
+
+    <script>
+        async function handleLaunch(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const symbol = document.getElementById('symbol').value;
+            const supply = parseInt(document.getElementById('supply').value) || 1000000;
+            const slope = parseInt(document.getElementById('slope').value) || 1;
+            const description = document.getElementById('description').value;
+            const twitter = document.getElementById('twitter').value;
+            const telegram = document.getElementById('telegram').value;
+            const website = document.getElementById('website').value;
+            const iconInput = document.getElementById('iconFile');
+
+            let icon_base64 = null;
+            if (iconInput.files && iconInput.files[0]) {
+                icon_base64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(iconInput.files[0]);
+                });
+            }
+
+            const payload = {
+                name, symbol, supply, slope, description, twitter, telegram, website, icon_base64
+            };
+
+            const statusEl = document.getElementById('status-msg');
+            statusEl.innerHTML = '<span style="color: var(--spectral-blue)">Deploying bonding curve contract...</span>';
+
+            try {
+                const res = await fetch('/api/deploy-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && (data.contract_address || data.contractAddress)) {
+                    const addr = data.contract_address || data.contractAddress;
+                    statusEl.innerHTML = `
+                        <div style="background: rgba(0, 255, 170, 0.1); border: 1px solid var(--accent-green); padding: 18px; border-radius: 8px; margin-top: 15px; text-align: left;">
+                            <h3 style="color: var(--accent-green); margin-bottom: 8px;">🚀 Token Successfully Launched!</h3>
+                            <p><strong>Contract Address:</strong> <code style="word-break: break-all; color: var(--spectral-blue);">${addr}</code></p>
+                            <a href="/token/${addr}" class="btn-launch" style="display: inline-block; margin-top: 12px; padding: 10px 20px; text-decoration: none; text-align: center;">VIEW TOKEN PAGE →</a>
+                        </div>
+                    `;
+                } else {
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Error: ${data.error || 'Launch failed'}</span>`;
+                }
+            } catch (err) {
+                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network error: ${err.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>"#;
+
+pub const TOKEN_HTML: &str = r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Details - Zyanya Explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --void: #0A0F1C;
+            --shadow-teal: #0D3B50;
+            --spectral-blue: #7EC8D3;
+            --text-color: #E0E0E0;
+            --burn-red: #FF4D4D;
+            --accent-green: #00FFAA;
+            --font-mono: 'Fira Code', monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            background-color: var(--void);
+            color: var(--text-color);
+            font-family: var(--font-mono);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.5rem 0; border-bottom: 1px solid var(--shadow-teal);
+        }
+        .logo-wrap { display: flex; align-items: center; text-decoration: none; gap: 10px; }
+        nav a {
+            color: var(--spectral-blue); text-decoration: none; margin-left: 1.2rem;
+            font-weight: 600; font-size: 0.9rem; transition: color 0.2s;
+        }
+        nav a:hover, nav a.active { color: #fff; text-shadow: 0 0 8px var(--spectral-blue); }
+        main { padding: 2.5rem 0; }
+        .token-header-card {
+            background: var(--shadow-teal); padding: 2rem; border-radius: 12px;
+            border: 1px solid rgba(126,200,211,0.3); display: flex; align-items: center; gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .token-icon {
+            width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
+            border: 2px solid var(--spectral-blue); background: var(--void); display: flex;
+            align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700;
+            color: var(--spectral-blue);
+        }
+        .token-info-main h1 { font-size: 2rem; color: #fff; margin-bottom: 0.2rem; }
+        .token-symbol { color: var(--spectral-blue); font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .token-desc { color: rgba(224,224,224,0.8); margin-bottom: 1rem; max-width: 600px; }
+        .social-links a {
+            display: inline-block; margin-right: 1rem; color: var(--spectral-blue);
+            text-decoration: none; font-size: 0.85rem; padding: 4px 10px;
+            border: 1px solid rgba(126,200,211,0.4); border-radius: 4px; transition: background 0.2s;
+        }
+        .social-links a:hover { background: rgba(126,200,211,0.2); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; margin-bottom: 2rem; }
+        .stat-card {
+            background: rgba(13, 59, 80, 0.6); padding: 1.2rem; border-radius: 8px;
+            border: 1px solid rgba(126,200,211,0.2);
+        }
+        .stat-title { color: rgba(224,224,224,0.6); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-val { color: var(--spectral-blue); font-size: 1.4rem; font-weight: 700; margin-top: 0.3rem; }
+        .trade-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .trade-card {
+            background: var(--shadow-teal); padding: 1.5rem; border-radius: 12px;
+            border: 1px solid rgba(126,200,211,0.3);
+        }
+        .trade-card h3 { color: var(--spectral-blue); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+        .trade-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+        label { color: rgba(224,224,224,0.8); font-size: 0.85rem; }
+        input {
+            background: rgba(10, 15, 28, 0.8); border: 1px solid rgba(126,200,211,0.3);
+            color: #fff; font-family: var(--font-mono); padding: 0.75rem 1rem; border-radius: 6px;
+            font-size: 1rem; outline: none; width: 100%;
+        }
+        .btn-buy {
+            background: var(--accent-green); color: var(--void); font-family: var(--font-mono);
+            font-weight: 700; font-size: 1rem; padding: 0.8rem; border: none; border-radius: 6px;
+            cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-sell {
+            background: var(--burn-red); color: #fff; font-family: var(--font-mono);
+            font-weight: 700; font-size: 1rem; padding: 0.8rem; border: none; border-radius: 6px;
+            cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .status-box { margin-top: 1rem; font-size: 0.9rem; text-align: center; }
+        footer { text-align: center; padding: 2rem 0; color: rgba(224,224,224,0.5); border-top: 1px solid var(--shadow-teal); margin-top: 4rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="/" class="logo-wrap">
+                <span style="font-size: 1.4rem; font-weight: 700; color: var(--spectral-blue); letter-spacing: 2px;">ZYANYA</span>
+                <span style="font-size: 0.85rem; color: rgba(224,224,224,0.6);">[BONDING CURVE TOKEN]</span>
+            </a>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/explorer">Explorer</a>
+                <a href="/launch">Launch Token</a>
+                <a href="/tools">Tools</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="token-header-card">
+                <div id="icon-container">
+                    <div class="token-icon" id="icon-fallback">?</div>
+                </div>
+                <div class="token-info-main">
+                    <h1 id="token-name">Loading...</h1>
+                    <div class="token-symbol" id="token-symbol">...</div>
+                    <p class="token-desc" id="token-desc">Loading token metadata...</p>
+                    <div class="social-links" id="social-links"></div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Current Price</div>
+                    <div class="stat-val" id="stat-price">0 ZYAN</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Total Supply</div>
+                    <div class="stat-val" id="stat-supply">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Your Balance</div>
+                    <div class="stat-val" id="stat-balance">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Active Caller Key</div>
+                    <div style="margin-top: 0.3rem;"><input type="text" id="caller-input" value="1" style="padding: 4px 8px; font-size: 0.9rem;" onchange="loadTokenData()"></div>
+                </div>
+            </div>
+
+            <div class="trade-container">
+                <div class="trade-card">
+                    <h3>🟢 Buy Tokens</h3>
+                    <div class="trade-group">
+                        <label for="buy-amount">Tokens to Buy</label>
+                        <input type="number" id="buy-amount" value="100" min="1">
+                    </div>
+                    <button class="btn-buy" onclick="handleBuy()">BUY NOW</button>
+                    <div class="status-box" id="buy-status"></div>
+                </div>
+
+                <div class="trade-card">
+                    <h3>🔴 Sell Tokens</h3>
+                    <div class="trade-group">
+                        <label for="sell-amount">Tokens to Sell</label>
+                        <input type="number" id="sell-amount" value="100" min="1">
+                    </div>
+                    <button class="btn-sell" onclick="handleSell()">SELL NOW</button>
+                    <div class="status-box" id="sell-status"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>The ghost in the IPv6 machine. &bull; <a href="/">zyanya.scottcloudhawk.org</a></p>
+        </footer>
+    </div>
+
+    <script>
+        const contractAddress = window.location.pathname.split('/').pop();
+
+        async function loadTokenData() {
+            if (!contractAddress || contractAddress === 'token') return;
+            const caller = document.getElementById('caller-input').value || '1';
+
+            try {
+                const res = await fetch('/api/token/' + contractAddress + '/metadata');
+                if (res.ok) {
+                    const meta = await res.json();
+                    document.getElementById('token-name').innerText = meta.name || 'Bonding Curve Token';
+                    document.getElementById('token-symbol').innerText = meta.symbol ? '$' + meta.symbol : '';
+                    document.getElementById('token-desc').innerText = meta.description || 'No description provided.';
+                    
+                    const iconUri = meta.icon_uri || ('/token-icons/' + contractAddress + '.png');
+                    const img = new Image();
+                    img.src = iconUri;
+                    img.className = 'token-icon';
+                    img.onload = () => {
+                        document.getElementById('icon-container').innerHTML = '';
+                        document.getElementById('icon-container').appendChild(img);
+                    };
+                    img.onerror = () => {
+                        document.getElementById('icon-fallback').innerText = (meta.symbol || meta.name || '?').charAt(0).toUpperCase();
+                    };
+
+                    const socialsHtml = [];
+                    if (meta.twitter) socialsHtml.push(`<a href="${meta.twitter}" target="_blank">Twitter / X</a>`);
+                    if (meta.telegram) socialsHtml.push(`<a href="${meta.telegram}" target="_blank">Telegram</a>`);
+                    if (meta.website) socialsHtml.push(`<a href="${meta.website}" target="_blank">Website</a>`);
+                    document.getElementById('social-links').innerHTML = socialsHtml.join('');
+                }
+            } catch (err) {
+                console.error('Metadata load error:', err);
+            }
+
+            try {
+                const res = await fetch('/api/call-contract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: contractAddress, entry_point: 6 })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('stat-price').innerText = (data.returnValue || 0) + ' ZYAN';
+                }
+            } catch (err) {}
+
+            try {
+                const res = await fetch('/api/call-contract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: contractAddress, entry_point: 3 })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('stat-supply').innerText = data.returnValue || 0;
+                }
+            } catch (err) {}
+
+            try {
+                const res = await fetch('/api/token-balance?token=' + contractAddress + '&holder=' + caller);
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('stat-balance').innerText = data.balance || 0;
+                }
+            } catch (err) {}
+        }
+
+        async function handleBuy() {
+            const caller = document.getElementById('caller-input').value || '1';
+            const amount = parseInt(document.getElementById('buy-amount').value) || 0;
+            const statusEl = document.getElementById('buy-status');
+            statusEl.innerHTML = '<span style="color: var(--spectral-blue)">Buying tokens...</span>';
+
+            try {
+                const res = await fetch('/api/invoke-contract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        address: contractAddress,
+                        entry_point: 4,
+                        calldata: caller + ',' + amount
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    statusEl.innerHTML = `<span style="color: var(--accent-green)">Bought ${data.returnValue || amount} tokens!</span>`;
+                    loadTokenData();
+                } else {
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Buy failed: ${data.error || 'Unknown error'}</span>`;
+                }
+            } catch (err) {
+                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network error: ${err.message}</span>`;
+            }
+        }
+
+        async function handleSell() {
+            const caller = document.getElementById('caller-input').value || '1';
+            const amount = parseInt(document.getElementById('sell-amount').value) || 0;
+            const statusEl = document.getElementById('sell-status');
+            statusEl.innerHTML = '<span style="color: var(--spectral-blue)">Selling tokens...</span>';
+
+            try {
+                const res = await fetch('/api/invoke-contract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        address: contractAddress,
+                        entry_point: 5,
+                        calldata: caller + ',' + amount
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    statusEl.innerHTML = `<span style="color: var(--accent-green)">Sold ${amount} tokens for ${data.returnValue || 0} ZYAN refund!</span>`;
+                    loadTokenData();
+                } else {
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Sell failed: ${data.error || 'Unknown error'}</span>`;
+                }
+            } catch (err) {
+                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network error: ${err.message}</span>`;
+            }
+        }
+
+        window.onload = loadTokenData;
+    </script>
+</body>
+</html>"#;

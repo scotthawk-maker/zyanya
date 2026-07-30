@@ -6,10 +6,24 @@ use zyanya_rpc_core::api::rpc::RpcApi;
 use zyanya_rpc_core::RpcHash;
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct TokenMetadata {
+    pub name: Option<String>,
+    pub symbol: Option<String>,
+    pub description: Option<String>,
+    pub twitter: Option<String>,
+    pub telegram: Option<String>,
+    pub website: Option<String>,
+    pub icon_uri: Option<String>,
+}
+
 #[derive(Clone)]
 pub struct RpcClientManager {
     rpc_url: String,
     client: Arc<RwLock<Option<GrpcClient>>>,
+    pub metadata_store: Arc<tokio::sync::Mutex<std::collections::HashMap<String, TokenMetadata>>>,
+    pub metadata_path: String,
+    pub icons_dir: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -122,6 +136,11 @@ pub struct TokenSummary {
     pub name: String,
     pub symbol: String,
     pub bytecode_size: usize,
+    pub description: Option<String>,
+    pub twitter: Option<String>,
+    pub telegram: Option<String>,
+    pub website: Option<String>,
+    pub icon_uri: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -161,10 +180,68 @@ pub struct DagGraphData {
 
 impl RpcClientManager {
     pub fn new(rpc_url: String) -> Self {
+        let metadata_path = std::env::var("ZYANYA_TOKEN_METADATA_PATH")
+            .unwrap_or_else(|_| "token-metadata.json".to_string());
+        let icons_dir = std::env::var("ZYANYA_TOKEN_ICONS_DIR")
+            .unwrap_or_else(|_| "token-icons".to_string());
+
+        if let Err(_) = std::fs::create_dir_all(&icons_dir) {
+            let _ = std::fs::create_dir_all("/tmp/zyanya-token-icons");
+        }
+
+        let mut loaded_map = std::collections::HashMap::new();
+        if let Ok(content) = std::fs::read_to_string(&metadata_path) {
+            if let Ok(map) = serde_json::from_str::<std::collections::HashMap<String, TokenMetadata>>(&content) {
+                loaded_map = map;
+            }
+        } else if let Ok(content) = std::fs::read_to_string("/tmp/zyanya-token-metadata.json") {
+            if let Ok(map) = serde_json::from_str::<std::collections::HashMap<String, TokenMetadata>>(&content) {
+                loaded_map = map;
+            }
+        }
+
         Self {
             rpc_url,
             client: Arc::new(RwLock::new(None)),
+            metadata_store: Arc::new(tokio::sync::Mutex::new(loaded_map)),
+            metadata_path,
+            icons_dir,
         }
+    }
+
+    pub async fn get_token_metadata(&self, address: &str) -> Option<TokenMetadata> {
+        let store = self.metadata_store.lock().await;
+        store.get(address).or_else(|| store.get(&address.to_lowercase())).cloned()
+    }
+
+    pub async fn save_token_metadata(&self, address: &str, metadata: TokenMetadata) -> Result<(), String> {
+        let mut store = self.metadata_store.lock().await;
+        store.insert(address.to_string(), metadata.clone());
+        store.insert(address.to_lowercase(), metadata);
+
+        let json = serde_json::to_string_pretty(&*store)
+            .map_err(|e| format!("Failed to serialize metadata: {}", e))?;
+
+        if let Err(e) = std::fs::write(&self.metadata_path, &json) {
+            let _ = std::fs::write("/tmp/zyanya-token-metadata.json", &json);
+            log::warn!("Failed to write metadata to {}: {}, saved to /tmp", self.metadata_path, e);
+        }
+        Ok(())
+    }
+
+    pub fn save_token_icon(&self, address: &str, base64_data: &str) -> Result<String, String> {
+        let decoded = decode_base64(base64_data)?;
+        let filename = format!("{}.png", address);
+        let mut path = std::path::Path::new(&self.icons_dir).join(&filename);
+
+        if let Err(_) = std::fs::write(&path, &decoded) {
+            let tmp_dir = std::path::Path::new("/tmp/zyanya-token-icons");
+            let _ = std::fs::create_dir_all(tmp_dir);
+            path = tmp_dir.join(&filename);
+            std::fs::write(&path, &decoded).map_err(|e| format!("Failed to write icon to /tmp: {}", e))?;
+        }
+
+        Ok(format!("/token-icons/{}", filename))
     }
 
     pub async fn ensure_connected(&self) -> Result<GrpcClient, String> {
@@ -480,7 +557,13 @@ impl RpcClientManager {
         let contract_address = RpcHash::from_str(address).map_err(|e| format!("Invalid contract address: {}", e))?;
         let parameters = if calldata.is_empty() {
             vec![]
-        } else if let Ok(val) = calldata.parse::<u64>() {
+        } else if calldata.contains(',') || calldata.contains(' ') {
+            calldata.split(&[',', ' '][..])
+                .map(|s| s.trim())
+                .filter(|s| !s.is_empty())
+                .map(|s| parse_u64_key(s))
+                .collect::<Result<Vec<u64>, _>>()?
+        } else if let Ok(val) = parse_u64_key(calldata) {
             vec![val]
         } else {
             let bytes = <Vec<u8>>::from_hex(calldata.trim_start_matches("0x"))
@@ -493,6 +576,78 @@ impl RpcClientManager {
             "transactionId": res.transaction_id,
             "gasUsed": res.gas_used,
             "success": res.success
+        }))
+    }
+
+    pub async fn deploy_bonding_curve_token(
+        &self,
+        name: &str,
+        symbol: &str,
+        supply: u64,
+        owner: &str,
+        slope: u64,
+        gas: u64,
+        description: Option<String>,
+        twitter: Option<String>,
+        telegram: Option<String>,
+        website: Option<String>,
+        icon_base64: Option<String>,
+    ) -> Result<serde_json::Value, String> {
+        let client = self.ensure_connected().await?;
+        let owner_u64 = parse_u64_key(owner)?;
+
+        let bytecode = zyanya_vm::bonding_curve_token::bonding_curve_bytecode();
+        let res = client.deploy_contract(bytecode, gas, 1, 0).await.map_err(|e| e.to_string())?;
+        let contract_address = res.contract_address.to_string();
+
+        let contract_hash = RpcHash::from_str(&contract_address).map_err(|e| e.to_string())?;
+        let _init_res = client.invoke_contract(contract_hash, 0, vec![slope], gas, 1, 0).await.map_err(|e| format!("Init curve failed: {}", e))?;
+
+        let icon_uri = if let Some(ref base64_str) = icon_base64 {
+            if !base64_str.trim().is_empty() {
+                match self.save_token_icon(&contract_address, base64_str) {
+                    Ok(uri) => Some(uri),
+                    Err(e) => {
+                        log::warn!("Failed to save icon: {}", e);
+                        Some(format!("/token-icons/{}.png", contract_address))
+                    }
+                }
+            } else {
+                Some(format!("/token-icons/{}.png", contract_address))
+            }
+        } else {
+            Some(format!("/token-icons/{}.png", contract_address))
+        };
+
+        let metadata = TokenMetadata {
+            name: Some(name.to_string()),
+            symbol: Some(symbol.to_string()),
+            description: description.clone(),
+            twitter: twitter.clone(),
+            telegram: telegram.clone(),
+            website: website.clone(),
+            icon_uri: icon_uri.clone(),
+        };
+        self.save_token_metadata(&contract_address, metadata).await?;
+
+        Ok(serde_json::json!({
+            "contract_address": contract_address,
+            "contractAddress": contract_address,
+            "transactionId": res.transaction_id,
+            "gasUsed": res.gas_used,
+            "success": res.success,
+            "name": name,
+            "symbol": symbol,
+            "description": description,
+            "socials": {
+                "twitter": twitter,
+                "telegram": telegram,
+                "website": website
+            },
+            "icon_uri": icon_uri,
+            "slope": slope,
+            "supply": supply,
+            "owner": owner_u64
         }))
     }
 
@@ -693,19 +848,34 @@ impl RpcClientManager {
     pub async fn get_tokens(&self) -> Result<Vec<TokenSummary>, String> {
         let contracts = self.get_contracts().await?;
         let mut tokens = Vec::new();
+        let store = self.metadata_store.lock().await;
 
         for c in contracts {
             if c.contract_type == "Token" {
                 let k0 = self.get_contract_state_key(&c.address, 0).await.unwrap_or(0);
                 let k1 = self.get_contract_state_key(&c.address, 1).await.unwrap_or(0);
 
+                let meta = store.get(&c.address).or_else(|| store.get(&c.address.to_lowercase()));
+                let name = meta.and_then(|m| m.name.clone()).unwrap_or_else(|| "GHOST Token".to_string());
+                let symbol = meta.and_then(|m| m.symbol.clone()).unwrap_or_else(|| "GHOST".to_string());
+                let description = meta.and_then(|m| m.description.clone());
+                let twitter = meta.and_then(|m| m.twitter.clone());
+                let telegram = meta.and_then(|m| m.telegram.clone());
+                let website = meta.and_then(|m| m.website.clone());
+                let icon_uri = meta.and_then(|m| m.icon_uri.clone());
+
                 tokens.push(TokenSummary {
                     contract_address: c.address.clone(),
                     total_supply: k0,
                     owner_address: k1,
-                    name: "GHOST Token".to_string(),
-                    symbol: "GHOST".to_string(),
+                    name,
+                    symbol,
                     bytecode_size: c.bytecode_size,
+                    description,
+                    twitter,
+                    telegram,
+                    website,
+                    icon_uri,
                 });
             }
         }
@@ -745,5 +915,36 @@ fn parse_u64_key(s: &str) -> Result<u64, String> {
     } else {
         clean.parse::<u64>().map_err(|e| format!("Invalid numeric key: {}", e))
     }
+}
+
+pub fn decode_base64(s: &str) -> Result<Vec<u8>, String> {
+    let clean = if let Some(pos) = s.find(',') {
+        &s[pos + 1..]
+    } else {
+        s
+    }.trim();
+
+    let mut table = [255u8; 256];
+    for (i, &b) in b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".iter().enumerate() {
+        table[b as usize] = i as u8;
+    }
+    let bytes = clean.as_bytes();
+    let mut out = Vec::new();
+    let mut buf = 0u32;
+    let mut bits = 0;
+    for &b in bytes {
+        if b == b'=' || b.is_ascii_whitespace() { continue; }
+        let val = table[b as usize];
+        if val == 255 {
+            continue;
+        }
+        buf = (buf << 6) | (val as u32);
+        bits += 6;
+        if bits >= 8 {
+            bits -= 8;
+            out.push((buf >> bits) as u8);
+        }
+    }
+    Ok(out)
 }
 
