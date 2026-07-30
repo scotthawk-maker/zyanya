@@ -1,0 +1,15 @@
+# rust-sandbox image — generic for any Rust project.
+# The rust version is pinned at build time via RUST_IMAGE to match the host
+# `rustc --version`, so the shared host `target/` cache stays compatible.
+ARG RUST_IMAGE=rust:slim-bookworm
+FROM $RUST_IMAGE
+
+# clippy + rustfmt ship with the default rust image toolchain; ensure present.
+# (No-op if already installed.)
+RUN rustup component add clippy rustfmt
+
+# protoc — needed by rusty-spectre's P2P crate (prost-build compiles .proto files)
+RUN apt-get update && apt-get install -y --no-install-recommends protobuf-compiler libclang-dev g++ && rm -rf /var/lib/apt/lists/*
+
+# No source is COPYed: the project is bind-mounted at runtime (/work).
+WORKDIR /work

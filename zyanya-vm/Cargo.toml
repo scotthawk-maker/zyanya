@@ -1,0 +1,18 @@
+[package]
+name = "zyanya-vm"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+serde = { workspace = true, optional = true }
+zyanya-utils = { workspace = true }
+
+[dev-dependencies]
+
+[features]
+default = []
+serde = ["dep:serde"]

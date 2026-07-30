@@ -1,0 +1,28 @@
+[package]
+name = "zyanya-query"
+description = "Zyanya Node RPC Query CLI"
+publish = false
+rust-version.workspace = true
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+include.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "zyanya-query"
+path = "src/main.rs"
+
+[dependencies]
+zyanya-alloc.workspace = true
+zyanya-grpc-client.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-utils.workspace = true
+zyanya-vm.workspace = true
+
+clap = { workspace = true, features = ["derive"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+thiserror.workspace = true

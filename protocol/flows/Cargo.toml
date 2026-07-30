@@ -1,0 +1,38 @@
+[package]
+name = "zyanya-p2p-flows"
+description = "Zyanya p2p flows"
+rust-version.workspace = true
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+include.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+zyanya-core.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-notify.workspace = true
+zyanya-p2p-lib.workspace = true
+zyanya-utils.workspace = true
+zyanya-utils-tower.workspace = true
+zyanya-hashes.workspace = true
+zyanya-muhash.workspace = true
+zyanya-connectionmanager.workspace = true
+zyanya-addressmanager.workspace = true
+zyanya-consensusmanager.workspace = true
+zyanya-mining.workspace = true
+zyanya-notify.workspace = true
+
+async-trait.workspace = true
+futures = { workspace = true, features = ["alloc"] }
+indexmap.workspace = true
+itertools.workspace = true
+log.workspace = true
+parking_lot.workspace = true
+rand.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "signal"] }
+tokio-stream = { workspace = true, features = ["net"] }
+uuid = { workspace = true, features = ["v4", "fast-rng"] }
+chrono.workspace = true

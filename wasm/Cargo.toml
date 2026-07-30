@@ -1,0 +1,69 @@
+[package]
+name = "zyanya-wasm"
+description = "ZYANYA WASM bindings"
+rust-version.workspace = true
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+include.workspace = true
+repository.workspace = true
+# wasm-pack requires this value to be a string
+# (it can not be derived from the workspace)
+license = "ISC"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+cfg-if.workspace = true
+js-sys.workspace = true
+zyanya-addresses.workspace = true
+zyanya-bip32.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-wasm.workspace = true
+zyanya-core.workspace = true
+zyanya-math.workspace = true
+zyanya-pow.workspace = true
+zyanya-txscript.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-utils.workspace = true
+zyanya-wasm-core.workspace = true
+zyanya-wallet-core.workspace = true
+zyanya-wallet-keys.workspace = true
+zyanya-wrpc-client.workspace = true
+zyanya-wrpc-wasm.workspace = true
+num.workspace = true
+wasm-bindgen.workspace = true
+workflow-log.workspace = true
+workflow-core.workspace = true
+workflow-wasm.workspace = true
+
+[features] 
+wasm32-sdk = [
+    "zyanya-wallet-core/wasm32-sdk",
+    "zyanya-pow/wasm32-sdk",
+    "zyanya-txscript/wasm32-sdk",
+]
+wasm32-core = [
+    "zyanya-wallet-core/wasm32-core",
+    "zyanya-pow/wasm32-sdk",
+    "zyanya-txscript/wasm32-sdk",
+]
+wasm32-rpc = [
+    "zyanya-consensus-core/wasm32-sdk",
+    "zyanya-consensus-wasm/wasm32-sdk",
+    "zyanya-wrpc-client/wasm32-sdk",
+    "zyanya-wrpc-wasm/wasm32-sdk",
+]
+wasm32-keygen = []
+default = []
+
+[package.metadata.docs.rs]
+targets = ["wasm32-unknown-unknown"]
+
+[package.metadata.emanate.wasm]
+targets = [
+    { target = "nodejs", out-dir = "nodejs/zyanya" },
+    { target = "web", out-dir = "web/zyanya" }
+]
+folder = "setup"

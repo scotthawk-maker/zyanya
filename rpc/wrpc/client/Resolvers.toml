@@ -1,0 +1,12 @@
+[[resolver]]
+enable = true
+address = "https://resolver.zyanya-network.org"
+
+[[resolver]]
+enable = false
+address = "http://127.0.0.1:8888"
+
+[[group]]
+enable = false
+template = "https://*."
+nodes = ["rudy", "todd", "clay", "walt"]

@@ -1,0 +1,77 @@
+[package]
+name = "zyanya-testing-integration"
+publish = false
+rust-version.workspace = true
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+include.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+zyanya-alloc.workspace = true            # This changes the global allocator for all of the next dependencies so should be kept first
+
+zyanya-addresses.workspace = true
+zyanya-bip32.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-notify.workspace = true
+zyanya-consensus.workspace = true
+zyanya-consensusmanager.workspace = true
+zyanya-core.workspace = true
+zyanya-database.workspace = true
+zyanya-grpc-client.workspace = true
+zyanya-grpc-core.workspace = true
+zyanya-grpc-server.workspace = true
+zyanya-hashes.workspace = true
+zyanya-index-processor.workspace = true
+zyanya-math.workspace = true
+zyanya-merkle.workspace = true
+zyanya-muhash.workspace = true
+zyanya-notify.workspace = true
+zyanya-pow.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-rpc-service.workspace = true
+zyanya-txscript.workspace = true
+zyanya-utils.workspace = true
+zyanya-utxoindex.workspace = true
+zyanya-wrpc-server.workspace = true
+zyanyad.workspace = true
+
+async-channel.workspace = true
+async-trait.workspace = true
+bincode.workspace = true
+clap.workspace = true
+chrono.workspace = true
+crossbeam-channel.workspace = true
+dhat = { workspace = true, optional = true }
+faster-hex.workspace = true
+flate2.workspace = true
+futures-util.workspace = true
+indexmap.workspace = true
+itertools.workspace = true
+log.workspace = true
+parking_lot.workspace = true
+rand_distr.workspace = true
+rand.workspace = true
+rayon.workspace = true
+rocksdb.workspace = true
+secp256k1.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+smallvec.workspace = true
+tempfile.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+workflow-perf-monitor.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+rand = { workspace = true, features = ["small_rng"] }
+tokio = { workspace = true, features = ["rt", "macros", "process"] }
+zyanya-txscript-errors.workspace = true
+
+[features]
+heap = ["dhat"]
+html_reports = []
+devnet-prealloc = ["zyanyad/devnet-prealloc"]

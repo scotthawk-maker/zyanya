@@ -1,0 +1,38 @@
+[package]
+name = "zyanya-rpc-service"
+description = "Zyanya RPC service"
+rust-version.workspace = true
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+include.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+zyanya-addresses.workspace = true
+zyanya-consensus.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-notify.workspace = true
+zyanya-consensusmanager.workspace = true
+zyanya-vm.workspace = true
+zyanya-core.workspace = true
+zyanya-hashes.workspace = true
+zyanya-index-core.workspace = true
+zyanya-math.workspace = true
+zyanya-mining.workspace = true
+zyanya-notify.workspace = true
+zyanya-p2p-flows.workspace = true
+zyanya-p2p-lib.workspace = true
+zyanya-perf-monitor.workspace = true
+zyanya-rpc-core.workspace = true
+zyanya-txscript.workspace = true
+zyanya-utils.workspace = true
+zyanya-utils-tower.workspace = true
+zyanya-utxoindex.workspace = true
+
+async-trait.workspace = true
+log.workspace = true
+tokio.workspace = true
+triggered.workspace = true
+workflow-rpc.workspace = true
