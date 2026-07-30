@@ -39,14 +39,15 @@ contract BondingCurveToken {
     // Entry point 4: Buy(caller, tokens_to_mint)
     fn buy(caller, tokens_to_mint) {
         let slope = sload(1);
-        let cost = slope * tokens_to_mint;
         let supply = sload(0);
-        sstore(0, supply + tokens_to_mint);
+        let k = tokens_to_mint;
+        let cost = (slope * (2 * supply * k + k * k)) / 2;
+        sstore(0, supply + k);
         let reserve = sload(2);
         sstore(2, reserve + cost);
         let user_bal = sload(caller);
-        sstore(caller, user_bal + tokens_to_mint);
-        return tokens_to_mint;
+        sstore(caller, user_bal + k);
+        return cost;
     }
 
     // Entry point 5: Sell(caller, tokens_in)
@@ -55,18 +56,24 @@ contract BondingCurveToken {
         if (user_bal < tokens_in) {
             return 0;
         }
-        sstore(caller, user_bal - tokens_in);
         let slope = sload(1);
-        let refund = slope * tokens_in;
         let supply = sload(0);
-        sstore(0, supply - tokens_in);
+        let k = tokens_in;
+        let refund = (slope * (2 * supply * k - k * k)) / 2;
         let reserve = sload(2);
+        if (reserve < refund) {
+            return 0;
+        }
+        sstore(caller, user_bal - k);
+        sstore(0, supply - k);
         sstore(2, reserve - refund);
         return refund;
     }
 
     // Entry point 6: Price()
     fn price() {
-        return sload(1);
+        let slope = sload(1);
+        let supply = sload(0);
+        return slope * supply;
     }
 }
