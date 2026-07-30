@@ -388,7 +388,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
             <section id="join">
                 <h2>HOW TO JOIN THE TESTNET</h2>
                 <p>An IPv6-enabled connection is required. Download the latest distribution (Docker image, Windows binaries, and README) from the seed node to get started.</p>
-                <p><a href="http://[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:8097/" target="_blank">Download Distribution Here</a></p>
+                <p><a href="/distro/" target="_blank">Download Distribution Here</a></p>
                 
                 <h4>1. Run a Full Node & Mine</h4>
                 <p>Use the `zyanyad` daemon. The `--connect` flag points to the seed node, and `--enable-unsynced-mining` lets you start mining immediately.</p>
