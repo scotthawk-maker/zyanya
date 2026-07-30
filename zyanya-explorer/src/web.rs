@@ -410,7 +410,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <h4>1. Run a Full Node</h4>
                 <p>Use the <code>zyanyad</code> daemon. The <code>--connect</code> flag points to the seed node over IPv6; <code>--enable-unsynced-mining</code> lets the node accept blocks while it's still syncing. (The node syncs the chain — it doesn't mine on its own.)</p>
                 <div class="code-block">
-                    <code>zyanyad --testnet --connect=[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18211 --enable-unsynced-mining</code>
+                    <code>zyanyad --testnet --connect=[2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18211 --enable-unsynced-mining</code>
                 </div>
 
                 <h4>2. Generate a Mining Address</h4>
@@ -428,7 +428,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <h4>4. Query the Network</h4>
                 <p>Use <code>zyanya-query</code> against your local node, or the seed's public RPC.</p>
                 <div class="code-block">
-                    <code>zyanya-query --testnet --rpcserver [2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18210 get-dag-info</code>
+                    <code>zyanya-query --testnet --rpcserver [2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18210 get-dag-info</code>
                 </div>
             </section>
 
@@ -1958,7 +1958,7 @@ footer{text-align:center;padding:2rem 0;border-top:1px solid var(--shadow-teal);
 <section><h2>2 · Run a full node</h2>
 <p>Syns the chain and connects to the public seed over IPv6. <code>--enable-unsynced-mining</code> lets it accept blocks while still syncing.</p>
 <div class="code-block"><code>zyanyad --testnet \
-  --connect=[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18211 \
+  --connect=[2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18211 \
   --enable-unsynced-mining</code></div>
 <p style="text-align:center;color:rgba(224,224,224,.6)">Or run it in Docker — see the README.</p></section>
 
