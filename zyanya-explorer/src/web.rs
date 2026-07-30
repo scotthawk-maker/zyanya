@@ -330,8 +330,8 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <a href="#pillars">Pillars</a>
                 <a href="#economics">Economics</a>
                 <a href="#join">Join Testnet</a>
-                <a href="https://testnet.zyanya.scottcloudhawk.org/" target="_blank">Explorer</a>
-                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" class="mono" style="color: var(--accent-spectral);">GitHub</a>
+                <a href="/explorer" target="_blank">Explorer</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" class="mono" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
 
@@ -341,13 +341,13 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <h1>The ghost in the IPv6 machine.</h1>
                 <p>Zyanya is an IPv6-native, agent-native blockchain built on Spectre/GhostDAG. No gateways. No translators. Just pure, end-to-end decentralized consensus over the next-generation internet.</p>
                 <div class="cta-buttons">
-                    <a href="https://testnet.zyanya.scottcloudhawk.org/" target="_blank" class="btn btn-primary">LAUNCH EXPLORER</a>
+                    <a href="/explorer" target="_blank" class="btn btn-primary">LAUNCH EXPLORER</a>
                     <a href="#join" class="btn btn-secondary">JOIN THE TESTNET</a>
                 </div>
             </section>
 
             <section id="status-banner">
-                <p>🟣 Public testnet is LIVE &mdash; 3 nodes, 15,000+ blocks, and mining over IPv6. <a href="https://testnet.zyanya.scottcloudhawk.org/" target="_blank">Explore the testnet &rarr;</a></p>
+                <p>🟣 Public testnet is LIVE &mdash; 3 nodes, <span id="testnet-blocks">50,000+</span> blocks, and mining over IPv6. <a href="/explorer" target="_blank">Explore the testnet &rarr;</a></p>
             </section>
 
             <section id="pillars">
@@ -363,7 +363,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                     </div>
                     <div class="card">
                         <h3>III. THE FOREVER</h3>
-                        <p>Designed for longevity. A slow-burn emission schedule with time-locked vesting for the foundation, combined with a permanent 50% gas fee burn, creates a deflationary, sustainable economic model for the long term.</p>
+                        <p>Designed for longevity. A slow-burn emission schedule (50 ZYAN per block with a smooth geometric decay toward a ~28.7B ZYAN cap) combined with a permanent 50% gas fee burn creates a deflationary, sustainable economic model for the long term.</p>
                     </div>
                 </div>
             </section>
@@ -373,11 +373,11 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <div class="grid-3">
                      <div class="card">
                         <div class="icon-container" id="icon-coin"><h3>Total Supply</h3></div>
-                        <p>2.1 billion ZYA. A fixed supply, ensuring predictable scarcity. No pre-mine. The genesis block starts a fair launch for all participants.</p>
+                        <p>A capped max supply of ~28.7 billion ZYAN, reached via a smooth geometric decay. 50 ZYAN per block. Zero premine — the genesis block has no outputs, so every coin is mined.</p>
                     </div>
                      <div class="card">
-                        <div class="icon-container" id="icon-token"><h3>Vesting Schedule</h3></div>
-                        <p>A 10% foundation allocation is locked in a 10-year linear vesting contract. This aligns long-term incentives and ensures sustained development.</p>
+                        <div class="icon-container" id="icon-token"><h3>Fair Launch</h3></div>
+                        <p>Zero premine. No team wallets, no foundation allocation, no investor stake. The genesis block has zero outputs — the network is funded purely by ongoing emission and fees.</p>
                     </div>
                      <div class="card">
                         <div class="icon-container" id="icon-burn"><h3><span class="burn-red">The Burn</span></h3></div>
@@ -388,8 +388,8 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
 
             <section id="join">
                 <h2>HOW TO JOIN THE TESTNET</h2>
-                <p>An IPv6-enabled connection is required. Download the latest distribution (Docker image, Windows binaries, and README) from the seed node to get started.</p>
-                <p><a href="/distro/" target="_blank">Download Distribution Here</a></p>
+                <p>An IPv6-enabled connection is required. Download the latest distribution (Windows + Linux binaries and README) from the GitHub release to get started.</p>
+                <p><a href="https://github.com/scotthawk-maker/zyanya/releases/tag/v0.3.17-testnet" target="_blank">Download Distribution Here</a></p>
                 
                 <h4>1. Run a Full Node</h4>
                 <p>Use the <code>zyanyad</code> daemon. The <code>--connect</code> flag points to the seed node over IPv6; <code>--enable-unsynced-mining</code> lets the node accept blocks while it's still syncing. (The node syncs the chain — it doesn't mine on its own.)</p>
@@ -414,6 +414,27 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <div class="code-block">
                     <code>zyanya-query --testnet --rpcserver [2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18210 get-dag-info</code>
                 </div>
+            </section>
+
+            <section id="ipv6-safety">
+                <h2>IPv6: REWARDS & RISKS</h2>
+                <p style="max-width:800px;margin:0 auto 2rem;">Zyanya is IPv6-native — every node is directly, globally addressable. That is the point (true peer-to-peer, no NAT, no gateways) and it is also a responsibility.</p>
+                <div class="grid-3">
+                    <div class="card">
+                        <h3>THE REWARDS</h3>
+                        <p>Pure end-to-end peer-to-peer consensus. No NAT, no port-forwarding, no gateways or translators. A vast, un-NAT-ed address space. Every node is a first-class peer — the decentralized internet as it was meant to be.</p>
+                    </div>
+                    <div class="card">
+                        <h3>THE RISKS</h3>
+                        <p>Without IPv4 NAT acting as an accidental firewall, your node is reachable from the public internet. A device that was “hidden” behind NAT is now directly addressable. You must consciously run a host firewall.</p>
+                    </div>
+                    <div class="card">
+                        <h3>HARDEN YOUR NODE</h3>
+                        <p>Filter inbound IPv6 — only expose the ports you intend (P2P <code>18211</code>, RPC <code>18210</code>). <strong>Do NOT block all ICMPv6</strong> — IPv6 needs it for Neighbor Discovery + Path MTU; blocking it breaks connectivity (see RFC 4890).</p>
+                    </div>
+                </div>
+                <p style="margin-top:1.5rem;"><strong>Linux:</strong> <a href="https://wiki.archlinux.org/title/IPv6" target="_blank">Arch Wiki — IPv6</a> &bull; <a href="https://wiki.archlinux.org/title/Nftables" target="_blank">nftables</a> / <a href="https://wiki.archlinux.org/title/Uncomplicated_Firewall" target="_blank">ufw</a> &bull; <a href="https://datatracker.ietf.org/doc/html/rfc4890" target="_blank">RFC 4890 (ICMPv6 filtering)</a></p>
+                <p><strong>Windows:</strong> <a href="https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/windows-firewall-with-advanced-security" target="_blank">Windows Defender Firewall with Advanced Security</a> (default profile blocks inbound IPv6 — add rules only for the Zyanya ports)</p>
             </section>
 
             <section id="roadmap">
@@ -442,7 +463,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
 
         <footer>
             <p>The ghost in the IPv6 machine. Forever, always.</p>
-            <p>&copy; 2024 Zyanya Project. All rights reserved. &bull; <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--accent-spectral); text-decoration: none;">Source on GitHub</a></p>
+            <p>&copy; 2026 Zyanya Project. All rights reserved. &bull; <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue); text-decoration: none;">Source on GitHub</a></p>
         </footer>
     </div>
 
@@ -463,9 +484,15 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
 
             fetchAndInject('logo-container', '/brand/zyanya-logo.svg');
             fetchAndInject('banner-container', '/brand/zyanya-hero-banner.svg');
-            fetchAndInject('icon-coin', '/brand/icon-coin.svg');
-            fetchAndInject('icon-token', '/brand/icon-token.svg');
-            fetchAndInject('icon-burn', '/brand/icon-burn.svg');
+            fetchAndInject('icon-coin', '/brand/zyan-coin.svg');
+            fetchAndInject('icon-token', '/brand/zyanya-token-set.svg');
+            fetchAndInject('icon-burn', '/brand/gas-burn-icon.svg');
+
+            // Live testnet block count (graceful fallback to the static text)
+            fetch('/api/info').then(r => r.json()).then(d => {
+                const el = document.getElementById('testnet-blocks');
+                if (el && d && d.block_count) el.textContent = Number(d.block_count).toLocaleString();
+            }).catch(() => {});
         });
     </script>
     <script src="/webmcp.js"></script>
@@ -1175,6 +1202,32 @@ pub const WEBMCP_SCRIPT: &str = r###"
         description: "Query Zyanya blockchain state including block count, DAA score, difficulty, circulating supply, sink block, and peer count.",
         inputSchema: { type: "object", properties: {} },
         execute: async () => await apiFetch('/api/info')
+    });
+
+    mc.registerTool({
+        name: "ipv6-safety",
+        description: "Return Zyanya's IPv6 peer-to-peer safety guidance: the rewards of IPv6-native P2P, the risks of being globally addressable, and host-firewall hardening steps + links (Linux nftables/ufw, Windows Defender Firewall, RFC 4890 ICMPv6).",
+        inputSchema: { type: "object", properties: {} },
+        execute: async () => ({
+            rewards: "Pure end-to-end peer-to-peer consensus. No NAT, no port-forwarding, no gateways. Every node is a first-class, globally addressable peer.",
+            risks: "Without IPv4 NAT as an accidental firewall, your node is directly reachable from the public internet. You must run a host firewall.",
+            hardening: [
+                "Filter inbound IPv6; only expose the ports you intend (P2P 18211, RPC 18210).",
+                "Do NOT block all ICMPv6 — IPv6 needs it for Neighbor Discovery and Path MTU Discovery; blocking it breaks connectivity (RFC 4890).",
+                "Use a stable/assigned IPv6 address for a node, or a privacy/temporary address if you prefer."
+            ],
+            links: {
+                linux: [
+                    { name: "Arch Wiki — IPv6", url: "https://wiki.archlinux.org/title/IPv6" },
+                    { name: "nftables", url: "https://wiki.archlinux.org/title/Nftables" },
+                    { name: "ufw", url: "https://wiki.archlinux.org/title/Uncomplicated_Firewall" },
+                    { name: "RFC 4890 — ICMPv6 filtering", url: "https://datatracker.ietf.org/doc/html/rfc4890" }
+                ],
+                windows: [
+                    { name: "Windows Defender Firewall with Advanced Security", url: "https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/windows-firewall-with-advanced-security" }
+                ]
+            }
+        })
     });
 
     mc.registerTool({
