@@ -564,6 +564,12 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
         th, td { padding: 0.85rem 1rem; border-bottom: 1px solid rgba(126, 200, 211, 0.1); font-size: 0.9rem; }
         th { color: var(--accent-spectral); font-size: 0.8rem; letter-spacing: 1px; }
         tr:hover { background: rgba(126, 200, 211, 0.05); }
+        .new-block { animation: newBlockFlash 1.6s ease-out; }
+        @keyframes newBlockFlash {
+            0% { background-color: rgba(126, 200, 211, 0.45); }
+            70% { background-color: rgba(126, 200, 211, 0.12); }
+            100% { background-color: transparent; }
+        }
 
         a.link { color: var(--accent-spectral); text-decoration: none; }
         a.link:hover { text-decoration: underline; }
@@ -817,6 +823,9 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             if (name === 'dag') loadDag();
         }
 
+        let seenBlocks = new Set();
+        let firstDashboardLoad = true;
+
         async function loadDashboard() {
             try {
                 const infoRes = await fetch('/api/info');
@@ -834,7 +843,8 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                     const shortHash = b.hash.substring(0, 12) + '...' + b.hash.substring(b.hash.length - 8);
                     const shortParent = b.selected_parent ? (b.selected_parent.substring(0, 10) + '...') : 'Genesis';
                     const timeStr = new Date(b.timestamp).toLocaleTimeString();
-                    html += '<tr>' +
+                    const isNew = !firstDashboardLoad && !seenBlocks.has(b.hash);
+                    html += '<tr' + (isNew ? ' class="new-block"' : '') + '>' +
                         '<td><a href="#" class="link mono" onclick="viewBlock(\'' + b.hash + '\')">' + shortHash + '</a></td>' +
                         '<td class="mono">' + b.blue_score + '</td>' +
                         '<td class="mono">' + b.daa_score + '</td>' +
@@ -842,7 +852,9 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                         '<td class="mono">' + b.tx_count + '</td>' +
                         '<td class="mono"><a href="#" class="link" onclick="viewBlock(\'' + b.selected_parent + '\')">' + shortParent + '</a></td>' +
                     '</tr>';
+                    seenBlocks.add(b.hash);
                 });
+                firstDashboardLoad = false;
                 document.getElementById('blocks-tbody').innerHTML = html;
                 const lu = document.getElementById('last-updated');
                 if (lu) lu.innerText = new Date().toLocaleTimeString();
