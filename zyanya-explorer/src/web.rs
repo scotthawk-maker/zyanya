@@ -391,14 +391,26 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <p>An IPv6-enabled connection is required. Download the latest distribution (Docker image, Windows binaries, and README) from the seed node to get started.</p>
                 <p><a href="/distro/" target="_blank">Download Distribution Here</a></p>
                 
-                <h4>1. Run a Full Node & Mine</h4>
-                <p>Use the `zyanyad` daemon. The `--connect` flag points to the seed node, and `--enable-unsynced-mining` lets you start mining immediately.</p>
+                <h4>1. Run a Full Node</h4>
+                <p>Use the <code>zyanyad</code> daemon. The <code>--connect</code> flag points to the seed node over IPv6; <code>--enable-unsynced-mining</code> lets the node accept blocks while it's still syncing. (The node syncs the chain — it doesn't mine on its own.)</p>
                 <div class="code-block">
                     <code>zyanyad --testnet --connect=[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18211 --enable-unsynced-mining</code>
                 </div>
 
-                <h4>2. Query the Network</h4>
-                <p>Use the `zyanya-query` tool to interact with your node's RPC server. The testnet seed also runs a public RPC endpoint.</p>
+                <h4>2. Generate a Mining Address</h4>
+                <p>Create a <code>zyanyatest:</code> address + secret key. <strong>Save the secret key!</strong></p>
+                <div class="code-block">
+                    <code>gen-address --testnet</code>
+                </div>
+
+                <h4>3. Mine</h4>
+                <p>Run the CPU miner pointing at <em>your local node's</em> RPC (127.0.0.1, not the seed), with your address. It mines while the node syncs.</p>
+                <div class="code-block">
+                    <code>zyanya-miner --testnet --mine-when-not-synced --cpu-percent 25 --zyanyad-address=127.0.0.1 --port=18210 --mining-address=zyanyatest:YOUR_ADDRESS</code>
+                </div>
+
+                <h4>4. Query the Network</h4>
+                <p>Use <code>zyanya-query</code> against your local node, or the seed's public RPC.</p>
                 <div class="code-block">
                     <code>zyanya-query --testnet --rpcserver [2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18210 get-dag-info</code>
                 </div>
