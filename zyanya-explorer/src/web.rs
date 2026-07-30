@@ -71,10 +71,22 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
 
         header {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             padding: 2rem 0;
             border-bottom: 1px solid var(--shadow-teal);
+        }
+
+        .top-logo {
+            text-align: center;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .top-logo svg {
+            max-width: 520px;
+            width: 100%;
+            height: auto;
         }
 
         #logo-container svg {
@@ -325,7 +337,6 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
     <div class="grid-bg"></div>
     <div class="container">
         <header>
-            <div id="logo-container"><!-- SVG will be injected here --></div>
             <nav>
                 <a href="#pillars">Pillars</a>
                 <a href="#economics">Economics</a>
@@ -334,6 +345,10 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" class="mono" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
+
+        <div class="top-logo">
+            <div id="logo-container"><!-- SVG will be injected here --></div>
+        </div>
 
         <main>
             <section id="hero">
