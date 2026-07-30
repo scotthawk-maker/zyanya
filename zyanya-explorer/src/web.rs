@@ -331,6 +331,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <a href="#economics">Economics</a>
                 <a href="#join">Join Testnet</a>
                 <a href="https://testnet.zyanya.scottcloudhawk.org/" target="_blank">Explorer</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" class="mono" style="color: var(--accent-spectral);">GitHub</a>
             </nav>
         </header>
 
@@ -429,7 +430,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
 
         <footer>
             <p>The ghost in the IPv6 machine. Forever, always.</p>
-            <p>&copy; 2024 Zyanya Project. All rights reserved.</p>
+            <p>&copy; 2024 Zyanya Project. All rights reserved. &bull; <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--accent-spectral); text-decoration: none;">Source on GitHub</a></p>
         </footer>
     </div>
 
@@ -634,6 +635,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             <button class="nav-btn mono" onclick="switchTab('dag')">DAG GRAPH</button>
             <a href="/tools" class="nav-btn mono" style="text-decoration: none;">WEBMCP TOOLS</a>
             <a href="/" class="nav-btn mono" style="text-decoration: none;">WEBSITE</a>
+            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" class="nav-btn mono" style="text-decoration: none; color: var(--accent-spectral);">GITHUB</a>
         </nav>
     </header>
 
@@ -1657,6 +1659,7 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
             <a href="/" class="mono">WEBSITE</a>
             <a href="/explorer" class="mono">EXPLORER</a>
             <a href="/tools" class="mono active">WEBMCP TOOLS</a>
+            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" class="mono" style="color: var(--accent-spectral);">GITHUB</a>
         </nav>
     </header>
 
