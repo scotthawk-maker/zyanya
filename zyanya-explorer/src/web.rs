@@ -408,9 +408,9 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <p><a href="https://github.com/scotthawk-maker/zyanya/releases/tag/v0.3.17-testnet" target="_blank">Download Distribution Here</a></p>
                 
                 <h4>1. Run a Full Node</h4>
-                <p>Use the <code>zyanyad</code> daemon. The <code>--connect</code> flag points to the seed node over IPv6; <code>--enable-unsynced-mining</code> lets the node accept blocks while it's still syncing. (The node syncs the chain — it doesn't mine on its own.)</p>
+                <p>Use the <code>zyanyad</code> daemon. The <code>--connect</code> flag points to the seed node over IPv6; <code>--enable-unsynced-mining --utxoindex</code> lets the node accept blocks while it's still syncing. (The node syncs the chain — it doesn't mine on its own.)</p>
                 <div class="code-block">
-                    <code>zyanyad --testnet --connect=[2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18211 --enable-unsynced-mining</code>
+                    <code>zyanyad --testnet --connect=[2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18211 --enable-unsynced-mining --utxoindex</code>
                 </div>
 
                 <h4>2. Generate a Mining Address</h4>
@@ -544,7 +544,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
 
         header {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             padding: 1.2rem 2.5rem;
             border-bottom: 1px solid rgba(126, 200, 211, 0.2);
@@ -1956,10 +1956,10 @@ footer{text-align:center;padding:2rem 0;border-top:1px solid var(--shadow-teal);
 <a class="btn btn-primary" href="https://github.com/scotthawk-maker/zyanya/releases/tag/v0.3.17-testnet" target="_blank">Download from GitHub</a></section>
 
 <section><h2>2 · Run a full node</h2>
-<p>Syns the chain and connects to the public seed over IPv6. <code>--enable-unsynced-mining</code> lets it accept blocks while still syncing.</p>
+<p>Syns the chain and connects to the public seed over IPv6. <code>--enable-unsynced-mining --utxoindex</code> lets it accept blocks while still syncing.</p>
 <div class="code-block"><code>zyanyad --testnet \
   --connect=[2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18211 \
-  --enable-unsynced-mining</code></div>
+  --enable-unsynced-mining --utxoindex</code></div>
 <p style="text-align:center;color:rgba(224,224,224,.6)">Or run it in Docker — see the README.</p></section>
 
 <section><h2>3 · Get a wallet address</h2>
@@ -2547,3 +2547,945 @@ pub const TOKEN_HTML: &str = r#"<!DOCTYPE html>
     </script>
 </body>
 </html>"#;
+
+pub const AI_AGENTS_HTML: &str = r###"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyanya — Agent-Native Blockchain</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --void: #0A0F1C;
+            --shadow-teal: #0D3B50;
+            --spectral-blue: #7EC8D3;
+            --text: #E0E0E0;
+            --burn-red: #FF4D4D;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            background-color: var(--void);
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 16px;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image:
+                linear-gradient(to right, rgba(13, 59, 80, 0.3) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(13, 59, 80, 0.3) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -2;
+        }
+
+        .grid-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, rgba(13, 59, 80, 0.2), var(--void) 70%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--shadow-teal);
+        }
+
+        nav a {
+            color: var(--spectral-blue);
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--text);
+            text-shadow: 0 0 8px var(--spectral-blue);
+        }
+
+        .top-logo {
+            text-align: center;
+            margin: 2rem 0 1rem;
+        }
+
+        .top-logo svg {
+            max-width: 520px;
+            width: 100%;
+            height: auto;
+        }
+
+        main {
+            padding: 2rem 0 4rem;
+        }
+
+        section {
+            margin-bottom: 4rem;
+            text-align: center;
+        }
+
+        #hero h1 {
+            font-size: 2.2rem;
+            color: var(--spectral-blue);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text);
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text);
+        }
+
+        h4 {
+            color: var(--spectral-blue);
+            margin: 1.5rem 0 0.5rem;
+            text-align: left;
+            font-size: 1.05rem;
+        }
+
+        p {
+            text-align: left;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .code-block {
+            background: var(--void);
+            border: 1px solid var(--shadow-teal);
+            border-radius: 6px;
+            padding: 1.2rem;
+            text-align: left;
+            overflow-x: auto;
+            margin: 0.8rem 0 1.5rem;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        code {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--spectral-blue);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .callout {
+            background: rgba(13, 59, 80, 0.4);
+            border: 1px solid var(--shadow-teal);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+
+        .callout strong {
+            color: var(--spectral-blue);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            text-align: left;
+            margin-top: 1.5rem;
+        }
+
+        .card {
+            background: var(--shadow-teal);
+            padding: 1.8rem;
+            border-radius: 8px;
+            border: 1px solid rgba(126, 200, 211, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .card h3 {
+            color: var(--spectral-blue);
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .card a.agent-link {
+            display: inline-block;
+            color: var(--spectral-blue);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid var(--spectral-blue);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .card a.agent-link:hover {
+            background: var(--spectral-blue);
+            color: var(--void);
+            box-shadow: 0 0 10px var(--spectral-blue);
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .badge-native {
+            background: var(--spectral-blue);
+            color: var(--void);
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid var(--shadow-teal);
+            color: rgba(224, 224, 224, 0.5);
+            font-size: 0.85rem;
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="container">
+        <header>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/explorer">Explorer</a>
+                <a href="/testnet">Testnet</a>
+                <a href="/launch">Launch Token</a>
+                <a href="/agents" class="active">AI Agents</a>
+                <a href="/docs">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank">GitHub</a>
+            </nav>
+        </header>
+
+        <div class="top-logo">
+            <div id="logo-container"><!-- SVG injected dynamically --></div>
+        </div>
+
+        <main>
+            <section id="hero">
+                <h1>Zyanya — Agent-Native Blockchain</h1>
+                <p class="hero-subtitle">Built for AI agents, not just humans</p>
+            </section>
+
+            <section id="why">
+                <h2>Why Agent-Native?</h2>
+                <p>Zyanya ships a Web MCP (Model Context Protocol) alongside the block explorer, so AI agents can read chain state, deploy tokens, buy/sell on the bonding curve, and query the network programmatically. No screen scraping — the blockchain speaks directly to agents via structured APIs.</p>
+                <div class="callout">
+                    <strong>Zero Friction for Agents:</strong> Rather than relying on DOM scraping or complex browser automation, autonomous agents interact with Zyanya using standardized Model Context Protocol tools and clean REST endpoints over IPv6.
+                </div>
+            </section>
+
+            <section id="webmcp">
+                <h2>The Web MCP</h2>
+                <p>The WebMCP is a JavaScript polyfill that registers blockchain tools on <code>navigator.modelContext</code> (get-chain-info, get-block, deploy-token, invoke-contract, call-contract, ipv6-safety, etc.). Agents visiting the explorer page auto-discover these tools.</p>
+                <p>For headless agents, the same functionality is available via the HTTP API endpoints.</p>
+            </section>
+
+            <section id="prompts">
+                <h2>Prompt Examples</h2>
+                <p>Below are sample commands and prompts an AI agent can execute to interact with the Zyanya blockchain:</p>
+
+                <h4>1. Query Chain Information</h4>
+                <div class="code-block"><code>Query the chain: curl https://testnet.zyanya.scottcloudhawk.org/api/info</code></div>
+
+                <h4>2. Get Recent Blocks</h4>
+                <div class="code-block"><code>Get recent blocks: curl https://testnet.zyanya.scottcloudhawk.org/api/blocks</code></div>
+
+                <h4>3. Deploy a Token</h4>
+                <div class="code-block"><code>Deploy a token: POST /api/deploy-token with {name, symbol, supply, slope, description, twitter, website}</code></div>
+
+                <h4>4. Buy Tokens on Bonding Curve</h4>
+                <div class="code-block"><code>Buy tokens on the bonding curve: POST /api/invoke-contract with {contract_address, entry_point: 4, calldata: 'caller,tokens_to_mint'}</code></div>
+
+                <h4>5. Check Token Spot Price</h4>
+                <div class="code-block"><code>Check the price: POST /api/call-contract with {contract_address, entry_point: 6, calldata: ''}</code></div>
+
+                <h4>6. Check Token Metadata</h4>
+                <div class="code-block"><code>Check token metadata: GET /api/token/:address/metadata</code></div>
+            </section>
+
+            <section id="recommended-agents">
+                <h2>Recommended AI Agents</h2>
+                <p style="text-align:center; max-width: 720px; margin: 0 auto 2rem;">Frameworks and autonomous agents built for coding, CAD generation, automated workflows, and blockchain execution on Zyanya.</p>
+                
+                <div class="grid">
+                    <div class="card">
+                        <div>
+                            <h3>Pi Agent <span class="badge badge-native">Core</span></h3>
+                            <p>A clean, focused coding + orchestration agent (pi-coding-agent). Runs on cloud LLMs (glm-5.2:cloud) for main reasoning + local Ollama models for sub-work. The agent that built Zyanya.</p>
+                        </div>
+                        <a href="https://github.com/node-tech/pi" target="_blank" class="agent-link">View Pi Agent &rarr;</a>
+                    </div>
+
+                    <div class="card">
+                        <div>
+                            <h3>OpenCode <span class="badge badge-native">Terminal</span></h3>
+                            <p>A terminal-based coding agent with local LLM support. Great for 3D printing CAD generation + code tasks. Runs on Ollama cloud models.</p>
+                        </div>
+                        <a href="https://github.com/opencode-ai/opencode" target="_blank" class="agent-link">View OpenCode &rarr;</a>
+                    </div>
+
+                    <div class="card">
+                        <div>
+                            <h3>Hermes Agent <span class="badge badge-native">Harness</span></h3>
+                            <p>A full agent harness with a gateway, cron jobs, MCP servers, and Discord integration. The original architect of the Zyanya trading system. Runs at ~/.hermes.</p>
+                        </div>
+                        <a href="https://github.com/hermes-agent/hermes" target="_blank" class="agent-link">View Hermes Agent &rarr;</a>
+                    </div>
+
+                    <div class="card">
+                        <div>
+                            <h3>Spacebot <span class="badge badge-native">Agent OS</span></h3>
+                            <p>An AI Agent OS for 3D printing. A Rust-based agentic system that generates CAD models from text prompts.</p>
+                        </div>
+                        <a href="https://spacebot.sh" target="_blank" class="agent-link">Visit Spacebot.sh &rarr;</a>
+                    </div>
+
+                    <div class="card">
+                        <div>
+                            <h3>DeerFlow <span class="badge badge-native">Workflow</span></h3>
+                            <p>A research + workflow agent by ByteDance. Deep research, multi-step reasoning, and workflow automation. Great for analyzing blockchain data + generating insights.</p>
+                        </div>
+                        <a href="https://github.com/bytedance/deerflow" target="_blank" class="agent-link">View DeerFlow &rarr;</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>The ghost in the IPv6 machine. Forever, always.</p>
+            <p>&copy; 2026 Zyanya Project. All rights reserved. &bull; <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue); text-decoration: none;">Source on GitHub</a></p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const fetchAndInject = (id, url) => {
+                const container = document.getElementById(id);
+                if (!container) return;
+                fetch(url)
+                    .then(response => response.text())
+                    .then(svgText => {
+                        container.innerHTML = svgText;
+                    })
+                    .catch(error => console.error(`Failed to load SVG ${url}:`, error));
+            };
+
+            fetchAndInject('logo-container', '/brand/zyanya-logo.svg');
+        });
+    </script>
+    <script src="/webmcp.js"></script>
+</body>
+</html>
+"###;
+
+pub const DOCS_HTML: &str = r###"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyanya — Technical White Paper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --void: #0A0F1C;
+            --shadow-teal: #0D3B50;
+            --spectral-blue: #7EC8D3;
+            --text: #E0E0E0;
+            --burn-red: #FF4D4D;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            background-color: var(--void);
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 16px;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image:
+                linear-gradient(to right, rgba(13, 59, 80, 0.3) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(13, 59, 80, 0.3) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -2;
+        }
+
+        .grid-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, rgba(13, 59, 80, 0.2), var(--void) 70%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--shadow-teal);
+        }
+
+        nav a {
+            color: var(--spectral-blue);
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--text);
+            text-shadow: 0 0 8px var(--spectral-blue);
+        }
+
+        .top-logo {
+            text-align: center;
+            margin: 2rem 0 1rem;
+        }
+
+        .top-logo svg {
+            max-width: 520px;
+            width: 100%;
+            height: auto;
+        }
+
+        main {
+            padding: 2rem 0 4rem;
+        }
+
+        section {
+            margin-bottom: 4rem;
+            text-align: left;
+        }
+
+        #hero {
+            text-align: center;
+        }
+
+        #hero h1 {
+            font-size: 2.2rem;
+            color: var(--spectral-blue);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text);
+            opacity: 0.9;
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--spectral-blue);
+            border-bottom: 1px solid var(--shadow-teal);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: var(--text);
+            margin: 1.2rem 0 0.6rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            font-size: 0.98rem;
+            color: var(--text);
+        }
+
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .code-block {
+            background: var(--void);
+            border: 1px solid var(--shadow-teal);
+            border-radius: 6px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        code {
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            color: var(--spectral-blue);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .callout {
+            background: rgba(13, 59, 80, 0.4);
+            border: 1px solid var(--shadow-teal);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .callout strong {
+            color: var(--spectral-blue);
+        }
+
+        .formula-box {
+            background: rgba(10, 15, 28, 0.9);
+            border: 1px solid var(--spectral-blue);
+            border-radius: 6px;
+            padding: 1.2rem 1.5rem;
+            margin: 1.2rem 0;
+            text-align: center;
+            font-size: 1.05rem;
+            color: var(--spectral-blue);
+            font-weight: 600;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid var(--shadow-teal);
+            color: rgba(224, 224, 224, 0.5);
+            font-size: 0.85rem;
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="container">
+        <header>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/explorer">Explorer</a>
+                <a href="/testnet">Testnet</a>
+                <a href="/launch">Launch Token</a>
+                <a href="/agents">AI Agents</a>
+                <a href="/docs" class="active">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank">GitHub</a>
+            </nav>
+        </header>
+
+        <div class="top-logo">
+            <div id="logo-container"><!-- SVG injected dynamically --></div>
+        </div>
+
+        <main>
+            <section id="hero">
+                <h1>Zyanya — Technical White Paper</h1>
+                <p class="hero-subtitle">The Ghost in the IPv6 Machine</p>
+            </section>
+
+            <section id="abstract">
+                <h2>Abstract</h2>
+                <p>Zyanya is an IPv6-native, agent-native, CPU-mineable blockDAG forked from Spectre (the Kaspa-family GhostDAG protocol). Designed as an autonomous decentralized computing substrate, Zyanya merges high-throughput DAG consensus with native Model Context Protocol (MCP) integrations, enabling AI agents to operate on-chain without human mediation or brittle web scraping.</p>
+                <p>The network features a zero-premine fair launch, a lightweight stack-based smart contract Virtual Machine (zyanya-vm), an on-chain pump.fun-style bonding-curve token launcher, an automated market maker DEX, a native Web MCP interface, and a BIP-39 wallet ecosystem. Zyanya runs entirely over IPv6 — no IPv4 gateways, no NAT traversal, pure end-to-end peer-to-peer networking.</p>
+            </section>
+
+            <section id="sec-1">
+                <h2>1. Architecture</h2>
+                <p>Zyanya's underlying consensus engine is built upon the Spectre / GhostDAG blockDAG protocol. Unlike traditional single-chain architectures that discard parallel blocks as orphans, GhostDAG orders concurrently mined blocks into a directed acyclic graph, maximizing throughput while maintaining strict Proof-of-Work security guarantees.</p>
+                <p>The core node daemon (<code>zyanyad</code>) coordinates DAG consensus, UTXO set validation, and smart contract state transitions. Networking is native IPv6 end-to-end: nodes discover peers, propagate blocks, and transmit transactions across explicit IPv6 sockets (defaulting to <code>[::]:18610</code>). Mining consensus utilizes SpectreX / AstroBWTv3 Proof-of-Work, specifically engineered for CPU accessibility and ASIC resistance.</p>
+            </section>
+
+            <section id="sec-2">
+                <h2>2. Tokenomics</h2>
+                <p>Zyanya prioritizes absolute fairness and sustainability in its economic design:</p>
+                <ul>
+                    <li><strong>Zero Premine:</strong> The genesis block contains zero minted tokens or pre-allocated outputs. 100% of all circulating supply originates from CPU mining rewards.</li>
+                    <li><strong>Block Reward & Supply:</strong> Initial block reward is 50 ZYAN per block, following a smooth geometric decay toward a theoretical maximum supply of ~28.7 billion ZYAN.</li>
+                    <li><strong>Deflationary Gas Burn:</strong> 50% of all gas fees collected during smart contract execution and token operations are permanently burned from total supply.</li>
+                    <li><strong>Coinbase Maturity:</strong> Mined coinbase outputs require 100 block confirmations before becoming spendable, preventing short-reorg exploitation.</li>
+                    <li><strong>No Allocations:</strong> Zero team allocations, zero foundation reserves, and zero VC/investor pre-allocations.</li>
+                </ul>
+            </section>
+
+            <section id="sec-3">
+                <h2>3. Smart Contracts</h2>
+                <p>Smart contract execution on Zyanya is powered by <code>zyanya-vm</code>, a deterministic stack-based virtual machine operating on 64-bit unsigned integer registers and persistent contract key-value storage.</p>
+                <p>Contracts are written in Zyanya Contract Language (ZCL) and compiled into compact bytecodes. Opcodes include stack manipulations (<code>PUSH</code>, <code>POP</code>, <code>DUP</code>), state storage (<code>SLOAD</code>, <code>SSTORE</code>), arithmetic (<code>ADD</code>, <code>SUB</code>, <code>MUL</code>, <code>DIV</code>), control flow (<code>JUMPIF</code>, <code>CALL</code>), and execution control (<code>REVERT</code>, <code>RETURN</code>).</p>
+
+                <div class="callout">
+                    <strong>Checked Arithmetic & Security:</strong> All mathematical operations within <code>zyanya-vm</code> execute with mandatory overflow and underflow checking. Any arithmetic boundary violation automatically triggers an execution revert, preserving state integrity. Gas metering enforces strict limits on execution cycles to prevent infinite loops.
+                </div>
+            </section>
+
+            <section id="sec-4">
+                <h2>4. Bonding Curve Token Launcher</h2>
+                <p>Zyanya introduces a pump.fun-style bonding curve token launch framework directly within the contract runtime. The system employs a linear bonding curve where token price scales linearly with total circulating supply:</p>
+                
+                <div class="formula-box">Price = slope &times; supply</div>
+
+                <p>Users and AI agents create new tokens via the <code>/launch</code> interface by providing parameters (Name, Symbol, Initial Reserve Supply, Slope, Description, Icon, Social links). Token purchasing and selling occur against the bonding curve on the <code>/token</code> page.</p>
+                <p>Because the VM operates on 64-bit integer registers, string metadata (name, description, social links, icon path) is indexed by an off-chain metadata store, while economic state resides on-chain.</p>
+
+                <div class="callout">
+                    <strong>Mathematical Formulas:</strong>
+                    <div class="formula-box">Buy Cost = [ slope &times; (2 &times; S &times; k + k&sup2;) ] / 2</div>
+                    <div class="formula-box">Sell Refund = [ slope &times; (2 &times; S &times; k - k&sup2;) ] / 2</div>
+                    <p style="margin-top:0.5rem; text-align:center;"><em>where <strong>S</strong> is current circulating token supply, and <strong>k</strong> is the quantity of tokens being bought or sold.</em></p>
+                </div>
+            </section>
+
+            <section id="sec-5">
+                <h2>5. The DEX</h2>
+                <p>Zyanya features an automated constant-product market maker (AMM) DEX compiled via <code>dex.zcl</code>. The exchange maintains the constant-product invariant:</p>
+
+                <div class="formula-box">x &times; y = k</div>
+
+                <p>Every trade incurs a 0.3% swap fee distributed to liquidity providers. The DEX exposes entry points for <code>addLiquidity</code>, <code>removeLiquidity</code>, and <code>swap</code>, issuing LP tokens to represent liquidity shares.</p>
+            </section>
+
+            <section id="sec-6">
+                <h2>6. The Web MCP</h2>
+                <p>Zyanya is the first blockchain natively equipped with Model Context Protocol (MCP) support for AI agents. The Web MCP polyfill registers structured tools on <code>navigator.modelContext</code> when an agent visits the explorer web UI.</p>
+                <p>Registered tools include:</p>
+                <ul>
+                    <li><code>get-chain-info</code>: Retrieve height, block count, DAA score, and peer status.</li>
+                    <li><code>get-block</code>: Fetch specific block DAG header and transaction details.</li>
+                    <li><code>deploy-token</code>: Deploy a new bonding curve token contract.</li>
+                    <li><code>invoke-contract</code>: Execute state-changing smart contract entry points.</li>
+                    <li><code>call-contract</code>: Perform read-only contract state queries.</li>
+                    <li><code>ipv6-safety</code>: Access network hardening rules and IPv6 safety guidance.</li>
+                </ul>
+                <p>Headless agents can access identical functionalities via native HTTP API endpoints over IPv6.</p>
+            </section>
+
+            <section id="sec-7">
+                <h2>7. The Wallet</h2>
+                <p>The official <code>zyanya-wallet</code> CLI uses BIP-39 24-word seed mnemonics with optional 25th-word passphrase protection for key derivation. Key features include:</p>
+                <ul>
+                    <li>Interactive TUI for balance checks, ZYAN transfers, token operations, and DEX swaps.</li>
+                    <li><code>--show-secret</code> flag requirement to reveal private keys, protecting against unintended output logging.</li>
+                    <li><code>--force</code> guard when overwriting keyfiles, preventing accidental key loss.</li>
+                    <li>Strict Linux <code>0600</code> file permission enforcement on stored keyfiles.</li>
+                    <li>Fixed-point amount parsing to avoid precision errors in financial calculations.</li>
+                </ul>
+            </section>
+
+            <section id="sec-8">
+                <h2>8. Mining</h2>
+                <p>Mining on Zyanya is optimized for standard consumer CPUs. Miners can choose between solo mining via <code>zyanya-miner</code> (supporting adjustable CPU thread limits, e.g. 25% CPU throttle) or connecting to Stratum pools.</p>
+                <p>The official <code>zyanya-pool</code> daemon listens on IPv6 socket <code>[::]:3334</code> using the Stratum protocol. Mined coinbase outputs follow the 100-block maturity rule before becoming spendable.</p>
+            </section>
+
+            <section id="sec-9">
+                <h2>9. The Network</h2>
+                <p>Zyanya defines three network tiers: <strong>devnet</strong>, <strong>testnet</strong>, and <strong>mainnet</strong>.</p>
+                <p>The public testnet consists of 3 primary seed nodes connected via IPv6 (Unraid seed, MS-A2 node, and crypto backup node). The block explorer and Web MCP server operate publicly at <code>testnet.zyanya.scottcloudhawk.org</code>.</p>
+            </section>
+
+            <section id="sec-10">
+                <h2>10. IPv6-Native</h2>
+                <p>Zyanya is designed exclusively for IPv6 networking. Eliminating IPv4 avoids NAT traversal friction, eliminates middlebox gateways, enables true peer-to-peer connectivity, and provides an practically infinite address space for autonomous nodes and agent micro-instances.</p>
+                <p>The IPv6 safety documentation guides node operators on firewall configuration using <code>nftables</code> or <code>ufw</code>, default-deny inbound policies, and RFC 4890 ICMPv6 filtering standards to maintain node security while preserving P2P health.</p>
+            </section>
+
+            <section id="sec-11">
+                <h2>11. Roadmap</h2>
+                <ol>
+                    <li><strong>Phase 01: Ghost in the Machine</strong> — Public testnet hardening, P2P stability tuning, and contract VM edge-case testing.</li>
+                    <li><strong>Phase 02: Dark Launch</strong> — Mainnet genesis block mining and silent peer network deployment.</li>
+                    <li><strong>Phase 03: Prepare Optics</strong> — Documentation finalization, Web MCP tool expansion, and explorer integrations.</li>
+                    <li><strong>Phase 04: The r/IPv6 Signal</strong> — Public announcement and onboarding of the global IPv6 community.</li>
+                </ol>
+            </section>
+        </main>
+
+        <footer>
+            <p>The ghost in the IPv6 machine. Forever, always.</p>
+            <p>&copy; 2026 Zyanya Project. All rights reserved. &bull; <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue); text-decoration: none;">Source on GitHub</a></p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const fetchAndInject = (id, url) => {
+                const container = document.getElementById(id);
+                if (!container) return;
+                fetch(url)
+                    .then(response => response.text())
+                    .then(svgText => {
+                        container.innerHTML = svgText;
+                    })
+                    .catch(error => console.error(`Failed to load SVG ${url}:`, error));
+            };
+
+            fetchAndInject('logo-container', '/brand/zyanya-logo.svg');
+        });
+    </script>
+    <script src="/webmcp.js"></script>
+</body>
+</html>
+"###;
+
+
+pub const LLMS_TXT: &str = r###"# Zyanya
+
+> Zyanya is an IPv6-native, agent-native, CPU-mineable blockDAG — a Spectre/GhostDAG fork. The ghost in the IPv6 machine.
+
+## Info
+- URL: https://testnet.zyanya.scottcloudhawk.org/
+- Description: A decentralized blockchain with zero-premine fair launch, a smart contract VM, a pump.fun-style bonding-curve token launcher, a DEX, and a Web MCP for AI agent interaction. Runs entirely over IPv6.
+
+## Sections
+- [Home](https://testnet.zyanya.scottcloudhawk.org/): Landing page with the three pillars (Ghost, Secret, Forever) + economics
+- [Block Explorer](https://testnet.zyanya.scottcloudhawk.org/explorer): Live block explorer with auto-refreshing block table + stats
+- [Token Launcher](https://testnet.zyanya.scottcloudhawk.org/launch): Create bonding-curve tokens with metadata, icon, and socials
+- [Testnet Setup](https://testnet.zyanya.scottcloudhawk.org/testnet): All-in-one setup guide (download → node → wallet → mine)
+- [Roadmap](https://testnet.zyanya.scottcloudhawk.org/future): Features (live + planned) + the 4-phase go-to-market
+- [AI Agents](https://testnet.zyanya.scottcloudhawk.org/agents): Agent-native guide with prompt examples + recommended agents
+- [Documentation](https://testnet.zyanya.scottcloudhawk.org/docs): Technical white paper
+- [IPv6 Safety](https://testnet.zyanya.scottcloudhawk.org/#ipv6-safety): IPv6 rewards, risks, and hardening guide
+
+## API Endpoints (for AI agents)
+- GET /api/info: Chain state (block_count, difficulty, supply, peers)
+- GET /api/blocks: Recent blocks (hash, blue_score, daa_score, timestamp, tx_count)
+- GET /api/block/:hash: Block details by hash
+- GET /api/contracts: Deployed contracts list
+- GET /api/tokens: Deployed tokens list
+- GET /api/token/:address/metadata: Token metadata (name, symbol, description, socials, icon_uri)
+- GET /api/token-balance?token=:addr&holder=:id: Token balance for a holder
+- GET /api/dag: DAG graph data
+- POST /api/deploy-token: Deploy a bonding-curve token (name, symbol, supply, slope, description, twitter, telegram, website, icon_base64)
+- POST /api/invoke-contract: State-changing contract call (contract_address, entry_point, calldata, gas)
+- POST /api/call-contract: Read-only contract call (contract_address, entry_point, calldata, gas)
+- POST /api/deploy-contract: Deploy a custom contract (bytecode)
+- POST /api/swap-on-dex: Swap on the DEX
+- GET /token-icons/:filename: Token icon images
+- GET /webmcp.js: Web MCP polyfill (registers blockchain tools on navigator.modelContext)
+
+## WebMCP Tools (for browser-based agents)
+- get-chain-info: Query block count, DAA score, difficulty, supply, peers
+- get-block: Query block details by hash
+- ipv6-safety: IPv6 hardening guidance for agents
+- (more tools registered dynamically by the explorer)
+
+## Networks
+- Testnet (public): Seed at [2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18211
+- RPC: [2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18210
+- Explorer: https://testnet.zyanya.scottcloudhawk.org/
+- GitHub: https://github.com/scotthawk-maker/zyanya
+
+## Tokenomics
+- Max supply: ~28.7 billion ZYAN (smooth geometric decay)
+- Block reward: 50 ZYAN/block
+- Premine: ZERO (genesis has zero outputs)
+- Gas burn: 50% of every transaction fee permanently burned
+- Coinbase maturity: 100 blocks
+- No team wallets, no foundation allocation, no investor stake
+
+## Smart Contracts
+- VM: zyanya-vm (stack-based, u64-only, checked arithmetic)
+- Language: ZCL (Zyanya Contract Language)
+- Bonding curve: price = slope * supply, buy cost = slope*(2*S*k + k^2)/2, sell refund = slope*(2*S*k - k^2)/2
+- Entry points: 0=init, 1=transfer, 2=balance_of, 3=total_supply, 4=buy, 5=sell, 6=price
+- DEX: Constant-product AMM (x*y=k, 0.3% fee)"###;
+
+pub const LLMS_MD: &str = r###"# Zyanya — LLM/Agent API Documentation
+
+> Zyanya is an IPv6-native, agent-native, CPU-mineable blockDAG. This document provides detailed API documentation for AI agents to interact with the Zyanya blockchain programmatically.
+
+## Quick Start for Agents
+
+```
+# Query the chain state
+curl https://testnet.zyanya.scottcloudhawk.org/api/info
+
+# Get recent blocks
+curl https://testnet.zyanya.scottcloudhawk.org/api/blocks
+
+# Deploy a bonding-curve token
+curl -X POST https://testnet.zyanya.scottcloudhawk.org/api/deploy-token \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"MyToken","symbol":"MTK","supply":1000000,"slope":2,"owner":"100","description":"A test token","twitter":"@mytoken"}'
+
+# Buy tokens on the bonding curve (entry_point 4 = buy)
+curl -X POST https://testnet.zyanya.scottcloudhawk.org/api/invoke-contract \
+  -H 'Content-Type: application/json' \
+  -d '{"contract_address":"<TOKEN_ADDRESS>","entry_point":4,"calldata":"100,10"}'
+
+# Check the price (entry_point 6 = price)
+curl -X POST https://testnet.zyanya.scottcloudhawk.org/api/call-contract \
+  -H 'Content-Type: application/json' \
+  -d '{"contract_address":"<TOKEN_ADDRESS>","entry_point":6,"calldata":""}'
+
+# Sell tokens (entry_point 5 = sell)
+curl -X POST https://testnet.zyanya.scottcloudhawk.org/api/invoke-contract \
+  -H 'Content-Type: application/json' \
+  -d '{"contract_address":"<TOKEN_ADDRESS>","entry_point":5,"calldata":"100,5"}'
+
+# Get token metadata
+curl https://testnet.zyanya.scottcloudhawk.org/api/token/<TOKEN_ADDRESS>/metadata
+```
+
+## API Reference
+
+### GET /api/info
+Returns the current chain state.
+- Response: `{block_count, header_count, difficulty, network, is_synced, server_version, virtual_daa_score, past_median_time, sink_hash, peer_count, mempool_size, coin_supply_zyan, max_supply_zyan}`
+
+### GET /api/blocks
+Returns the 20 most recent blocks.
+- Response: `[{hash, blue_score, daa_score, timestamp, tx_count, selected_parent}]`
+
+### GET /api/block/:hash
+Returns details for a specific block by its 64-character hex hash.
+
+### GET /api/contracts
+Returns a list of all deployed contracts.
+
+### GET /api/tokens
+Returns a list of all deployed tokens with their metadata (name, symbol, total_supply, owner_address).
+
+### GET /api/token/:address/metadata
+Returns the off-chain metadata for a token: `{name, symbol, description, twitter, telegram, website, icon_uri}`
+
+### GET /api/token-balance
+Query parameters: `token=<contract_address>&holder=<holder_id>`
+Returns: `{balance, holder, token}`
+
+### POST /api/deploy-token
+Deploy a bonding-curve token with metadata.
+- Body: `{name, symbol, supply, slope, owner, description, twitter, telegram, website, icon_base64}`
+- Response: `{contract_address, name, symbol, description, socials, icon_uri, slope, supply, gasUsed}`
+- Note: State-changing endpoints require ZYANYA_EXPLORER_ENABLE_WRITE=1 on the server.
+
+### POST /api/invoke-contract
+Execute a state-changing contract call (buy, sell, transfer, init).
+- Body: `{contract_address, entry_point, calldata, gas}`
+- calldata format: comma-separated u64 values (e.g., "100,10" for caller=100, amount=10)
+- Entry points for bonding-curve tokens: 0=init(slope), 1=transfer(from,to,amt), 4=buy(caller,k), 5=sell(caller,k)
+- Response: `{success, returnValue, gasUsed, transactionId}`
+
+### POST /api/call-contract
+Execute a read-only contract call (balance_of, total_supply, price).
+- Body: `{contract_address, entry_point, calldata, gas}`
+- Entry points for bonding-curve tokens: 2=balance_of(addr), 3=total_supply(), 6=price()
+- Response: `{executionSuccess, gasUsed, returnValue}`
+
+### GET /token-icons/:filename
+Returns a token icon PNG image.
+
+## Bonding Curve Math
+- price(supply) = slope * supply
+- buy cost = slope * (2 * S * k + k^2) / 2  (where S = current supply, k = tokens to mint)
+- sell refund = slope * (2 * S * k - k^2) / 2  (where S = supply before burn, k = tokens to burn)
+- All arithmetic is checked (overflow/underflow reverts the transaction)
+
+## Web MCP
+The explorer serves `/webmcp.js` which registers blockchain tools on `navigator.modelContext`:
+- `get-chain-info` — query chain state
+- `get-block` — query block details
+- `get-recent-blocks` — list recent blocks
+- `ipv6-safety` — IPv6 hardening guidance
+
+Browser-based agents auto-discover these tools when visiting the explorer page.
+
+## Network
+- Testnet seed (P2P): `[2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18211`
+- Testnet RPC: `[2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18210`
+- Explorer: `https://testnet.zyanya.scottcloudhawk.org/`
+- GitHub: `https://github.com/scotthawk-maker/zyanya`
+- All connections are IPv6-only."###;

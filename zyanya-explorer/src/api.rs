@@ -72,6 +72,22 @@ pub async fn future_handler() -> Html<&'static str> {
     Html(FUTURE_HTML)
 }
 
+pub async fn agents_handler() -> Html<&'static str> {
+    Html(AI_AGENTS_HTML)
+}
+
+pub async fn docs_handler() -> Html<&'static str> {
+    Html(DOCS_HTML)
+}
+
+pub async fn llms_txt_handler() -> Response {
+    ([(header::CONTENT_TYPE, "text/plain; charset=utf-8")], LLMS_TXT).into_response()
+}
+
+pub async fn llms_md_handler() -> Response {
+    ([(header::CONTENT_TYPE, "text/markdown; charset=utf-8")], LLMS_MD).into_response()
+}
+
 pub async fn webmcp_js_handler() -> Response {
     ([(header::CONTENT_TYPE, "application/javascript")], WEBMCP_SCRIPT).into_response()
 }
