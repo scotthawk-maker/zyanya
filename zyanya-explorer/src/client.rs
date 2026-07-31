@@ -808,7 +808,7 @@ impl RpcClientManager {
             .as_nanos() as u64;
 
         let unsigned_tx = Transaction::new(
-            1,
+            0,
             inputs,
             outputs,
             nonce,
