@@ -1119,9 +1119,10 @@ impl RpcClientManager {
                     let k1 = self.get_contract_state_key(&addr, 1).await.unwrap_or(0);
                     let k2 = self.get_contract_state_key(&addr, 2).await.unwrap_or(0);
 
+                    let in_metadata = self.metadata_store.lock().await.contains_key(&addr);
                     let contract_type = if k0 > 0 && k1 > 0 && k2 > 0 {
                         "DEX".to_string()
-                    } else if k0 > 0 {
+                    } else if k0 > 0 || in_metadata {
                         "Token".to_string()
                     } else {
                         "Contract".to_string()
