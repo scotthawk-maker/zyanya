@@ -60,6 +60,10 @@ pub async fn explorer_handler() -> Html<&'static str> {
     Html(EXPLORER_HTML)
 }
 
+pub async fn dag_page_handler() -> Html<&'static str> {
+    Html(DAG_HTML)
+}
+
 pub async fn tools_handler() -> Html<&'static str> {
     Html(TOOLS_HTML)
 }

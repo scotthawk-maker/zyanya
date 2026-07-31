@@ -79,6 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new()
         .route("/", get(landing_handler))
         .route("/explorer", get(explorer_handler))
+        .route("/dag", get(dag_page_handler))
         .route("/launch", get(launch_handler))
         .route("/token/:address", get(token_handler))
         .route("/token-icons/:filename", get(token_icon_handler))

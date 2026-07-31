@@ -500,6 +500,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
             <nav>
                 <a href="/" class="active">Home</a>
                 <a href="/explorer">Explorer</a>
+                <a href="/dag">DAG Visualizer</a>
                 <a href="/testnet">Testnet</a>
                 <a href="/launch">Launch</a>
                 <a href="/future">Roadmap</a>
@@ -1018,6 +1019,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
         <nav>
             <a href="/">Home</a>
             <a href="/explorer" class="active">Explorer</a>
+            <a href="/dag">DAG Visualizer</a>
             <a href="/testnet">Testnet</a>
             <a href="/launch">Launch</a>
             <a href="/future">Roadmap</a>
@@ -1037,7 +1039,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             <button class="nav-btn mono" onclick="switchTab('contracts')">CONTRACTS</button>
             <button class="nav-btn mono" onclick="switchTab('tokens')">TOKENS</button>
             <button class="nav-btn mono" onclick="switchTab('dex')">DEX</button>
-            <button class="nav-btn mono" onclick="switchTab('dag')">DAG GRAPH</button>
+            <a href="/dag" class="nav-btn mono" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">DAG GRAPH ↗</a>
             <a href="/tools" class="nav-btn mono" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">WEBMCP TOOLS</a>
         </div>
 
@@ -4718,3 +4720,1162 @@ Browser-based agents auto-discover these tools when visiting the explorer page.
 - Explorer: `https://testnet.zyanya.scottcloudhawk.org/`
 - GitHub: `https://github.com/scotthawk-maker/zyanya`
 - All connections are IPv6-only."###;
+
+pub const DAG_HTML: &str = r###"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyanya BlockDAG Explorer & Visualizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --void: #0A0F1C;
+            --shadow-teal: #0D3B50;
+            --spectral-blue: #7EC8D3;
+            --accent-spectral: #7EC8D3;
+            --text-color: #E0E0E0;
+            --burn-red: #FF4D4D;
+            --side-red: #FF6B6B;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            background-color: var(--void);
+            color: var(--text-color);
+            font-family: var(--font-mono);
+            font-size: 15px;
+            line-height: 1.6;
+            overflow-x: hidden;
+            height: 100%;
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image:
+                linear-gradient(to right, rgba(13, 59, 80, 0.3) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(13, 59, 80, 0.3) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -2;
+        }
+
+        .grid-bg::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse at center, rgba(13, 59, 80, 0.2), var(--void) 70%);
+            z-index: -1;
+        }
+
+        header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid rgba(126, 200, 211, 0.2);
+            background: rgba(10, 15, 28, 0.92);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .menu-toggle { display: none; }
+
+        .hamburger {
+            display: none;
+            font-size: 1.8rem;
+            color: var(--spectral-blue);
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            user-select: none;
+            z-index: 101;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--spectral-blue);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        nav a:hover, nav a.active {
+            color: #FFFFFF;
+            text-shadow: 0 0 8px var(--spectral-blue);
+        }
+
+        .top-logo {
+            text-align: center;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .top-logo svg {
+            max-width: 480px;
+            width: 100%;
+            height: auto;
+        }
+
+        #logo-container {
+            display: inline-block;
+        }
+
+        #logo-container svg {
+            height: 44px;
+            width: auto;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem 2rem;
+        }
+
+        .dag-header-card {
+            background: rgba(13, 59, 80, 0.35);
+            border: 1px solid rgba(126, 200, 211, 0.25);
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .dag-title-box h1 {
+            font-size: 1.4rem;
+            color: var(--spectral-blue);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dag-title-box p {
+            color: #90A0B0;
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+        }
+
+        .dag-stats {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .dag-stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dag-stat-label {
+            font-size: 0.7rem;
+            color: #7A8B9E;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .dag-stat-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        .dag-viewport-container {
+            position: relative;
+            background: rgba(8, 12, 22, 0.95);
+            border: 1px solid rgba(126, 200, 211, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            height: calc(100vh - 280px);
+            min-height: 520px;
+        }
+
+        #dag-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        #dag-canvas:active {
+            cursor: grabbing;
+        }
+
+        .controls-overlay {
+            position: absolute;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+            background: rgba(10, 15, 28, 0.85);
+            border: 1px solid rgba(126, 200, 211, 0.3);
+            border-radius: 6px;
+            padding: 0.4rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .ctrl-btn {
+            background: rgba(13, 59, 80, 0.6);
+            border: 1px solid rgba(126, 200, 211, 0.3);
+            color: var(--spectral-blue);
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .ctrl-btn:hover {
+            background: var(--spectral-blue);
+            color: var(--void);
+            box-shadow: 0 0 10px rgba(126, 200, 211, 0.5);
+        }
+
+        .ctrl-btn-text {
+            width: auto;
+            padding: 0 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .legend-overlay {
+            position: absolute;
+            top: 1.25rem;
+            left: 1.25rem;
+            background: rgba(10, 15, 28, 0.88);
+            border: 1px solid rgba(126, 200, 211, 0.3);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            z-index: 10;
+            backdrop-filter: blur(8px);
+            pointer-events: none;
+        }
+
+        .legend-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--spectral-blue);
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .legend-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.78rem;
+            color: #C0D0E0;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .legend-dot.blue {
+            background: var(--spectral-blue);
+            box-shadow: 0 0 6px var(--spectral-blue);
+        }
+
+        .legend-dot.red {
+            background: var(--side-red);
+            box-shadow: 0 0 6px var(--side-red);
+        }
+
+        .legend-dot.sink {
+            background: #FFFFFF;
+            border: 2px solid var(--spectral-blue);
+            box-shadow: 0 0 8px #FFFFFF, 0 0 12px var(--spectral-blue);
+        }
+
+        .legend-line {
+            width: 18px;
+            height: 2px;
+            display: inline-block;
+        }
+
+        .legend-line.selected {
+            background: var(--spectral-blue);
+        }
+
+        .legend-line.merged {
+            background: rgba(255, 107, 107, 0.7);
+            border-top: 1px dashed rgba(255, 107, 107, 0.7);
+        }
+
+        #dag-tooltip {
+            position: absolute;
+            display: none;
+            background: rgba(10, 15, 28, 0.96);
+            border: 1px solid var(--spectral-blue);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 12px rgba(126, 200, 211, 0.2);
+            font-size: 0.8rem;
+            max-width: 340px;
+        }
+
+        #dag-tooltip h4 {
+            color: var(--spectral-blue);
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(126, 200, 211, 0.2);
+            padding-bottom: 0.2rem;
+            word-break: break-all;
+        }
+
+        .tt-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+            gap: 1rem;
+        }
+
+        .tt-label {
+            color: #8095A8;
+        }
+
+        .tt-val {
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+
+        .badge-chain {
+            color: var(--spectral-blue);
+            background: rgba(126, 200, 211, 0.15);
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid rgba(126, 200, 211, 0.4);
+        }
+
+        .badge-side {
+            color: var(--side-red);
+            background: rgba(255, 107, 107, 0.15);
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 107, 107, 0.4);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: #0A0F1C;
+            border: 1px solid var(--spectral-blue);
+            border-radius: 8px;
+            max-width: 650px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(126, 200, 211, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(126, 200, 211, 0.2);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-header h3 {
+            color: var(--spectral-blue);
+            font-size: 1.1rem;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 0 0.5rem;
+        }
+
+        .close-btn:hover {
+            color: var(--burn-red);
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 1rem 0;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            nav {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                background: rgba(10, 15, 28, 0.98);
+                border: 1px solid var(--shadow-teal);
+                border-radius: 8px;
+                padding: 1rem 0;
+                margin-top: 0.5rem;
+            }
+
+            .menu-toggle:checked ~ nav {
+                display: flex;
+            }
+
+            nav a {
+                padding: 0.75rem 1.5rem;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .container {
+                padding: 0.75rem;
+            }
+
+            .dag-header-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .dag-viewport-container {
+                height: 60vh;
+                min-height: 400px;
+            }
+
+            .legend-overlay {
+                font-size: 0.7rem;
+                padding: 0.5rem 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+
+    <header>
+        <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
+        <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/explorer">Explorer</a>
+            <a href="/dag" class="active">DAG Visualizer</a>
+            <a href="/testnet">Testnet</a>
+            <a href="/launch">Launch</a>
+            <a href="/future">Roadmap</a>
+            <a href="/agents">Agents</a>
+            <a href="/docs">Docs</a>
+            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="top-logo">
+            <div id="logo-container"><!-- SVG injected dynamically --></div>
+        </div>
+
+        <div class="dag-header-card">
+            <div class="dag-title-box">
+                <h1>GHOSTDAG BLOCKDAG VISUALIZATION</h1>
+                <p>Real-time visual node-link graph showing multi-parent block DAG topology & selected chain</p>
+            </div>
+            <div class="dag-stats">
+                <div class="dag-stat-item">
+                    <span class="dag-stat-label">Total Rendered</span>
+                    <span class="dag-stat-val" id="stat-node-count">0</span>
+                </div>
+                <div class="dag-stat-item">
+                    <span class="dag-stat-label">Chain / Side Ratio</span>
+                    <span class="dag-stat-val" id="stat-chain-ratio">0%</span>
+                </div>
+                <div class="dag-stat-item">
+                    <span class="dag-stat-label">Sink DAA Score</span>
+                    <span class="dag-stat-val" id="stat-sink-daa">0</span>
+                </div>
+                <div class="dag-stat-item">
+                    <span class="dag-stat-label">Auto-Refresh</span>
+                    <span class="dag-stat-val" id="stat-status" style="color: var(--spectral-blue);">LIVE (10s)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dag-viewport-container">
+            <!-- Legend Overlay -->
+            <div class="legend-overlay">
+                <div class="legend-title">DAG Topology Legend</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <span class="legend-dot blue"></span>
+                        <span>Chain Block (Blue)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot red"></span>
+                        <span>Side Block (Red)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot sink"></span>
+                        <span>Sink Block (Latest Tip)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-line selected"></span>
+                        <span>Selected Parent Edge</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-line merged"></span>
+                        <span>Merge Parent Edge</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Overlay -->
+            <div class="controls-overlay">
+                <button class="ctrl-btn" id="btn-zoom-in" title="Zoom In">+</button>
+                <button class="ctrl-btn" id="btn-zoom-out" title="Zoom Out">−</button>
+                <button class="ctrl-btn ctrl-btn-text" id="btn-reset" title="Reset View">RESET</button>
+                <button class="ctrl-btn ctrl-btn-text" id="btn-toggle-refresh" title="Toggle Auto Refresh">↻ 10s</button>
+            </div>
+
+            <canvas id="dag-canvas"></canvas>
+            <div id="dag-tooltip"></div>
+        </div>
+    </div>
+
+    <!-- Block Detail Modal -->
+    <div id="block-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">BLOCK DETAILS</h3>
+                <button class="close-btn" onclick="closeModal()">✕</button>
+            </div>
+            <div id="modal-body">Loading...</div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const fetchAndInject = (id, url) => {
+            const container = document.getElementById(id);
+            if (!container) return;
+            fetch(url)
+                .then(r => r.text())
+                .then(t => { container.innerHTML = t; })
+                .catch(e => console.error('Failed to load logo SVG:', e));
+        };
+        fetchAndInject('logo-container', '/brand/zyanya-logo.svg');
+
+        const canvas = document.getElementById('dag-canvas');
+        const ctx = canvas.getContext('2d');
+        const container = canvas.parentElement;
+        const tooltip = document.getElementById('dag-tooltip');
+
+        let nodes = [];
+        let nodeMap = new Map();
+        let sinkHash = null;
+        let isInitialLoad = true;
+        let isPaused = false;
+
+        let scale = 1.0;
+        let panX = 0;
+        let panY = 0;
+
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let startPanX = 0;
+        let startPanY = 0;
+
+        let hoveredNode = null;
+        let pulseAngle = 0;
+
+        let touchStartDist = 0;
+        let touchStartScale = 1.0;
+
+        function resizeCanvas() {
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.resetTransform();
+            ctx.scale(dpr, dpr);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const SPACING_X = 140;
+        const LANE_HEIGHT = 80;
+        const NODE_RADIUS = 20;
+
+        function calculateLayout(rawNodes) {
+            if (!rawNodes || rawNodes.length === 0) return [];
+
+            const sorted = [...rawNodes].sort((a, b) => {
+                if (a.daa_score !== b.daa_score) return a.daa_score - b.daa_score;
+                if (a.blue_score !== b.blue_score) return a.blue_score - b.blue_score;
+                return a.hash.localeCompare(b.hash);
+            });
+
+            let scoreRanks = new Map();
+            let currentRank = 0;
+            let lastScore = null;
+
+            sorted.forEach(node => {
+                if (lastScore === null || node.daa_score !== lastScore) {
+                    if (lastScore !== null) currentRank++;
+                    lastScore = node.daa_score;
+                }
+                scoreRanks.set(node.hash, currentRank);
+            });
+
+            const laneMap = new Map();
+            const occupiedPositions = [];
+
+            function isSlotOccupied(rank, lane) {
+                return occupiedPositions.some(p => p.lane === lane && Math.abs(p.rank - rank) < 1.2);
+            }
+
+            sorted.forEach(node => {
+                const rank = scoreRanks.get(node.hash);
+                if (node.is_chain_block) {
+                    laneMap.set(node.hash, 0);
+                    occupiedPositions.push({ rank, lane: 0 });
+                }
+            });
+
+            sorted.forEach(node => {
+                if (!node.is_chain_block) {
+                    const rank = scoreRanks.get(node.hash);
+                    let hashNum = 0;
+                    for (let i = 0; i < node.hash.length; i++) hashNum += node.hash.charCodeAt(i);
+                    const preferredDirection = (hashNum % 2 === 0) ? 1 : -1;
+
+                    let assignedLane = preferredDirection;
+                    let step = 1;
+                    while (isSlotOccupied(rank, assignedLane)) {
+                        if (step % 2 === 1) {
+                            assignedLane = -assignedLane;
+                        } else {
+                            assignedLane = (assignedLane > 0) ? -(assignedLane + 1) : -(assignedLane - 1);
+                        }
+                        step++;
+                        if (step > 20) break;
+                    }
+
+                    laneMap.set(node.hash, assignedLane);
+                    occupiedPositions.push({ rank, lane: assignedLane });
+                }
+            });
+
+            const centerY = container.getBoundingClientRect().height / 2;
+            return sorted.map(node => {
+                const rank = scoreRanks.get(node.hash);
+                const lane = laneMap.get(node.hash) || 0;
+                const x = rank * SPACING_X + 100;
+                const y = centerY + lane * LANE_HEIGHT;
+                return {
+                    ...node,
+                    x,
+                    y,
+                    rank,
+                    lane
+                };
+            });
+        }
+
+        function autoFit() {
+            if (nodes.length === 0) return;
+
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+
+            nodes.forEach(n => {
+                if (n.x < minX) minX = n.x;
+                if (n.x > maxX) maxX = n.x;
+                if (n.y < minY) minY = n.y;
+                if (n.y > maxY) maxY = n.y;
+            });
+
+            const rect = container.getBoundingClientRect();
+            const width = maxX - minX + SPACING_X * 2;
+            const height = maxY - minY + LANE_HEIGHT * 2;
+
+            if (width <= 0 || height <= 0) return;
+
+            const scaleX = (rect.width * 0.85) / width;
+            const scaleY = (rect.height * 0.85) / height;
+
+            scale = Math.min(Math.max(Math.min(scaleX, scaleY), 0.4), 1.2);
+
+            const graphCenterX = (minX + maxX) / 2;
+            const graphCenterY = (minY + maxY) / 2;
+
+            panX = (rect.width / 2) - (graphCenterX * scale);
+            panY = (rect.height / 2) - (graphCenterY * scale);
+        }
+
+        async function fetchDagData() {
+            try {
+                const res = await fetch('/api/dag?limit=60');
+                if (!res.ok) throw new Error(`API error ${res.status}`);
+                const data = await res.json();
+                
+                if (data && data.nodes) {
+                    sinkHash = data.sink || (data.nodes[0] ? data.nodes[0].hash : null);
+                    
+                    const newProcessedNodes = calculateLayout(data.nodes);
+                    nodes = newProcessedNodes;
+                    
+                    nodeMap.clear();
+                    nodes.forEach(n => nodeMap.set(n.hash, n));
+
+                    document.getElementById('stat-node-count').innerText = nodes.length;
+                    const chainCount = nodes.filter(n => n.is_chain_block).length;
+                    const ratio = nodes.length > 0 ? Math.round((chainCount / nodes.length) * 100) : 0;
+                    document.getElementById('stat-chain-ratio').innerText = `${ratio}% (${chainCount}/${nodes.length})`;
+                    
+                    if (sinkHash && nodeMap.has(sinkHash)) {
+                        document.getElementById('stat-sink-daa').innerText = nodeMap.get(sinkHash).daa_score.toLocaleString();
+                    } else if (nodes.length > 0) {
+                        document.getElementById('stat-sink-daa').innerText = nodes[nodes.length - 1].daa_score.toLocaleString();
+                    }
+
+                    if (isInitialLoad) {
+                        autoFit();
+                        isInitialLoad = false;
+                    }
+                }
+            } catch (e) {
+                console.error('Error fetching DAG graph:', e);
+            }
+        }
+
+        function render() {
+            pulseAngle = (pulseAngle + 0.04) % (Math.PI * 2);
+
+            const rect = container.getBoundingClientRect();
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            ctx.save();
+            ctx.translate(panX, panY);
+            ctx.scale(scale, scale);
+
+            drawWorldGrid(ctx, rect.width, rect.height);
+
+            nodes.forEach(node => {
+                if (node.parents && node.parents.length > 0) {
+                    node.parents.forEach(parentHash => {
+                        const parentNode = nodeMap.get(parentHash);
+                        if (parentNode) {
+                            const isSelectedParent = (parentHash === node.selected_parent);
+                            drawEdge(ctx, node, parentNode, isSelectedParent);
+                        }
+                    });
+                }
+            });
+
+            nodes.forEach(node => {
+                const isSink = (node.hash === sinkHash);
+                const isHovered = (hoveredNode && hoveredNode.hash === node.hash);
+                drawNode(ctx, node, isSink, isHovered);
+            });
+
+            ctx.restore();
+
+            requestAnimationFrame(render);
+        }
+
+        function drawWorldGrid(ctx, viewportW, viewportH) {
+            const gridSize = 40;
+            const startX = Math.floor((-panX / scale) / gridSize) * gridSize - gridSize;
+            const endX = Math.ceil(((viewportW - panX) / scale) / gridSize) * gridSize + gridSize;
+            const startY = Math.floor((-panY / scale) / gridSize) * gridSize - gridSize;
+            const endY = Math.ceil(((viewportH - panY) / scale) / gridSize) * gridSize + gridSize;
+
+            ctx.strokeStyle = 'rgba(13, 59, 80, 0.15)';
+            ctx.lineWidth = 1 / scale;
+
+            ctx.beginPath();
+            for (let x = startX; x <= endX; x += gridSize) {
+                ctx.moveTo(x, startY);
+                ctx.lineTo(x, endY);
+            }
+            for (let y = startY; y <= endY; y += gridSize) {
+                ctx.moveTo(startX, y);
+                ctx.lineTo(endX, y);
+            }
+            ctx.stroke();
+        }
+
+        function drawEdge(ctx, child, parent, isSelected) {
+            ctx.beginPath();
+            
+            const dx = parent.x - child.x;
+            const cp1x = child.x + dx * 0.5;
+            const cp1y = child.y;
+            const cp2x = parent.x - dx * 0.5;
+            const cp2y = parent.y;
+
+            ctx.moveTo(child.x, child.y);
+            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, parent.x, parent.y);
+
+            if (isSelected) {
+                ctx.strokeStyle = '#7EC8D3';
+                ctx.lineWidth = 2.5;
+                ctx.setLineDash([]);
+            } else {
+                ctx.strokeStyle = 'rgba(255, 107, 107, 0.5)';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([4, 4]);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            const midX = (child.x + parent.x) / 2;
+            const midY = (child.y + parent.y) / 2;
+            ctx.beginPath();
+            ctx.fillStyle = isSelected ? '#7EC8D3' : 'rgba(255, 107, 107, 0.7)';
+            ctx.arc(midX, midY, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawNode(ctx, node, isSink, isHovered) {
+            const radius = NODE_RADIUS;
+
+            if (isSink) {
+                const glowRadius = radius + 6 + Math.sin(pulseAngle) * 4;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, glowRadius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(126, 200, 211, 0.25)';
+                ctx.fill();
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            if (isHovered) {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, radius + 5, 0, Math.PI * 2);
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+
+            if (node.is_chain_block) {
+                ctx.fillStyle = '#7EC8D3';
+                ctx.strokeStyle = '#0D3B50';
+            } else {
+                ctx.fillStyle = '#FF6B6B';
+                ctx.strokeStyle = '#501313';
+            }
+            ctx.lineWidth = 3;
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#0A0F1C';
+            ctx.font = 'bold 10px "Fira Code", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            const labelText = node.short_hash ? node.short_hash.substring(0, 4) : 'BLK';
+            ctx.fillText(labelText, node.x, node.y);
+
+            ctx.fillStyle = '#A0B0C0';
+            ctx.font = '10px "Fira Code", monospace';
+            ctx.fillText(`${node.daa_score}`, node.x, node.y + radius + 14);
+        }
+
+        function getNodeAt(screenX, screenY) {
+            const rect = container.getBoundingClientRect();
+            const mouseX = screenX - rect.left;
+            const mouseY = screenY - rect.top;
+
+            const worldX = (mouseX - panX) / scale;
+            const worldY = (mouseY - panY) / scale;
+
+            for (let i = nodes.length - 1; i >= 0; i--) {
+                const n = nodes[i];
+                const dx = worldX - n.x;
+                const dy = worldY - n.y;
+                if (dx * dx + dy * dy <= (NODE_RADIUS + 6) * (NODE_RADIUS + 6)) {
+                    return n;
+                }
+            }
+            return null;
+        }
+
+        function updateTooltip(node, screenX, screenY) {
+            if (!node) {
+                tooltip.style.display = 'none';
+                return;
+            }
+
+            const rect = container.getBoundingClientRect();
+            let left = screenX - rect.left + 15;
+            let top = screenY - rect.top + 15;
+
+            if (left + 320 > rect.width) left = screenX - rect.left - 330;
+            if (top + 220 > rect.height) top = screenY - rect.top - 230;
+
+            const isSink = (node.hash === sinkHash);
+            const parentCount = node.parents ? node.parents.length : 0;
+            const badgeClass = node.is_chain_block ? 'badge-chain' : 'badge-side';
+            const blockType = node.is_chain_block ? 'Chain Block (Blue)' : 'Side Block (Red)';
+
+            tooltip.innerHTML = `
+                <h4>Block ${node.short_hash}</h4>
+                <div class="tt-row"><span class="tt-label">Type:</span> <span class="${badgeClass}">${blockType}</span></div>
+                ${isSink ? '<div class="tt-row"><span class="tt-label">Status:</span> <span style="color:#7EC8D3;font-weight:bold;">★ SINK (Latest Tip)</span></div>' : ''}
+                <div class="tt-row"><span class="tt-label">Blue Score:</span> <span class="tt-val">${node.blue_score.toLocaleString()}</span></div>
+                <div class="tt-row"><span class="tt-label">DAA Score:</span> <span class="tt-val">${node.daa_score.toLocaleString()}</span></div>
+                <div class="tt-row"><span class="tt-label">Parents (${parentCount}):</span> <span class="tt-val">${node.parents ? node.parents.map(p => p.substring(0, 6)).join(', ') : 'None'}</span></div>
+                <div class="tt-row"><span class="tt-label">Selected Parent:</span> <span class="tt-val">${node.selected_parent ? node.selected_parent.substring(0, 8) + '...' : 'None'}</span></div>
+                <div style="margin-top:0.4rem; font-size:0.75rem; color:#7EC8D3; text-align:center;">👉 Click to view detailed info</div>
+            `;
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+            tooltip.style.display = 'block';
+        }
+
+        async function showBlockModal(hash) {
+            const modal = document.getElementById('block-modal');
+            const body = document.getElementById('modal-body');
+            const title = document.getElementById('modal-title');
+            
+            title.innerText = `BLOCK DETAILS: ${hash.substring(0, 12)}...`;
+            body.innerHTML = '<div style="text-align:center; padding: 2rem; color: #7EC8D3;">Loading block data from Zyanya Node gRPC...</div>';
+            modal.style.display = 'flex';
+
+            try {
+                const res = await fetch(`/api/block/${hash}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const block = await res.json();
+                
+                body.innerHTML = `
+                    <div class="tt-row" style="margin-bottom:0.75rem;"><span class="tt-label">Block Hash:</span> <span class="tt-val" style="word-break:break-all; font-size:0.85rem;">${block.hash || hash}</span></div>
+                    <div class="tt-row"><span class="tt-label">Blue Score:</span> <span class="tt-val">${block.blue_score ? block.blue_score.toLocaleString() : 'N/A'}</span></div>
+                    <div class="tt-row"><span class="tt-label">DAA Score:</span> <span class="tt-val">${block.daa_score ? block.daa_score.toLocaleString() : 'N/A'}</span></div>
+                    <div class="tt-row"><span class="tt-label">Is Chain Block:</span> <span class="tt-val">${block.is_chain_block ? 'YES (Blue)' : 'NO (Red)'}</span></div>
+                    <div class="tt-row"><span class="tt-label">Parents:</span> <span class="tt-val" style="word-break:break-all;">${block.parents ? block.parents.join('<br>') : 'None'}</span></div>
+                    <div class="tt-row"><span class="tt-label">Selected Parent:</span> <span class="tt-val" style="word-break:break-all;">${block.selected_parent || 'None'}</span></div>
+                    <div style="margin-top: 1.25rem; text-align: right;">
+                        <a href="/explorer?block=${hash}" target="_blank" style="color: var(--spectral-blue); font-weight: bold; text-decoration: underline;">Open in Explorer Tab ↗</a>
+                    </div>
+                `;
+            } catch (err) {
+                body.innerHTML = `<div style="color: var(--side-red); padding: 1rem;">Failed to load block details: ${err.message}</div>`;
+            }
+        }
+
+        window.closeModal = function() {
+            document.getElementById('block-modal').style.display = 'none';
+        };
+
+        canvas.addEventListener('mousedown', (e) => {
+            const clickedNode = getNodeAt(e.clientX, e.clientY);
+            if (clickedNode) {
+                showBlockModal(clickedNode.hash);
+                return;
+            }
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            startPanX = panX;
+            startPanY = panY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                panX = startPanX + (e.clientX - dragStartX);
+                panY = startPanY + (e.clientY - dragStartY);
+            } else {
+                const node = getNodeAt(e.clientX, e.clientY);
+                hoveredNode = node;
+                updateTooltip(node, e.clientX, e.clientY);
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = container.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+            const newScale = Math.min(Math.max(scale * zoomFactor, 0.2), 3.0);
+
+            panX = mouseX - (mouseX - panX) * (newScale / scale);
+            panY = mouseY - (mouseY - panY) * (newScale / scale);
+            scale = newScale;
+
+            const node = getNodeAt(e.clientX, e.clientY);
+            hoveredNode = node;
+            updateTooltip(node, e.clientX, e.clientY);
+        }, { passive: false });
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                const clickedNode = getNodeAt(touch.clientX, touch.clientY);
+                if (clickedNode) {
+                    showBlockModal(clickedNode.hash);
+                    return;
+                }
+                isDragging = true;
+                dragStartX = touch.clientX;
+                dragStartY = touch.clientY;
+                startPanX = panX;
+                startPanY = panY;
+            } else if (e.touches.length === 2) {
+                isDragging = false;
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                touchStartDist = Math.hypot(dx, dy);
+                touchStartScale = scale;
+            }
+        }, { passive: true });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1 && isDragging) {
+                const touch = e.touches[0];
+                panX = startPanX + (touch.clientX - dragStartX);
+                panY = startPanY + (touch.clientY - dragStartY);
+            } else if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const dist = Math.hypot(dx, dy);
+                if (touchStartDist > 0) {
+                    const newScale = Math.min(Math.max(touchStartScale * (dist / touchStartDist), 0.2), 3.0);
+                    const rect = container.getBoundingClientRect();
+                    const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+                    const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+                    
+                    panX = midX - (midX - panX) * (newScale / scale);
+                    panY = midY - (midY - panY) * (newScale / scale);
+                    scale = newScale;
+                }
+            }
+        }, { passive: true });
+
+        canvas.addEventListener('touchend', () => {
+            isDragging = false;
+            touchStartDist = 0;
+        });
+
+        document.getElementById('btn-zoom-in').addEventListener('click', () => {
+            const rect = container.getBoundingClientRect();
+            const midX = rect.width / 2;
+            const midY = rect.height / 2;
+            const newScale = Math.min(scale * 1.25, 3.0);
+            panX = midX - (midX - panX) * (newScale / scale);
+            panY = midY - (midY - panY) * (newScale / scale);
+            scale = newScale;
+        });
+
+        document.getElementById('btn-zoom-out').addEventListener('click', () => {
+            const rect = container.getBoundingClientRect();
+            const midX = rect.width / 2;
+            const midY = rect.height / 2;
+            const newScale = Math.max(scale * 0.8, 0.2);
+            panX = midX - (midX - panX) * (newScale / scale);
+            panY = midY - (midY - panY) * (newScale / scale);
+            scale = newScale;
+        });
+
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            autoFit();
+        });
+
+        const btnRefresh = document.getElementById('btn-toggle-refresh');
+        btnRefresh.addEventListener('click', () => {
+            isPaused = !isPaused;
+            if (isPaused) {
+                btnRefresh.innerText = 'PAUSED';
+                btnRefresh.style.color = '#FF6B6B';
+                document.getElementById('stat-status').innerText = 'PAUSED';
+                document.getElementById('stat-status').style.color = '#FF6B6B';
+            } else {
+                btnRefresh.innerText = '↻ 10s';
+                btnRefresh.style.color = '#7EC8D3';
+                document.getElementById('stat-status').innerText = 'LIVE (10s)';
+                document.getElementById('stat-status').style.color = '#7EC8D3';
+                fetchDagData();
+            }
+        });
+
+        setInterval(() => {
+            if (!document.hidden && !isPaused) {
+                fetchDagData();
+            }
+        }, 10000);
+
+        fetchDagData();
+        render();
+    });
+    </script>
+</body>
+</html>
+"###;
+
