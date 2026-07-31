@@ -277,7 +277,10 @@ impl RpcClientManager {
         let peers = client.get_connected_peer_info().await.ok().map(|p| p.peer_info.len()).unwrap_or(0);
 
         let coin_supply_zyan = coin_supply.as_ref().map(|s| s.circulating_sompi as f64 / 100_000_000.0).unwrap_or(0.0);
-        let max_supply_zyan = coin_supply.as_ref().map(|s| s.max_sompi as f64 / 100_000_000.0).unwrap_or(21_000_000.0);
+        // The max supply is the total emission per the Zyanya schedule (~28.7B ZYAN),
+        // NOT MAX_SOMPI (which is the max value of a single UTXO = 1.161B ZYAN).
+        // See consensus/src/processes/coinbase.rs: total_supply_zyan approaches ~28.7B.
+        let max_supply_zyan = 28_700_000_000.0;
 
         let sink_hash = dag_info.sink.to_string();
 
