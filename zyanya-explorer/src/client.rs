@@ -8,7 +8,8 @@ use zyanya_rpc_core::model::tx::RpcTransaction;
 use zyanya_consensus_core::hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync};
 use zyanya_consensus_core::hashing::sighash_type::SIG_HASH_ALL;
 use zyanya_consensus_core::sign::verify;
-use zyanya_consensus_core::tx::{ContractPayload, DeployContractPayload, SignableTransaction, Transaction, TransactionInput, TransactionOutput, UtxoEntry};
+use zyanya_consensus_core::tx::{ContractPayload, DeployContractPayload, InvokeContractPayload, SignableTransaction, Transaction, TransactionInput, TransactionOutput, UtxoEntry};
+use crate::api::{UnsignedBuyReq, UnsignedSellReq};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -866,6 +867,303 @@ impl RpcClientManager {
                 "supply": supply,
                 "slope": slope,
                 "fee_zyan": fee as f64 / 100_000_000.0,
+                "user_address": user_address.to_string(),
+                "input_count": tx_data.tx.inputs.len(),
+            }
+        }))
+    }
+
+    pub async fn build_unsigned_buy_tx(
+        &self,
+        req: UnsignedBuyReq,
+    ) -> Result<serde_json::Value, String> {
+        let client = self.ensure_connected().await?;
+        let token_addr_str = req.token_address.or(req.tokenAddress).or(req.token).unwrap_or_default();
+        if token_addr_str.is_empty() {
+            return Err("Missing token address".to_string());
+        }
+        let contract_address = RpcHash::from_str(&token_addr_str)
+            .map_err(|e| format!("Invalid token address: {}", e))?;
+
+        let gas = req.gas.unwrap_or(100_000);
+        let user_address = parse_user_address(&req.address)?;
+        let amount = req.amount;
+
+        let total_supply = client.get_contract_state(contract_address, 0).await.map(|r| r.value).unwrap_or(0);
+        let slope = client.get_contract_state(contract_address, 1).await.map(|r| r.value).unwrap_or(1);
+
+        let S = total_supply;
+        let k = amount;
+        let cost = slope.saturating_mul(2 * S * k + k * k) / 2;
+
+        let gas_fee = gas.saturating_mul(1);
+        let required_zyan = cost.saturating_add(gas_fee);
+
+        let utxo_resp = client.get_utxos_by_addresses(vec![user_address.clone()]).await.unwrap_or_default();
+        let virtual_daa_score = client.get_server_info().await.map(|s| s.virtual_daa_score).unwrap_or(0);
+
+        let mut selected_utxos = Vec::new();
+        let mut total_in = 0u64;
+
+        for entry in utxo_resp {
+            if entry.utxo_entry.block_daa_score + 10 <= virtual_daa_score {
+                let outpoint = zyanya_consensus_core::tx::TransactionOutpoint::from(entry.outpoint);
+                let utxo_entry = zyanya_consensus_core::tx::UtxoEntry::from(entry.utxo_entry);
+                total_in += utxo_entry.amount;
+                selected_utxos.push((outpoint, utxo_entry));
+                if total_in >= required_zyan {
+                    break;
+                }
+            }
+        }
+
+        let mut inputs = Vec::new();
+        let mut entries = Vec::new();
+
+        if !selected_utxos.is_empty() {
+            for (outpoint, entry) in selected_utxos {
+                inputs.push(TransactionInput {
+                    previous_outpoint: outpoint,
+                    signature_script: vec![],
+                    sequence: 0,
+                    sig_op_count: 1,
+                });
+                entries.push(entry);
+            }
+        } else {
+            let dummy_outpoint = zyanya_consensus_core::tx::TransactionOutpoint::new(
+                zyanya_consensus_core::tx::TransactionId::from_bytes([0u8; 32]),
+                0,
+            );
+            let dummy_script = zyanya_txscript::pay_to_address_script(&user_address);
+            let dummy_entry = UtxoEntry::new(required_zyan, dummy_script, 0, false);
+            inputs.push(TransactionInput {
+                previous_outpoint: dummy_outpoint,
+                signature_script: vec![],
+                sequence: 0,
+                sig_op_count: 1,
+            });
+            entries.push(dummy_entry);
+            total_in = required_zyan;
+        }
+
+        let mut outputs = Vec::new();
+        let change = total_in.saturating_sub(required_zyan);
+        if change > 0 {
+            let script_pub_key = zyanya_txscript::pay_to_address_script(&user_address);
+            outputs.push(TransactionOutput {
+                value: change,
+                script_public_key: script_pub_key,
+            });
+        }
+
+        let buyer_u64 = parse_u64_key(&user_address.to_string()).unwrap_or(1);
+        let payload = ContractPayload::Invoke(InvokeContractPayload {
+            contract_address,
+            entry_point: 4,
+            parameters: vec![buyer_u64, amount],
+            max_gas: gas,
+            gas_price: 1,
+            deposit_amount: cost,
+        });
+        let payload_bytes = payload.to_bytes().map_err(|e| e.to_string())?;
+
+        let unsigned_tx = Transaction::new(
+            0,
+            inputs,
+            outputs,
+            0,
+            zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
+            gas,
+            payload_bytes,
+        );
+
+        let signable_tx = SignableTransaction::with_entries(unsigned_tx.clone(), entries.clone());
+        let reused_values = SigHashReusedValuesUnsync::new();
+        let mut sighashes = Vec::new();
+        for i in 0..unsigned_tx.inputs.len() {
+            let hash = calc_schnorr_signature_hash(&signable_tx.as_verifiable(), i, SIG_HASH_ALL, &reused_values);
+            sighashes.push(hash.to_string());
+        }
+
+        let tx_data = SignableTxData {
+            tx: unsigned_tx,
+            entries,
+            contract_address: token_addr_str.clone(),
+            slope,
+            name: "Buy Tokens".to_string(),
+            symbol: "BUY".to_string(),
+            description: None,
+            twitter: None,
+            telegram: None,
+            website: None,
+            icon_uri: None,
+        };
+
+        let json_bytes = serde_json::to_vec(&tx_data).map_err(|e| e.to_string())?;
+        let unsigned_tx_hex = zyanya_utils::hex::ToHex::to_hex(&json_bytes);
+
+        Ok(serde_json::json!({
+            "unsigned_tx": unsigned_tx_hex,
+            "sighashes": sighashes,
+            "contract_address": token_addr_str,
+            "cost_zyan": cost as f64 / 100_000_000.0,
+            "cost_sompi": cost,
+            "summary": {
+                "token": token_addr_str,
+                "amount": amount,
+                "cost_sompi": cost,
+                "fee_zyan": gas_fee as f64 / 100_000_000.0,
+                "user_address": user_address.to_string(),
+                "input_count": tx_data.tx.inputs.len(),
+            }
+        }))
+    }
+
+    pub async fn build_unsigned_sell_tx(
+        &self,
+        req: UnsignedSellReq,
+    ) -> Result<serde_json::Value, String> {
+        let client = self.ensure_connected().await?;
+        let token_addr_str = req.token_address.or(req.tokenAddress).or(req.token).unwrap_or_default();
+        if token_addr_str.is_empty() {
+            return Err("Missing token address".to_string());
+        }
+        let contract_address = RpcHash::from_str(&token_addr_str)
+            .map_err(|e| format!("Invalid token address: {}", e))?;
+
+        let gas = req.gas.unwrap_or(100_000);
+        let user_address = parse_user_address(&req.address)?;
+        let amount = req.amount;
+
+        let total_supply = client.get_contract_state(contract_address, 0).await.map(|r| r.value).unwrap_or(0);
+        let slope = client.get_contract_state(contract_address, 1).await.map(|r| r.value).unwrap_or(1);
+
+        let S = total_supply;
+        let k = amount;
+        let refund = if S >= k {
+            slope.saturating_mul(2 * S * k - k * k) / 2
+        } else {
+            0
+        };
+
+        let gas_fee = gas.saturating_mul(1);
+
+        let utxo_resp = client.get_utxos_by_addresses(vec![user_address.clone()]).await.unwrap_or_default();
+        let virtual_daa_score = client.get_server_info().await.map(|s| s.virtual_daa_score).unwrap_or(0);
+
+        let mut selected_utxos = Vec::new();
+        let mut total_in = 0u64;
+
+        for entry in utxo_resp {
+            if entry.utxo_entry.block_daa_score + 10 <= virtual_daa_score {
+                let outpoint = zyanya_consensus_core::tx::TransactionOutpoint::from(entry.outpoint);
+                let utxo_entry = zyanya_consensus_core::tx::UtxoEntry::from(entry.utxo_entry);
+                total_in += utxo_entry.amount;
+                selected_utxos.push((outpoint, utxo_entry));
+                if total_in >= gas_fee {
+                    break;
+                }
+            }
+        }
+
+        let mut inputs = Vec::new();
+        let mut entries = Vec::new();
+
+        if !selected_utxos.is_empty() {
+            for (outpoint, entry) in selected_utxos {
+                inputs.push(TransactionInput {
+                    previous_outpoint: outpoint,
+                    signature_script: vec![],
+                    sequence: 0,
+                    sig_op_count: 1,
+                });
+                entries.push(entry);
+            }
+        } else {
+            let dummy_outpoint = zyanya_consensus_core::tx::TransactionOutpoint::new(
+                zyanya_consensus_core::tx::TransactionId::from_bytes([0u8; 32]),
+                0,
+            );
+            let dummy_script = zyanya_txscript::pay_to_address_script(&user_address);
+            let dummy_entry = UtxoEntry::new(gas_fee, dummy_script, 0, false);
+            inputs.push(TransactionInput {
+                previous_outpoint: dummy_outpoint,
+                signature_script: vec![],
+                sequence: 0,
+                sig_op_count: 1,
+            });
+            entries.push(dummy_entry);
+            total_in = gas_fee;
+        }
+
+        let mut outputs = Vec::new();
+        let change = total_in.saturating_sub(gas_fee);
+        if change > 0 {
+            let script_pub_key = zyanya_txscript::pay_to_address_script(&user_address);
+            outputs.push(TransactionOutput {
+                value: change,
+                script_public_key: script_pub_key,
+            });
+        }
+
+        let seller_u64 = parse_u64_key(&user_address.to_string()).unwrap_or(1);
+        let payload = ContractPayload::Invoke(InvokeContractPayload {
+            contract_address,
+            entry_point: 5,
+            parameters: vec![seller_u64, amount],
+            max_gas: gas,
+            gas_price: 1,
+            deposit_amount: 0,
+        });
+        let payload_bytes = payload.to_bytes().map_err(|e| e.to_string())?;
+
+        let unsigned_tx = Transaction::new(
+            0,
+            inputs,
+            outputs,
+            0,
+            zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
+            gas,
+            payload_bytes,
+        );
+
+        let signable_tx = SignableTransaction::with_entries(unsigned_tx.clone(), entries.clone());
+        let reused_values = SigHashReusedValuesUnsync::new();
+        let mut sighashes = Vec::new();
+        for i in 0..unsigned_tx.inputs.len() {
+            let hash = calc_schnorr_signature_hash(&signable_tx.as_verifiable(), i, SIG_HASH_ALL, &reused_values);
+            sighashes.push(hash.to_string());
+        }
+
+        let tx_data = SignableTxData {
+            tx: unsigned_tx,
+            entries,
+            contract_address: token_addr_str.clone(),
+            slope,
+            name: "Sell Tokens".to_string(),
+            symbol: "SELL".to_string(),
+            description: None,
+            twitter: None,
+            telegram: None,
+            website: None,
+            icon_uri: None,
+        };
+
+        let json_bytes = serde_json::to_vec(&tx_data).map_err(|e| e.to_string())?;
+        let unsigned_tx_hex = zyanya_utils::hex::ToHex::to_hex(&json_bytes);
+
+        Ok(serde_json::json!({
+            "unsigned_tx": unsigned_tx_hex,
+            "sighashes": sighashes,
+            "contract_address": token_addr_str,
+            "refund_zyan": refund as f64 / 100_000_000.0,
+            "refund_sompi": refund,
+            "summary": {
+                "token": token_addr_str,
+                "amount": amount,
+                "refund_sompi": refund,
+                "fee_zyan": gas_fee as f64 / 100_000_000.0,
                 "user_address": user_address.to_string(),
                 "input_count": tx_data.tx.inputs.len(),
             }

@@ -58,6 +58,7 @@ pub struct ContractStateCache {
     pub storage: HashMap<([u8; 32], u64), u64>,
     pub balances: HashMap<[u8; 32], u64>,
     pub fallback_storage: Option<Arc<dyn Fn([u8; 32], u64) -> u64 + Send + Sync>>,
+    pub fallback_balance: Option<Arc<dyn Fn([u8; 32]) -> u64 + Send + Sync>>,
 }
 
 impl std::fmt::Debug for ContractStateCache {
@@ -67,6 +68,7 @@ impl std::fmt::Debug for ContractStateCache {
             .field("storage", &self.storage)
             .field("balances", &self.balances)
             .field("has_fallback", &self.fallback_storage.is_some())
+            .field("has_fallback_balance", &self.fallback_balance.is_some())
             .finish()
     }
 }
@@ -74,6 +76,16 @@ impl std::fmt::Debug for ContractStateCache {
 impl ContractStateCache {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn get_balance(&self, addr_bytes: &[u8; 32]) -> u64 {
+        if let Some(bal) = self.balances.get(addr_bytes) {
+            return *bal;
+        }
+        if let Some(ref fallback) = self.fallback_balance {
+            return fallback(*addr_bytes);
+        }
+        0
     }
 }
 
@@ -201,7 +213,7 @@ impl ContractProcessor {
                 cache.code.insert(addr_bytes, deploy.bytecode.clone());
 
                 if deploy.deposit_amount > 0 {
-                    let current_balance = cache.balances.get(&addr_bytes).copied().unwrap_or(0);
+                    let current_balance = cache.get_balance(&addr_bytes);
                     cache.balances.insert(addr_bytes, current_balance.saturating_add(deploy.deposit_amount));
                 }
 
@@ -289,7 +301,7 @@ impl ContractProcessor {
                 };
 
                 if invoke.deposit_amount > 0 {
-                    let current_balance = cache.balances.get(&addr_bytes).copied().unwrap_or(0);
+                    let current_balance = cache.get_balance(&addr_bytes);
                     cache.balances.insert(addr_bytes, current_balance.saturating_add(invoke.deposit_amount));
                 }
 
@@ -320,10 +332,50 @@ impl ContractProcessor {
                 let mut temp_cache = cache.clone();
                 match vm.execute_stateful(&opcodes, &addr_bytes, &mut temp_cache) {
                     Ok(res) => {
-                        *cache = temp_cache;
                         let total_fee = res.gas_used.saturating_mul(invoke.gas_price);
                         let burned = total_fee / 2;
                         let miner = total_fee - burned;
+
+                        let ret_val = res.return_value.unwrap_or(0);
+
+                        // Real ZYAN Custody enforcement for bonding curve buy (entry point 4) and sell (entry point 5)
+                        if invoke.entry_point == 4 {
+                            let cost = ret_val;
+                            if invoke.deposit_amount > 0 && invoke.deposit_amount < cost {
+                                // Buyer deposited insufficient ZYAN to cover cost
+                                return Some(ContractExecutionOutcome {
+                                    tx_id: tx.id(),
+                                    contract_address,
+                                    gas_used: invoke.max_gas,
+                                    gas_fee: total_fee,
+                                    burned_fee: burned,
+                                    miner_fee: miner,
+                                    return_value: None,
+                                    success: false,
+                                });
+                            }
+                        } else if invoke.entry_point == 5 {
+                            let refund = ret_val;
+                            if refund > 0 {
+                                let contract_bal = temp_cache.get_balance(&addr_bytes);
+                                if contract_bal < refund {
+                                    // Contract has insufficient ZYAN reserve to refund seller
+                                    return Some(ContractExecutionOutcome {
+                                        tx_id: tx.id(),
+                                        contract_address,
+                                        gas_used: invoke.max_gas,
+                                        gas_fee: total_fee,
+                                        burned_fee: burned,
+                                        miner_fee: miner,
+                                        return_value: None,
+                                        success: false,
+                                    });
+                                }
+                                temp_cache.balances.insert(addr_bytes, contract_bal - refund);
+                            }
+                        }
+
+                        *cache = temp_cache;
                         Some(ContractExecutionOutcome {
                             tx_id: tx.id(),
                             contract_address,

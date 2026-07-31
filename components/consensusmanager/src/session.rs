@@ -217,6 +217,14 @@ impl ConsensusSessionOwned {
         self.consensus.write_contract_storage(contract_address, key, value)
     }
 
+    pub fn get_contract_balance(&self, contract_address: Hash) -> ConsensusResult<u64> {
+        self.consensus.get_contract_balance(contract_address)
+    }
+
+    pub fn write_contract_balance(&self, contract_address: Hash, balance: u64) -> ConsensusResult<()> {
+        self.consensus.write_contract_balance(contract_address, balance)
+    }
+
     pub fn get_virtual_daa_score(&self) -> u64 {
         // Accessing cached virtual fields is lock-free and does not require spawn_blocking
         self.consensus.get_virtual_daa_score()

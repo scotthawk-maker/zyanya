@@ -683,6 +683,11 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
                 cache.fallback_storage = Some(std::sync::Arc::new(move |addr, key| {
                     session_clone.get_contract_storage(addr, key).unwrap_or(0)
                 }));
+                let session_clone_bal = session.clone();
+                cache.fallback_balance = Some(std::sync::Arc::new(move |addr| {
+                    let hash_addr = zyanya_hashes::Hash::from_bytes(addr);
+                    session_clone_bal.get_contract_balance(hash_addr).unwrap_or(0)
+                }));
                 let addr_bytes: [u8; 32] = request.contract_address.as_bytes().try_into().unwrap();
                 if !bytecode.is_empty() {
                     cache.code.insert(addr_bytes, bytecode);
@@ -702,6 +707,10 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
                     }
                     for ((addr, key), val) in cache.storage {
                         let _ = session.write_contract_storage(addr, key, val);
+                    }
+                    for (addr, bal) in cache.balances {
+                        let hash_addr = zyanya_hashes::Hash::from_bytes(addr);
+                        let _ = session.write_contract_balance(hash_addr, bal);
                     }
                 }
                 (g_used, ret_val, succ)

@@ -599,6 +599,24 @@ impl ConsensusApi for Consensus {
         Ok(())
     }
 
+    fn get_contract_balance(&self, contract_address: Hash) -> ConsensusResult<u64> {
+        Ok(self.contract_store.get_balance(contract_address).unwrap_or(0))
+    }
+
+    fn write_contract_balance(&self, contract_address: Hash, balance: u64) -> ConsensusResult<()> {
+        let mut cache = crate::model::stores::contract::ContractStateCache::new();
+        let addr_bytes: [u8; 32] = contract_address.as_bytes();
+        cache.balances.insert(addr_bytes, balance);
+        let mut batch = rocksdb::WriteBatch::default();
+        self.contract_store.commit_cache_batch(&mut batch, &cache).map_err(|_| {
+            zyanya_consensus_core::errors::consensus::ConsensusError::General("contract store commit error")
+        })?;
+        self.db.write(batch).map_err(|_| {
+            zyanya_consensus_core::errors::consensus::ConsensusError::General("db write error")
+        })?;
+        Ok(())
+    }
+
     fn get_source(&self) -> Hash {
         if self.config.is_archival {
             // we use the history root in archival cases.

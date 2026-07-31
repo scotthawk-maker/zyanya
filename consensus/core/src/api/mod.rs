@@ -218,6 +218,14 @@ pub trait ConsensusApi: Send + Sync {
         Ok(())
     }
 
+    fn get_contract_balance(&self, _contract_address: Hash) -> ConsensusResult<u64> {
+        Ok(0)
+    }
+
+    fn write_contract_balance(&self, _contract_address: Hash, _balance: u64) -> ConsensusResult<()> {
+        Ok(())
+    }
+
     fn modify_coinbase_payload(&self, payload: Vec<u8>, miner_data: &MinerData) -> CoinbaseResult<Vec<u8>> {
         unimplemented!()
     }

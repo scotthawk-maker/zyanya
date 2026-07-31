@@ -438,6 +438,54 @@ pub async fn api_unsigned_deploy_token_handler(
     }
 }
 
+#[derive(Deserialize)]
+#[allow(non_snake_case)]
+pub struct UnsignedBuyReq {
+    pub token_address: Option<String>,
+    pub tokenAddress: Option<String>,
+    pub token: Option<String>,
+    pub address: String,
+    pub amount: u64,
+    pub gas: Option<u64>,
+}
+
+pub async fn api_unsigned_buy_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Json(payload): Json<UnsignedBuyReq>,
+) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
+    match client.build_unsigned_buy_tx(payload).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+#[allow(non_snake_case)]
+pub struct UnsignedSellReq {
+    pub token_address: Option<String>,
+    pub tokenAddress: Option<String>,
+    pub token: Option<String>,
+    pub address: String,
+    pub amount: u64,
+    pub gas: Option<u64>,
+}
+
+pub async fn api_unsigned_sell_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Json(payload): Json<UnsignedSellReq>,
+) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
+    match client.build_unsigned_sell_tx(payload).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
 pub async fn api_submit_signed_tx_handler(
     State(client): State<Arc<RpcClientManager>>,
     Json(payload): Json<SubmitSignedTxReq>,
