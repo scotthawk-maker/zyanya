@@ -237,44 +237,22 @@ impl ContractProcessor {
                     }
                 };
 
-                let mut vm = VM::new(deploy.max_gas);
-                let _ = vm.stack.push(0);
-                let mut temp_cache = cache.clone();
-                match vm.execute_stateful(&opcodes, &addr_bytes, &mut temp_cache) {
-                    Ok(res) => {
-                        // Execution success: apply state changes
-                        *cache = temp_cache;
-                        let total_fee = res.gas_used.saturating_mul(deploy.gas_price);
-                        let burned = total_fee / 2;
-                        let miner = total_fee - burned;
-                        Some(ContractExecutionOutcome {
-                            tx_id: tx.id(),
-                            contract_address,
-                            gas_used: res.gas_used,
-                            gas_fee: total_fee,
-                            burned_fee: burned,
-                            miner_fee: miner,
-                            return_value: res.return_value,
-                            success: true,
-                        })
-                    }
-                    Err(_) => {
-                        // Execution failed: revert state changes, forfeit max gas fee
-                        let total_fee = deploy.max_gas.saturating_mul(deploy.gas_price);
-                        let burned = total_fee / 2;
-                        let miner = total_fee - burned;
-                        Some(ContractExecutionOutcome {
-                            tx_id: tx.id(),
-                            contract_address,
-                            gas_used: deploy.max_gas,
-                            gas_fee: total_fee,
-                            burned_fee: burned,
-                            miner_fee: miner,
-                            return_value: None,
-                            success: false,
-                        })
-                    }
-                }
+                // Save bytecode only — do NOT execute the constructor/init on deploy.
+                // The init (setting the slope) is done separately via invoke_contract (entry_point 0).
+                // Executing here would run the init with an empty stack → garbage slope.
+                let total_fee = deploy.max_gas.saturating_mul(deploy.gas_price);
+                let burned = total_fee / 2;
+                let miner = total_fee - burned;
+                Some(ContractExecutionOutcome {
+                    tx_id: tx.id(),
+                    contract_address,
+                    gas_used: 0,
+                    gas_fee: total_fee,
+                    burned_fee: burned,
+                    miner_fee: miner,
+                    return_value: None,
+                    success: true,
+                })
             }
             ContractPayload::Invoke(invoke) => {
                 let contract_address = invoke.contract_address;

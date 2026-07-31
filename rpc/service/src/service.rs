@@ -596,12 +596,12 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
         });
         let payload_bytes = payload.to_bytes().map_err(|e| RpcError::General(e.to_string()))?;
 
-        let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos() as u64;
+        let lock_time = 0u64; // no lock time (was nonce → "not finalized" bug)
         let tx = zyanya_consensus_core::tx::Transaction::new(
             0,
             vec![],
             vec![],
-            nonce,
+            lock_time,
             zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
             request.max_gas,
             payload_bytes,
@@ -662,12 +662,12 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
         });
         let payload_bytes = payload.to_bytes().map_err(|e| RpcError::General(e.to_string()))?;
 
-        let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos() as u64;
+        let lock_time = 0u64; // no lock time (was nonce → "not finalized" bug)
         let tx = zyanya_consensus_core::tx::Transaction::new(
             0,
             vec![],
             vec![],
-            nonce,
+            lock_time,
             zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
             request.max_gas,
             payload_bytes,
