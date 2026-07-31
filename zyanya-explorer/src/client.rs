@@ -1063,6 +1063,14 @@ impl RpcClientManager {
         known_addresses.insert("3d208f19ac8ee260ba85c939526b1562470098ce651281e5a1f08a68475bf483".to_string());
         known_addresses.insert("cef968ca5d9ea40d306224efb988b2b408d3c751f8b8baea10c1e7caafb4fe40".to_string());
 
+        // Seed from the off-chain metadata store (contracts deployed via the explorer — both custodial + non-custodial)
+        {
+            let store = self.metadata_store.lock().await;
+            for addr in store.keys() {
+                known_addresses.insert(addr.clone());
+            }
+        }
+
         let mut current_hash = dag_info.sink;
         let mut visited = std::collections::HashSet::new();
 
