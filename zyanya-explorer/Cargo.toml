@@ -13,6 +13,8 @@ zyanya-hashes = { workspace = true }
 zyanya-utils = { workspace = true }
 zyanya-vm = { workspace = true }
 zyanya-consensus-core = { workspace = true }
+zyanya-addresses = { workspace = true }
+zyanya-txscript = { workspace = true }
 
 tokio = { workspace = true, features = ["sync", "rt-multi-thread", "net", "macros"] }
 axum = "0.7.9"

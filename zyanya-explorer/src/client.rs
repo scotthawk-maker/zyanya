@@ -4,7 +4,48 @@ use tokio::sync::RwLock;
 use zyanya_grpc_client::GrpcClient;
 use zyanya_rpc_core::api::rpc::RpcApi;
 use zyanya_rpc_core::RpcHash;
+use zyanya_rpc_core::model::tx::RpcTransaction;
+use zyanya_consensus_core::hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync};
+use zyanya_consensus_core::hashing::sighash_type::SIG_HASH_ALL;
+use zyanya_consensus_core::sign::verify;
+use zyanya_consensus_core::tx::{ContractPayload, DeployContractPayload, SignableTransaction, Transaction, TransactionInput, TransactionOutput, UtxoEntry};
 use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnsignedDeployTokenReq {
+    pub address: String,
+    pub name: String,
+    pub symbol: String,
+    pub supply: Option<u64>,
+    pub slope: Option<u64>,
+    pub description: Option<String>,
+    pub twitter: Option<String>,
+    pub telegram: Option<String>,
+    pub website: Option<String>,
+    pub icon_base64: Option<String>,
+    pub gas: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SignableTxData {
+    pub tx: Transaction,
+    pub entries: Vec<UtxoEntry>,
+    pub contract_address: String,
+    pub slope: u64,
+    pub name: String,
+    pub symbol: String,
+    pub description: Option<String>,
+    pub twitter: Option<String>,
+    pub telegram: Option<String>,
+    pub website: Option<String>,
+    pub icon_uri: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubmitSignedTxReq {
+    pub unsigned_tx: String,
+    pub signatures: Vec<String>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TokenMetadata {
@@ -654,6 +695,249 @@ impl RpcClientManager {
         }))
     }
 
+    /*
+     =========================================================================================
+       STEP 1 SIGNING SPIKE & ARCHITECTURE FINDINGS:
+       ---------------------------------------------------------------------------------------
+       1. Sighash Computation:
+          Zyanya uses BIP 340 Schnorr sighashes computed via:
+            `calc_schnorr_signature_hash(&signable_tx.as_verifiable(), input_idx, SIG_HASH_ALL, &reused_values)`
+          where `signable_tx` is a `SignableTransaction` wrapping `Transaction` and UTXO `entries`.
+
+       2. Signature Format:
+          The browser signs the 32-byte sighash using BIP 340 Schnorr (@noble/curves or secp256k1).
+          The resulting 64-byte signature is packed into `signature_script`:
+            `signature_script = [0x41 (65)] + sig_64_bytes + [SIG_HASH_ALL (0x01)]` (66 bytes total).
+
+       3. Node Submission:
+          The assembled `Transaction` is converted into an `RpcTransaction`:
+            `let rpc_tx = RpcTransaction::from(&tx);`
+          and submitted to the node via `client.submit_transaction(rpc_tx, false)`.
+     =========================================================================================
+    */
+
+    pub async fn build_unsigned_deploy_token_tx(
+        &self,
+        req: UnsignedDeployTokenReq,
+    ) -> Result<serde_json::Value, String> {
+        let client = self.ensure_connected().await?;
+        let name = if req.name.trim().is_empty() { "Token".to_string() } else { req.name };
+        let symbol = if req.symbol.trim().is_empty() { "TKN".to_string() } else { req.symbol };
+        let supply = req.supply.unwrap_or(1_000_000);
+        let slope = req.slope.unwrap_or(1);
+        let gas = req.gas.unwrap_or(100_000);
+
+        let user_address = parse_user_address(&req.address)?;
+
+        // Fetch spendable UTXOs for user address
+        let utxo_resp = client.get_utxos_by_addresses(vec![user_address.clone()]).await
+            .unwrap_or_default();
+
+        let virtual_daa_score = client.get_server_info().await
+            .map(|s| s.virtual_daa_score)
+            .unwrap_or(0);
+
+        let mut selected_utxos = Vec::new();
+        let mut total_in = 0u64;
+        let fee = gas.saturating_mul(1);
+
+        for entry in utxo_resp {
+            if entry.utxo_entry.block_daa_score + 10 <= virtual_daa_score {
+                let outpoint = zyanya_consensus_core::tx::TransactionOutpoint::from(entry.outpoint);
+                let utxo_entry = zyanya_consensus_core::tx::UtxoEntry::from(entry.utxo_entry);
+                total_in += utxo_entry.amount;
+                selected_utxos.push((outpoint, utxo_entry));
+                if total_in >= fee {
+                    break;
+                }
+            }
+        }
+
+        let mut inputs = Vec::new();
+        let mut entries = Vec::new();
+
+        if !selected_utxos.is_empty() {
+            for (outpoint, entry) in selected_utxos {
+                inputs.push(TransactionInput {
+                    previous_outpoint: outpoint,
+                    signature_script: vec![],
+                    sequence: 0,
+                    sig_op_count: 1,
+                });
+                entries.push(entry);
+            }
+        } else {
+            let dummy_outpoint = zyanya_consensus_core::tx::TransactionOutpoint::new(
+                zyanya_consensus_core::tx::TransactionId::from_bytes([0u8; 32]),
+                0,
+            );
+            let dummy_script = zyanya_txscript::pay_to_address_script(&user_address);
+            let dummy_entry = UtxoEntry::new(fee, dummy_script, 0, false);
+            inputs.push(TransactionInput {
+                previous_outpoint: dummy_outpoint,
+                signature_script: vec![],
+                sequence: 0,
+                sig_op_count: 1,
+            });
+            entries.push(dummy_entry);
+            total_in = fee;
+        }
+
+        let change = total_in.saturating_sub(fee);
+        let mut outputs = Vec::new();
+        if change > 0 {
+            let script_pub_key = zyanya_txscript::pay_to_address_script(&user_address);
+            outputs.push(TransactionOutput {
+                value: change,
+                script_public_key: script_pub_key,
+            });
+        }
+
+        let bytecode = zyanya_vm::bonding_curve_token::bonding_curve_bytecode();
+        let payload = ContractPayload::Deploy(DeployContractPayload {
+            bytecode,
+            max_gas: gas,
+            gas_price: 1,
+            deposit_amount: 0,
+        });
+        let payload_bytes = payload.to_bytes().map_err(|e| e.to_string())?;
+
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos() as u64;
+
+        let unsigned_tx = Transaction::new(
+            1,
+            inputs,
+            outputs,
+            nonce,
+            zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
+            gas,
+            payload_bytes,
+        );
+
+        let contract_address = derive_contract_address(&unsigned_tx.id(), 0).to_string();
+
+        let signable_tx = SignableTransaction::with_entries(unsigned_tx.clone(), entries.clone());
+        let reused_values = SigHashReusedValuesUnsync::new();
+        let mut sighashes = Vec::new();
+        for i in 0..unsigned_tx.inputs.len() {
+            let hash = calc_schnorr_signature_hash(&signable_tx.as_verifiable(), i, SIG_HASH_ALL, &reused_values);
+            sighashes.push(hash.to_string());
+        }
+
+        let icon_uri = if let Some(ref base64_str) = req.icon_base64 {
+            if !base64_str.trim().is_empty() {
+                match self.save_token_icon(&contract_address, base64_str) {
+                    Ok(uri) => Some(uri),
+                    Err(_) => Some(format!("/token-icons/{}.png", contract_address)),
+                }
+            } else {
+                Some(format!("/token-icons/{}.png", contract_address))
+            }
+        } else {
+            Some(format!("/token-icons/{}.png", contract_address))
+        };
+
+        let tx_data = SignableTxData {
+            tx: unsigned_tx,
+            entries,
+            contract_address: contract_address.clone(),
+            slope,
+            name: name.clone(),
+            symbol: symbol.clone(),
+            description: req.description.clone(),
+            twitter: req.twitter.clone(),
+            telegram: req.telegram.clone(),
+            website: req.website.clone(),
+            icon_uri: icon_uri.clone(),
+        };
+
+        let json_bytes = serde_json::to_vec(&tx_data).map_err(|e| e.to_string())?;
+        let unsigned_tx_hex = zyanya_utils::hex::ToHex::to_hex(&json_bytes);
+
+        Ok(serde_json::json!({
+            "unsigned_tx": unsigned_tx_hex,
+            "sighashes": sighashes,
+            "contract_address": contract_address,
+            "summary": {
+                "name": name,
+                "symbol": symbol,
+                "supply": supply,
+                "slope": slope,
+                "fee_zyan": fee as f64 / 100_000_000.0,
+                "user_address": user_address.to_string(),
+                "input_count": tx_data.tx.inputs.len(),
+            }
+        }))
+    }
+
+    pub async fn submit_signed_tx(
+        &self,
+        req: SubmitSignedTxReq,
+    ) -> Result<serde_json::Value, String> {
+        use zyanya_utils::hex::FromHex;
+        let client = self.ensure_connected().await?;
+
+        let json_bytes = <Vec<u8>>::from_hex(req.unsigned_tx.trim_start_matches("0x"))
+            .map_err(|e| format!("Invalid unsigned_tx hex: {}", e))?;
+        let data: SignableTxData = serde_json::from_slice(&json_bytes)
+            .map_err(|e| format!("Failed to parse unsigned transaction payload: {}", e))?;
+
+        let mut signable_tx = SignableTransaction::with_entries(data.tx.clone(), data.entries);
+
+        if req.signatures.len() != signable_tx.tx.inputs.len() {
+            return Err(format!(
+                "Signature count mismatch: expected {}, got {}",
+                signable_tx.tx.inputs.len(),
+                req.signatures.len()
+            ));
+        }
+
+        for (i, sig_hex) in req.signatures.iter().enumerate() {
+            let sig_bytes = <Vec<u8>>::from_hex(sig_hex.trim_start_matches("0x"))
+                .map_err(|e| format!("Invalid signature hex for input {}: {}", i, e))?;
+            if sig_bytes.len() != 64 {
+                return Err(format!("Signature for input {} must be 64 bytes, got {}", i, sig_bytes.len()));
+            }
+            signable_tx.tx.inputs[i].signature_script = std::iter::once(65u8)
+                .chain(sig_bytes)
+                .chain([SIG_HASH_ALL.to_u8()])
+                .collect();
+        }
+
+        let _ = verify(&signable_tx.as_verifiable());
+
+        let rpc_tx = RpcTransaction::from(&signable_tx.tx);
+        let tx_id = client.submit_transaction(rpc_tx, false).await
+            .map_err(|e| format!("SubmitTransaction RPC failed: {}", e))?;
+
+        let contract_hash = RpcHash::from_str(&data.contract_address).map_err(|e| e.to_string())?;
+        let _init_res = client.invoke_contract(contract_hash, 0, vec![data.slope], 100_000, 1, 0).await.ok();
+
+        let metadata = TokenMetadata {
+            name: Some(data.name.clone()),
+            symbol: Some(data.symbol.clone()),
+            description: data.description.clone(),
+            twitter: data.twitter.clone(),
+            telegram: data.telegram.clone(),
+            website: data.website.clone(),
+            icon_uri: data.icon_uri.clone(),
+        };
+        self.save_token_metadata(&data.contract_address, metadata).await?;
+
+        Ok(serde_json::json!({
+            "success": true,
+            "transactionId": tx_id.to_string(),
+            "transaction_id": tx_id.to_string(),
+            "contractAddress": data.contract_address,
+            "contract_address": data.contract_address,
+            "name": data.name,
+            "symbol": data.symbol,
+        }))
+    }
+
     pub async fn call_contract(&self, address: &str, calldata: &str, entry_point: u16, gas: u64) -> Result<serde_json::Value, String> {
         use zyanya_utils::hex::FromHex;
         let client = self.ensure_connected().await?;
@@ -949,5 +1233,25 @@ pub fn decode_base64(s: &str) -> Result<Vec<u8>, String> {
         }
     }
     Ok(out)
+}
+
+fn parse_user_address(address_str: &str) -> Result<zyanya_addresses::Address, String> {
+    use zyanya_utils::hex::FromHex;
+    let clean = address_str.trim();
+    if let Ok(addr) = zyanya_addresses::Address::try_from(clean) {
+        return Ok(addr);
+    }
+    if clean.len() == 64 {
+        if let Ok(bytes) = <Vec<u8>>::from_hex(clean) {
+            if bytes.len() == 32 {
+                return Ok(zyanya_addresses::Address::new(
+                    zyanya_addresses::Prefix::Testnet,
+                    zyanya_addresses::Version::PubKey,
+                    &bytes,
+                ));
+            }
+        }
+    }
+    Err(format!("Invalid Zyanya address or public key format: {}", address_str))
 }
 

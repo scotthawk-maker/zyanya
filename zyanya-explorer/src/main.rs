@@ -108,6 +108,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/invoke-contract", post(api_invoke_contract_handler))
         .route("/api/call-contract", post(api_call_contract_handler))
         .route("/api/deploy-token", post(api_deploy_token_handler))
+        .route("/api/unsigned-deploy-token", post(api_unsigned_deploy_token_handler))
+        .route("/api/submit-signed-tx", post(api_submit_signed_tx_handler))
         .route("/api/token-transfer", post(api_token_transfer_handler))
         .route("/api/swap-on-dex", post(api_swap_on_dex_handler))
         .route("/api/compile-contract", post(api_compile_contract_handler))

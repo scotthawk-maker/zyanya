@@ -6,7 +6,7 @@ use axum::{
 };
 use serde::Deserialize;
 use std::sync::Arc;
-use crate::client::RpcClientManager;
+use crate::client::*;
 use crate::web::*;
 
 #[derive(Deserialize)]
@@ -406,6 +406,7 @@ pub async fn api_call_contract_handler(
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct DeployTokenReq {
     pub name: Option<String>,
     pub symbol: Option<String>,
@@ -420,36 +421,42 @@ pub struct DeployTokenReq {
     pub slope: Option<u64>,
 }
 
-pub async fn api_deploy_token_handler(
+pub async fn api_unsigned_deploy_token_handler(
     State(client): State<Arc<RpcClientManager>>,
-    Json(payload): Json<DeployTokenReq>,
+    Json(payload): Json<UnsignedDeployTokenReq>,
 ) -> Response {
     if let Err(resp) = check_write_enabled() {
         return resp;
     }
-    let name = payload.name.as_deref().unwrap_or("Token");
-    let symbol = payload.symbol.as_deref().unwrap_or("TKN");
-    let supply = payload.supply.unwrap_or(1_000_000);
-    let owner = payload.owner.as_deref().unwrap_or("1");
-    let gas = payload.gas.unwrap_or(100000);
-    let slope = payload.slope.unwrap_or(1);
-
-    match client.deploy_bonding_curve_token(
-        name,
-        symbol,
-        supply,
-        owner,
-        slope,
-        gas,
-        payload.description,
-        payload.twitter,
-        payload.telegram,
-        payload.website,
-        payload.icon_base64,
-    ).await {
+    match client.build_unsigned_deploy_token_tx(payload).await {
         Ok(res) => Json(res).into_response(),
         Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
     }
+}
+
+pub async fn api_submit_signed_tx_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Json(payload): Json<SubmitSignedTxReq>,
+) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
+    match client.submit_signed_tx(payload).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+pub async fn api_deploy_token_handler(
+    State(_client): State<Arc<RpcClientManager>>,
+    Json(_payload): Json<DeployTokenReq>,
+) -> Response {
+    (
+        StatusCode::GONE,
+        Json(serde_json::json!({
+            "error": "The custodial /api/deploy-token endpoint has been deprecated and disabled. Token deployments are now non-custodial. Use /api/unsigned-deploy-token and /api/submit-signed-tx."
+        })),
+    ).into_response()
 }
 
 #[derive(Deserialize)]

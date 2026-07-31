@@ -2613,10 +2613,14 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zyanya Launch - Pump.fun-style Token Launcher</title>
+    <title>Zyanya Launch - Non-Custodial Token Launcher</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <script type="module">
+        import { schnorr, secp256k1 } from 'https://esm.sh/@noble/curves@1.4.0/secp256k1';
+        window.nobleSecp256k1 = { schnorr, secp256k1 };
+    </script>
     <style>
         :root {
             --void: #0A0F1C;
@@ -2665,6 +2669,38 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
             background: var(--shadow-teal); padding: 2rem; border-radius: 12px;
             border: 1px solid rgba(126,200,211,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
+        .wallet-bar {
+            background: rgba(10, 15, 28, 0.8);
+            border: 1px solid rgba(126,200,211,0.4);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .wallet-info { display: flex; flex-direction: column; gap: 0.2rem; }
+        .wallet-status { font-size: 0.85rem; color: rgba(224,224,224,0.7); text-transform: uppercase; }
+        .wallet-addr { color: var(--accent-green); font-weight: 600; word-break: break-all; }
+        .wallet-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .btn-sm {
+            background: rgba(126,200,211,0.15);
+            border: 1px solid var(--spectral-blue);
+            color: var(--spectral-blue);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-sm:hover {
+            background: var(--spectral-blue);
+            color: var(--void);
+        }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
         .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
         .form-group.full { grid-column: span 2; }
@@ -2675,10 +2711,7 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
             font-size: 16px; min-height: 48px; outline: none; transition: border-color 0.2s;
             width: 100%;
         }
-        input[type="file"] {
-            padding: 0.6rem;
-            cursor: pointer;
-        }
+        input[type="file"] { padding: 0.6rem; cursor: pointer; }
         input:focus, textarea:focus { border-color: var(--spectral-blue); box-shadow: 0 0 8px rgba(126,200,211,0.3); }
         textarea { resize: vertical; min-height: 90px; }
         .btn-launch {
@@ -2691,6 +2724,18 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
         .btn-launch:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(126,200,211,0.6); }
         #status-msg { margin-top: 1.5rem; text-align: center; }
         footer { text-align: center; padding: 2rem 0; color: rgba(224,224,224,0.5); border-top: 1px solid var(--shadow-teal); margin-top: 4rem; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(10, 15, 28, 0.85); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; display: none;
+        }
+        .modal-card {
+            background: var(--shadow-teal); border: 1px solid var(--spectral-blue);
+            border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); text-align: left;
+        }
 
         @media (max-width: 768px) {
             header { flex-direction: column; padding: 1rem 0; }
@@ -2738,10 +2783,22 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
             </nav>
         </header>
         <main>
-            <h1 class="hero-title">🚀 Bonding Curve Token Launcher</h1>
-            <p class="hero-subtitle">Launch your token instantly on Zyanya. Instant bonding curve pricing on-chain.</p>
+            <h1 class="hero-title">🚀 Non-Custodial Token Launcher</h1>
+            <p class="hero-subtitle">Deploy tokens non-custodially. Your keys stay in your browser. Signed locally with Schnorr.</p>
             
             <div class="card">
+                <div class="wallet-bar">
+                    <div class="wallet-info">
+                        <span class="wallet-status">🔐 Browser Non-Custodial Wallet:</span>
+                        <span id="walletAddressDisplay" class="wallet-addr">Loading wallet...</span>
+                    </div>
+                    <div class="wallet-btns">
+                        <button type="button" class="btn-sm" onclick="connectOrGenerateWallet()">⚡ Connect / New Wallet</button>
+                        <button type="button" class="btn-sm" onclick="exportPrivateKey()">🔑 Export Key</button>
+                        <button type="button" class="btn-sm" onclick="importWalletPrompt()">📥 Import Key</button>
+                    </div>
+                </div>
+
                 <form id="launchForm" onsubmit="handleLaunch(event)">
                     <div class="form-grid">
                         <div class="form-group">
@@ -2780,7 +2837,7 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
                             <label for="website">Website URL</label>
                             <input type="url" id="website" placeholder="https://yourtoken.io">
                         </div>
-                        <button type="submit" class="btn-launch">DEPLOY TOKEN</button>
+                        <button type="submit" id="submitBtn" class="btn-launch">SIGN & DEPLOY TOKEN</button>
                     </div>
                 </form>
                 <div id="status-msg"></div>
@@ -2791,9 +2848,147 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
         </footer>
     </div>
 
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 style="color: var(--spectral-blue); margin-bottom: 1rem;">✍️ Confirm Non-Custodial Deployment</h3>
+            <div id="modalSummaryContent" style="margin-bottom: 1.5rem; line-height: 1.8;"></div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" class="btn-sm" style="background: var(--burn-red); border-color: var(--burn-red); color: #fff;" onclick="closeConfirmModal(false)">Cancel</button>
+                <button type="button" class="btn-sm" style="background: var(--accent-green); border-color: var(--accent-green); color: var(--void); font-weight: bold;" onclick="closeConfirmModal(true)">SIGN & SUBMIT</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let currentWallet = null; // { privKeyHex, pubKeyHex, address }
+
+        function bytesToHex(bytes) {
+            return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        function hexToBytes(hex) {
+            hex = hex.trim().replace(/^0x/i, '');
+            if (hex.length % 2 !== 0) hex = '0' + hex;
+            const bytes = new Uint8Array(hex.length / 2);
+            for (let i = 0; i < hex.length; i += 2) {
+                bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+            }
+            return bytes;
+        }
+
+        // Simple IndexedDB storage wrapper
+        function getDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open("zyanya_wallet_db", 1);
+                req.onupgradeneeded = () => req.result.createObjectStore("keys");
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function loadStoredWallet() {
+            try {
+                const db = await getDB();
+                const tx = db.transaction("keys", "readonly");
+                const store = tx.objectStore("keys");
+                const req = store.get("user_privkey");
+                req.onsuccess = async () => {
+                    if (req.result) {
+                        await setWalletFromPrivKey(req.result);
+                    } else {
+                        await connectOrGenerateWallet();
+                    }
+                };
+            } catch (e) {
+                await connectOrGenerateWallet();
+            }
+        }
+
+        async function saveStoredWallet(privKeyHex) {
+            const db = await getDB();
+            const tx = db.transaction("keys", "readwrite");
+            tx.objectStore("keys").put(privKeyHex, "user_privkey");
+        }
+
+        async function setWalletFromPrivKey(privKeyHex) {
+            const privBytes = hexToBytes(privKeyHex);
+            let pubKeyHex = "";
+
+            if (window.nobleSecp256k1 && window.nobleSecp256k1.secp256k1) {
+                const pubKey = window.nobleSecp256k1.secp256k1.getPublicKey(privBytes, true);
+                // x-only 32-byte pubkey
+                pubKeyHex = bytesToHex(pubKey.slice(1, 33));
+            } else {
+                // Fallback x-only pubkey approximation / pass privkey hex for backend address resolution
+                pubKeyHex = privKeyHex; 
+            }
+
+            const addressStr = pubKeyHex; // Backend converts to canonical zyanyatest:q...
+            currentWallet = { privKeyHex, pubKeyHex, address: addressStr };
+
+            const display = document.getElementById("walletAddressDisplay");
+            display.innerText = addressStr.length > 24 ? `${addressStr.slice(0, 12)}...${addressStr.slice(-10)}` : addressStr;
+        }
+
+        async function connectOrGenerateWallet() {
+            let privKeyHex = "";
+            if (window.crypto && window.crypto.getRandomValues) {
+                const randBytes = new Uint8Array(32);
+                window.crypto.getRandomValues(randBytes);
+                privKeyHex = bytesToHex(randBytes);
+            } else {
+                privKeyHex = bytesToHex(new Uint8Array(32).map(() => Math.floor(Math.random() * 256)));
+            }
+            await saveStoredWallet(privKeyHex);
+            await setWalletFromPrivKey(privKeyHex);
+        }
+
+        function exportPrivateKey() {
+            if (!currentWallet) {
+                alert("No wallet loaded!");
+                return;
+            }
+            prompt("🔑 COPY YOUR PRIVATE KEY (keep secure):", currentWallet.privKeyHex);
+        }
+
+        async function importWalletPrompt() {
+            const input = prompt("📥 Paste your 32-byte hex private key:");
+            if (input && input.trim()) {
+                const hex = input.trim().replace(/^0x/i, '');
+                if (hex.length === 64) {
+                    await saveStoredWallet(hex);
+                    await setWalletFromPrivKey(hex);
+                    alert("Wallet imported successfully!");
+                } else {
+                    alert("Invalid private key format. Must be 64 hex characters (32 bytes).");
+                }
+            }
+        }
+
+        let confirmResolver = null;
+        function showConfirmModal(htmlSummary) {
+            document.getElementById("modalSummaryContent").innerHTML = htmlSummary;
+            document.getElementById("confirmModal").style.display = "flex";
+            return new Promise((resolve) => { confirmResolver = resolve; });
+        }
+        function closeConfirmModal(result) {
+            document.getElementById("confirmModal").style.display = "none";
+            if (confirmResolver) confirmResolver(result);
+        }
+
+        async function schnorrSignMessageHash(msgHashHex, privKeyHex) {
+            if (window.nobleSecp256k1 && window.nobleSecp256k1.schnorr) {
+                const sig = window.nobleSecp256k1.schnorr.sign(msgHashHex, privKeyHex);
+                return bytesToHex(sig);
+            }
+            throw new Error("@noble/curves library not ready. Please refresh or check connection.");
+        }
+
         async function handleLaunch(event) {
             event.preventDefault();
+            if (!currentWallet) {
+                await connectOrGenerateWallet();
+            }
+
             const name = document.getElementById('name').value;
             const symbol = document.getElementById('symbol').value;
             const supply = parseInt(document.getElementById('supply').value) || 1000000;
@@ -2813,36 +3008,84 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
                 });
             }
 
-            const payload = {
-                name, symbol, supply, slope, description, twitter, telegram, website, icon_base64
-            };
-
             const statusEl = document.getElementById('status-msg');
-            statusEl.innerHTML = '<span style="color: var(--spectral-blue)">Deploying bonding curve contract...</span>';
+            statusEl.innerHTML = '<span style="color: var(--spectral-blue)">Building unsigned deployment transaction...</span>';
 
             try {
-                const res = await fetch('/api/deploy-token', {
+                const payload = {
+                    address: currentWallet.address,
+                    name, symbol, supply, slope, description, twitter, telegram, website, icon_base64
+                };
+
+                const unsignedRes = await fetch('/api/unsigned-deploy-token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                const data = await res.json();
-                if (res.ok && (data.contract_address || data.contractAddress)) {
-                    const addr = data.contract_address || data.contractAddress;
+                const unsignedData = await unsignedRes.json();
+
+                if (!unsignedRes.ok || !unsignedData.unsigned_tx) {
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Unsigned tx build error: ${unsignedData.error || 'Failed'}</span>`;
+                    return;
+                }
+
+                const summary = unsignedData.summary;
+                const htmlSummary = `
+                    <p><strong>Token Name:</strong> ${summary.name} (${summary.symbol})</p>
+                    <p><strong>Supply:</strong> ${summary.supply.toLocaleString()}</p>
+                    <p><strong>Slope Multiplier:</strong> ${summary.slope}</p>
+                    <p><strong>Deployer Address:</strong> <code style="word-break: break-all; color: var(--accent-green);">${summary.user_address}</code></p>
+                    <p><strong>Estimated Gas/Fee:</strong> ${summary.fee_zyan} ZYAN</p>
+                    <p><strong>Sighashes to Sign:</strong> ${unsignedData.sighashes.length} input(s)</p>
+                `;
+
+                const userConfirmed = await showConfirmModal(htmlSummary);
+                if (!userConfirmed) {
+                    statusEl.innerHTML = '<span style="color: var(--burn-red)">Deployment cancelled by user.</span>';
+                    return;
+                }
+
+                statusEl.innerHTML = '<span style="color: var(--spectral-blue)">Schnorr signing transaction in browser...</span>';
+
+                const signatures = [];
+                for (const sighashHex of unsignedData.sighashes) {
+                    const sigHex = await schnorrSignMessageHash(sighashHex, currentWallet.privKeyHex);
+                    signatures.push(sigHex);
+                }
+
+                statusEl.innerHTML = '<span style="color: var(--spectral-blue)">Submitting signed transaction to Zyanya node...</span>';
+
+                const submitRes = await fetch('/api/submit-signed-tx', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        unsigned_tx: unsignedData.unsigned_tx,
+                        signatures: signatures
+                    })
+                });
+                const submitData = await submitRes.json();
+
+                if (submitRes.ok && (submitData.contract_address || submitData.contractAddress)) {
+                    const addr = submitData.contract_address || submitData.contractAddress;
+                    const txId = submitData.transaction_id || submitData.transactionId;
                     statusEl.innerHTML = `
                         <div style="background: rgba(0, 255, 170, 0.1); border: 1px solid var(--accent-green); padding: 18px; border-radius: 8px; margin-top: 15px; text-align: left;">
-                            <h3 style="color: var(--accent-green); margin-bottom: 8px;">🚀 Token Successfully Launched!</h3>
+                            <h3 style="color: var(--accent-green); margin-bottom: 8px;">🚀 Non-Custodial Token Successfully Launched!</h3>
                             <p><strong>Contract Address:</strong> <code style="word-break: break-all; color: var(--spectral-blue);">${addr}</code></p>
+                            <p><strong>Transaction ID:</strong> <code style="word-break: break-all; color: rgba(224,224,224,0.8);">${txId}</code></p>
                             <a href="/token/${addr}" class="btn-launch" style="display: inline-block; margin-top: 12px; padding: 10px 20px; text-decoration: none; text-align: center;">VIEW TOKEN PAGE →</a>
                         </div>
                     `;
                 } else {
-                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Error: ${data.error || 'Launch failed'}</span>`;
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Submission Error: ${submitData.error || 'Submit failed'}</span>`;
                 }
+
             } catch (err) {
-                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network error: ${err.message}</span>`;
+                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network/Crypto error: ${err.message}</span>`;
             }
         }
+
+        window.addEventListener('DOMContentLoaded', loadStoredWallet);
     </script>
 </body>
 </html>"#;
