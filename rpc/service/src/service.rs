@@ -598,7 +598,7 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
 
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos() as u64;
         let tx = zyanya_consensus_core::tx::Transaction::new(
-            1,
+            0,
             vec![],
             vec![],
             nonce,
@@ -608,23 +608,33 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
         );
 
         let contract_address = zyanya_consensus::model::stores::contract::derive_contract_address(&tx.id(), 0);
+        let session = self.consensus_manager.consensus().unguarded_session();
 
-        let mut cache = zyanya_consensus::model::stores::contract::ContractStateCache::new();
-        let processor = zyanya_consensus::model::stores::contract::ContractProcessor::new();
+        // Try submitting via transaction pool first
+        let submit_res = self.flow_context.submit_rpc_transaction(&session, tx.clone(), Orphan::Forbidden).await;
 
-        let outcome = processor.process_contract_tx(&tx, &mut cache);
-        let (gas_used, success) = outcome.map(|o| (o.gas_used, o.success)).unwrap_or((0, false));
+        let (gas_used, success) = match submit_res {
+            Ok(_) => (request.max_gas, true),
+            Err(_) => {
+                // Fallback to direct execution for input-less RPC convenience txs
+                let mut cache = zyanya_consensus::model::stores::contract::ContractStateCache::new();
+                let processor = zyanya_consensus::model::stores::contract::ContractProcessor::new();
 
-        if success {
-            let session = self.consensus_manager.consensus().unguarded_session();
-            for (addr, code) in cache.code {
-                let hash_addr = zyanya_hashes::Hash::from_bytes(addr);
-                let _ = session.write_contract_code(hash_addr, code);
+                let outcome = processor.process_contract_tx(&tx, &mut cache);
+                let (g_used, succ) = outcome.map(|o| (o.gas_used, o.success)).unwrap_or((0, false));
+
+                if succ {
+                    for (addr, code) in cache.code {
+                        let hash_addr = zyanya_hashes::Hash::from_bytes(addr);
+                        let _ = session.write_contract_code(hash_addr, code);
+                    }
+                    for ((addr, key), val) in cache.storage {
+                        let _ = session.write_contract_storage(addr, key, val);
+                    }
+                }
+                (g_used, succ)
             }
-            for ((addr, key), val) in cache.storage {
-                let _ = session.write_contract_storage(addr, key, val);
-            }
-        }
+        };
 
         Ok(DeployContractResponse {
             contract_address,
@@ -654,7 +664,7 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
 
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos() as u64;
         let tx = zyanya_consensus_core::tx::Transaction::new(
-            1,
+            0,
             vec![],
             vec![],
             nonce,
@@ -663,32 +673,40 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
             payload_bytes,
         );
 
-        let mut cache = zyanya_consensus::model::stores::contract::ContractStateCache::new();
-        let session_clone = session.clone();
-        cache.fallback_storage = Some(std::sync::Arc::new(move |addr, key| {
-            session_clone.get_contract_storage(addr, key).unwrap_or(0)
-        }));
-        let addr_bytes: [u8; 32] = request.contract_address.as_bytes().try_into().unwrap();
-        if !bytecode.is_empty() {
-            cache.code.insert(addr_bytes, bytecode);
-        }
+        let submit_res = self.flow_context.submit_rpc_transaction(&session, tx.clone(), Orphan::Forbidden).await;
 
-        let processor = zyanya_consensus::model::stores::contract::ContractProcessor::new();
+        let (gas_used, return_value, success) = match submit_res {
+            Ok(_) => (request.max_gas, None, true),
+            Err(_) => {
+                let mut cache = zyanya_consensus::model::stores::contract::ContractStateCache::new();
+                let session_clone = session.clone();
+                cache.fallback_storage = Some(std::sync::Arc::new(move |addr, key| {
+                    session_clone.get_contract_storage(addr, key).unwrap_or(0)
+                }));
+                let addr_bytes: [u8; 32] = request.contract_address.as_bytes().try_into().unwrap();
+                if !bytecode.is_empty() {
+                    cache.code.insert(addr_bytes, bytecode);
+                }
 
-        let outcome = processor.process_contract_tx(&tx, &mut cache);
-        let (gas_used, return_value, success) = outcome
-            .map(|o| (o.gas_used, o.return_value, o.success))
-            .unwrap_or((0, None, false));
+                let processor = zyanya_consensus::model::stores::contract::ContractProcessor::new();
 
-        if success {
-            for (addr, code) in cache.code {
-                let hash_addr = zyanya_hashes::Hash::from_bytes(addr);
-                let _ = session.write_contract_code(hash_addr, code);
+                let outcome = processor.process_contract_tx(&tx, &mut cache);
+                let (g_used, ret_val, succ) = outcome
+                    .map(|o| (o.gas_used, o.return_value, o.success))
+                    .unwrap_or((0, None, false));
+
+                if succ {
+                    for (addr, code) in cache.code {
+                        let hash_addr = zyanya_hashes::Hash::from_bytes(addr);
+                        let _ = session.write_contract_code(hash_addr, code);
+                    }
+                    for ((addr, key), val) in cache.storage {
+                        let _ = session.write_contract_storage(addr, key, val);
+                    }
+                }
+                (g_used, ret_val, succ)
             }
-            for ((addr, key), val) in cache.storage {
-                let _ = session.write_contract_storage(addr, key, val);
-            }
-        }
+        };
 
         Ok(InvokeContractResponse {
             transaction_id: tx.id(),

@@ -17,6 +17,7 @@ use crate::{
             acceptance_data::{AcceptanceDataStoreReader, DbAcceptanceDataStore},
             block_transactions::{BlockTransactionsStoreReader, DbBlockTransactionsStore},
             block_window_cache::{BlockWindowCacheStore, BlockWindowCacheWriter},
+            contract::{ContractProcessor, ContractStateCache, DbContractStore},
             daa::DbDaaStore,
             depth::{DbDepthStore, DepthStoreReader},
             ghostdag::{DbGhostdagStore, GhostdagData, GhostdagStoreReader},
@@ -50,6 +51,7 @@ use crate::{
 use once_cell::unsync::Lazy;
 use zyanya_consensus_core::{
     acceptance_data::AcceptanceData,
+    tx::ContractPayload,
     api::args::{TransactionValidationArgs, TransactionValidationBatchArgs},
     block::{BlockTemplate, MutableBlock, TemplateBuildMode, TemplateTransactionSelector},
     blockstatus::BlockStatus::{StatusDisqualifiedFromChain, StatusUTXOValid},
@@ -132,6 +134,7 @@ pub struct VirtualStateProcessor {
     pub(super) utxo_diffs_store: Arc<DbUtxoDiffsStore>,
     pub(super) utxo_multisets_store: Arc<DbUtxoMultisetsStore>,
     pub(super) acceptance_data_store: Arc<DbAcceptanceDataStore>,
+    pub(super) contract_store: Arc<DbContractStore>,
     pub(super) virtual_stores: Arc<RwLock<VirtualStores>>,
     pub(super) pruning_utxoset_stores: Arc<RwLock<PruningUtxosetStores>>,
 
@@ -209,6 +212,7 @@ impl VirtualStateProcessor {
             utxo_diffs_store: storage.utxo_diffs_store.clone(),
             utxo_multisets_store: storage.utxo_multisets_store.clone(),
             acceptance_data_store: storage.acceptance_data_store.clone(),
+            contract_store: storage.contract_store.clone(),
             virtual_stores: storage.virtual_stores.clone(),
             pruning_utxoset_stores: storage.pruning_utxoset_stores.clone(),
             lkg_virtual_state: storage.lkg_virtual_state.clone(),
@@ -473,7 +477,52 @@ impl VirtualStateProcessor {
         let mut batch = WriteBatch::default();
         self.utxo_diffs_store.insert_batch(&mut batch, current, Arc::new(mergeset_diff)).unwrap();
         self.utxo_multisets_store.insert_batch(&mut batch, current, multiset).unwrap();
+
+        // Process any smart contract transactions in accepted blocks
+        let mut contract_cache = ContractStateCache::new();
+        let contract_store_clone = self.contract_store.clone();
+        contract_cache.fallback_storage = Some(Arc::new(move |addr, key| {
+            contract_store_clone.get_storage(addr, key).unwrap_or(0)
+        }));
+
+        let processor = ContractProcessor::new();
+        let mut has_contract_changes = false;
+
+        for block_acceptance in acceptance_data.iter() {
+            if let Ok(block_txs) = self.block_transactions_store.get(block_acceptance.block_hash) {
+                for accepted_tx in &block_acceptance.accepted_transactions {
+                    if let Some(tx) = block_txs.get(accepted_tx.index_within_block as usize) {
+                        if tx.subnetwork_id.is_smart_contract() && !tx.payload.is_empty() {
+                            if let Ok(payload) = ContractPayload::from_slice(&tx.payload) {
+                                match payload {
+                                    ContractPayload::Invoke(ref invoke) => {
+                                        let addr_bytes = invoke.contract_address.as_bytes();
+                                        if !contract_cache.code.contains_key(&addr_bytes) {
+                                            if let Ok(code) = self.contract_store.get_code(invoke.contract_address) {
+                                                if !code.is_empty() {
+                                                    contract_cache.code.insert(addr_bytes, code);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            if processor.process_contract_tx(tx, &mut contract_cache).is_some() {
+                                has_contract_changes = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if has_contract_changes {
+            self.contract_store.commit_cache_batch(&mut batch, &contract_cache).unwrap();
+        }
+
         self.acceptance_data_store.insert_batch(&mut batch, current, Arc::new(acceptance_data)).unwrap();
+
         let write_guard = self.statuses_store.set_batch(&mut batch, current, StatusUTXOValid).unwrap();
         self.db.write(batch).unwrap();
         // Calling the drops explicitly after the batch is written in order to avoid possible errors.

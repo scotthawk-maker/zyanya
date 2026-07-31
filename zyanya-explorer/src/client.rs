@@ -802,16 +802,15 @@ impl RpcClientManager {
         });
         let payload_bytes = payload.to_bytes().map_err(|e| e.to_string())?;
 
-        let nonce = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_nanos() as u64;
+        // lock_time = 0 means no lock time (always finalized — the tx can be mined immediately)
+        // Do NOT use a nonce/timestamp here — the node interprets it as a future lock time + rejects it
+        let lock_time = 0u64;
 
         let unsigned_tx = Transaction::new(
             0,
             inputs,
             outputs,
-            nonce,
+            lock_time,
             zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
             gas,
             payload_bytes,
@@ -907,7 +906,10 @@ impl RpcClientManager {
                 .collect();
         }
 
-        let _ = verify(&signable_tx.as_verifiable());
+        if let Err(e) = verify(&signable_tx.as_verifiable()) {
+            log::warn!("Signature verification failed: {:?}", e);
+            return Err(format!("Signature verification failed: {:?}", e));
+        }
 
         let rpc_tx = RpcTransaction::from(&signable_tx.tx);
         let tx_id = client.submit_transaction(rpc_tx, false).await
