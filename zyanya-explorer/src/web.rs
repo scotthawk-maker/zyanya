@@ -73,8 +73,45 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 2rem 0;
+            padding: 1.5rem 0;
             border-bottom: 1px solid var(--shadow-teal);
+            position: relative;
+            width: 100%;
+        }
+
+        .menu-toggle { display: none; }
+
+        .hamburger {
+            display: none;
+            font-size: 1.8rem;
+            color: var(--spectral-blue);
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            user-select: none;
+            z-index: 101;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--spectral-blue);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        nav a:hover, nav a.active {
+            color: #FFFFFF;
+            text-shadow: 0 0 8px var(--spectral-blue);
         }
 
         .top-logo {
@@ -94,17 +131,138 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
             width: auto;
         }
 
-        nav a {
-            color: var(--spectral-blue);
-            text-decoration: none;
-            margin-left: 2rem;
-            font-weight: 600;
-            transition: color 0.3s ease;
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 1rem 0;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            nav {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                background: rgba(10, 15, 28, 0.98);
+                border: 1px solid var(--shadow-teal);
+                border-radius: 8px;
+                margin-top: 0.5rem;
+                padding: 0.5rem 0;
+                gap: 0;
+                z-index: 100;
+            }
+
+            .menu-toggle:checked ~ nav {
+                display: flex;
+            }
+
+            nav a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 48px;
+                width: 100%;
+                margin: 0;
+                padding: 0 1rem;
+                border-bottom: 1px solid rgba(13, 59, 80, 0.5);
+                font-size: 1rem;
+            }
+
+            nav a:last-child {
+                border-bottom: none;
+            }
+
+            .container {
+                padding: 0 16px;
+            }
+
+            main {
+                padding: 2rem 0;
+            }
+
+            section {
+                margin-bottom: 3.5rem;
+            }
+
+            #hero h1 {
+                font-size: 1.4rem;
+            }
+
+            #hero p {
+                font-size: 0.95rem;
+                margin-bottom: 1.8rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                gap: 1rem;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+                min-height: 48px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0.8rem 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+                margin-bottom: 1.8rem;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .card {
+                padding: 1.25rem;
+                width: 100%;
+            }
+
+            .code-block {
+                font-size: 0.8rem;
+                padding: 1rem;
+                margin: 1rem 0;
+                overflow-x: auto;
+                background-image: linear-gradient(to right, rgba(126, 200, 211, 0.15), transparent 15px), linear-gradient(to left, rgba(126, 200, 211, 0.2), transparent 15px);
+                background-position: left center, right center;
+                background-repeat: no-repeat;
+                background-size: 15px 100%;
+            }
+
+            #roadmap li {
+                padding: 1.25rem 1rem 1.25rem 3rem;
+            }
+
+            #roadmap li::before {
+                left: -8px;
+                font-size: 0.7rem;
+            }
         }
 
-        nav a:hover {
-            color: var(--text-color);
-            text-shadow: 0 0 5px var(--spectral-blue);
+        @media (max-width: 480px) {
+            nav a {
+                min-height: 56px;
+            }
+
+            #hero h1 {
+                font-size: 1.2rem;
+            }
+
+            .code-block {
+                font-size: 0.75rem;
+            }
+
+            .grid-3 {
+                gap: 1rem;
+            }
         }
 
         main {
@@ -337,13 +495,17 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
     <div class="grid-bg"></div>
     <div class="container">
         <header>
+            <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
+            <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
             <nav>
-                <a href="#pillars">Pillars</a>
-                <a href="#economics">Economics</a>
+                <a href="/" class="active">Home</a>
+                <a href="/explorer">Explorer</a>
                 <a href="/testnet">Testnet</a>
-                <a href="/explorer" target="_blank">Explorer</a>
+                <a href="/launch">Launch</a>
                 <a href="/future">Roadmap</a>
-                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" class="mono" style="color: var(--spectral-blue);">GitHub</a>
+                <a href="/agents">Agents</a>
+                <a href="/docs">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
 
@@ -542,6 +704,17 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
 
         .mono { font-family: 'Courier New', Courier, monospace; }
 
+        .menu-toggle { display: none; }
+        .hamburger {
+            display: none;
+            font-size: 1.8rem;
+            color: var(--accent-spectral);
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            user-select: none;
+            z-index: 101;
+        }
+
         header {
             display: flex;
             justify-content: center;
@@ -558,7 +731,43 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
         .logo-wrap { display: flex; align-items: center; gap: 1rem; text-decoration: none; }
         .logo-wrap svg { height: 32px; width: auto; }
 
-        nav { display: flex; gap: 1.5rem; }
+        nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--accent-spectral);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        nav a:hover, nav a.active {
+            color: #FFFFFF;
+            text-shadow: 0 0 8px var(--accent-spectral);
+        }
+
+        .tabs-bar {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         .nav-btn {
             background: transparent;
             border: 1px solid transparent;
@@ -566,6 +775,132 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             padding: 0.5rem 1rem;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover, .nav-btn.active {
+            border-color: var(--accent-spectral);
+            color: var(--accent-spectral);
+            background: rgba(13, 59, 80, 0.4);
+            box-shadow: 0 0 10px rgba(126, 200, 211, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 0.8rem 1rem;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            nav {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                background: rgba(10, 15, 28, 0.98);
+                border: 1px solid rgba(126, 200, 211, 0.3);
+                border-radius: 8px;
+                margin-top: 0.5rem;
+                padding: 0.5rem 0;
+                gap: 0;
+            }
+
+            .menu-toggle:checked ~ nav {
+                display: flex;
+            }
+
+            nav a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 48px;
+                width: 100%;
+                padding: 0 1rem;
+                border-bottom: 1px solid rgba(13, 59, 80, 0.5);
+                font-size: 1rem;
+            }
+
+            nav a:last-child {
+                border-bottom: none;
+            }
+
+            .container {
+                padding: 1rem 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .search-input {
+                font-size: 16px;
+                min-height: 48px;
+            }
+
+            .search-btn {
+                min-height: 48px;
+                padding: 0.8rem 1.5rem;
+            }
+
+            .nav-btn {
+                min-height: 48px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            th, td {
+                padding: 0.6rem 0.75rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            nav a {
+                min-height: 56px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .tabs-bar {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .tabs-bar .nav-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .search-btn {
+                width: 100%;
+            }
+        }
             font-size: 0.9rem;
             letter-spacing: 1px;
             transition: all 0.2s;
@@ -678,23 +1013,34 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
 </head>
 <body>
     <header>
-        <a href="/" class="logo-wrap">
-            <div id="explorer-logo"></div>
-            <span class="mono" style="font-size: 1.1rem; color: var(--accent-spectral); letter-spacing: 2px;">EXPLORER</span>
-        </a>
+        <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
+        <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
         <nav>
+            <a href="/">Home</a>
+            <a href="/explorer" class="active">Explorer</a>
+            <a href="/testnet">Testnet</a>
+            <a href="/launch">Launch</a>
+            <a href="/future">Roadmap</a>
+            <a href="/agents">Agents</a>
+            <a href="/docs">Docs</a>
+            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--accent-spectral);">GitHub</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="top-logo" style="text-align:center; margin-top: 1.5rem; margin-bottom: 1rem;">
+            <div id="explorer-logo" style="display:inline-block;"></div>
+        </div>
+
+        <div class="tabs-bar">
             <button class="nav-btn mono active" onclick="switchTab('dashboard')">DASHBOARD</button>
             <button class="nav-btn mono" onclick="switchTab('contracts')">CONTRACTS</button>
             <button class="nav-btn mono" onclick="switchTab('tokens')">TOKENS</button>
             <button class="nav-btn mono" onclick="switchTab('dex')">DEX</button>
             <button class="nav-btn mono" onclick="switchTab('dag')">DAG GRAPH</button>
-            <a href="/tools" class="nav-btn mono" style="text-decoration: none;">WEBMCP TOOLS</a>
-            <a href="/" class="nav-btn mono" style="text-decoration: none;">WEBSITE</a>
-            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" class="nav-btn mono" style="text-decoration: none; color: var(--accent-spectral);">GITHUB</a>
-        </nav>
-    </header>
+            <a href="/tools" class="nav-btn mono" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">WEBMCP TOOLS</a>
+        </div>
 
-    <main class="container">
         <div class="search-box">
             <input type="text" id="search-input" class="search-input mono" placeholder="Search by Block Hash or Contract Address...">
             <button class="search-btn mono" onclick="performSearch()">SEARCH</button>
@@ -729,6 +1075,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                     <h3 class="card-title mono">RECENT BLOCKS</h3>
                     <span class="mono" style="font-size: 0.8rem; color: #708090;">Auto-refreshing live chain &bull; last updated <span id="last-updated">&hellip;</span></span>
                 </div>
+                <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
@@ -744,6 +1091,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                         <tr><td colspan="6" style="text-align:center;">Loading recent blocks...</td></tr>
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
 
@@ -757,6 +1105,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                     Contracts deployed on Zyanya feature 50% gas burn deflationary mechanics, bytecode inspection, and key storage.
                 </p>
                 <div id="contracts-container">
+                    <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
@@ -771,6 +1120,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                             <tr><td colspan="5" style="text-align:center;">Loading deployed contracts...</td></tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
             <div class="card" style="background:#050810; margin-top: 1.5rem;">
@@ -794,6 +1144,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                     ERC-20 style custom tokens deployed on-chain with total supply and key holder balances.
                 </p>
                 <div id="tokens-container">
+                    <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
@@ -808,6 +1159,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                             <tr><td colspan="5" style="text-align:center;">Loading tokens...</td></tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -822,6 +1174,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                     Automated market maker pools pairing ZYAN with custom tokens (GHOST). Reserves stored at Key 0 (ZYAN) and Key 1 (GHOST).
                 </p>
                 <div id="dex-container">
+                    <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
@@ -837,6 +1190,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                             <tr><td colspan="6" style="text-align:center;">Loading DEX pools...</td></tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1530,9 +1884,20 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
             pointer-events: none;
         }
 
+        .menu-toggle { display: none; }
+        .hamburger {
+            display: none;
+            font-size: 1.8rem;
+            color: var(--accent-spectral);
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            user-select: none;
+            z-index: 101;
+        }
+
         header {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             padding: 1.2rem 2.5rem;
             border-bottom: 1px solid rgba(126, 200, 211, 0.2);
@@ -1542,9 +1907,6 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
             top: 0;
             z-index: 100;
         }
-
-        .logo-wrap { display: flex; align-items: center; gap: 1rem; text-decoration: none; }
-        .logo-wrap svg { height: 32px; width: auto; }
 
         .ipv6-badge {
             background: rgba(126, 200, 211, 0.1);
@@ -1556,17 +1918,27 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
             letter-spacing: 1px;
         }
 
-        nav { display: flex; gap: 1.5rem; align-items: center; }
-        nav a {
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            transition: all 0.2s;
+        nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
         }
-        nav a:hover, nav a.active {
+
+        nav a {
             color: var(--accent-spectral);
-            text-shadow: 0 0 8px rgba(126, 200, 211, 0.6);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        nav a:hover, nav a.active {
+            color: #FFFFFF;
+            text-shadow: 0 0 8px var(--accent-spectral);
         }
 
         .btn {
@@ -1605,6 +1977,122 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
             letter-spacing: 2px;
             margin-bottom: 1rem;
         }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 0.8rem 1rem;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            nav {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                background: rgba(10, 15, 28, 0.98);
+                border: 1px solid rgba(126, 200, 211, 0.3);
+                border-radius: 8px;
+                margin-top: 0.5rem;
+                padding: 0.5rem 0;
+                gap: 0;
+            }
+
+            .menu-toggle:checked ~ nav {
+                display: flex;
+            }
+
+            nav a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 48px;
+                width: 100%;
+                padding: 0 1rem;
+                border-bottom: 1px solid rgba(13, 59, 80, 0.5);
+                font-size: 1rem;
+            }
+
+            nav a:last-child {
+                border-bottom: none;
+            }
+
+            .container {
+                padding: 1rem 16px;
+            }
+
+            .hero-card {
+                padding: 1.5rem;
+            }
+
+            .hero-title {
+                font-size: 1.4rem;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .inspector-card {
+                padding: 1.25rem;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            select.form-input, textarea.form-input, input.form-input {
+                font-size: 16px;
+                min-height: 48px;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+                min-height: 48px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0.8rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            nav a {
+                min-height: 56px;
+            }
+
+            .hero-title {
+                font-size: 1.2rem;
+            }
+
+            .output-box {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+
+    <header>
+        <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
+        <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/explorer">Explorer</a>
+            <a href="/testnet">Testnet</a>
+            <a href="/launch">Launch</a>
+            <a href="/future">Roadmap</a>
+            <a href="/agents">Agents</a>
+            <a href="/docs">Docs</a>
+            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--accent-spectral);">GitHub</a>
+        </nav>
+    </header>
 
         .hero-text {
             font-size: 1.05rem;
@@ -1729,20 +2217,6 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
 </head>
 <body>
     <div class="grid-bg"></div>
-
-    <header>
-        <a href="/" class="logo-wrap">
-            <div id="tools-logo"></div>
-            <span class="mono" style="font-size: 1.1rem; color: var(--accent-spectral); letter-spacing: 2px;">WEBMCP TOOLS</span>
-        </a>
-        <div class="ipv6-badge mono">[::]:8098 • AGENT-NATIVE</div>
-        <nav>
-            <a href="/" class="mono">WEBSITE</a>
-            <a href="/explorer" class="mono">EXPLORER</a>
-            <a href="/tools" class="mono active">WEBMCP TOOLS</a>
-            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" class="mono" style="color: var(--accent-spectral);">GITHUB</a>
-        </nav>
-    </header>
 
     <main class="container">
         <section class="hero-card">
@@ -1919,19 +2393,23 @@ pub const TESTNET_HTML: &str = r###"<!DOCTYPE html>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{--void:#0A0F1C;--shadow-teal:#0D3B50;--spectral-blue:#7EC8D3;--text:#E0E0E0;--burn:#FF4D4D;--font-mono:'Fira Code',monospace}
-*{box-sizing:border-box;margin:0;padding:0}html,body{background:var(--void);color:var(--text);font-family:var(--font-mono);line-height:1.6}
+*{box-sizing:border-box;margin:0;padding:0}html,body{background:var(--void);color:var(--text);font-family:var(--font-mono);line-height:1.6;overflow-x:hidden}
 .container{max-width:900px;margin:0 auto;padding:0 20px}
-header{display:flex;justify-content:center;align-items:center;padding:2rem 0;border-bottom:1px solid var(--shadow-teal)}
-nav a{color:var(--spectral-blue);text-decoration:none;margin-left:1.5rem;font-weight:600;font-size:.95rem}
+header{display:flex;justify-content:center;align-items:center;padding:1.5rem 0;border-bottom:1px solid var(--shadow-teal);position:relative;width:100%}
+.menu-toggle{display:none}
+.hamburger{display:none;font-size:1.8rem;color:var(--spectral-blue);cursor:pointer;padding:.5rem 1rem;user-select:none;z-index:101}
+nav{display:flex;justify-content:center;align-items:center;gap:1.5rem;flex-wrap:wrap}
+nav a{color:var(--spectral-blue);text-decoration:none;font-weight:600;font-size:.95rem;transition:color .3s ease;display:inline-flex;align-items:center}
+nav a:hover,nav a.active{color:#fff;text-shadow:0 0 8px var(--spectral-blue)}
 .top-logo{text-align:center;margin:2rem 0 1rem}.top-logo svg{max-width:520px;width:100%;height:auto}
 main{padding:2rem 0 4rem}section{margin-bottom:4rem;text-align:center}
 h1{font-size:2rem;color:var(--spectral-blue);margin-bottom:.5rem}h2{font-size:1.6rem;margin-bottom:1.5rem;text-transform:uppercase;letter-spacing:2px}
 h4{color:var(--spectral-blue);margin:2rem 0 .5rem;text-align:left;font-size:1.1rem}p{text-align:left;margin-bottom:1rem}
-.code-block{background:var(--void);border:1px solid var(--shadow-teal);border-radius:4px;padding:1rem;text-align:left;overflow-x:auto;margin:1rem 0}
+.code-block{background:var(--void);border:1px solid var(--shadow-teal);border-radius:4px;padding:1rem;text-align:left;overflow-x:auto;margin:1rem 0;background-image:linear-gradient(to right,rgba(126,200,211,.15),transparent 15px),linear-gradient(to left,rgba(126,200,211,.2),transparent 15px);background-position:left center,right center;background-repeat:no-repeat;background-size:15px 100%}
 code{font-family:var(--font-mono);font-size:.9rem;color:var(--spectral-blue);white-space:pre}
 .callout{background:rgba(13,59,80,.4);border:1px solid var(--shadow-teal);border-radius:8px;padding:1rem 1.5rem;margin:1.5rem auto;text-align:left}
 .callout strong{color:var(--spectral-blue)}
-a{color:var(--spectral-blue)}.btn{display:inline-block;padding:.8rem 1.8rem;border-radius:4px;font-weight:600;text-decoration:none;margin:.5rem}
+a{color:var(--spectral-blue)}.btn{display:inline-block;padding:.8rem 1.8rem;border-radius:4px;font-weight:600;text-decoration:none;margin:.5rem;min-height:48px}
 .btn-primary{background:var(--spectral-blue);color:var(--void)}.btn-secondary{border:2px solid var(--shadow-teal);color:var(--text)}
 footer{text-align:center;padding:2rem 0;border-top:1px solid var(--shadow-teal);color:rgba(224,224,224,.5);font-size:.85rem}
 .choice{display:flex;gap:2rem;flex-wrap:wrap;justify-content:center;margin:1.5rem 0}
@@ -1941,9 +2419,33 @@ footer{text-align:center;padding:2rem 0;border-top:1px solid var(--shadow-teal);
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;text-align:left}
 .card{background:var(--shadow-teal);padding:1.5rem;border-radius:8px;border:1px solid rgba(126,200,211,.2)}
 .card h3{color:var(--spectral-blue);margin-bottom:.5rem}
+@media (max-width:768px){
+header{flex-direction:column;padding:1rem 0}
+.hamburger{display:block}
+nav{display:none;flex-direction:column;width:100%;background:rgba(10,15,28,.98);border:1px solid var(--shadow-teal);border-radius:8px;margin-top:.5rem;padding:.5rem 0;gap:0;z-index:100}
+.menu-toggle:checked ~ nav{display:flex}
+nav a{display:flex;align-items:center;justify-content:center;min-height:48px;width:100%;margin:0;padding:0 1rem;border-bottom:1px solid rgba(13,59,80,.5);font-size:1rem}
+nav a:last-child{border-bottom:none}
+.container{padding:0 16px}
+h1{font-size:1.4rem}h2{font-size:1.3rem}
+.choice{flex-direction:column;gap:1rem}
+.choice>div{width:100%;min-width:unset;padding:1.25rem}
+.code-block{font-size:.8rem;padding:1rem}
+code{font-size:.8rem}
+.btn{width:100%;text-align:center;min-height:48px;display:inline-flex;align-items:center;justify-content:center;margin:.5rem 0}
+}
+@media (max-width:480px){
+nav a{min-height:56px}
+h1{font-size:1.2rem}
+.code-block{font-size:.75rem}
+code{font-size:.75rem}
+}
 </style></head><body>
-<div class="container"><header><nav>
-<a href="/">Home</a><a href="/explorer" target="_blank">Explorer</a><a href="/testnet">Testnet</a><a href="/future">Roadmap</a><a href="https://github.com/scotthawk-maker/zyanya" target="_blank">GitHub</a>
+<div class="container"><header>
+<input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
+<label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
+<nav>
+<a href="/">Home</a><a href="/explorer">Explorer</a><a href="/testnet" class="active">Testnet</a><a href="/launch">Launch</a><a href="/future">Roadmap</a><a href="/agents">Agents</a><a href="/docs">Docs</a><a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color:var(--spectral-blue)">GitHub</a>
 </nav></header>
 <div class="top-logo"><div id="logo-container"></div></div>
 <main>
@@ -2000,10 +2502,14 @@ pub const FUTURE_HTML: &str = r###"<!DOCTYPE html>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{--void:#0A0F1C;--shadow-teal:#0D3B50;--spectral-blue:#7EC8D3;--text:#E0E0E0;--burn:#FF4D4D;--font-mono:'Fira Code',monospace}
-*{box-sizing:border-box;margin:0;padding:0}html,body{background:var(--void);color:var(--text);font-family:var(--font-mono);line-height:1.6}
+*{box-sizing:border-box;margin:0;padding:0}html,body{background:var(--void);color:var(--text);font-family:var(--font-mono);line-height:1.6;overflow-x:hidden}
 .container{max-width:1000px;margin:0 auto;padding:0 20px}
-header{display:flex;justify-content:center;align-items:center;padding:2rem 0;border-bottom:1px solid var(--shadow-teal)}
-nav a{color:var(--spectral-blue);text-decoration:none;margin-left:1.5rem;font-weight:600;font-size:.95rem}
+header{display:flex;justify-content:center;align-items:center;padding:1.5rem 0;border-bottom:1px solid var(--shadow-teal);position:relative;width:100%}
+.menu-toggle{display:none}
+.hamburger{display:none;font-size:1.8rem;color:var(--spectral-blue);cursor:pointer;padding:.5rem 1rem;user-select:none;z-index:101}
+nav{display:flex;justify-content:center;align-items:center;gap:1.5rem;flex-wrap:wrap}
+nav a{color:var(--spectral-blue);text-decoration:none;font-weight:600;font-size:.95rem;transition:color .3s ease;display:inline-flex;align-items:center}
+nav a:hover,nav a.active{color:#fff;text-shadow:0 0 8px var(--spectral-blue)}
 .top-logo{text-align:center;margin:2rem 0 1rem}.top-logo svg{max-width:520px;width:100%;height:auto}
 main{padding:2rem 0 4rem}section{margin-bottom:4rem;text-align:center}
 h1{font-size:2rem;color:var(--spectral-blue);margin-bottom:.5rem}h2{font-size:1.6rem;margin-bottom:2rem;text-transform:uppercase;letter-spacing:2px}
@@ -2020,9 +2526,29 @@ p{text-align:left;margin-bottom:1rem}
 .phase{counter-reset:phase-counter}.phase strong{display:block;margin-bottom:.3rem}
 footer{text-align:center;padding:2rem 0;border-top:1px solid var(--shadow-teal);color:rgba(224,224,224,.5);font-size:.85rem}
 a{color:var(--spectral-blue)}
+@media (max-width:768px){
+header{flex-direction:column;padding:1rem 0}
+.hamburger{display:block}
+nav{display:none;flex-direction:column;width:100%;background:rgba(10,15,28,.98);border:1px solid var(--shadow-teal);border-radius:8px;margin-top:.5rem;padding:.5rem 0;gap:0;z-index:100}
+.menu-toggle:checked ~ nav{display:flex}
+nav a{display:flex;align-items:center;justify-content:center;min-height:48px;width:100%;margin:0;padding:0 1rem;border-bottom:1px solid rgba(13,59,80,.5);font-size:1rem}
+nav a:last-child{border-bottom:none}
+.container{padding:0 16px}
+h1{font-size:1.4rem}h2{font-size:1.3rem}
+.grid{grid-template-columns:1fr;gap:1rem}
+.card{padding:1.25rem}
+.phase li{padding:1.25rem 1rem 1.25rem 3rem}
+}
+@media (max-width:480px){
+nav a{min-height:56px}
+h1{font-size:1.2rem}
+}
 </style></head><body>
-<div class="container"><header><nav>
-<a href="/">Home</a><a href="/explorer" target="_blank">Explorer</a><a href="/testnet">Testnet</a><a href="/future">Roadmap</a><a href="https://github.com/scotthawk-maker/zyanya" target="_blank">GitHub</a>
+<div class="container"><header>
+<input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
+<label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
+<nav>
+<a href="/">Home</a><a href="/explorer">Explorer</a><a href="/testnet">Testnet</a><a href="/launch">Launch</a><a href="/future" class="active">Roadmap</a><a href="/agents">Agents</a><a href="/docs">Docs</a><a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color:var(--spectral-blue)">GitHub</a>
 </nav></header>
 <div class="top-logo"><div id="logo-container"></div></div>
 <main>
@@ -2084,16 +2610,28 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
             font-family: var(--font-mono);
             font-size: 15px;
             line-height: 1.6;
+            overflow-x: hidden;
         }
         .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
         header {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: center; align-items: center;
             padding: 1.5rem 0; border-bottom: 1px solid var(--shadow-teal);
+            position: relative; width: 100%;
+        }
+        .menu-toggle { display: none; }
+        .hamburger {
+            display: none; font-size: 1.8rem; color: var(--spectral-blue);
+            cursor: pointer; padding: 0.5rem 1rem; user-select: none; z-index: 101;
         }
         .logo-wrap { display: flex; align-items: center; text-decoration: none; gap: 10px; }
+        nav {
+            display: flex; justify-content: center; align-items: center;
+            gap: 1.5rem; flex-wrap: wrap;
+        }
         nav a {
-            color: var(--spectral-blue); text-decoration: none; margin-left: 1.2rem;
-            font-weight: 600; font-size: 0.9rem; transition: color 0.2s;
+            color: var(--spectral-blue); text-decoration: none;
+            font-weight: 600; font-size: 0.95rem; transition: color 0.2s;
+            display: inline-flex; align-items: center;
         }
         nav a:hover, nav a.active { color: #fff; text-shadow: 0 0 8px var(--spectral-blue); }
         main { padding: 3rem 0; }
@@ -2107,36 +2645,72 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
         .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
         .form-group.full { grid-column: span 2; }
         label { color: var(--spectral-blue); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-        input, textarea {
+        input, textarea, select {
             background: rgba(10, 15, 28, 0.8); border: 1px solid rgba(126,200,211,0.3);
             color: #fff; font-family: var(--font-mono); padding: 0.75rem 1rem; border-radius: 6px;
-            font-size: 0.95rem; outline: none; transition: border-color 0.2s;
+            font-size: 16px; min-height: 48px; outline: none; transition: border-color 0.2s;
+            width: 100%;
+        }
+        input[type="file"] {
+            padding: 0.6rem;
+            cursor: pointer;
         }
         input:focus, textarea:focus { border-color: var(--spectral-blue); box-shadow: 0 0 8px rgba(126,200,211,0.3); }
         textarea { resize: vertical; min-height: 90px; }
         .btn-launch {
             grid-column: span 2; background: linear-gradient(135deg, var(--spectral-blue), #4a90e2);
             color: var(--void); font-family: var(--font-mono); font-weight: 700; font-size: 1.1rem;
-            padding: 1rem; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase;
+            padding: 0.8rem 1.5rem; min-height: 48px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase;
             letter-spacing: 2px; transition: transform 0.2s, box-shadow 0.2s; margin-top: 1rem;
+            display: inline-flex; align-items: center; justify-content: center;
         }
         .btn-launch:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(126,200,211,0.6); }
         #status-msg { margin-top: 1.5rem; text-align: center; }
         footer { text-align: center; padding: 2rem 0; color: rgba(224,224,224,0.5); border-top: 1px solid var(--shadow-teal); margin-top: 4rem; }
+
+        @media (max-width: 768px) {
+            header { flex-direction: column; padding: 1rem 0; }
+            .hamburger { display: block; }
+            nav {
+                display: none; flex-direction: column; width: 100%;
+                background: rgba(10, 15, 28, 0.98); border: 1px solid var(--shadow-teal);
+                border-radius: 8px; margin-top: 0.5rem; padding: 0.5rem 0; gap: 0; z-index: 100;
+            }
+            .menu-toggle:checked ~ nav { display: flex; }
+            nav a {
+                display: flex; align-items: center; justify-content: center;
+                min-height: 48px; width: 100%; margin: 0; padding: 0 1rem;
+                border-bottom: 1px solid rgba(13, 59, 80, 0.5); font-size: 1rem;
+            }
+            nav a:last-child { border-bottom: none; }
+            .container { padding: 0 16px; }
+            .hero-title { font-size: 1.4rem; }
+            .form-grid { grid-template-columns: 1fr; gap: 1rem; }
+            .form-group.full { grid-column: span 1; }
+            .btn-launch { grid-column: span 1; width: 100%; }
+            .card { padding: 1.25rem; }
+        }
+
+        @media (max-width: 480px) {
+            nav a { min-height: 56px; }
+            .hero-title { font-size: 1.2rem; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <a href="/" class="logo-wrap">
-                <span style="font-size: 1.4rem; font-weight: 700; color: var(--spectral-blue); letter-spacing: 2px;">ZYANYA</span>
-                <span style="font-size: 0.85rem; color: rgba(224,224,224,0.6);">[LAUNCH]</span>
-            </a>
+            <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
+            <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
             <nav>
                 <a href="/">Home</a>
                 <a href="/explorer">Explorer</a>
-                <a href="/launch" class="active">Launch Token</a>
-                <a href="/tools">Tools</a>
+                <a href="/testnet">Testnet</a>
+                <a href="/launch" class="active">Launch</a>
+                <a href="/future">Roadmap</a>
+                <a href="/agents">Agents</a>
+                <a href="/docs">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
         <main>
@@ -2180,7 +2754,7 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
                         </div>
                         <div class="form-group full">
                             <label for="website">Website URL</label>
-                            <input type="text" id="website" placeholder="https://yourtoken.io">
+                            <input type="url" id="website" placeholder="https://yourtoken.io">
                         </div>
                         <button type="submit" class="btn-launch">DEPLOY TOKEN</button>
                     </div>
@@ -2275,16 +2849,28 @@ pub const TOKEN_HTML: &str = r#"<!DOCTYPE html>
             font-family: var(--font-mono);
             font-size: 15px;
             line-height: 1.6;
+            overflow-x: hidden;
         }
         .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
         header {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: center; align-items: center;
             padding: 1.5rem 0; border-bottom: 1px solid var(--shadow-teal);
+            position: relative; width: 100%;
+        }
+        .menu-toggle { display: none; }
+        .hamburger {
+            display: none; font-size: 1.8rem; color: var(--spectral-blue);
+            cursor: pointer; padding: 0.5rem 1rem; user-select: none; z-index: 101;
         }
         .logo-wrap { display: flex; align-items: center; text-decoration: none; gap: 10px; }
+        nav {
+            display: flex; justify-content: center; align-items: center;
+            gap: 1.5rem; flex-wrap: wrap;
+        }
         nav a {
-            color: var(--spectral-blue); text-decoration: none; margin-left: 1.2rem;
-            font-weight: 600; font-size: 0.9rem; transition: color 0.2s;
+            color: var(--spectral-blue); text-decoration: none;
+            font-weight: 600; font-size: 0.95rem; transition: color 0.2s;
+            display: inline-flex; align-items: center;
         }
         nav a:hover, nav a.active { color: #fff; text-shadow: 0 0 8px var(--spectral-blue); }
         main { padding: 2.5rem 0; }
@@ -2326,34 +2912,67 @@ pub const TOKEN_HTML: &str = r#"<!DOCTYPE html>
         input {
             background: rgba(10, 15, 28, 0.8); border: 1px solid rgba(126,200,211,0.3);
             color: #fff; font-family: var(--font-mono); padding: 0.75rem 1rem; border-radius: 6px;
-            font-size: 1rem; outline: none; width: 100%;
+            font-size: 16px; min-height: 48px; outline: none; width: 100%;
         }
         .btn-buy {
             background: var(--accent-green); color: var(--void); font-family: var(--font-mono);
-            font-weight: 700; font-size: 1rem; padding: 0.8rem; border: none; border-radius: 6px;
+            font-weight: 700; font-size: 1rem; padding: 0.8rem 1.5rem; min-height: 48px; border: none; border-radius: 6px;
             cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px;
+            display: inline-flex; align-items: center; justify-content: center;
         }
         .btn-sell {
             background: var(--burn-red); color: #fff; font-family: var(--font-mono);
-            font-weight: 700; font-size: 1rem; padding: 0.8rem; border: none; border-radius: 6px;
+            font-weight: 700; font-size: 1rem; padding: 0.8rem 1.5rem; min-height: 48px; border: none; border-radius: 6px;
             cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px;
+            display: inline-flex; align-items: center; justify-content: center;
         }
         .status-box { margin-top: 1rem; font-size: 0.9rem; text-align: center; }
         footer { text-align: center; padding: 2rem 0; color: rgba(224,224,224,0.5); border-top: 1px solid var(--shadow-teal); margin-top: 4rem; }
+
+        @media (max-width: 768px) {
+            header { flex-direction: column; padding: 1rem 0; }
+            .hamburger { display: block; }
+            nav {
+                display: none; flex-direction: column; width: 100%;
+                background: rgba(10, 15, 28, 0.98); border: 1px solid var(--shadow-teal);
+                border-radius: 8px; margin-top: 0.5rem; padding: 0.5rem 0; gap: 0; z-index: 100;
+            }
+            .menu-toggle:checked ~ nav { display: flex; }
+            nav a {
+                display: flex; align-items: center; justify-content: center;
+                min-height: 48px; width: 100%; margin: 0; padding: 0 1rem;
+                border-bottom: 1px solid rgba(13, 59, 80, 0.5); font-size: 1rem;
+            }
+            nav a:last-child { border-bottom: none; }
+            .container { padding: 0 16px; }
+            .token-header-card { flex-direction: column; text-align: center; gap: 1rem; padding: 1.5rem; }
+            .token-desc { max-width: 100%; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+            .trade-container { grid-template-columns: 1fr; gap: 1.5rem; }
+            .social-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+            .social-links a { margin-right: 0; min-height: 44px; display: inline-flex; align-items: center; padding: 0.5rem 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            nav a { min-height: 56px; }
+            .stats-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <a href="/" class="logo-wrap">
-                <span style="font-size: 1.4rem; font-weight: 700; color: var(--spectral-blue); letter-spacing: 2px;">ZYANYA</span>
-                <span style="font-size: 0.85rem; color: rgba(224,224,224,0.6);">[BONDING CURVE TOKEN]</span>
-            </a>
+            <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
+            <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
             <nav>
                 <a href="/">Home</a>
                 <a href="/explorer">Explorer</a>
-                <a href="/launch">Launch Token</a>
-                <a href="/tools">Tools</a>
+                <a href="/testnet">Testnet</a>
+                <a href="/launch" class="active">Launch</a>
+                <a href="/future">Roadmap</a>
+                <a href="/agents">Agents</a>
+                <a href="/docs">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
 
@@ -2616,17 +3235,40 @@ pub const AI_AGENTS_HTML: &str = r###"<!DOCTYPE html>
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 2rem 0;
+            padding: 1.5rem 0;
             border-bottom: 1px solid var(--shadow-teal);
+            position: relative;
+            width: 100%;
+        }
+
+        .menu-toggle { display: none; }
+
+        .hamburger {
+            display: none;
+            font-size: 1.8rem;
+            color: var(--spectral-blue);
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            user-select: none;
+            z-index: 101;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
         }
 
         nav a {
             color: var(--spectral-blue);
             text-decoration: none;
-            margin-left: 1.5rem;
             font-weight: 600;
             font-size: 0.95rem;
             transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
         }
 
         nav a:hover, nav a.active {
@@ -2700,6 +3342,10 @@ pub const AI_AGENTS_HTML: &str = r###"<!DOCTYPE html>
             overflow-x: auto;
             margin: 0.8rem 0 1.5rem;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            background-image: linear-gradient(to right, rgba(126, 200, 211, 0.15), transparent 15px), linear-gradient(to left, rgba(126, 200, 211, 0.2), transparent 15px);
+            background-position: left center, right center;
+            background-repeat: no-repeat;
+            background-size: 15px 100%;
         }
 
         code {
@@ -2805,20 +3451,126 @@ pub const AI_AGENTS_HTML: &str = r###"<!DOCTYPE html>
             font-size: 0.85rem;
             margin-top: 4rem;
         }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 1rem 0;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            nav {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                background: rgba(10, 15, 28, 0.98);
+                border: 1px solid var(--shadow-teal);
+                border-radius: 8px;
+                margin-top: 0.5rem;
+                padding: 0.5rem 0;
+                gap: 0;
+                z-index: 100;
+            }
+
+            .menu-toggle:checked ~ nav {
+                display: flex;
+            }
+
+            nav a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 48px;
+                width: 100%;
+                margin: 0;
+                padding: 0 1rem;
+                border-bottom: 1px solid rgba(13, 59, 80, 0.5);
+                font-size: 1rem;
+            }
+
+            nav a:last-child {
+                border-bottom: none;
+            }
+
+            .container {
+                padding: 0 16px;
+            }
+
+            #hero h1 {
+                font-size: 1.4rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .card {
+                padding: 1.25rem;
+            }
+
+            .code-block {
+                font-size: 0.8rem;
+                padding: 1rem;
+            }
+
+            code {
+                font-size: 0.8rem;
+            }
+
+            .card a.agent-link {
+                min-height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            nav a {
+                min-height: 56px;
+            }
+
+            #hero h1 {
+                font-size: 1.2rem;
+            }
+
+            .code-block {
+                font-size: 0.75rem;
+            }
+
+            code {
+                font-size: 0.75rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="grid-bg"></div>
     <div class="container">
         <header>
+            <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
+            <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
             <nav>
                 <a href="/">Home</a>
                 <a href="/explorer">Explorer</a>
                 <a href="/testnet">Testnet</a>
-                <a href="/launch">Launch Token</a>
-                <a href="/agents" class="active">AI Agents</a>
+                <a href="/launch">Launch</a>
+                <a href="/future">Roadmap</a>
+                <a href="/agents" class="active">Agents</a>
                 <a href="/docs">Docs</a>
-                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank">GitHub</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
 
@@ -3012,17 +3764,40 @@ pub const DOCS_HTML: &str = r###"<!DOCTYPE html>
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 2rem 0;
+            padding: 1.5rem 0;
             border-bottom: 1px solid var(--shadow-teal);
+            position: relative;
+            width: 100%;
+        }
+
+        .menu-toggle { display: none; }
+
+        .hamburger {
+            display: none;
+            font-size: 1.8rem;
+            color: var(--spectral-blue);
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            user-select: none;
+            z-index: 101;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
         }
 
         nav a {
             color: var(--spectral-blue);
             text-decoration: none;
-            margin-left: 1.5rem;
             font-weight: 600;
             font-size: 0.95rem;
             transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
         }
 
         nav a:hover, nav a.active {
@@ -3108,6 +3883,10 @@ pub const DOCS_HTML: &str = r###"<!DOCTYPE html>
             overflow-x: auto;
             margin: 1rem 0;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            background-image: linear-gradient(to right, rgba(126, 200, 211, 0.15), transparent 15px), linear-gradient(to left, rgba(126, 200, 211, 0.2), transparent 15px);
+            background-position: left center, right center;
+            background-repeat: no-repeat;
+            background-size: 15px 100%;
         }
 
         code {
@@ -3150,20 +3929,128 @@ pub const DOCS_HTML: &str = r###"<!DOCTYPE html>
             font-size: 0.85rem;
             margin-top: 4rem;
         }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 1rem 0;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            nav {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                background: rgba(10, 15, 28, 0.98);
+                border: 1px solid var(--shadow-teal);
+                border-radius: 8px;
+                margin-top: 0.5rem;
+                padding: 0.5rem 0;
+                gap: 0;
+                z-index: 100;
+            }
+
+            .menu-toggle:checked ~ nav {
+                display: flex;
+            }
+
+            nav a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 48px;
+                width: 100%;
+                margin: 0;
+                padding: 0 1rem;
+                border-bottom: 1px solid rgba(13, 59, 80, 0.5);
+                font-size: 1rem;
+            }
+
+            nav a:last-child {
+                border-bottom: none;
+            }
+
+            .container {
+                padding: 0 16px;
+            }
+
+            #hero h1 {
+                font-size: 1.4rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+
+            h3 {
+                font-size: 1.05rem;
+            }
+
+            .code-block {
+                font-size: 0.8rem;
+                padding: 1rem;
+            }
+
+            code {
+                font-size: 0.8rem;
+            }
+
+            .formula-box {
+                font-size: 0.9rem;
+                padding: 0.8rem 1rem;
+                word-break: break-word;
+            }
+
+            .callout {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            nav a {
+                min-height: 56px;
+            }
+
+            #hero h1 {
+                font-size: 1.2rem;
+            }
+
+            .code-block {
+                font-size: 0.75rem;
+            }
+
+            code {
+                font-size: 0.75rem;
+            }
+
+            .formula-box {
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="grid-bg"></div>
     <div class="container">
         <header>
+            <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
+            <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
             <nav>
                 <a href="/">Home</a>
                 <a href="/explorer">Explorer</a>
                 <a href="/testnet">Testnet</a>
-                <a href="/launch">Launch Token</a>
-                <a href="/agents">AI Agents</a>
+                <a href="/launch">Launch</a>
+                <a href="/future">Roadmap</a>
+                <a href="/agents">Agents</a>
                 <a href="/docs" class="active">Docs</a>
-                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank">GitHub</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
 
