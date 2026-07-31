@@ -2215,8 +2215,7 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
         </nav>
     </header>
 
-    <div class="grid-bg"></div>
-
+    
     <main class="container">
         <section class="hero-card">
             <h1 class="hero-title mono">ZYANYA: THE AGENT-NATIVE BLOCKCHAIN</h1>
