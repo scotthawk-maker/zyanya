@@ -1214,7 +1214,13 @@ impl RpcClientManager {
             .map_err(|e| format!("SubmitTransaction RPC failed: {}", e))?;
 
         let contract_hash = RpcHash::from_str(&data.contract_address).map_err(|e| e.to_string())?;
-        let _init_res = client.invoke_contract(contract_hash, 0, vec![data.slope], 100_000, 1, 0).await.ok();
+        // Only init the contract for Deploy txs. For Invoke txs (buy/sell), the block
+        // processor runs the entry_point during block commitment — don't re-init!
+        if let Ok(payload) = zyanya_consensus_core::tx::ContractPayload::from_slice(&data.tx.payload) {
+            if matches!(payload, zyanya_consensus_core::tx::ContractPayload::Deploy(_)) {
+                let _init_res = client.invoke_contract(contract_hash, 0, vec![data.slope], 100_000, 1, 0).await.ok();
+            }
+        }
 
         let metadata = TokenMetadata {
             name: Some(data.name.clone()),
