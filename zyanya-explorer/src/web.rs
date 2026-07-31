@@ -1719,7 +1719,7 @@ pub const WEBMCP_SCRIPT: &str = r###"
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                address: params.contractAddress,
+                contract_address: params.contractAddress,
                 entry_point: params.entryPoint || 0,
                 calldata: params.calldata || "",
                 gas: params.gas || 100000
@@ -1744,7 +1744,7 @@ pub const WEBMCP_SCRIPT: &str = r###"
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                address: params.contractAddress,
+                contract_address: params.contractAddress,
                 calldata: params.calldata || "",
                 entry_point: params.entryPoint || 0,
                 gas: params.gas || 100000
@@ -1754,13 +1754,20 @@ pub const WEBMCP_SCRIPT: &str = r###"
 
     mc.registerTool({
         name: "deploy-token",
-        description: "Deploy a custom reference ERC-20 style token contract with specified supply and owner key.",
+        description: "Deploy a custom reference ERC-20 style token contract with specified supply, owner key, symbol, slope, and metadata.",
         inputSchema: {
             type: "object",
             properties: {
-                name: { type: "string", description: "Token name or symbol" },
+                name: { type: "string", description: "Token name" },
+                symbol: { type: "string", description: "Token ticker symbol (e.g. ZYAN)" },
                 supply: { type: "number", description: "Initial total supply" },
-                owner: { type: "string", description: "Owner address or key ID (default 1)" }
+                owner: { type: "string", description: "Owner address or key ID (default 1)" },
+                slope: { type: "number", description: "Bonding curve slope parameter (default 1)" },
+                description: { type: "string", description: "Token description" },
+                twitter: { type: "string", description: "Twitter handle or URL" },
+                telegram: { type: "string", description: "Telegram group or handle" },
+                website: { type: "string", description: "Project website URL" },
+                icon_base64: { type: "string", description: "Base64-encoded token icon image" }
             },
             required: ["supply"]
         },
@@ -1769,8 +1776,15 @@ pub const WEBMCP_SCRIPT: &str = r###"
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 name: params.name || "Token",
+                symbol: params.symbol || "TKN",
                 supply: params.supply,
-                owner: params.owner || "1"
+                owner: params.owner || "1",
+                slope: params.slope || 1,
+                description: params.description || "",
+                twitter: params.twitter || "",
+                telegram: params.telegram || "",
+                website: params.website || "",
+                icon_base64: params.icon_base64 || null
             })
         })
     });
@@ -2215,7 +2229,8 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
         </nav>
     </header>
 
-    
+    <div class="top-logo" style="text-align: center; margin: 1.5rem 0;"><div id="tools-logo"></div></div>
+
     <main class="container">
         <section class="hero-card">
             <h1 class="hero-title mono">ZYANYA: THE AGENT-NATIVE BLOCKCHAIN</h1>
@@ -2224,7 +2239,7 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
             </p>
             <div class="hero-stats mono">
                 <div class="hero-stat-item">
-                    <div class="hero-stat-val">14 TOOLS</div>
+                    <div class="hero-stat-val">15 TOOLS</div>
                     <div class="hero-stat-lbl">REGISTERED WEBMCP TOOLS</div>
                 </div>
                 <div class="hero-stat-item">
@@ -2271,7 +2286,7 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
 
         <div class="section-header">
             <h2 class="section-title mono">REGISTERED WEBMCP BLOCKCHAIN TOOLS</h2>
-            <span class="mono" style="font-size: 0.8rem; color: #708090;">14 Exposed Operations</span>
+            <span class="mono" style="font-size: 0.8rem; color: #708090;">15 Exposed Operations</span>
         </div>
 
         <div class="tools-grid" id="tools-cards-grid">
@@ -2289,13 +2304,16 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
     <script src="/webmcp.js"></script>
     <script>
         fetch('/brand/zyanya-logo.svg').then(r => r.text()).then(html => {
-            document.getElementById('tools-logo').innerHTML = html;
-        });
+            const el = document.getElementById('tools-logo');
+            if (el) el.innerHTML = html;
+        }).catch(() => {});
 
         function populateToolsUI() {
             if (!navigator.modelContext) return;
-            const tools = navigator.modelContext.getTools();
             const select = document.getElementById('tool-select');
+            const cardsGrid = document.getElementById('tools-cards-grid');
+            if (!select || !cardsGrid) return;
+            const tools = navigator.modelContext.getTools();
             select.innerHTML = '';
 
             let gridHtml = '';
@@ -2306,7 +2324,7 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
                 opt.textContent = (idx + 1) + '. ' + t.name + ' — ' + t.description;
                 select.appendChild(opt);
 
-                const isQuery = t.name.startsWith('get-');
+                const isQuery = t.name.startsWith('get-') || t.name === 'ipv6-safety';
                 const tagClass = isQuery ? 'tag-query' : 'tag-op';
                 const tagText = isQuery ? 'READ-ONLY QUERY' : 'NETWORK OPERATION';
 
@@ -2320,20 +2338,22 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
                 '</div>';
             });
 
-            document.getElementById('tools-cards-grid').innerHTML = gridHtml;
+            cardsGrid.innerHTML = gridHtml;
             onToolSelectChange();
         }
 
         function onToolSelectChange() {
             const select = document.getElementById('tool-select');
+            if (!select || !navigator.modelContext) return;
             const name = select.value;
-            if (!name || !navigator.modelContext) return;
+            if (!name) return;
 
             const tools = navigator.modelContext.getTools();
             const tool = tools.find(t => t.name === name);
             if (!tool) return;
 
-            document.getElementById('tool-desc-display').innerText = tool.description;
+            const descEl = document.getElementById('tool-desc-display');
+            if (descEl) descEl.innerText = tool.description || '';
 
             let sample = {};
             if (name === 'get-block') sample = { blockHash: "" };
@@ -2344,23 +2364,27 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
             if (name === 'deploy-contract') sample = { bytecode: "608060405234801561001057600080fd5b50", gas: 100000 };
             if (name === 'invoke-contract') sample = { contractAddress: "0000000000000000000000000000000000000000000000000000000000000000", entryPoint: 0, calldata: "1", gas: 100000 };
             if (name === 'call-contract') sample = { contractAddress: "0000000000000000000000000000000000000000000000000000000000000000", calldata: "1", entryPoint: 0, gas: 100000 };
-            if (name === 'deploy-token') sample = { name: "MYTOKEN", supply: 1000000, owner: "1" };
+            if (name === 'deploy-token') sample = { name: "MYTOKEN", symbol: "MTK", supply: 1000000, slope: 1, owner: "1", description: "Sample token", twitter: "@mytoken" };
             if (name === 'token-transfer') sample = { tokenAddress: "0000000000000000000000000000000000000000000000000000000000000000", from: "1", to: "2", amount: 100 };
             if (name === 'swap-on-dex') sample = { dexAddress: "0000000000000000000000000000000000000000000000000000000000000000", tokenIn: "zyan", amountIn: 50 };
             if (name === 'compile-contract') sample = { source: "entry main() { sstore(0, 100); }" };
 
-            document.getElementById('tool-params-input').value = JSON.stringify(sample, null, 2);
+            const paramsInput = document.getElementById('tool-params-input');
+            if (paramsInput) paramsInput.value = JSON.stringify(sample, null, 2);
         }
 
         async function runSelectedTool() {
             const select = document.getElementById('tool-select');
+            if (!select) return;
             const name = select.value;
             const outputBox = document.getElementById('tool-output-box');
+            if (!outputBox) return;
             if (!name) return alert('Select a tool first');
 
             let params = {};
             try {
-                const paramText = document.getElementById('tool-params-input').value.trim();
+                const paramsInput = document.getElementById('tool-params-input');
+                const paramText = paramsInput ? paramsInput.value.trim() : '';
                 if (paramText) params = JSON.parse(paramText);
             } catch (err) {
                 return alert('Invalid JSON in parameters input: ' + err.message);
@@ -2379,6 +2403,8 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
             }
         }
 
+        window.addEventListener('webmcp:registerTool', populateToolsUI);
+        document.addEventListener('DOMContentLoaded', populateToolsUI);
         setTimeout(populateToolsUI, 100);
     </script>
 </body>
@@ -4173,7 +4199,7 @@ pub const DOCS_HTML: &str = r###"<!DOCTYPE html>
                     <li><strong>Phase 01: Ghost in the Machine</strong> — Public testnet hardening, P2P stability tuning, and contract VM edge-case testing.</li>
                     <li><strong>Phase 02: Dark Launch</strong> — Mainnet genesis block mining and silent peer network deployment.</li>
                     <li><strong>Phase 03: Prepare Optics</strong> — Documentation finalization, Web MCP tool expansion, and explorer integrations.</li>
-                    <li><strong>Phase 04: The r/IPv6 Signal</strong> — Public announcement and onboarding of the global IPv6 community.</li>
+                    <li><strong>Phase 04: The r/IPv6 Signal</strong> — Public announcement and invitation to the wider technical community, growing the IPv6-native builder network and establishing the r/IPv6 subreddit signal.</li>
                 </ol>
             </section>
         </main>
@@ -4242,10 +4268,24 @@ pub const LLMS_TXT: &str = r###"# Zyanya
 - GET /webmcp.js: Web MCP polyfill (registers blockchain tools on navigator.modelContext)
 
 ## WebMCP Tools (for browser-based agents)
-- get-chain-info: Query block count, DAA score, difficulty, supply, peers
-- get-block: Query block details by hash
-- ipv6-safety: IPv6 hardening guidance for agents
-- (more tools registered dynamically by the explorer)
+Query tools (read-only):
+- get-chain-info: Query block count, DAA score, difficulty, supply, sink block, and peer count
+- get-block: Query block details by 64-char hex hash or get recent blocks
+- get-dag-info: Query parallel GHOSTDAG structure, DAG nodes, and sink block
+- get-contract-state: Query key-value storage state of a ZCL contract
+- get-contract-code: Query deployed ZCL bytecode hex and size
+- get-token-balance: Query custom token balance for a holder address
+- get-dex-reserves: Query DEX liquidity pool reserves
+- ipv6-safety: Return IPv6 peer-to-peer security, risk, and firewall guidance
+
+Deploy & Invoke tools:
+- deploy-token: Deploy a bonding-curve token contract with metadata, supply, slope, and socials
+- deploy-contract: Deploy compiled ZCL bytecode to the network
+- compile-contract: Compile ZCL contract source code into VM bytecode hex
+- invoke-contract: Invoke a smart contract entry point with calldata (state-changing)
+- call-contract: Read-only execution of a smart contract function
+- swap-on-dex: Swap tokens on a DEX liquidity pool
+- token-transfer: Transfer custom tokens to a recipient address
 
 ## Networks
 - Testnet (public): Seed at [2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18211
@@ -4318,8 +4358,22 @@ Returns the 20 most recent blocks.
 ### GET /api/block/:hash
 Returns details for a specific block by its 64-character hex hash.
 
+### GET /api/dag
+Returns parallel GHOSTDAG structure and nodes.
+- Query parameters: `limit` (number, default 20, max 100), `offset` (number, default 0)
+- Response: `{nodes: [{hash, blue_score, parents, selected_parent}], sink_hash, total_blocks}`
+
 ### GET /api/contracts
 Returns a list of all deployed contracts.
+
+### GET /api/contract/:address/state
+Query persistent storage key-value state of a ZCL smart contract.
+- Query parameters: `key` (u64 string or 0x hex, default 0)
+- Response: `{address, key, value}`
+
+### GET /api/contract/:address/code
+Query deployed ZCL bytecode hex and size for a smart contract address.
+- Response: `{address, bytecode, size}`
 
 ### GET /api/tokens
 Returns a list of all deployed tokens with their metadata (name, symbol, total_supply, owner_address).
@@ -4328,14 +4382,29 @@ Returns a list of all deployed tokens with their metadata (name, symbol, total_s
 Returns the off-chain metadata for a token: `{name, symbol, description, twitter, telegram, website, icon_uri}`
 
 ### GET /api/token-balance
-Query parameters: `token=<contract_address>&holder=<holder_id>`
-Returns: `{balance, holder, token}`
+Query custom token balance for a holder address.
+- Query parameters: `token=<contract_address>&holder=<holder_id>`
+- Response: `{balance, holder, token}`
+
+### GET /api/dex-reserves
+Query DEX liquidity pool reserves (Reserve A, Reserve B, LP Supply).
+- Query parameters: `dex=<dex_address>`
+- Response: `{dex, reserve_a, reserve_b, lp_supply}`
 
 ### POST /api/deploy-token
 Deploy a bonding-curve token with metadata.
 - Body: `{name, symbol, supply, slope, owner, description, twitter, telegram, website, icon_base64}`
 - Response: `{contract_address, name, symbol, description, socials, icon_uri, slope, supply, gasUsed}`
-- Note: State-changing endpoints require ZYANYA_EXPLORER_ENABLE_WRITE=1 on the server.
+
+### POST /api/token-transfer
+Transfer custom tokens from sender to recipient.
+- Body: `{token, from, to, amount, gas}`
+- Response: `{success, txHash, gasUsed}`
+
+### POST /api/compile-contract
+Compile ZCL contract source code into executable VM bytecode hex.
+- Body: `{source: string}`
+- Response: `{bytecode, gas_estimate}`
 
 ### POST /api/invoke-contract
 Execute a state-changing contract call (buy, sell, transfer, init).
@@ -4353,6 +4422,8 @@ Execute a read-only contract call (balance_of, total_supply, price).
 ### GET /token-icons/:filename
 Returns a token icon PNG image.
 
+> **Note on Testnet Write Access:** On the Zyanya testnet, `ZYANYA_EXPLORER_ENABLE_WRITE=1` is intentionally set so users can test the `/launch` token creator + bonding-curve trades without authentication. No authentication is required on the testnet. For mainnet, state-changing endpoints will require authentication + rate limiting.
+
 ## Bonding Curve Math
 - price(supply) = slope * supply
 - buy cost = slope * (2 * S * k + k^2) / 2  (where S = current supply, k = tokens to mint)
@@ -4360,11 +4431,41 @@ Returns a token icon PNG image.
 - All arithmetic is checked (overflow/underflow reverts the transaction)
 
 ## Web MCP
-The explorer serves `/webmcp.js` which registers blockchain tools on `navigator.modelContext`:
-- `get-chain-info` — query chain state
-- `get-block` — query block details
-- `get-recent-blocks` — list recent blocks
-- `ipv6-safety` — IPv6 hardening guidance
+The explorer serves `/webmcp.js` which registers 15 blockchain tools on `navigator.modelContext`:
+
+### Query Tools (Read-Only)
+1. **`get-chain-info`**: Query chain state (block count, DAA score, difficulty, supply, peers).
+   - Input Schema: `{ type: "object", properties: {} }`
+2. **`get-block`**: Query block details by 64-char hex hash or recent blocks.
+   - Input Schema: `{ type: "object", properties: { blockHash: { type: "string" } } }`
+3. **`get-dag-info`**: Query parallel GHOSTDAG structure and sink block.
+   - Input Schema: `{ type: "object", properties: {} }`
+4. **`get-contract-state`**: Query storage key-value state of a ZCL contract.
+   - Input Schema: `{ type: "object", properties: { contractAddress: { type: "string" }, key: { type: "string" } }, required: ["contractAddress"] }`
+5. **`get-contract-code`**: Query deployed bytecode hex and size.
+   - Input Schema: `{ type: "object", properties: { contractAddress: { type: "string" } }, required: ["contractAddress"] }`
+6. **`get-token-balance`**: Query custom token balance for holder.
+   - Input Schema: `{ type: "object", properties: { tokenAddress: { type: "string" }, holder: { type: "string" } }, required: ["tokenAddress"] }`
+7. **`get-dex-reserves`**: Query DEX liquidity pool reserves.
+   - Input Schema: `{ type: "object", properties: { dexAddress: { type: "string" } }, required: ["dexAddress"] }`
+8. **`ipv6-safety`**: Return IPv6 peer-to-peer security & firewall guidance.
+   - Input Schema: `{ type: "object", properties: {} }`
+
+### Deploy & Invoke Tools (Network Operations)
+9. **`deploy-token`**: Deploy a bonding-curve token with metadata and socials.
+   - Input Schema: `{ type: "object", properties: { name: { type: "string" }, symbol: { type: "string" }, supply: { type: "number" }, owner: { type: "string" }, slope: { type: "number" }, description: { type: "string" }, twitter: { type: "string" }, telegram: { type: "string" }, website: { type: "string" }, icon_base64: { type: "string" } }, required: ["supply"] }`
+10. **`deploy-contract`**: Deploy compiled ZCL bytecode hex.
+    - Input Schema: `{ type: "object", properties: { bytecode: { type: "string" }, gas: { type: "number" } }, required: ["bytecode"] }`
+11. **`compile-contract`**: Compile ZCL source code into VM bytecode hex.
+    - Input Schema: `{ type: "object", properties: { source: { type: "string" } }, required: ["source"] }`
+12. **`invoke-contract`**: Invoke smart contract entry point with calldata (state-changing).
+    - Input Schema: `{ type: "object", properties: { contractAddress: { type: "string" }, entryPoint: { type: "number" }, calldata: { type: "string" }, gas: { type: "number" } }, required: ["contractAddress"] }`
+13. **`call-contract`**: Read-only virtual execution of smart contract function.
+    - Input Schema: `{ type: "object", properties: { contractAddress: { type: "string" }, calldata: { type: "string" }, entryPoint: { type: "number" }, gas: { type: "number" } }, required: ["contractAddress"] }`
+14. **`swap-on-dex`**: Swap tokens on a DEX liquidity pool.
+    - Input Schema: `{ type: "object", properties: { dexAddress: { type: "string" }, tokenIn: { type: "string" }, amountIn: { type: "number" } }, required: ["dexAddress", "tokenIn", "amountIn"] }`
+15. **`token-transfer`**: Transfer custom tokens to a recipient.
+    - Input Schema: `{ type: "object", properties: { tokenAddress: { type: "string" }, from: { type: "string" }, to: { type: "string" }, amount: { type: "number" } }, required: ["tokenAddress", "to", "amount"] }`
 
 Browser-based agents auto-discover these tools when visiting the explorer page.
 
