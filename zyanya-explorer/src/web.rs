@@ -2074,25 +2074,7 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
                 font-size: 0.75rem;
             }
         }
-    </style>
-</head>
-<body>
-    <div class="grid-bg"></div>
-
-    <header>
-        <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
-        <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-        <nav>
-            <a href="/">Home</a>
-            <a href="/explorer">Explorer</a>
-            <a href="/testnet">Testnet</a>
-            <a href="/launch">Launch</a>
-            <a href="/future">Roadmap</a>
-            <a href="/agents">Agents</a>
-            <a href="/docs">Docs</a>
-            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--accent-spectral);">GitHub</a>
-        </nav>
-    </header>
+    
 
         .hero-text {
             font-size: 1.05rem;
@@ -2216,6 +2198,23 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
     </style>
 </head>
 <body>
+    <div class="grid-bg"></div>
+
+    <header>
+        <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
+        <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/explorer">Explorer</a>
+            <a href="/testnet">Testnet</a>
+            <a href="/launch">Launch</a>
+            <a href="/future">Roadmap</a>
+            <a href="/agents">Agents</a>
+            <a href="/docs">Docs</a>
+            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--accent-spectral);">GitHub</a>
+        </nav>
+    </header>
+
     <div class="grid-bg"></div>
 
     <main class="container">
