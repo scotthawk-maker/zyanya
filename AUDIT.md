@@ -64,7 +64,7 @@ The Zyanya architecture is well-structured, leveraging Rust's safety guarantees 
 
 ### 🟠 HIGH SEVERITY
 
-#### [HIGH-01] Non-Deterministic Storage Iteration Order in Consensus `ContractStateCache`
+#### [HIGH-01] ~~Non-Deterministic Storage Iteration Order in Consensus `ContractStateCache`~~ — **FIXED (2026-08-01)**
 - **Location**: `consensus/src/model/stores/contract.rs:57-59`, `139-153`
 - **What is wrong**: `ContractStateCache` uses standard `std::collections::HashMap` for `code`, `storage`, and `balances`. When `commit_cache_batch` iterates over state updates to write to RocksDB:
   ```rust
@@ -89,6 +89,8 @@ The Zyanya architecture is well-structured, leveraging Rust's safety guarantees 
       ...
   }
   ```
+
+> **VERDICT: APPLIED.** Switched all three cache fields (`code`, `storage`, `balances`) from `HashMap` to `BTreeMap` for deterministic lexicographic iteration order in `commit_cache_batch`. Keys (`[u8;32]`, `([u8;32],u64)`) both implement `Ord`, and all call sites use only `insert`/`get`/`contains_key` (BTreeMap-compatible). Also fixed the stale `test_smart_contract_end_to_end_integration` deploy assertions (deploy no longer executes init since commit a14be79). All 49 consensus + 28 VM tests pass. — *Pi, 2026-08-01*
 
 #### [HIGH-02] Unchecked Integer Overflow / Underflow in VM Arithmetic
 - **Location**: `zyanya-vm/src/vm.rs:86-103`

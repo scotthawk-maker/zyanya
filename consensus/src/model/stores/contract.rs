@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use rocksdb::WriteBatch;
@@ -52,11 +52,15 @@ impl std::fmt::Display for ContractStorageKey {
 impl MemSizeEstimator for ContractStorageKey {}
 
 /// Transactional in-memory state cache for smart contract execution.
+///
+/// Uses `BTreeMap` (not `HashMap`) for deterministic iteration order — critical so that
+/// `commit_cache_batch` writes and any state-root hashing produce identical ordering across
+/// all consensus nodes (avoids network forks). See AUDIT.md HIGH-01.
 #[derive(Clone, Default)]
 pub struct ContractStateCache {
-    pub code: HashMap<[u8; 32], Vec<u8>>,
-    pub storage: HashMap<([u8; 32], u64), u64>,
-    pub balances: HashMap<[u8; 32], u64>,
+    pub code: BTreeMap<[u8; 32], Vec<u8>>,
+    pub storage: BTreeMap<([u8; 32], u64), u64>,
+    pub balances: BTreeMap<[u8; 32], u64>,
     pub fallback_storage: Option<Arc<dyn Fn([u8; 32], u64) -> u64 + Send + Sync>>,
     pub fallback_balance: Option<Arc<dyn Fn([u8; 32]) -> u64 + Send + Sync>>,
 }
@@ -455,12 +459,14 @@ mod tests {
         let contract_addr = deploy_outcome.contract_address;
         let addr_bytes: [u8; 32] = contract_addr.as_bytes().try_into().unwrap();
 
-        assert_eq!(deploy_outcome.return_value, Some(300));
-        assert!(deploy_outcome.gas_used > 0);
-        assert_eq!(deploy_outcome.gas_fee, deploy_outcome.gas_used * 10);
+        // Deploy no longer executes the init bytecode (since commit a14be79): it only stores
+        // the code + credits the deposit. Init runs separately via an invoke at entry_point 0.
+        assert_eq!(deploy_outcome.return_value, None, "Deploy should not execute init");
+        assert_eq!(deploy_outcome.gas_used, 0, "Deploy does not consume execution gas");
+        assert_eq!(deploy_outcome.gas_fee, 10000 * 10, "Full max_gas fee charged on deploy");
         assert_eq!(deploy_outcome.burned_fee, deploy_outcome.gas_fee / 2);
         assert_eq!(deploy_outcome.miner_fee, deploy_outcome.gas_fee - deploy_outcome.burned_fee);
-        assert_eq!(cache.sload(&addr_bytes, 42).unwrap(), 300, "State updated in cache");
+        assert_eq!(cache.sload(&addr_bytes, 42).unwrap_or(0), 0, "State not set until invoke runs");
 
         // 4. Create InvokeContract transaction targeting deployed contract
         let invoke_payload = ContractPayload::Invoke(InvokeContractPayload {
