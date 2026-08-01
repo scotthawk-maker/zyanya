@@ -1,0 +1,129 @@
+// Zyanya Staking Contract in Zyanya Contract Language (ZCL)
+// Non-custodial ZYAN Token Staking & Protocol Fee Reward Sharing
+//
+// Storage Layout:
+// Key 0: totalStaked (Total ZYAN tokens staked in pool)
+// Key 1: totalRewardsDistributed (Accumulated protocol fee rewards)
+// Key (caller * 1000 + 10): Staked amount for caller
+// Key (caller * 1000 + 20): Claimed reward amount for caller
+
+contract Staking {
+    // Entry point 0: Init / Constructor
+    fn init() {
+        sstore(0, 0);
+        sstore(1, 0);
+        return 0;
+    }
+
+    // Entry point 1: stake(caller, amount)
+    fn stake(caller, amount) {
+        if (amount == 0) {
+            return 0;
+        }
+
+        let total = sload(0);
+        let stakeKey = caller * 1000 + 10;
+        let currentStaked = sload(stakeKey);
+
+        sstore(0, total + amount);
+        sstore(stakeKey, currentStaked + amount);
+
+        return currentStaked + amount;
+    }
+
+    // Entry point 2: unstake(caller, amount)
+    fn unstake(caller, amount) {
+        let stakeKey = caller * 1000 + 10;
+        let currentStaked = sload(stakeKey);
+
+        if (currentStaked < amount) {
+            return 0;
+        }
+
+        let total = sload(0);
+        sstore(0, total - amount);
+        sstore(stakeKey, currentStaked - amount);
+
+        return currentStaked - amount;
+    }
+
+    // Entry point 3: depositRewards(amount)
+    fn depositRewards(amount) {
+        if (amount == 0) {
+            return 0;
+        }
+        let totalRewards = sload(1);
+        sstore(1, totalRewards + amount);
+        return totalRewards + amount;
+    }
+
+    // Entry point 4: claimRewards(caller)
+    fn claimRewards(caller) {
+        let totalStaked = sload(0);
+        if (totalStaked == 0) {
+            return 0;
+        }
+
+        let stakeKey = caller * 1000 + 10;
+        let userStaked = sload(stakeKey);
+        if (userStaked == 0) {
+            return 0;
+        }
+
+        let totalRewards = sload(1);
+        let rewardKey = caller * 1000 + 20;
+        let claimed = sload(rewardKey);
+
+        // User share = (userStaked * totalRewards) / totalStaked
+        let entitlement = (userStaked * totalRewards) / totalStaked;
+        if (entitlement <= claimed) {
+            return 0;
+        }
+
+        let pending = entitlement - claimed;
+        sstore(rewardKey, claimed + pending);
+
+        return pending;
+    }
+
+    // Entry point 5: getStaked(caller)
+    fn getStaked(caller) {
+        let stakeKey = caller * 1000 + 10;
+        return sload(stakeKey);
+    }
+
+    // Entry point 6: getTotalStaked()
+    fn getTotalStaked() {
+        return sload(0);
+    }
+
+    // Entry point 7: getTotalRewards()
+    fn getTotalRewards() {
+        return sload(1);
+    }
+
+    // Entry point 8: getPendingRewards(caller)
+    fn getPendingRewards(caller) {
+        let totalStaked = sload(0);
+        if (totalStaked == 0) {
+            return 0;
+        }
+
+        let stakeKey = caller * 1000 + 10;
+        let userStaked = sload(stakeKey);
+        if (userStaked == 0) {
+            return 0;
+        }
+
+        let totalRewards = sload(1);
+        let rewardKey = caller * 1000 + 20;
+        let claimed = sload(rewardKey);
+
+        let entitlement = (userStaked * totalRewards) / totalStaked;
+        if (entitlement <= claimed) {
+            return 0;
+        }
+
+        return entitlement - claimed;
+    }
+}

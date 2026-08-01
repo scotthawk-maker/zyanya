@@ -1039,6 +1039,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             <button class="nav-btn mono" onclick="switchTab('contracts')">CONTRACTS</button>
             <button class="nav-btn mono" onclick="switchTab('tokens')">TOKENS</button>
             <button class="nav-btn mono" onclick="switchTab('dex')">DEX</button>
+            <button class="nav-btn mono" onclick="switchTab('staking')">STAKING & GRADUATION</button>
             <a href="/dag" class="nav-btn mono" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">DAG GRAPH ↗</a>
             <a href="/tools" class="nav-btn mono" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">WEBMCP TOOLS</a>
         </div>
@@ -1197,6 +1198,86 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             </div>
         </div>
 
+        <div id="tab-staking" class="tab-content">
+            <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                <div class="stat-card">
+                    <div class="stat-label mono">TOTAL ZYAN STAKED</div>
+                    <div class="stat-value mono" id="stake-stat-total" style="color: #7EC8D3;">--- ZYAN</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label mono">TOTAL REWARDS DISTRIBUTED</div>
+                    <div class="stat-value mono" id="stake-stat-rewards" style="color: #FF4D4D;">--- ZYAN</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label mono">ESTIMATED APY</div>
+                    <div class="stat-value mono" id="stake-stat-apy" style="color: #7EC8D3; font-weight: bold;">--- %</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label mono">YOUR PENDING REWARDS</div>
+                    <div class="stat-value mono" id="stake-stat-user-pending" style="color: #38EF7D;">--- ZYAN</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title mono">ZYAN STAKING PORTAL</h3>
+                    </div>
+                    <p style="color: #A0B0BC; font-size: 0.85rem; margin-bottom: 1rem;">
+                        Stake ZYAN tokens non-custodially to earn 0.3% protocol fee rewards from DEX swaps and bonding curve transactions.
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <input type="text" id="stake-address-input" class="search-input mono" placeholder="Your Zyanya Address (zyanyatest:...)" style="font-size: 0.85rem;" oninput="loadStaking()">
+                        <input type="number" id="stake-amount-input" class="search-input mono" placeholder="Amount ZYAN to Stake / Unstake" style="font-size: 0.85rem;">
+                        
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                            <button class="search-btn mono" style="flex: 1; min-width: 100px;" onclick="handleStake()">STAKE ZYAN</button>
+                            <button class="search-btn mono" style="flex: 1; min-width: 100px; background: #FF4D4D;" onclick="handleUnstake()">UNSTAKE</button>
+                            <button class="search-btn mono" style="flex: 1; min-width: 120px; background: #38EF7D; color: #0A0F1C;" onclick="handleClaimRewards()">CLAIM REWARDS</button>
+                        </div>
+                        <div id="stake-status-msg" class="mono" style="font-size: 0.8rem; min-height: 1.2rem; margin-top: 0.5rem;"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title mono">BONDING CURVE GRADUATION</h3>
+                    </div>
+                    <p style="color: #A0B0BC; font-size: 0.85rem; margin-bottom: 1rem;">
+                        When a bonding curve token collects <strong>10 ZYAN</strong> in reserve liquidity, it automatically <strong>graduates</strong> into a constant-product AMM DEX Pool (x &bull; y = k) with full liquidity.
+                    </p>
+                    <div style="background: rgba(10,15,28,0.6); padding: 1rem; border-radius: 6px; border: 1px solid rgba(126,200,211,0.2);">
+                        <div class="mono" style="font-size: 0.8rem; color: #7EC8D3; margin-bottom: 0.4rem;">GRADUATION THRESHOLD: <strong>10 ZYAN Reserve</strong></div>
+                        <div class="mono" style="font-size: 0.78rem; color: #8090A0; margin-bottom: 0.2rem;">&bull; Phase 1: Bonding curve (p = slope &bull; supply)</div>
+                        <div class="mono" style="font-size: 0.78rem; color: #8090A0; margin-bottom: 0.2rem;">&bull; Phase 2: Reserve reaches 10 ZYAN &rarr; AMM Graduation</div>
+                        <div class="mono" style="font-size: 0.78rem; color: #8090A0;">&bull; Phase 3: Constant-Product DEX Pool + 0.3% Staking Rewards</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mono">TOKEN GRADUATION PROGRESS</h3>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="mono">TOKEN</th>
+                                <th class="mono">RESERVE</th>
+                                <th class="mono">TARGET</th>
+                                <th class="mono">GRADUATION PROGRESS</th>
+                                <th class="mono">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="graduation-tbody">
+                            <tr><td colspan="5" style="text-align:center; color:#A0B0BC;">Loading token graduation progress...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div id="tab-dag" class="tab-content">
             <div class="card">
                 <div class="card-header">
@@ -1233,6 +1314,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             if (name === 'contracts') loadContracts();
             if (name === 'tokens') loadTokens();
             if (name === 'dex') loadDex();
+            if (name === 'staking') loadStaking();
             if (name === 'dag') loadDag();
         }
 
@@ -1419,6 +1501,148 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                 document.getElementById('dex-tbody').innerHTML = html;
             } catch (err) {
                 console.error(err);
+            }
+        }
+
+        async function loadStaking() {
+            try {
+                const callerInput = document.getElementById('stake-address-input') ? document.getElementById('stake-address-input').value.trim() : '';
+                const infoRes = await fetch('/api/staking-info' + (callerInput ? '?caller=' + encodeURIComponent(callerInput) : ''));
+                const info = await infoRes.json();
+                
+                document.getElementById('stake-stat-total').innerText = (info.total_staked_zyan || 0).toFixed(2) + ' ZYAN';
+                document.getElementById('stake-stat-rewards').innerText = (info.total_rewards_zyan || 0).toFixed(2) + ' ZYAN';
+                document.getElementById('stake-stat-apy').innerText = (info.estimated_apy_percent || 18.5).toFixed(1) + ' %';
+                document.getElementById('stake-stat-user-pending').innerText = (info.user_pending_rewards_zyan || 0).toFixed(4) + ' ZYAN';
+
+                const tokensRes = await fetch('/api/tokens');
+                const tokens = await tokensRes.json();
+                let gradHtml = '';
+                if (Array.isArray(tokens) && tokens.length > 0) {
+                    for (const t of tokens) {
+                        try {
+                            const gRes = await fetch('/api/token/' + t.contract_address + '/graduation');
+                            const g = await gRes.json();
+                            const pct = g.progress_percent || 0;
+                            const statusBadge = g.graduated 
+                                ? '<span class="badge" style="background:#38EF7D; color:#0A0F1C; font-weight:bold;">GRADUATED (AMM DEX)</span>' 
+                                : '<span class="badge" style="background:#7EC8D3; color:#0A0F1C;">BONDING CURVE</span>';
+                            
+                            gradHtml += '<tr>' +
+                                '<td class="mono" style="color:#7EC8D3; font-weight:bold;">' + (g.name || 'Token') + ' (' + (g.symbol || 'TKN') + ')</td>' +
+                                '<td class="mono">' + (g.reserve_zyan || 0).toFixed(2) + ' ZYAN</td>' +
+                                '<td class="mono">10.00 ZYAN</td>' +
+                                '<td>' +
+                                    '<div style="background:rgba(13,59,80,0.5); border-radius:4px; overflow:hidden; height:18px; width:100%; border:1px solid rgba(126,200,211,0.3);">' +
+                                        '<div style="background:linear-gradient(90deg, #7EC8D3, #38EF7D); height:100%; width:' + Math.min(pct, 100) + '%; transition: width 0.5s;"></div>' +
+                                    '</div>' +
+                                    '<div class="mono" style="font-size:0.7rem; color:#A0B0BC; text-align:right; margin-top:2px;">' + pct.toFixed(1) + '%</div>' +
+                                '</td>' +
+                                '<td>' + statusBadge + '</td>' +
+                            '</tr>';
+                        } catch(e) { console.error(e); }
+                    }
+                }
+                if (!gradHtml) {
+                    gradHtml = '<tr><td colspan="5" style="text-align:center; color:#A0B0BC;">No active bonding curve tokens found</td></tr>';
+                }
+                document.getElementById('graduation-tbody').innerHTML = gradHtml;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function handleStake() {
+            const addr = document.getElementById('stake-address-input').value.trim();
+            const amountZyan = parseFloat(document.getElementById('stake-amount-input').value);
+            const msgEl = document.getElementById('stake-status-msg');
+            if (!addr || !amountZyan || amountZyan <= 0) {
+                msgEl.style.color = '#FF4D4D';
+                msgEl.innerText = 'Please enter a valid Zyanya address and amount.';
+                return;
+            }
+            msgEl.style.color = '#7EC8D3';
+            msgEl.innerText = 'Building unsigned staking transaction...';
+            try {
+                const amountSompi = Math.round(amountZyan * 100000000);
+                const res = await fetch('/api/unsigned-stake', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ address: addr, amount: amountSompi })
+                });
+                const data = await res.json();
+                if (data.error) {
+                    msgEl.style.color = '#FF4D4D';
+                    msgEl.innerText = 'Error: ' + data.error;
+                } else {
+                    msgEl.style.color = '#38EF7D';
+                    msgEl.innerText = 'Unsigned Stake Tx built! Total fee: ' + data.summary.fee_zyan + ' ZYAN. Ready for Schnorr signature.';
+                }
+            } catch(e) {
+                msgEl.style.color = '#FF4D4D';
+                msgEl.innerText = 'Request failed: ' + e.message;
+            }
+        }
+
+        async function handleUnstake() {
+            const addr = document.getElementById('stake-address-input').value.trim();
+            const amountZyan = parseFloat(document.getElementById('stake-amount-input').value);
+            const msgEl = document.getElementById('stake-status-msg');
+            if (!addr || !amountZyan || amountZyan <= 0) {
+                msgEl.style.color = '#FF4D4D';
+                msgEl.innerText = 'Please enter a valid Zyanya address and amount to unstake.';
+                return;
+            }
+            msgEl.style.color = '#7EC8D3';
+            msgEl.innerText = 'Building unsigned unstake transaction...';
+            try {
+                const amountSompi = Math.round(amountZyan * 100000000);
+                const res = await fetch('/api/unsigned-unstake', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ address: addr, amount: amountSompi })
+                });
+                const data = await res.json();
+                if (data.error) {
+                    msgEl.style.color = '#FF4D4D';
+                    msgEl.innerText = 'Error: ' + data.error;
+                } else {
+                    msgEl.style.color = '#38EF7D';
+                    msgEl.innerText = 'Unsigned Unstake Tx built! Ready for Schnorr signature.';
+                }
+            } catch(e) {
+                msgEl.style.color = '#FF4D4D';
+                msgEl.innerText = 'Request failed: ' + e.message;
+            }
+        }
+
+        async function handleClaimRewards() {
+            const addr = document.getElementById('stake-address-input').value.trim();
+            const msgEl = document.getElementById('stake-status-msg');
+            if (!addr) {
+                msgEl.style.color = '#FF4D4D';
+                msgEl.innerText = 'Please enter your Zyanya address to claim rewards.';
+                return;
+            }
+            msgEl.style.color = '#7EC8D3';
+            msgEl.innerText = 'Building claim rewards transaction...';
+            try {
+                const res = await fetch('/api/unsigned-claim-rewards', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ address: addr })
+                });
+                const data = await res.json();
+                if (data.error) {
+                    msgEl.style.color = '#FF4D4D';
+                    msgEl.innerText = 'Error: ' + data.error;
+                } else {
+                    msgEl.style.color = '#38EF7D';
+                    msgEl.innerText = 'Claim Rewards Tx built! Ready for Schnorr signature.';
+                }
+            } catch(e) {
+                msgEl.style.color = '#FF4D4D';
+                msgEl.innerText = 'Request failed: ' + e.message;
             }
         }
 

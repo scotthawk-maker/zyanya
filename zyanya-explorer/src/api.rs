@@ -499,6 +499,95 @@ pub async fn api_submit_signed_tx_handler(
     }
 }
 
+pub async fn api_token_graduation_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Path(address): Path<String>,
+) -> Response {
+    match client.get_token_graduation(&address).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::NOT_FOUND, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+pub struct StakingInfoQuery {
+    pub address: Option<String>,
+    pub caller: Option<String>,
+}
+
+pub async fn api_staking_info_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Query(query): Query<StakingInfoQuery>,
+) -> Response {
+    let caller = query.caller.or(query.address);
+    match client.get_staking_info(caller).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+#[allow(non_snake_case)]
+pub struct UnsignedStakeReq {
+    pub address: String,
+    pub amount: u64,
+    pub gas: Option<u64>,
+}
+
+pub async fn api_unsigned_stake_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Json(payload): Json<UnsignedStakeReq>,
+) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
+    match client.build_unsigned_stake_tx(payload).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+#[allow(non_snake_case)]
+pub struct UnsignedUnstakeReq {
+    pub address: String,
+    pub amount: u64,
+    pub gas: Option<u64>,
+}
+
+pub async fn api_unsigned_unstake_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Json(payload): Json<UnsignedUnstakeReq>,
+) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
+    match client.build_unsigned_unstake_tx(payload).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+#[allow(non_snake_case)]
+pub struct UnsignedClaimRewardsReq {
+    pub address: String,
+    pub gas: Option<u64>,
+}
+
+pub async fn api_unsigned_claim_rewards_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Json(payload): Json<UnsignedClaimRewardsReq>,
+) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
+    match client.build_unsigned_claim_rewards_tx(payload).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
 pub async fn api_deploy_token_handler(
     State(_client): State<Arc<RpcClientManager>>,
     Json(_payload): Json<DeployTokenReq>,

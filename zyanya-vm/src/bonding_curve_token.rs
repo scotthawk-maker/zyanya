@@ -10,14 +10,11 @@ pub const BONDING_CURVE_ASM: &str = r#"
 // --- Check Initialization ---
 PUSH 1
 SLOAD
-DUP
 PUSH 0
 EQ
 JUMPIF :initialize
 
 // --- Dispatch Invoke by Entry Point ---
-POP
-
 DUP
 PUSH 0
 EQ
@@ -53,26 +50,13 @@ PUSH 6
 EQ
 JUMPIF :op_price
 
+POP
 PUSH 0
 RETURN
 
 // --- Initialization (on Deploy) ---
 :initialize
-POP
-PUSH 1
-PUSH 1
-SWAP
-SSTORE
-PUSH 0
-PUSH 0
-SWAP
-SSTORE
-PUSH 0
-PUSH 2
-SWAP
-SSTORE
-PUSH 1
-RETURN
+JUMP :op_init
 
 // --- Entry Point 0: Init(slope) ---
 :op_init
@@ -307,6 +291,7 @@ mod tests {
 
         // 0. Deploy Initialization (as node consensus does)
         let mut vm = VM::new(100_000);
+        vm.stack.push(1).unwrap(); // slope = 1
         vm.stack.push(0).unwrap(); // entry point 0 on deploy
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Deploy failed");
         assert_eq!(res.return_value, Some(1), "Deploy should succeed");
@@ -390,7 +375,8 @@ mod tests {
 
         // Step 1: Deploy contract
         let mut vm = VM::new(100_000);
-        vm.stack.push(0).unwrap();
+        vm.stack.push(1).unwrap(); // slope = 1
+        vm.stack.push(0).unwrap(); // entry_point 0
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
         assert_eq!(res.return_value, Some(1), "Deploy returns 1");
 
@@ -447,6 +433,52 @@ mod tests {
         assert_eq!(state.get(&addr, bob), 0);
         assert_eq!(state.get(&addr, 0), 35);
         assert_eq!(state.get(&addr, 2), 6125);
+    }
+
+    #[test]
+    fn test_bonding_curve_init_slope_parameter_and_dispatch() {
+        let bytecode = bonding_curve_bytecode();
+        let opcodes = OpCode::deserialize_slice(&bytecode).expect("Failed to deserialize bytecode");
+        let mut state = MockStateBackend::new();
+        let addr = [0x88u8; 32];
+        let user = 999u64;
+
+        // 1. Fresh contract init with slope = 11 (entry point 0, params = [11])
+        let mut vm = VM::new(100_000);
+        vm.stack.push(11).unwrap(); // slope = 11
+        vm.stack.push(0).unwrap();  // entry_point = 0
+        let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Init failed");
+        assert_eq!(res.return_value, Some(1));
+        assert_eq!(state.get(&addr, 1), 11, "Slope must be read as 11 from stack parameter");
+
+        // 2. Buy 10 tokens for user (entry point 4)
+        // Cost formula: slope * (2 * supply * k + k^2) / 2 = 11 * (0 + 100) / 2 = 550
+        let mut vm = VM::new(100_000);
+        vm.stack.push(10).unwrap();   // k = 10
+        vm.stack.push(user).unwrap(); // caller
+        vm.stack.push(4).unwrap();    // entry_point 4
+        let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Buy failed");
+        assert_eq!(res.return_value, Some(550), "Buy cost should be 550 for slope 11");
+        assert_eq!(state.get(&addr, 2), 550, "Reserve should be 550");
+
+        // 3. Sell 10 tokens for user (entry point 5)
+        // Refund formula: slope * (2 * 10 * 10 - 100) / 2 = 11 * 100 / 2 = 550
+        let mut vm = VM::new(100_000);
+        vm.stack.push(10).unwrap();   // k = 10
+        vm.stack.push(user).unwrap(); // caller
+        vm.stack.push(5).unwrap();    // entry_point 5
+        let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Sell failed");
+        assert_eq!(res.return_value, Some(550), "Sell refund should be 550");
+        assert_eq!(state.get(&addr, 2), 0, "Reserve should be 0 after full sell");
+
+        // 4. Already-initialized contract calling init(slope = 5) (entry point 0)
+        // Should dispatch correctly to :op_init and set slope = 5
+        let mut vm = VM::new(100_000);
+        vm.stack.push(5).unwrap(); // new slope = 5
+        vm.stack.push(0).unwrap(); // entry_point = 0
+        let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Re-init failed");
+        assert_eq!(res.return_value, Some(1));
+        assert_eq!(state.get(&addr, 1), 5, "Slope updated to 5");
     }
 }
 
