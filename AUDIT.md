@@ -34,9 +34,9 @@ The Zyanya architecture is well-structured, leveraging Rust's safety guarantees 
 
 ### 🔴 CRITICAL SEVERITY
 
-#### [CRIT-01] Stack Operand Transposition in `OpCode::SStore`
+#### [CRIT-01] ~~Stack Operand Transposition in `OpCode::SStore`~~ — **FALSE POSITIVE (verified 2026-08-01)**
 - **Location**: `zyanya-vm/src/vm.rs:225-230`
-- **What is wrong**: `OpCode::SStore` pops `val` first, followed by `key`:
+- **Original claim**: `OpCode::SStore` pops `val` first, followed by `key`:
   ```rust
   OpCode::SStore => {
       let val = self.stack.pop()?;
@@ -57,6 +57,8 @@ The Zyanya architecture is well-structured, leveraging Rust's safety guarantees 
       self.pc += 1;
   }
   ```
+
+> **VERDICT: DO NOT APPLY — false positive.** The compiler codegen (`zyanya-vm/src/compiler/codegen.rs:209-215`) emits `sstore(key, val)` by pushing `args[0]` (key) **first**, then `args[1]` (val) **second**, so **val is on top of the stack**. The VM popping `val` first then `key` is therefore **correct and consistent**. Applying the proposed fix transposes the operands and **breaks 10 unit tests** (`test_stateful_sstore_sload`, `test_inter_contract_call`, `test_token_contract_full_lifecycle`, `test_bonding_curve_*`, etc.). All 28 `zyanya-vm` tests pass with the current code. The auditor's `Push(42); Swap; SStore` example mischaracterized the post-`Swap` stack order. — *Pi, 2026-08-01*
 
 ---
 
@@ -242,9 +244,9 @@ The Zyanya architecture is well-structured, leveraging Rust's safety guarantees 
 | Metric | Rating | Notes |
 | :--- | :--- | :--- |
 | **Architecture** | Excellent | Clean crate breakdown, modular design |
-| **Consensus Safety** | Needs Attention | Require fix for `CRIT-01` (`SStore`) and `HIGH-01` (`HashMap`) |
+| **Consensus Safety** | Needs Attention | `CRIT-01` is a **false positive** (verified — see note above); `HIGH-01` (`HashMap`) still needs fix |
 | **Wallet Security** | Good | Robust BIP-39 seed support; mask secret keys in stdout |
 | **API Security** | Moderate | Add pagination limits and API rate-limiting |
 
 **Final Verdict**: **PASS WITH REQUIRED REMEDIATIONS**  
-Remediate `CRIT-01` (`SStore` stack order) and `HIGH-01` (`HashMap` determinism) prior to public testnet release.
+Remediate `HIGH-01` (`HashMap` determinism) prior to public testnet release. (`CRIT-01` was investigated and is a false positive — no change needed.)
