@@ -127,7 +127,7 @@ impl VM {
                     let a = self.stack.pop()?;
                     let extra_gas = 1 + (b as u64 / 32);
                     self.gas_meter.consume(extra_gas)?;
-                    self.stack.push(a.wrapping_pow(b as u32))?;
+                    self.stack.push(a.checked_pow(b as u32).ok_or(VMError::ArithmeticOverflow)?)?;
                     self.pc += 1;
                 }
                 OpCode::And => {
