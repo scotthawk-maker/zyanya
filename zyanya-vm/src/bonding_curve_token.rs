@@ -5,7 +5,13 @@ pub const BONDING_CURVE_ASM: &str = r#"
 // Key 0: Total Supply
 // Key 1: Slope
 // Key 2: Reserve
+// Key 3: Phase (0=bonding, 1=frozen, 2=AMM)
+// Key 4: AMM X Reserve (ZYAN side)
+// Key 5: AMM Y Supply (token side)
+// Key 6: AMM K (constant product)
 // Key <address>: Holder Balance
+// NOTE: Storage keys 0-6 are reserved for contract state. User balances use
+// key = address (u64). Use addresses > 6 to avoid collisions (tests use 100, 200, etc.)
 
 // --- Check Initialization ---
 PUSH 1
@@ -46,6 +52,11 @@ EQ
 JUMPIF :op_sell
 
 DUP
+PUSH 7
+EQ
+JUMPIF :op_amm_swap
+
+DUP
 PUSH 6
 EQ
 JUMPIF :op_price
@@ -72,6 +83,10 @@ SWAP
 SSTORE
 PUSH 0
 PUSH 2
+SWAP
+SSTORE
+PUSH 0
+PUSH 3
 SWAP
 SSTORE
 PUSH 1
@@ -129,6 +144,15 @@ RETURN
 // --- Entry Point 4: Buy(caller, tokens_to_mint) ---
 :op_buy
 POP
+// Phase guard: only allow buy if phase == 0
+PUSH 3
+SLOAD
+PUSH 0
+EQ
+JUMPIF :op_buy_proceed
+PUSH 0
+RETURN
+:op_buy_proceed
 STORE 0
 STORE 1
 
@@ -184,6 +208,15 @@ RETURN
 // --- Entry Point 5: Sell(caller, tokens_in) ---
 :op_sell
 POP
+// Phase guard: only allow sell if phase == 0
+PUSH 3
+SLOAD
+PUSH 0
+EQ
+JUMPIF :op_sell_proceed
+PUSH 0
+RETURN
+:op_sell_proceed
 STORE 0
 STORE 1
 
@@ -268,6 +301,134 @@ SLOAD
 PUSH 0
 SLOAD
 MUL
+RETURN
+
+// --- Entry Point 7: AMM Swap(caller, token_in_amount, is_x_to_y) ---
+:op_amm_swap
+POP
+STORE 0    // caller
+STORE 1    // token_in_amount
+STORE 2    // is_x_to_y
+
+// Phase guard: only allow if phase == 2
+PUSH 3
+SLOAD
+PUSH 2
+EQ
+JUMPIF :amm_proceed
+PUSH 0
+RETURN
+
+:amm_proceed
+// Check direction
+LOAD 2
+PUSH 1
+EQ
+JUMPIF :amm_x_to_y
+
+// --- Y to X (sell tokens for ZYAN) ---
+// Check holder balance >= token_in_amount
+LOAD 0
+SLOAD        // holder[caller]
+LOAD 1       // token_in_amount
+GTE
+JUMPIF :amm_y_to_x_calc
+PUSH 0
+RETURN
+
+:amm_y_to_x_calc
+// new_y = y_supply + token_in_amount
+PUSH 5
+SLOAD        // y_supply
+LOAD 1
+ADD
+STORE 3      // mem[3] = new_y
+
+// new_x = k / new_y
+PUSH 6
+SLOAD        // k
+LOAD 3
+DIV
+STORE 4      // mem[4] = new_x
+
+// zyan_out = x_reserve - new_x
+PUSH 4
+SLOAD        // x_reserve
+LOAD 4
+SUB
+STORE 5      // mem[5] = zyan_out
+
+// Update holder balance: holder[caller] -= token_in_amount
+LOAD 0
+SLOAD        // holder[caller]
+LOAD 1
+SUB
+LOAD 0
+SWAP
+SSTORE
+
+// Update x_reserve = new_x
+LOAD 4
+PUSH 4
+SWAP
+SSTORE
+
+// Update y_supply = new_y
+LOAD 3
+PUSH 5
+SWAP
+SSTORE
+
+// Return zyan_out
+LOAD 5
+RETURN
+
+// --- X to Y (buy tokens with ZYAN) ---
+:amm_x_to_y
+// new_x = x_reserve + token_in_amount
+PUSH 4
+SLOAD        // x_reserve
+LOAD 1
+ADD
+STORE 3      // mem[3] = new_x
+
+// new_y = k / new_x
+PUSH 6
+SLOAD        // k
+LOAD 3
+DIV
+STORE 4      // mem[4] = new_y
+
+// tokens_out = y_supply - new_y
+PUSH 5
+SLOAD        // y_supply
+LOAD 4
+SUB
+STORE 5      // mem[5] = tokens_out
+
+// Update holder balance: holder[caller] += tokens_out
+LOAD 0
+SLOAD        // holder[caller]
+LOAD 5
+ADD
+LOAD 0
+SWAP
+SSTORE
+
+// Update x_reserve = new_x
+LOAD 3
+PUSH 4
+SWAP
+SSTORE
+
+// Update y_supply = new_y
+LOAD 4
+PUSH 5
+SWAP
+SSTORE
+
+// Return tokens_out
+LOAD 5
 RETURN
 "#;
 
