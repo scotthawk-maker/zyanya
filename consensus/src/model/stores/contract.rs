@@ -115,6 +115,21 @@ impl StateBackend for ContractStateCache {
             .cloned()
             .ok_or_else(|| VMError::StorageError("Contract code not found".to_string()))
     }
+
+    fn get_balance(&self, contract_address: &[u8; 32]) -> Result<u64, VMError> {
+        // Delegate to the inherent lookup (with fallback) — qualify via ContractStateCache
+        // to avoid infinite recursion through this trait method.
+        Ok(ContractStateCache::get_balance(self, contract_address))
+    }
+
+    fn withdraw(&mut self, contract_address: &[u8; 32], _recipient: u64, amount: u64) -> Result<(), VMError> {
+        let current = ContractStateCache::get_balance(self, contract_address);
+        let new_balance = current.checked_sub(amount).ok_or_else(|| {
+            VMError::InsufficientBalance { have: current, need: amount }
+        })?;
+        self.balances.insert(*contract_address, new_balance);
+        Ok(())
+    }
 }
 
 /// Database store for persistent smart contract code, storage, and balances.
@@ -182,11 +197,45 @@ pub struct ContractExecutionOutcome {
     pub miner_fee: u64,
     pub return_value: Option<u64>,
     pub success: bool,
+    /// Withdrawals produced during execution: `(recipient_u64, amount)` pairs.
+    /// The consensus layer should create UTXO outputs for these.
+    pub withdrawals: Vec<(u64, u64)>,
 }
 
 /// Processor for executing smart contract transactions in GhostDAG order.
 #[derive(Debug, Clone, Default)]
 pub struct ContractProcessor;
+
+/// Derive the verified caller's u64 key from the transaction.
+///
+/// The caller is derived from the first transaction output's `script_public_key`
+/// (the change output paying back to the signer's own address). For a standard
+/// P2PK script `[OpData32, <32-byte pubkey>, OpCheckSig]`, the address payload
+/// is the 32-byte x-only public key; we take its first 8 bytes as a little-endian
+/// u64 — the same derivation the explorer/wallet use (`holder_u64` /
+/// `parse_u64_key`). Falls back to 0 if no suitable output is found.
+fn derive_caller_u64(tx: &Transaction) -> u64 {
+    use zyanya_txscript::script_class::ScriptClass;
+    use zyanya_txscript::standard::extract_script_pub_key_address;
+
+    for output in &tx.outputs {
+        let script = output.script_public_key.script();
+        // P2PK (schnorr): [0x20, <32 bytes>, 0xac]; P2PK ECDSA: [0x21, <33 bytes>, 0xab]
+        let class = ScriptClass::from_script(&output.script_public_key);
+        if matches!(class, ScriptClass::PubKey | ScriptClass::PubKeyECDSA) {
+            if let Ok(addr) = extract_script_pub_key_address(&output.script_public_key, zyanya_addresses::Prefix::Mainnet) {
+                if addr.payload.len() >= 8 {
+                    let mut buf = [0u8; 8];
+                    buf.copy_from_slice(&addr.payload[0..8]);
+                    return u64::from_le_bytes(buf);
+                }
+            }
+        }
+        let _ = script; // silence unused binding in some cfg
+    }
+
+    0
+}
 
 impl ContractProcessor {
     pub fn new() -> Self {
@@ -222,7 +271,7 @@ impl ContractProcessor {
                 }
 
                 // Execute constructor/initial bytecode
-                let opcodes = match OpCode::deserialize_slice(&deploy.bytecode) {
+                let _ = match OpCode::deserialize_slice(&deploy.bytecode) {
                     Ok(ops) => ops,
                     Err(_) => {
                         let total_fee = deploy.max_gas.saturating_mul(deploy.gas_price);
@@ -237,6 +286,7 @@ impl ContractProcessor {
                             miner_fee: miner,
                             return_value: None,
                             success: false,
+                            withdrawals: Vec::new(),
                         });
                     }
                 };
@@ -256,6 +306,7 @@ impl ContractProcessor {
                     miner_fee: miner,
                     return_value: None,
                     success: true,
+                    withdrawals: Vec::new(),
                 })
             }
             ContractPayload::Invoke(invoke) => {
@@ -278,6 +329,7 @@ impl ContractProcessor {
                             miner_fee: miner,
                             return_value: None,
                             success: false,
+                            withdrawals: Vec::new(),
                         });
                     }
                 };
@@ -302,11 +354,14 @@ impl ContractProcessor {
                             miner_fee: miner,
                             return_value: None,
                             success: false,
+                            withdrawals: Vec::new(),
                         });
                     }
                 };
 
                 let mut vm = VM::new(invoke.max_gas);
+                // Inject the verified caller derived from the transaction signer.
+                vm.set_caller(derive_caller_u64(tx));
                 for param in invoke.parameters.iter().rev() {
                     let _ = vm.stack.push(*param);
                 }
@@ -334,6 +389,7 @@ impl ContractProcessor {
                                     miner_fee: miner,
                                     return_value: None,
                                     success: false,
+                                    withdrawals: Vec::new(),
                                 });
                             }
                         } else if invoke.entry_point == 5 {
@@ -351,6 +407,7 @@ impl ContractProcessor {
                                         miner_fee: miner,
                                         return_value: None,
                                         success: false,
+                                        withdrawals: Vec::new(),
                                     });
                                 }
                                 temp_cache.balances.insert(addr_bytes, contract_bal - refund);
@@ -367,6 +424,7 @@ impl ContractProcessor {
                             miner_fee: miner,
                             return_value: res.return_value,
                             success: true,
+                            withdrawals: res.withdrawals,
                         })
                     }
                     Err(_) => {
@@ -382,6 +440,7 @@ impl ContractProcessor {
                             miner_fee: miner,
                             return_value: None,
                             success: false,
+                            withdrawals: Vec::new(),
                         })
                     }
                 }

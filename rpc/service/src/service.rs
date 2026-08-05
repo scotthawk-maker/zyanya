@@ -787,7 +787,22 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
                 let hash_addr = zyanya_hashes::Hash::from_bytes(*contract_address);
                 self.session.get_contract_code(hash_addr).map_err(|e| zyanya_vm::VMError::StorageError(e.to_string()))
             }
-        }
+
+            fn get_balance(&self, contract_address: &[u8; 32]) -> Result<u64, zyanya_vm::VMError> {
+                // Delegate to the inherent lookup (with fallback) — qualify via ContractStateCache
+                // to avoid infinite recursion through this trait method.
+                Ok(zyanya_consensus::model::stores::contract::ContractStateCache::get_balance(&self.cache, contract_address))
+            }
+
+            fn withdraw(&mut self, contract_address: &[u8; 32], _recipient: u64, amount: u64) -> Result<(), zyanya_vm::VMError> {
+                let current = zyanya_consensus::model::stores::contract::ContractStateCache::get_balance(&self.cache, contract_address);
+                let new_balance = current.checked_sub(amount).ok_or_else(|| {
+                    zyanya_vm::VMError::InsufficientBalance { have: current, need: amount }
+                })?;
+                self.cache.balances.insert(*contract_address, new_balance);
+                Ok(())
+            }
+         }
 
         let mut vm = zyanya_vm::VM::new(request.max_gas);
         let mut state = RpcDbStateBackend {

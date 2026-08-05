@@ -9,12 +9,18 @@ pub trait StateBackend {
     fn sstore(&mut self, contract_address: &[u8; 32], key: u64, value: u64) -> Result<(), VMError>;
     /// Read compiled bytecode for a given contract address.
     fn get_code(&self, contract_address: &[u8; 32]) -> Result<Vec<u8>, VMError>;
+    /// Read the ZYAN balance held by a contract at the given address.
+    fn get_balance(&self, contract_address: &[u8; 32]) -> Result<u64, VMError>;
+    /// Withdraw ZYAN from the contract at `contract_address` to `recipient`.
+    /// Returns `Ok(())` if the transfer succeeded, or an error if funds are insufficient.
+    fn withdraw(&mut self, contract_address: &[u8; 32], recipient: u64, amount: u64) -> Result<(), VMError>;
 }
 
 /// A simple in-memory mock implementation of `StateBackend` for testing and standalone execution.
 #[derive(Debug, Clone, Default)]
 pub struct MockStateBackend {
     storage: HashMap<([u8; 32], u64), u64>,
+    balances: HashMap<[u8; 32], u64>,
     code: HashMap<[u8; 32], Vec<u8>>,
 }
 
@@ -23,6 +29,7 @@ impl MockStateBackend {
         Self {
             storage: HashMap::new(),
             code: HashMap::new(),
+            balances: HashMap::new(),
         }
     }
 
@@ -36,6 +43,16 @@ impl MockStateBackend {
 
     pub fn set(&mut self, contract_address: &[u8; 32], key: u64, value: u64) {
         self.storage.insert((*contract_address, key), value);
+    }
+
+    /// Set the ZYAN balance for a contract (testing helper).
+    pub fn set_balance(&mut self, contract_address: &[u8; 32], balance: u64) {
+        self.balances.insert(*contract_address, balance);
+    }
+
+    /// Read the ZYAN balance for a contract (testing helper).
+    pub fn balance(&self, contract_address: &[u8; 32]) -> u64 {
+        self.balances.get(contract_address).copied().unwrap_or(0)
     }
 }
 
@@ -55,6 +72,22 @@ impl StateBackend for MockStateBackend {
             .cloned()
             .ok_or_else(|| VMError::StorageError("Contract code not found".to_string()))
     }
+
+    fn get_balance(&self, contract_address: &[u8; 32]) -> Result<u64, VMError> {
+        Ok(self.balances.get(contract_address).copied().unwrap_or(0))
+    }
+
+    fn withdraw(&mut self, contract_address: &[u8; 32], _recipient: u64, amount: u64) -> Result<(), VMError> {
+        let current = self.balances.get(contract_address).copied().unwrap_or(0);
+        let new_balance = current.checked_sub(amount).ok_or_else(|| {
+            VMError::StorageError(format!(
+                "Insufficient contract balance: have {}, withdraw {}",
+                current, amount
+            ))
+        })?;
+        self.balances.insert(*contract_address, new_balance);
+        Ok(())
+    }
 }
 
 /// A dummy no-op state backend that returns 0 for loads and ignores stores.
@@ -72,5 +105,13 @@ impl StateBackend for NoopStateBackend {
 
     fn get_code(&self, _contract_address: &[u8; 32]) -> Result<Vec<u8>, VMError> {
         Err(VMError::StorageError("Contract code not found".to_string()))
+    }
+
+    fn get_balance(&self, _contract_address: &[u8; 32]) -> Result<u64, VMError> {
+        Ok(0)
+    }
+
+    fn withdraw(&mut self, _contract_address: &[u8; 32], _recipient: u64, _amount: u64) -> Result<(), VMError> {
+        Ok(())
     }
 }

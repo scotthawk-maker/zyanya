@@ -37,4 +37,7 @@ pub enum VMError {
 
     #[error("Unexpected end of code at PC {0}")]
     UnexpectedEndOfCode(usize),
+
+    #[error("Insufficient contract balance: have {have}, need {need}")]
+    InsufficientBalance { have: u64, need: u64 },
 }

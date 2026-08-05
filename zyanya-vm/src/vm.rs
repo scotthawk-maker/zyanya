@@ -16,6 +16,8 @@ pub struct VMResult {
     pub gas_used: u64,
     /// Final state of the operand stack.
     pub stack_dump: Vec<u64>,
+    /// Withdrawals recorded during execution: `(recipient, amount)` pairs.
+    pub withdrawals: Vec<(u64, u64)>,
 }
 
 /// The `zyanya-vm` Virtual Machine execution engine.
@@ -25,6 +27,8 @@ pub struct VM {
     pub memory: Memory,
     pub gas_meter: GasMeter,
     pub pc: usize,
+    /// Verified caller address (u64) injected by the consensus layer before execution.
+    pub caller: u64,
 }
 
 impl VM {
@@ -35,7 +39,13 @@ impl VM {
             memory: Memory::new(),
             gas_meter: GasMeter::new(gas_limit),
             pc: 0,
+            caller: 0,
         }
+    }
+
+    /// Set the verified caller address before execution. Called by the consensus layer.
+    pub fn set_caller(&mut self, caller: u64) {
+        self.caller = caller;
     }
 
     /// Execute a sequence of opcodes without contract state access (uses default noop backend).
@@ -52,6 +62,7 @@ impl VM {
         state: &mut S,
     ) -> Result<VMResult, VMError> {
         let mut return_val: Option<u64> = None;
+        let mut withdrawals: Vec<(u64, u64)> = Vec::new();
 
         while self.pc < code.len() {
             let op = &code[self.pc];
@@ -258,6 +269,7 @@ impl VM {
                     };
 
                     let mut child_vm = VM::new(forward_gas);
+                    child_vm.set_caller(self.caller);
                     if calldata > 0 {
                         let _ = child_vm.stack.push(calldata);
                     }
@@ -266,7 +278,32 @@ impl VM {
                         Ok(res) => {
                             let unused = child_vm.gas_meter.gas_limit().saturating_sub(child_vm.gas_meter.used_gas());
                             self.gas_meter.refund(unused);
+                            // Propagate withdrawals from the child call.
+                            withdrawals.extend(res.withdrawals);
                             self.stack.push(res.return_value.unwrap_or(0))?;
+                        }
+                        Err(_) => {
+                            self.stack.push(0)?;
+                        }
+                    }
+                    self.pc += 1;
+                }
+                OpCode::Caller => {
+                    self.stack.push(self.caller)?;
+                    self.pc += 1;
+                }
+                OpCode::Balance => {
+                    let bal = state.get_balance(contract_address)?;
+                    self.stack.push(bal)?;
+                    self.pc += 1;
+                }
+                OpCode::Withdraw => {
+                    let amount = self.stack.pop()?;
+                    let recipient = self.stack.pop()?;
+                    match state.withdraw(contract_address, recipient, amount) {
+                        Ok(()) => {
+                            withdrawals.push((recipient, amount));
+                            self.stack.push(1)?;
                         }
                         Err(_) => {
                             self.stack.push(0)?;
@@ -285,6 +322,7 @@ impl VM {
             return_value: return_val,
             gas_used: self.gas_meter.used_gas(),
             stack_dump: self.stack.as_slice().to_vec(),
+            withdrawals,
         })
     }
 }

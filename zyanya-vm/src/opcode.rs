@@ -76,6 +76,15 @@ pub enum OpCode {
     /// Call another contract at specified 32-byte address.
     Call([u8; 32]),
 
+    // --- Contract Context ---
+    /// Push the verified caller's address (u64) onto the stack. Set by the consensus layer.
+    Caller,
+    /// Push the contract's own ZYAN balance onto the stack.
+    Balance,
+    /// Withdraw ZYAN from the contract to a recipient. Pops `amount` then `recipient`,
+    /// pushes 1 on success or 0 on failure.
+    Withdraw,
+
     /// Return from execution with top stack value as result.
     Return,
 }
@@ -112,6 +121,9 @@ impl OpCode {
             OpCode::SLoad => 100,
             OpCode::SStore => 500,
             OpCode::Call(_) => 200,
+            OpCode::Caller => 1,
+            OpCode::Balance => 3,
+            OpCode::Withdraw => 10,
             OpCode::Return => 1,
         }
     }
@@ -167,6 +179,9 @@ impl OpCode {
                     bytes.push(0x60);
                     bytes.extend_from_slice(addr);
                 }
+                OpCode::Caller => bytes.push(0x70),
+                OpCode::Balance => bytes.push(0x71),
+                OpCode::Withdraw => bytes.push(0x72),
                 OpCode::Return => bytes.push(0xF0),
             }
         }
@@ -258,6 +273,9 @@ impl OpCode {
                     cursor += 32;
                     opcodes.push(OpCode::Call(addr));
                 }
+                0x70 => opcodes.push(OpCode::Caller),
+                0x71 => opcodes.push(OpCode::Balance),
+                0x72 => opcodes.push(OpCode::Withdraw),
                 0xF0 => opcodes.push(OpCode::Return),
                 unknown => return Err(VMError::InvalidOpcode(unknown)),
             }
@@ -314,6 +332,9 @@ impl fmt::Display for OpCode {
             OpCode::SLoad => write!(f, "SLOAD"),
             OpCode::SStore => write!(f, "SSTORE"),
             OpCode::Call(addr) => write!(f, "CALL 0x{}", addr.as_slice().to_hex()),
+            OpCode::Caller => write!(f, "CALLER"),
+            OpCode::Balance => write!(f, "BALANCE"),
+            OpCode::Withdraw => write!(f, "WITHDRAW"),
             OpCode::Return => write!(f, "RETURN"),
         }
     }
