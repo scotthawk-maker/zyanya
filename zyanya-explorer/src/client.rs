@@ -1543,8 +1543,8 @@ impl RpcClientManager {
     }
 
     pub async fn get_staking_info(&self, caller_str: Option<String>) -> Result<serde_json::Value, String> {
-        let staking_addr_str = "0x5454545454545454545454545454545454545454545454545454545454545454";
-        let staking_addr = RpcHash::from_str("5454545454545454545454545454545454545454545454545454545454545454").unwrap();
+        let staking_addr_str = "0xfe81d430cd2aa0d0299c0926c2f20e21de1929d9966aebf06cab4bf588faf631";
+        let staking_addr = RpcHash::from_str("fe81d430cd2aa0d0299c0926c2f20e21de1929d9966aebf06cab4bf588faf631").unwrap();
         let client = self.ensure_connected().await?;
 
         let total_staked = client.get_contract_state(staking_addr, 0).await.map(|r| r.value).unwrap_or(100_000_000);
@@ -1594,7 +1594,7 @@ impl RpcClientManager {
 
     pub async fn build_unsigned_stake_tx(&self, req: UnsignedStakeReq) -> Result<serde_json::Value, String> {
         let client = self.ensure_connected().await?;
-        let staking_addr_str = "5454545454545454545454545454545454545454545454545454545454545454";
+        let staking_addr_str = "fe81d430cd2aa0d0299c0926c2f20e21de1929d9966aebf06cab4bf588faf631";
         let contract_address = RpcHash::from_str(staking_addr_str).unwrap();
 
         let gas = req.gas.unwrap_or(100_000);
@@ -1725,7 +1725,7 @@ impl RpcClientManager {
 
     pub async fn build_unsigned_unstake_tx(&self, req: UnsignedUnstakeReq) -> Result<serde_json::Value, String> {
         let client = self.ensure_connected().await?;
-        let staking_addr_str = "5454545454545454545454545454545454545454545454545454545454545454";
+        let staking_addr_str = "fe81d430cd2aa0d0299c0926c2f20e21de1929d9966aebf06cab4bf588faf631";
         let contract_address = RpcHash::from_str(staking_addr_str).unwrap();
 
         let gas = req.gas.unwrap_or(100_000);
@@ -1855,7 +1855,7 @@ impl RpcClientManager {
 
     pub async fn build_unsigned_claim_rewards_tx(&self, req: UnsignedClaimRewardsReq) -> Result<serde_json::Value, String> {
         let client = self.ensure_connected().await?;
-        let staking_addr_str = "5454545454545454545454545454545454545454545454545454545454545454";
+        let staking_addr_str = "fe81d430cd2aa0d0299c0926c2f20e21de1929d9966aebf06cab4bf588faf631";
         let contract_address = RpcHash::from_str(staking_addr_str).unwrap();
 
         let gas = req.gas.unwrap_or(100_000);
