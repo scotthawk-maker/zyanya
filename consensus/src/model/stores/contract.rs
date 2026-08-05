@@ -53,7 +53,7 @@ impl MemSizeEstimator for ContractStorageKey {}
 
 /// Transactional in-memory state cache for smart contract execution.
 ///
-/// Uses `BTreeMap` (not `HashMap`) for deterministic iteration order — critical so that
+/// Uses `BTreeMap` (not `HashMap`) for deterministic iteration order - critical so that
 /// `commit_cache_batch` writes and any state-root hashing produce identical ordering across
 /// all consensus nodes (avoids network forks). See AUDIT.md HIGH-01.
 #[derive(Clone, Default)]
@@ -241,9 +241,9 @@ impl ContractProcessor {
                     }
                 };
 
-                // Save bytecode only — do NOT execute the constructor/init on deploy.
+                // Save bytecode only - do NOT execute the constructor/init on deploy.
                 // The init (setting the slope) is done separately via invoke_contract (entry_point 0).
-                // Executing here would run the init with an empty stack → garbage slope.
+                // Executing here would run the init with an empty stack  garbage slope.
                 let total_fee = deploy.max_gas.saturating_mul(deploy.gas_price);
                 let burned = total_fee / 2;
                 let miner = total_fee - burned;
@@ -354,6 +354,44 @@ impl ContractProcessor {
                                     });
                                 }
                                 temp_cache.balances.insert(addr_bytes, contract_bal - refund);
+                            }
+                        }
+
+                        // === Phase 4a: Automatic AMM graduation ===
+                        // After a successful buy (entry_point 4), if the bonding curve reserve
+                        // reaches 1B sompi (10 ZYAN), graduate the token to AMM mode.
+                        if invoke.entry_point == 4 && res.return_value.is_some() {
+                            let graduation_threshold: u64 = 1_000_000_000; // 10 ZYAN in sompi
+                            let phase = temp_cache.sload(&addr_bytes, 3).unwrap_or(0);
+                            if phase == 0 {
+                                let reserve = temp_cache.sload(&addr_bytes, 2).unwrap_or(0);
+                                if reserve >= graduation_threshold {
+                                    let supply = temp_cache.sload(&addr_bytes, 0).unwrap_or(0);
+                                    // Set phase = 2 (AMM active) — single atomic transition
+                                    let _ = temp_cache.sstore(&addr_bytes, 3, 2);
+                                    // Initialize AMM reserves (constant-product x*y=k)
+                                    let _ = temp_cache.sstore(&addr_bytes, 4, reserve);  // x_reserve (ZYAN side)
+                                    let _ = temp_cache.sstore(&addr_bytes, 5, supply);   // y_supply (token side)
+                                    let k = reserve.saturating_mul(supply);
+                                    let _ = temp_cache.sstore(&addr_bytes, 6, k);         // k (constant product)
+                                }
+                            }
+                        }
+
+                        // === Phase 4a: 0.3% protocol fee routing to staking contract ===
+                        // Route 0.3% of the buy cost (entry_point 4) or AMM trade value
+                        // (entry_point 7) to the staking contract's totalRewardsDistributed (key 1).
+                        if invoke.entry_point == 4 || invoke.entry_point == 7 {
+                            let staking_addr: [u8; 32] = [0x54u8; 32];
+                            let trade_value = match invoke.entry_point {
+                                4 => res.return_value.unwrap_or(0),  // buy cost
+                                7 => invoke.deposit_amount,          // AMM trade value (ZYAN in)
+                                _ => 0,
+                            };
+                            let fee = trade_value * 3 / 1000; // 0.3%
+                            if fee > 0 {
+                                let current_rewards = temp_cache.sload(&staking_addr, 1).unwrap_or(0);
+                                let _ = temp_cache.sstore(&staking_addr, 1, current_rewards + fee);
                             }
                         }
 
@@ -601,5 +639,161 @@ mod tests {
         assert_eq!(store.get_storage(addr_bytes, 0).unwrap(), 1_000_000, "Total supply in RocksDB");
         assert_eq!(store.get_storage(addr_bytes, 1).unwrap(), 999_900, "Owner balance in RocksDB");
         assert_eq!(store.get_storage(addr_bytes, 2).unwrap(), 100, "Recipient balance in RocksDB");
+    }
+
+    #[test]
+    fn test_graduation_consensus_integration() {
+        use zyanya_vm::bonding_curve_token::bonding_curve_bytecode;
+
+        let (_temp_dir, db) = create_temp_db!(zyanya_database::prelude::ConnBuilder::default().with_files_limit(10));
+        let _store = DbContractStore::new(db.clone(), CachePolicy::Count(100));
+        let mut cache = ContractStateCache::new();
+        let processor = ContractProcessor::new();
+
+        // 1. Deploy bonding curve contract
+        let bytecode = bonding_curve_bytecode();
+        let deploy_payload = ContractPayload::Deploy(DeployContractPayload {
+            bytecode: bytecode.clone(),
+            max_gas: 10_000_000,
+            gas_price: 1,
+            deposit_amount: 0,
+        });
+        let deploy_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000_000, deploy_payload.to_bytes().unwrap());
+        let deploy_outcome = processor.process_contract_tx(&deploy_tx, &mut cache).unwrap();
+        assert!(deploy_outcome.success, "Bonding curve deploy failed");
+        let contract_addr = deploy_outcome.contract_address;
+        let addr_bytes: [u8; 32] = contract_addr.as_bytes().try_into().unwrap();
+
+        // 2. Init with slope = 1 (entry point 0, param = [1])
+        let init_payload = ContractPayload::Invoke(InvokeContractPayload {
+            contract_address: contract_addr,
+            entry_point: 0,
+            parameters: vec![1],
+            max_gas: 10_000_000,
+            gas_price: 1,
+            deposit_amount: 0,
+        });
+        let init_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000_000, init_payload.to_bytes().unwrap());
+        let init_outcome = processor.process_contract_tx(&init_tx, &mut cache).unwrap();
+        assert!(init_outcome.success, "Init failed");
+        assert_eq!(init_outcome.return_value, Some(1));
+        // Verify phase = 0 after init
+        assert_eq!(cache.sload(&addr_bytes, 3).unwrap_or(0), 0, "Phase should be 0 after init");
+
+        // 3. Buy 45,000 tokens — cost = 45000^2 / 2 = 1,012,500,000 (>= 1B threshold)
+        //    Caller = 100, deposit must cover the cost.
+        let caller = 100u64;
+        let buy_cost = 1_012_500_000u64;
+        let buy_payload = ContractPayload::Invoke(InvokeContractPayload {
+            contract_address: contract_addr,
+            entry_point: 4,
+            parameters: vec![caller, 45_000],
+            max_gas: 10_000_000,
+            gas_price: 1,
+            deposit_amount: buy_cost,
+        });
+        let buy_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000_000, buy_payload.to_bytes().unwrap());
+        let buy_outcome = processor.process_contract_tx(&buy_tx, &mut cache).unwrap();
+        assert!(buy_outcome.success, "Buy should succeed");
+        assert_eq!(buy_outcome.return_value, Some(buy_cost), "Buy cost should be 1,012,500,000");
+
+        // 4. Verify graduation auto-fired
+        assert_eq!(cache.sload(&addr_bytes, 3).unwrap_or(0), 2, "Phase should be 2 (AMM) after graduation");
+        let reserve = cache.sload(&addr_bytes, 2).unwrap_or(0);
+        let supply = cache.sload(&addr_bytes, 0).unwrap_or(0);
+        assert_eq!(reserve, buy_cost, "Reserve should be 1,012,500,000");
+        assert_eq!(supply, 45_000, "Supply should be 45,000");
+        assert_eq!(cache.sload(&addr_bytes, 4).unwrap_or(0), reserve, "AMM x_reserve = reserve");
+        assert_eq!(cache.sload(&addr_bytes, 5).unwrap_or(0), supply, "AMM y_supply = supply");
+        let expected_k = reserve.saturating_mul(supply);
+        assert_eq!(cache.sload(&addr_bytes, 6).unwrap_or(0), expected_k, "AMM k = reserve * supply");
+
+        // 5. Verify fee routing: 0.3% of buy cost to staking contract's totalRewardsDistributed
+        let staking_addr: [u8; 32] = [0x54u8; 32];
+        let expected_fee = buy_cost * 3 / 1000; // 0.3%
+        assert_eq!(
+            cache.sload(&staking_addr, 1).unwrap_or(0),
+            expected_fee,
+            "Staking totalRewardsDistributed should receive 0.3% fee"
+        );
+
+        // 6. Attempt another buy — should return 0 (rejected, phase != 0)
+        let buy2_payload = ContractPayload::Invoke(InvokeContractPayload {
+            contract_address: contract_addr,
+            entry_point: 4,
+            parameters: vec![caller, 100],
+            max_gas: 10_000_000,
+            gas_price: 1,
+            deposit_amount: 1_000_000,
+        });
+        let buy2_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000_000, buy2_payload.to_bytes().unwrap());
+        let buy2_outcome = processor.process_contract_tx(&buy2_tx, &mut cache).unwrap();
+        assert!(buy2_outcome.success, "Buy2 tx should succeed (VM ran, returned 0)");
+        assert_eq!(buy2_outcome.return_value, Some(0), "Buy should return 0 when phase != 0");
+
+        // 7. AMM swap x_to_y: send ZYAN, receive tokens (entry point 7)
+        let zyan_in = 1_000_000u64;
+        let holder_before = cache.sload(&addr_bytes, caller).unwrap_or(0);
+        let x_before = cache.sload(&addr_bytes, 4).unwrap_or(0);
+        let y_before = cache.sload(&addr_bytes, 5).unwrap_or(0);
+
+        let swap_payload = ContractPayload::Invoke(InvokeContractPayload {
+            contract_address: contract_addr,
+            entry_point: 7,
+            parameters: vec![caller, zyan_in, 1], // caller, token_in_amount, is_x_to_y=1
+            max_gas: 10_000_000,
+            gas_price: 1,
+            deposit_amount: zyan_in,
+        });
+        let swap_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000_000, swap_payload.to_bytes().unwrap());
+        let swap_outcome = processor.process_contract_tx(&swap_tx, &mut cache).unwrap();
+        assert!(swap_outcome.success, "AMM swap should succeed");
+        let tokens_out = swap_outcome.return_value.expect("AMM swap should return tokens_out");
+        assert!(tokens_out > 0, "x_to_y swap should return > 0 tokens");
+
+        // Verify AMM state updated correctly
+        assert_eq!(cache.sload(&addr_bytes, 4).unwrap_or(0), x_before + zyan_in, "x_reserve increased by zyan_in");
+        assert_eq!(cache.sload(&addr_bytes, 5).unwrap_or(0), y_before - tokens_out, "y_supply decreased by tokens_out");
+        assert_eq!(cache.sload(&addr_bytes, caller).unwrap_or(0), holder_before + tokens_out, "Holder balance increased");
+
+        // 8. Verify AMM swap fee routing: 0.3% of zyan_in to staking
+        let expected_swap_fee = zyan_in * 3 / 1000;
+        assert_eq!(
+            cache.sload(&staking_addr, 1).unwrap_or(0),
+            expected_fee + expected_swap_fee,
+            "Staking rewards should include AMM swap fee"
+        );
+
+        // 9. AMM swap y_to_x: send tokens, receive ZYAN
+        let tokens_in = tokens_out;
+        let holder_before2 = cache.sload(&addr_bytes, caller).unwrap_or(0);
+        let x_before2 = cache.sload(&addr_bytes, 4).unwrap_or(0);
+        let y_before2 = cache.sload(&addr_bytes, 5).unwrap_or(0);
+
+        let swap2_payload = ContractPayload::Invoke(InvokeContractPayload {
+            contract_address: contract_addr,
+            entry_point: 7,
+            parameters: vec![caller, tokens_in, 0], // caller, token_in_amount, is_x_to_y=0
+            max_gas: 10_000_000,
+            gas_price: 1,
+            deposit_amount: 0,
+        });
+        let swap2_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000_000, swap2_payload.to_bytes().unwrap());
+        let swap2_outcome = processor.process_contract_tx(&swap2_tx, &mut cache).unwrap();
+        assert!(swap2_outcome.success, "AMM swap y_to_x should succeed");
+        let zyan_out = swap2_outcome.return_value.expect("AMM swap should return zyan_out");
+        assert!(zyan_out > 0, "y_to_x swap should return > 0 ZYAN");
+
+        // Verify AMM state updated correctly
+        assert_eq!(cache.sload(&addr_bytes, caller).unwrap_or(0), holder_before2 - tokens_in, "Holder balance decreased");
+        assert_eq!(cache.sload(&addr_bytes, 4).unwrap_or(0), x_before2 - zyan_out, "x_reserve decreased");
+        assert_eq!(cache.sload(&addr_bytes, 5).unwrap_or(0), y_before2 + tokens_in, "y_supply increased");
+
+        // 10. Verify no additional fee for y_to_x swap (deposit_amount=0, so no fee)
+        assert_eq!(
+            cache.sload(&staking_addr, 1).unwrap_or(0),
+            expected_fee + expected_swap_fee,
+            "No fee for y_to_x swap with 0 deposit"
+        );
     }
 }
