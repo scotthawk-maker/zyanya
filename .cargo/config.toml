@@ -1,0 +1,17 @@
+# Zyanya build configuration
+#
+# GCC 16.1.1 (CachyOS default) has an internal compiler error (ICE/segfault in
+# cc1plus) when compiling RocksDB 8.10.0 C++ source. Use GCC 15 instead.
+# GCC 15+ also dropped the transitive <cstdint> include that RocksDB headers
+# rely on, so -include cstdint is injected via CXXFLAGS.
+#
+# See WO #31 for the full root-cause analysis.
+#
+# These only affect the native RocksDB build (librocksdb-sys). If you are on a
+# toolchain without this bug (e.g. GCC <= 14, or a fixed GCC 16), you can
+# override by setting CXX/CXXFLAGS in your shell env — cargo env vars take
+# precedence over this file.
+
+[env]
+CXX = "c++-15"
+CXXFLAGS = "-include cstdint"

@@ -1,9 +1,9 @@
-pub const LOGO_SVG: &str = include_str!("/home/shawn/projects/zyanya-distro/brand/zyanya-logo.svg");
-pub const HERO_BANNER_SVG: &str = include_str!("/home/shawn/projects/zyanya-distro/brand/zyanya-hero-banner.svg");
-pub const ZYAN_COIN_SVG: &str = include_str!("/home/shawn/projects/zyanya-distro/brand/zyan-coin.svg");
-pub const GHOST_TOKEN_SVG: &str = include_str!("/home/shawn/projects/zyanya-distro/brand/ghost-token.svg");
-pub const GAS_BURN_SVG: &str = include_str!("/home/shawn/projects/zyanya-distro/brand/gas-burn-icon.svg");
-pub const TOKEN_SET_SVG: &str = include_str!("/home/shawn/projects/zyanya-distro/brand/zyanya-token-set.svg");
+pub const LOGO_SVG: &str = include_str!("../assets/brand/zyanya-logo.svg");
+pub const HERO_BANNER_SVG: &str = include_str!("../assets/brand/zyanya-hero-banner.svg");
+pub const ZYAN_COIN_SVG: &str = include_str!("../assets/brand/zyan-coin.svg");
+pub const GHOST_TOKEN_SVG: &str = include_str!("../assets/brand/ghost-token.svg");
+pub const GAS_BURN_SVG: &str = include_str!("../assets/brand/gas-burn-icon.svg");
+pub const TOKEN_SET_SVG: &str = include_str!("../assets/brand/zyanya-token-set.svg");
 
 pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
 <html lang="en">
