@@ -418,7 +418,8 @@ impl ContractProcessor {
                         // After a successful buy (entry_point 4), if the bonding curve reserve
                         // reaches 1B sompi (10 ZYAN), graduate the token to AMM mode.
                         if invoke.entry_point == 4 && res.return_value.is_some() {
-                            let graduation_threshold: u64 = 1_000_000_000; // 10 ZYAN in sompi
+                            let threshold_val = temp_cache.sload(&addr_bytes, 7).unwrap_or(1_000_000_000);
+                            let graduation_threshold: u64 = if threshold_val == 0 { 1_000_000_000 } else { threshold_val };
                             let phase = temp_cache.sload(&addr_bytes, 3).unwrap_or(0);
                             if phase == 0 {
                                 let reserve = temp_cache.sload(&addr_bytes, 2).unwrap_or(0);

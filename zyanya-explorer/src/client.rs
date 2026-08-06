@@ -1518,7 +1518,8 @@ impl RpcClientManager {
         let slope = client.get_contract_state(contract_address, 1).await.map(|r| r.value).unwrap_or(1);
         let reserve = client.get_contract_state(contract_address, 2).await.map(|r| r.value).unwrap_or(0);
 
-        let target_reserve_sompi = 1_000_000_000u64; // 10 ZYAN target reserve for AMM graduation
+        let threshold_val = client.get_contract_state(contract_address, 7).await.map(|r| r.value).unwrap_or(0);
+        let target_reserve_sompi = if threshold_val > 0 { threshold_val } else { 1_000_000_000u64 };
         let progress_percent = ((reserve as f64 / target_reserve_sompi as f64) * 100.0).min(100.0);
         let graduated = reserve >= target_reserve_sompi;
 

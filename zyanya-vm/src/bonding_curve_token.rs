@@ -9,9 +9,10 @@ pub const BONDING_CURVE_ASM: &str = r#"
 // Key 4: AMM X Reserve (ZYAN side)
 // Key 5: AMM Y Supply (token side)
 // Key 6: AMM K (constant product)
+// Key 7: Graduation Threshold (default 1_000_000_000)
 // Key <address>: Holder Balance
-// NOTE: Storage keys 0-6 are reserved for contract state. User balances use
-// key = address (u64). Use addresses > 6 to avoid collisions (tests use 100, 200, etc.)
+// NOTE: Storage keys 0-7 are reserved for contract state. User balances use
+// key = address (u64). Use addresses > 7 to avoid collisions (tests use 100, 200, etc.)
 
 // --- Check Initialization ---
 PUSH 1
@@ -61,6 +62,16 @@ PUSH 6
 EQ
 JUMPIF :op_price
 
+DUP
+PUSH 8
+EQ
+JUMPIF :op_set_graduation_threshold
+
+DUP
+PUSH 9
+EQ
+JUMPIF :op_get_graduation_threshold
+
 POP
 PUSH 0
 RETURN
@@ -87,6 +98,10 @@ SWAP
 SSTORE
 PUSH 0
 PUSH 3
+SWAP
+SSTORE
+PUSH 1000000000
+PUSH 7
 SWAP
 SSTORE
 PUSH 1
@@ -430,6 +445,30 @@ SSTORE
 // Return tokens_out
 LOAD 5
 RETURN
+
+// --- Entry Point 8: setGraduationThreshold(new_threshold) ---
+:op_set_graduation_threshold
+POP
+PUSH 7
+SWAP
+SSTORE
+PUSH 1
+RETURN
+
+// --- Entry Point 9: getGraduationThreshold ---
+:op_get_graduation_threshold
+POP
+PUSH 7
+SLOAD
+DUP
+PUSH 0
+EQ
+JUMPIF :get_default_threshold
+RETURN
+:get_default_threshold
+POP
+PUSH 1000000000
+RETURN
 "#;
 
 pub fn bonding_curve_bytecode() -> Vec<u8> {
@@ -640,6 +679,41 @@ mod tests {
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Re-init failed");
         assert_eq!(res.return_value, Some(1));
         assert_eq!(state.get(&addr, 1), 5, "Slope updated to 5");
+    }
+
+    #[test]
+    fn test_bonding_curve_graduation_threshold_get_set() {
+        let bytecode = bonding_curve_bytecode();
+        let opcodes = OpCode::deserialize_slice(&bytecode).expect("Failed to deserialize bytecode");
+        let mut state = MockStateBackend::new();
+        let addr = [0x99u8; 32];
+
+        // 1. Init (slope = 1)
+        let mut vm = VM::new(100_000);
+        vm.stack.push(1).unwrap();
+        vm.stack.push(0).unwrap();
+        let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
+        assert_eq!(res.return_value, Some(1));
+
+        // 2. Query default graduation threshold (EP 9) -> 1_000_000_000
+        let mut vm = VM::new(100_000);
+        vm.stack.push(9).unwrap();
+        let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
+        assert_eq!(res.return_value, Some(1_000_000_000), "Default threshold should be 1B");
+
+        // 3. Set graduation threshold to 500_000_000 (EP 8)
+        let mut vm = VM::new(100_000);
+        vm.stack.push(500_000_000).unwrap();
+        vm.stack.push(8).unwrap();
+        let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
+        assert_eq!(res.return_value, Some(1), "setGraduationThreshold should return 1");
+        assert_eq!(state.get(&addr, 7), 500_000_000, "Key 7 state should be 500_000_000");
+
+        // 4. Query updated graduation threshold (EP 9) -> 500_000_000
+        let mut vm = VM::new(100_000);
+        vm.stack.push(9).unwrap();
+        let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
+        assert_eq!(res.return_value, Some(500_000_000), "Updated threshold should be 500M");
     }
 }
 
