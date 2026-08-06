@@ -228,10 +228,16 @@ impl CodeGenerator {
                         ));
                     }
                     // Format: call(addr, gas, calldata...)
-                    // Stack for CALL opcode: forward_gas first, calldata args second, optional count, CALL <addr>
+                    // If addr is a variable, push it onto stack first for dynamic call evaluation.
+                    let is_dynamic_addr = matches!(&args[0], Expression::Variable(_));
+                    if is_dynamic_addr {
+                        self.generate_expression(&args[0], symbols, current_fn, fn_idx)?;
+                    }
+
                     self.generate_expression(&args[1], symbols, current_fn, fn_idx)?; // gas
 
-                    if args.len() == 3 {
+                    let is_multi = args.len() > 3;
+                    if !is_multi {
                         self.generate_expression(&args[2], symbols, current_fn, fn_idx)?; // single calldata
                     } else {
                         let num_calldata = args.len() - 2;
@@ -242,7 +248,6 @@ impl CodeGenerator {
                     }
 
                     let addr_str = match &args[0] {
-                        Expression::Variable(v) => v.clone(),
                         Expression::Number(n) => {
                             let hex = format!("{:x}", n);
                             if hex.len() == 1 || hex.len() == 2 {
@@ -253,7 +258,11 @@ impl CodeGenerator {
                         }
                         _ => "0x0000000000000000000000000000000000000000000000000000000000000000".into(),
                     };
-                    self.lines.push(format!("CALL {}", addr_str));
+                    if is_multi {
+                        self.lines.push(format!("CALLMULTI {}", addr_str));
+                    } else {
+                        self.lines.push(format!("CALL {}", addr_str));
+                    }
                 }
                 _ => {
                     // Function call fallback

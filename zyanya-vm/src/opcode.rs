@@ -73,8 +73,10 @@ pub enum OpCode {
     SStore,
 
     // --- Inter-Contract Call ---
-    /// Call another contract at specified 32-byte address.
+    /// Call another contract at specified 32-byte address with single calldata argument.
     Call([u8; 32]),
+    /// Call another contract at specified 32-byte address with multiple arguments.
+    CallMulti([u8; 32]),
 
     // --- Contract Context ---
     /// Push the verified caller's address (u64) onto the stack. Set by the consensus layer.
@@ -121,6 +123,7 @@ impl OpCode {
             OpCode::SLoad => 100,
             OpCode::SStore => 500,
             OpCode::Call(_) => 200,
+            OpCode::CallMulti(_) => 250,
             OpCode::Caller => 1,
             OpCode::Balance => 3,
             OpCode::Withdraw => 10,
@@ -177,6 +180,10 @@ impl OpCode {
                 OpCode::SStore => bytes.push(0x51),
                 OpCode::Call(addr) => {
                     bytes.push(0x60);
+                    bytes.extend_from_slice(addr);
+                }
+                OpCode::CallMulti(addr) => {
+                    bytes.push(0x61);
                     bytes.extend_from_slice(addr);
                 }
                 OpCode::Caller => bytes.push(0x70),
@@ -273,6 +280,15 @@ impl OpCode {
                     cursor += 32;
                     opcodes.push(OpCode::Call(addr));
                 }
+                0x61 => {
+                    if cursor + 32 > bytes.len() {
+                        return Err(VMError::UnexpectedEndOfCode(cursor));
+                    }
+                    let mut addr = [0u8; 32];
+                    addr.copy_from_slice(&bytes[cursor..cursor + 32]);
+                    cursor += 32;
+                    opcodes.push(OpCode::CallMulti(addr));
+                }
                 0x70 => opcodes.push(OpCode::Caller),
                 0x71 => opcodes.push(OpCode::Balance),
                 0x72 => opcodes.push(OpCode::Withdraw),
@@ -332,6 +348,7 @@ impl fmt::Display for OpCode {
             OpCode::SLoad => write!(f, "SLOAD"),
             OpCode::SStore => write!(f, "SSTORE"),
             OpCode::Call(addr) => write!(f, "CALL 0x{}", addr.as_slice().to_hex()),
+            OpCode::CallMulti(addr) => write!(f, "CALLMULTI 0x{}", addr.as_slice().to_hex()),
             OpCode::Caller => write!(f, "CALLER"),
             OpCode::Balance => write!(f, "BALANCE"),
             OpCode::Withdraw => write!(f, "WITHDRAW"),

@@ -245,79 +245,23 @@ impl VM {
                     self.pc += 1;
                 }
                 OpCode::Call(target_addr) => {
+                    let calldata = self.stack.pop()?;
+                    let forward_gas = self.stack.pop()?;
                     let mut args_to_push = Vec::new();
-                    let forward_gas: u64;
-
-                    if self.stack.len() >= 3 {
-                        if let Ok(top) = self.stack.peek() {
-                            if top >= 2 && top <= 16 && self.stack.len() >= top as usize + 2 {
-                                let count = self.stack.pop().unwrap() as usize;
-                                for _ in 0..count {
-                                    args_to_push.push(self.stack.pop()?);
-                                }
-                                args_to_push.reverse();
-                                forward_gas = self.stack.pop()?;
-                            } else {
-                                let calldata = self.stack.pop()?;
-                                forward_gas = self.stack.pop()?;
-                                if calldata > 0 {
-                                    args_to_push.push(calldata);
-                                }
-                            }
-                        } else {
-                            let calldata = self.stack.pop()?;
-                            forward_gas = self.stack.pop()?;
-                            if calldata > 0 {
-                                args_to_push.push(calldata);
-                            }
-                        }
-                    } else {
-                        let calldata = self.stack.pop()?;
-                        forward_gas = self.stack.pop()?;
-                        if calldata > 0 {
-                            args_to_push.push(calldata);
-                        }
+                    if calldata > 0 {
+                        args_to_push.push(calldata);
                     }
-
-                    self.gas_meter.consume(forward_gas)?;
-
-                    let target_bytecode = match state.get_code(target_addr) {
-                        Ok(code) => code,
-                        Err(_) => {
-                            self.stack.push(0)?;
-                            self.pc += 1;
-                            continue;
-                        }
-                    };
-
-                    let target_opcodes = match OpCode::deserialize_slice(&target_bytecode) {
-                        Ok(ops) => ops,
-                        Err(_) => {
-                            self.stack.push(0)?;
-                            self.pc += 1;
-                            continue;
-                        }
-                    };
-
-                    let mut child_vm = VM::new(forward_gas);
-                    child_vm.set_caller(self.caller);
-                    for arg in args_to_push {
-                        let _ = child_vm.stack.push(arg);
+                    self.execute_contract_subcall(target_addr, forward_gas, args_to_push, state, &mut withdrawals)?;
+                }
+                OpCode::CallMulti(target_addr) => {
+                    let count = self.stack.pop()? as usize;
+                    let mut args_to_push = Vec::new();
+                    for _ in 0..count {
+                        args_to_push.push(self.stack.pop()?);
                     }
-
-                    match child_vm.execute_stateful(&target_opcodes, target_addr, state) {
-                        Ok(res) => {
-                            let unused = child_vm.gas_meter.gas_limit().saturating_sub(child_vm.gas_meter.used_gas());
-                            self.gas_meter.refund(unused);
-                            // Propagate withdrawals from the child call.
-                            withdrawals.extend(res.withdrawals);
-                            self.stack.push(res.return_value.unwrap_or(0))?;
-                        }
-                        Err(_) => {
-                            self.stack.push(0)?;
-                        }
-                    }
-                    self.pc += 1;
+                    args_to_push.reverse();
+                    let forward_gas = self.stack.pop()?;
+                    self.execute_contract_subcall(target_addr, forward_gas, args_to_push, state, &mut withdrawals)?;
                 }
                 OpCode::Caller => {
                     self.stack.push(self.caller)?;
@@ -355,5 +299,67 @@ impl VM {
             stack_dump: self.stack.as_slice().to_vec(),
             withdrawals,
         })
+    }
+
+    fn execute_contract_subcall<S: StateBackend>(
+        &mut self,
+        target_addr: &[u8; 32],
+        forward_gas: u64,
+        args_to_push: Vec<u64>,
+        state: &mut S,
+        withdrawals: &mut Vec<(u64, u64)>,
+    ) -> Result<(), VMError> {
+        let actual_target_addr: [u8; 32] = if *target_addr == [0u8; 32] {
+            let addr_val = self.stack.pop()?;
+            if addr_val <= 255 {
+                [addr_val as u8; 32]
+            } else {
+                let mut a = [0u8; 32];
+                a[0..8].copy_from_slice(&addr_val.to_le_bytes());
+                a
+            }
+        } else {
+            *target_addr
+        };
+
+        self.gas_meter.consume(forward_gas)?;
+
+        let target_bytecode = match state.get_code(&actual_target_addr) {
+            Ok(code) => code,
+            Err(_) => {
+                self.stack.push(0)?;
+                self.pc += 1;
+                return Ok(());
+            }
+        };
+
+        let target_opcodes = match OpCode::deserialize_slice(&target_bytecode) {
+            Ok(ops) => ops,
+            Err(_) => {
+                self.stack.push(0)?;
+                self.pc += 1;
+                return Ok(());
+            }
+        };
+
+        let mut child_vm = VM::new(forward_gas);
+        child_vm.set_caller(self.caller);
+        for arg in args_to_push {
+            let _ = child_vm.stack.push(arg);
+        }
+
+        match child_vm.execute_stateful(&target_opcodes, &actual_target_addr, state) {
+            Ok(res) => {
+                let unused = child_vm.gas_meter.gas_limit().saturating_sub(child_vm.gas_meter.used_gas());
+                self.gas_meter.refund(unused);
+                withdrawals.extend(res.withdrawals);
+                self.stack.push(res.return_value.unwrap_or(0))?;
+            }
+            Err(_) => {
+                self.stack.push(0)?;
+            }
+        }
+        self.pc += 1;
+        Ok(())
     }
 }

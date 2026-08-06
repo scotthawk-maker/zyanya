@@ -193,4 +193,76 @@ mod tests {
         assert_eq!(state.get(&addr_b, 1), 142, "Contract B storage isolated and updated");
         assert_eq!(state.get(&addr_a, 99), 142, "Contract A storage updated with return value");
     }
+
+    #[test]
+    fn test_call_single_arg_no_heuristic_confusion() {
+        let mut vm = VM::new(10000);
+        let mut state = MockStateBackend::new();
+
+        let addr_a = [0x01u8; 32];
+        let addr_b = [0x02u8; 32];
+
+        // Contract B returns calldata + 10
+        let code_b = vec![
+            OpCode::Push(10),
+            OpCode::Add,
+            OpCode::Return,
+        ];
+        state.set_code(addr_b, OpCode::serialize_slice(&code_b));
+
+        // Contract A has 5 elements already on stack, then pushes gas=5000 and calldata=5
+        // (calldata 5 was previously misinterpreted as an arg count of 5)
+        let code_a = vec![
+            OpCode::Push(111),
+            OpCode::Push(222),
+            OpCode::Push(333),
+            OpCode::Push(444),
+            OpCode::Push(555),
+            OpCode::Push(5000), // gas
+            OpCode::Push(5),    // calldata = 5
+            OpCode::Call(addr_b),
+            OpCode::Return,
+        ];
+
+        let result = vm
+            .execute_stateful(&code_a, &addr_a, &mut state)
+            .expect("Contract A execution failed");
+
+        // Contract B should get calldata 5 and return 15
+        assert_eq!(result.return_value, Some(15));
+        // Remaining stack should contain the 5 junk elements [111, 222, 333, 444, 555] untouched
+        assert_eq!(result.stack_dump, vec![111, 222, 333, 444, 555]);
+    }
+
+    #[test]
+    fn test_call_multi_args() {
+        let mut vm = VM::new(10000);
+        let mut state = MockStateBackend::new();
+
+        let addr_a = [0x01u8; 32];
+        let addr_b = [0x02u8; 32];
+
+        // Contract B pops param 0 and param 1, adds them together and returns sum
+        let code_b = vec![
+            OpCode::Add,
+            OpCode::Return,
+        ];
+        state.set_code(addr_b, OpCode::serialize_slice(&code_b));
+
+        // Contract A passes arg1=20, arg2=30, count=2, gas=5000 via CallMulti
+        let code_a = vec![
+            OpCode::Push(5000), // gas
+            OpCode::Push(20),   // arg 1
+            OpCode::Push(30),   // arg 2
+            OpCode::Push(2),    // arg count = 2
+            OpCode::CallMulti(addr_b),
+            OpCode::Return,
+        ];
+
+        let result = vm
+            .execute_stateful(&code_a, &addr_a, &mut state)
+            .expect("CallMulti execution failed");
+
+        assert_eq!(result.return_value, Some(50));
+    }
 }

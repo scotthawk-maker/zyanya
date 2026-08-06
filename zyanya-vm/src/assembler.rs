@@ -133,6 +133,12 @@ impl Assembler {
                     let addr = <[u8; 32]>::from_hex(hex_str).map_err(|_| AssemblerError::InvalidAddress((*arg).into(), line_num))?;
                     OpCode::Call(addr)
                 }
+                "CALLMULTI" => {
+                    let arg = tokens.get(1).ok_or_else(|| AssemblerError::MissingArgument("CALLMULTI".into(), line_num))?;
+                    let hex_str = arg.trim_start_matches("0x");
+                    let addr = <[u8; 32]>::from_hex(hex_str).map_err(|_| AssemblerError::InvalidAddress((*arg).into(), line_num))?;
+                    OpCode::CallMulti(addr)
+                }
                 "RETURN" => OpCode::Return,
                 _ => return Err(AssemblerError::UnknownOpcode(tokens[0].to_string(), line_num)),
             };
@@ -173,7 +179,7 @@ fn opcode_line_byte_size(line: &str, line_num: usize) -> Result<usize, Assembler
         | "AND" | "OR" | "XOR" | "NOT" | "EQ" | "LT" | "GT" | "LTE" | "GTE" | "SLOAD" | "SSTORE"
         | "RETURN" => Ok(1),
         "PUSH" | "JUMP" | "JUMPIF" | "LOAD" | "STORE" => Ok(9),
-        "CALL" => Ok(33),
+        "CALL" | "CALLMULTI" => Ok(33),
         _ => Err(AssemblerError::UnknownOpcode(tokens[0].to_string(), line_num)),
     }
 }
