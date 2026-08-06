@@ -12,6 +12,6 @@
 # override by setting CXX/CXXFLAGS in your shell env — cargo env vars take
 # precedence over this file.
 
-[env]
+[target.x86_64-unknown-linux-gnu.env]
 CXX = "c++-15"
 CXXFLAGS = "-include cstdint"
