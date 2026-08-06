@@ -7,6 +7,8 @@
 // Key 2: totalLPSupply (Total LP tokens minted)
 // Key 3: feeSharePercent (Percentage of 0.3% fee routed to stakers, default 50%)
 // Key 4: totalFeesRouted (Total fees routed to staking contract)
+// Key 5: priceOracle (Last swap price: amountOut / amountIn)
+// Key 99: reentrancyLock (Reentrancy guard flag: 1 locked, 0 unlocked)
 // Key (caller + 10): LP balance for caller
 
 contract DEX {
@@ -14,11 +16,19 @@ contract DEX {
     fn init() {
         sstore(3, 50);
         sstore(4, 0);
+        sstore(5, 0);
+        sstore(99, 0);
         return 0;
     }
 
     // Entry point 1: addLiquidity(caller, amountA, amountB)
     fn addLiquidity(caller, amountA, amountB) {
+        let lock = sload(99);
+        if (lock == 1) {
+            return 0;
+        }
+        sstore(99, 1);
+
         let resA = sload(0);
         let resB = sload(1);
         let totalLP = sload(2);
@@ -44,6 +54,7 @@ contract DEX {
         let userLP = sload(lpKey);
         sstore(lpKey, userLP + minted);
 
+        sstore(99, 0);
         return minted;
     }
 
@@ -53,6 +64,12 @@ contract DEX {
     // Fee split: 0.3% fee is (amountIn * 3) / 1000. Configured percentage (feeSharePercent, default 50%)
     // is routed to staking contract (0x5454...54) entry point 3 (depositRewards).
     fn swap(tokenIn, amountIn) {
+        let lock = sload(99);
+        if (lock == 1) {
+            return 0;
+        }
+        sstore(99, 1);
+
         let resA = sload(0);
         let resB = sload(1);
         let amountOut = 0;
@@ -86,19 +103,32 @@ contract DEX {
             sstore(0, resA - amountOut);
         }
 
+        if (amountIn > 0) {
+            sstore(5, amountOut / amountIn);
+        }
+
+        sstore(99, 0);
         return amountOut;
     }
 
     // Entry point 3: removeLiquidity(caller, lpAmount)
     fn removeLiquidity(caller, lpAmount) {
+        let lock = sload(99);
+        if (lock == 1) {
+            return 0;
+        }
+        sstore(99, 1);
+
         let totalLP = sload(2);
         let lpKey = caller + 10;
         let userLP = sload(lpKey);
 
         if (userLP < lpAmount) {
+            sstore(99, 0);
             return 0;
         }
         if (totalLP == 0) {
+            sstore(99, 0);
             return 0;
         }
 
@@ -113,6 +143,7 @@ contract DEX {
         sstore(2, totalLP - lpAmount);
         sstore(lpKey, userLP - lpAmount);
 
+        sstore(99, 0);
         return amountA;
     }
 
@@ -165,5 +196,28 @@ contract DEX {
     // Entry point 11: getTotalFeesRouted() -> returns total staker fees routed
     fn getTotalFeesRouted() {
         return sload(4);
+    }
+
+    // Entry point 12: getPriceOracle() -> returns last swap price stored at key 5
+    fn getPriceOracle() {
+        return sload(5);
+    }
+
+    // Entry point 13: transferLP(caller, to, amount) -> transfers LP tokens from caller to recipient
+    fn transferLP(caller, to, amount) {
+        let callerKey = caller + 10;
+        let userLP = sload(callerKey);
+
+        if (userLP < amount) {
+            return 0;
+        }
+
+        sstore(callerKey, userLP - amount);
+
+        let toKey = to + 10;
+        let toLP = sload(toKey);
+        sstore(toKey, toLP + amount);
+
+        return 1;
     }
 }
