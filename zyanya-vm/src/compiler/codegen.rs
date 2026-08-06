@@ -224,17 +224,33 @@ impl CodeGenerator {
                 "call" => {
                     if args.len() < 3 {
                         return Err(CodegenError::InvalidBuiltinArgs(
-                            "call requires 3 arguments (addr, gas, calldata)".into(),
+                            "call requires at least 3 arguments (addr, gas, calldata...)".into(),
                         ));
                     }
-                    // Format: call(addr, gas, calldata)
-                    // Stack for CALL opcode: forward_gas first, calldata second, CALL <addr>
+                    // Format: call(addr, gas, calldata...)
+                    // Stack for CALL opcode: forward_gas first, calldata args second, optional count, CALL <addr>
                     self.generate_expression(&args[1], symbols, current_fn, fn_idx)?; // gas
-                    self.generate_expression(&args[2], symbols, current_fn, fn_idx)?; // calldata
+
+                    if args.len() == 3 {
+                        self.generate_expression(&args[2], symbols, current_fn, fn_idx)?; // single calldata
+                    } else {
+                        let num_calldata = args.len() - 2;
+                        for arg in &args[2..] {
+                            self.generate_expression(arg, symbols, current_fn, fn_idx)?;
+                        }
+                        self.lines.push(format!("PUSH {}", num_calldata));
+                    }
 
                     let addr_str = match &args[0] {
                         Expression::Variable(v) => v.clone(),
-                        Expression::Number(n) => format!("0x{:064x}", n),
+                        Expression::Number(n) => {
+                            let hex = format!("{:x}", n);
+                            if hex.len() == 1 || hex.len() == 2 {
+                                format!("0x{}", hex.repeat(32))
+                            } else {
+                                format!("0x{:064x}", n)
+                            }
+                        }
                         _ => "0x0000000000000000000000000000000000000000000000000000000000000000".into(),
                     };
                     self.lines.push(format!("CALL {}", addr_str));

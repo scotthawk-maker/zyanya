@@ -1,15 +1,19 @@
 // Zyanya DEX Contract in Zyanya Contract Language (ZCL)
-// Constant-product AMM (x * y = k with 0.3% swap fee)
+// Constant-product AMM (x * y = k with 0.3% swap fee & staker fee routing)
 //
 // Storage Layout:
 // Key 0: reserveA (Reserve of Token A / ZYAN)
 // Key 1: reserveB (Reserve of Token B / GHOST)
 // Key 2: totalLPSupply (Total LP tokens minted)
+// Key 3: feeSharePercent (Percentage of 0.3% fee routed to stakers, default 50%)
+// Key 4: totalFeesRouted (Total fees routed to staking contract)
 // Key (caller + 10): LP balance for caller
 
 contract DEX {
     // Entry point 0: Constructor / Initialization (takes 0 params)
     fn init() {
+        sstore(3, 50);
+        sstore(4, 0);
         return 0;
     }
 
@@ -46,10 +50,25 @@ contract DEX {
     // Entry point 2: swap(tokenIn, amountIn)
     // tokenIn: 0 for Token A (ZYAN), 1 for Token B (GHOST)
     // Formula with 0.3% fee: amountOut = (reserveOut * amountIn * 997) / (reserveIn * 1000 + amountIn * 997)
+    // Fee split: 0.3% fee is (amountIn * 3) / 1000. Configured percentage (feeSharePercent, default 50%)
+    // is routed to staking contract (0x5454...54) entry point 3 (depositRewards).
     fn swap(tokenIn, amountIn) {
         let resA = sload(0);
         let resB = sload(1);
         let amountOut = 0;
+
+        let totalFee = (amountIn * 3) / 1000;
+        let feeShare = sload(3);
+        if (feeShare == 0) {
+            feeShare = 50;
+        }
+        let stakerFee = (totalFee * feeShare) / 100;
+
+        if (stakerFee > 0) {
+            call(0x54, 50000, stakerFee, 3);
+            let routed = sload(4);
+            sstore(4, routed + stakerFee);
+        }
 
         if (tokenIn == 0) {
             let num = resB * amountIn * 997;
@@ -126,5 +145,25 @@ contract DEX {
     // Entry point 8: getTotalLPSupply() -> returns total LP supply
     fn getTotalLPSupply() {
         return sload(2);
+    }
+
+    // Entry point 9: setFeeShare(share) -> sets fee split percentage for stakers (e.g. 50 = 50%)
+    fn setFeeShare(share) {
+        sstore(3, share);
+        return share;
+    }
+
+    // Entry point 10: getFeeShare() -> returns fee split percentage
+    fn getFeeShare() {
+        let share = sload(3);
+        if (share == 0) {
+            return 50;
+        }
+        return share;
+    }
+
+    // Entry point 11: getTotalFeesRouted() -> returns total staker fees routed
+    fn getTotalFeesRouted() {
+        return sload(4);
     }
 }

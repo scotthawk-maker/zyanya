@@ -245,8 +245,39 @@ impl VM {
                     self.pc += 1;
                 }
                 OpCode::Call(target_addr) => {
-                    let calldata = self.stack.pop()?;
-                    let forward_gas = self.stack.pop()?;
+                    let mut args_to_push = Vec::new();
+                    let forward_gas: u64;
+
+                    if self.stack.len() >= 3 {
+                        if let Ok(top) = self.stack.peek() {
+                            if top >= 2 && top <= 16 && self.stack.len() >= top as usize + 2 {
+                                let count = self.stack.pop().unwrap() as usize;
+                                for _ in 0..count {
+                                    args_to_push.push(self.stack.pop()?);
+                                }
+                                args_to_push.reverse();
+                                forward_gas = self.stack.pop()?;
+                            } else {
+                                let calldata = self.stack.pop()?;
+                                forward_gas = self.stack.pop()?;
+                                if calldata > 0 {
+                                    args_to_push.push(calldata);
+                                }
+                            }
+                        } else {
+                            let calldata = self.stack.pop()?;
+                            forward_gas = self.stack.pop()?;
+                            if calldata > 0 {
+                                args_to_push.push(calldata);
+                            }
+                        }
+                    } else {
+                        let calldata = self.stack.pop()?;
+                        forward_gas = self.stack.pop()?;
+                        if calldata > 0 {
+                            args_to_push.push(calldata);
+                        }
+                    }
 
                     self.gas_meter.consume(forward_gas)?;
 
@@ -270,8 +301,8 @@ impl VM {
 
                     let mut child_vm = VM::new(forward_gas);
                     child_vm.set_caller(self.caller);
-                    if calldata > 0 {
-                        let _ = child_vm.stack.push(calldata);
+                    for arg in args_to_push {
+                        let _ = child_vm.stack.push(arg);
                     }
 
                     match child_vm.execute_stateful(&target_opcodes, target_addr, state) {
