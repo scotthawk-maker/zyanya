@@ -60,6 +60,10 @@ pub struct Args {
     pub inbound_limit: usize,
     #[serde(rename = "rpcmaxclients")]
     pub rpc_max_clients: usize,
+    #[serde(rename = "rpcuser")]
+    pub rpc_user: Option<String>,
+    #[serde(rename = "rpcpass")]
+    pub rpc_pass: Option<String>,
     pub max_tracked_addresses: usize,
     pub enable_unsynced_mining: bool,
     pub enable_mainnet_mining: bool,
@@ -107,6 +111,8 @@ impl Default for Args {
             outbound_target: 8,
             inbound_limit: 128,
             rpc_max_clients: 128,
+            rpc_user: None,
+            rpc_pass: None,
             max_tracked_addresses: 0,
             enable_unsynced_mining: false,
             enable_mainnet_mining: true,
@@ -191,6 +197,10 @@ impl Args {
             (false, false, false, false) => NetworkId::new(NetworkType::Mainnet),
             _ => panic!("only a single net should be activated"),
         }
+    }
+
+    pub fn rpc_auth_config(&self) -> zyanya_rpc_core::RpcAuthConfig {
+        zyanya_rpc_core::RpcAuthConfig::new(self.rpc_user.clone(), self.rpc_pass.clone())
     }
 }
 
@@ -303,6 +313,20 @@ pub fn cli() -> Command {
                 .require_equals(true)
                 .value_parser(clap::value_parser!(usize))
                 .help("Max number of RPC clients for standard connections (default: 128)."),
+        )
+        .arg(
+            Arg::new("rpcuser")
+                .long("rpcuser")
+                .value_name("USERNAME")
+                .require_equals(true)
+                .help("Username for RPC authentication."),
+        )
+        .arg(
+            Arg::new("rpcpass")
+                .long("rpcpass")
+                .value_name("PASSWORD")
+                .require_equals(true)
+                .help("Password for RPC authentication."),
         )
         .arg(arg!(--"reset-db" "Reset database before starting node. It's needed when switching between subnetworks."))
         .arg(arg!(--"enable-unsynced-mining" "Allow the node to accept blocks from RPC while not synced (this flag is mainly used for testing)"))
@@ -436,6 +460,8 @@ impl Args {
                 outbound_target: arg_match_unwrap_or::<usize>(&m, "outpeers", defaults.outbound_target),
                 inbound_limit: arg_match_unwrap_or::<usize>(&m, "maxinpeers", defaults.inbound_limit),
                 rpc_max_clients: arg_match_unwrap_or::<usize>(&m, "rpcmaxclients", defaults.rpc_max_clients),
+                rpc_user: m.get_one::<String>("rpcuser").cloned().or(defaults.rpc_user),
+                rpc_pass: m.get_one::<String>("rpcpass").cloned().or(defaults.rpc_pass),
                 max_tracked_addresses: arg_match_unwrap_or::<usize>(&m, "max-tracked-addresses", defaults.max_tracked_addresses),
                 reset_db: arg_match_unwrap_or::<bool>(&m, "reset-db", defaults.reset_db),
                 enable_unsynced_mining: arg_match_unwrap_or::<bool>(&m, "enable-unsynced-mining", defaults.enable_unsynced_mining),
@@ -593,5 +619,22 @@ mod tests {
 
         let args = Args::parse(["zyanyad", "--mainnet"]).unwrap();
         assert_eq!(args.network(), NetworkId::new(NetworkType::Mainnet));
+    }
+
+    #[test]
+    fn test_args_rpc_auth() {
+        let args = Args::parse(["zyanyad"]).unwrap();
+        assert_eq!(args.rpc_user, None);
+        assert_eq!(args.rpc_pass, None);
+        assert!(!args.rpc_auth_config().is_auth_required());
+
+        let args = Args::parse(["zyanyad", "--rpcuser=user123", "--rpcpass=pass123"]).unwrap();
+        assert_eq!(args.rpc_user, Some("user123".to_string()));
+        assert_eq!(args.rpc_pass, Some("pass123".to_string()));
+
+        let auth = args.rpc_auth_config();
+        assert!(auth.is_auth_required());
+        assert!(auth.validate("user123", "pass123"));
+        assert!(!auth.validate("user123", "wrongpass"));
     }
 }

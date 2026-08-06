@@ -15,6 +15,7 @@
 #![recursion_limit = "256"]
 
 pub mod api;
+pub mod auth;
 pub mod convert;
 pub mod error;
 pub mod model;
@@ -24,12 +25,15 @@ pub mod wasm;
 pub mod prelude {
     //! Re-exports of the most commonly used types and traits in this crate.
     pub use super::api::notifications::*;
+    pub use super::auth::*;
     pub use super::model::script_class::*;
     pub use super::model::*;
 }
 
 pub use api::notifications::*;
+pub use auth::*;
 pub use convert::utxo::*;
 pub use error::*;
 pub use model::script_class::*;
 pub use model::*;
+
