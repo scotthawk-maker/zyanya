@@ -518,7 +518,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
             <section id="hero">
                 <div id="banner-container"><!-- SVG will be injected here --></div>
                 <h1>The ghost in the IPv6 machine.</h1>
-                <p>Zyanya is an IPv6-native, agent-native blockchain built on Spectre/GhostDAG. No gateways. No translators. Just pure, end-to-end decentralized consensus over the next-generation internet.</p>
+                <p>Zyanya is an IPv6-native, agent-native blockchain with built-in DeFi — smart contracts, bonding curve tokens, AMM/DEX, and staking. Built on Spectre/GhostDAG. No gateways. No translators. Just pure, end-to-end decentralized consensus over the next-generation internet.</p>
                 <div class="cta-buttons">
                     <a href="/explorer" target="_blank" class="btn btn-primary">LAUNCH EXPLORER</a>
                     <a href="#join" class="btn btn-secondary">JOIN THE TESTNET</a>
@@ -526,7 +526,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
             </section>
 
             <section id="status-banner">
-                <p>🟣 Public testnet is LIVE &mdash; 3 nodes, <span id="testnet-blocks">50,000+</span> blocks, and mining over IPv6. <a href="/explorer" target="_blank">Explore the testnet &rarr;</a></p>
+                <p>🟣 Public testnet is LIVE &mdash; 3 nodes, <span id="testnet-blocks">50,000+</span> blocks, mining over IPv6. Smart contracts, DEX, staking, and bonding curve graduation are live. <a href="/explorer" target="_blank">Explore the testnet &rarr;</a></p>
             </section>
 
             <section id="pillars">
@@ -622,6 +622,17 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <div class="code-block">
                     <code>zyanya-query --testnet --rpcserver [2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18210 get-dag-info</code>
                 </div>
+                <h4>5. DeFi: Smart Contracts &amp; DEX</h4>
+                <p>Deploy tokens, create liquidity pools, swap, and stake using <code>zyanya-query</code>.</p>
+                <div class="code-block">
+                    <code>zyanya-query --testnet --rpcserver 127.0.0.1:18210 deploy-token --name "MYTOKEN" --symbol "MTK" --supply 1000000 --slope 1</code>
+                </div>
+                <div class="code-block">
+                    <code>zyanya-query --testnet --rpcserver 127.0.0.1:18210 dex-create --token-a ZYAN --token-b MYTOKEN</code>
+                </div>
+                <div class="code-block">
+                    <code>zyanya-query --testnet --rpcserver 127.0.0.1:18210 compile-contract --source staking.zcl</code>
+                </div>
             </section>
 
             <section id="ipv6-safety">
@@ -650,7 +661,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <ol>
                     <li>
                         <strong>Phase 01: Ghost in the Machine</strong>
-                        <span>Public testnet hardening. Protocol improvements, bug fixes, and network stability testing with the community.</span>
+                        <span>Public testnet hardening. Smart contracts, DEX, staking, bonding curve graduation, and multi-hop routing are live. Protocol improvements, bug fixes, and network stability testing with the community.</span>
                     </li>
                     <li>
                         <strong>Phase 02: Dark Launch</strong>
