@@ -564,6 +564,35 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                     </div>
                 </div>
             </section>
+            <section id="defi">
+                <h2>DEFI</h2>
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="icon-container"><h3>Smart Contracts</h3></div>
+                        <p>The Zyanya VM executes ZCL (Zyanya Contract Language) smart contracts. Compile, deploy, invoke, and call contracts with entry points. Persistent storage via <code>sstore</code>/<code>sload</code> opcodes. 56+ tests passing.</p>
+                    </div>
+                    <div class="card">
+                        <div class="icon-container"><h3>Bonding Curve</h3></div>
+                        <p>Tokens launch on a linear bonding curve (<code>price = slope &times; supply</code>). Buy and sell against the curve. When the reserve hits 1B sompi, the token graduates to a constant-product AMM — automatically.</p>
+                    </div>
+                    <div class="card">
+                        <div class="icon-container"><h3>AMM / DEX</h3></div>
+                        <p>Constant-product AMM (<code>x &times; y = k</code>) with a 0.3% swap fee. Add/remove liquidity, mint LP tokens, swap between pairs. Multi-hop router supports 2-hop and 3-hop swaps with slippage protection.</p>
+                    </div>
+                    <div class="card">
+                        <div class="icon-container"><h3>Staking</h3></div>
+                        <p>Non-custodial staking via VM opcodes (<code>Caller</code>, <code>Balance</code>, <code>Withdraw</code>). The <code>staking.zcl</code> contract: stake, unstake, depositRewards, claimRewards. 50% of DEX swap fees route to stakers as rewards.</p>
+                    </div>
+                    <div class="card">
+                        <div class="icon-container"><h3>Tokens</h3></div>
+                        <p>ERC-20-style token standard: deploy, mint, transfer, check balance and supply. Deploy via the bonding curve or as standalone contracts.</p>
+                    </div>
+                    <div class="card">
+                        <div class="icon-container"><h3>Fee Routing</h3></div>
+                        <p>DEX swap fees split automatically: 50% to the staking reward pool (via inter-contract <code>call</code>), 50% stays as LP incentive. Configurable via <code>setFeeShare</code>.</p>
+                    </div>
+                </div>
+            </section>
 
             <section id="join">
                 <h2>HOW TO JOIN THE TESTNET</h2>
