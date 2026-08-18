@@ -19,12 +19,21 @@ pub fn derive_contract_address(deploy_tx_id: &TransactionId, index: u32) -> Hash
 }
 
 /// Composite key for contract storage: contract address (32 bytes) + key (8 bytes).
+///
+/// `#[repr(C)]` guarantees the field layout is `contract_address` (32 bytes, align 1)
+/// followed by `key` (u64, align 8) at offset 32 with no padding, totalling 40 bytes.
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Serialize, Deserialize)]
 pub struct ContractStorageKey {
     pub contract_address: [u8; 32],
     pub key: u64,
 }
+
+// F-M-06: compile-time assertion that the #[repr(C)] layout has no padding so the
+// `AsRef<[u8]>` byte slice below is exactly `contract_address || key.to_le_bytes()`.
+const _: () = assert!(std::mem::size_of::<ContractStorageKey>() == 40);
+const _: () = assert!(std::mem::offset_of!(ContractStorageKey, contract_address) == 0);
+const _: () = assert!(std::mem::offset_of!(ContractStorageKey, key) == 32);
 
 impl ContractStorageKey {
     pub fn new(contract_address: [u8; 32], key: u64) -> Self {
@@ -34,6 +43,12 @@ impl ContractStorageKey {
 
 impl AsRef<[u8]> for ContractStorageKey {
     fn as_ref(&self) -> &[u8] {
+        // SAFETY: `ContractStorageKey` is `#[repr(C)]` with fields `contract_address:
+        // [u8; 32]` (align 1) followed by `key: u64` (align 8). The compile-time assertions
+        // above guarantee no padding: the struct is exactly 40 bytes with `contract_address`
+        // at offset 0 and `key` at offset 32. Therefore the raw byte slice is exactly
+        // `contract_address || key.to_le_bytes()` and contains no uninitialized padding
+        // bytes, making this cast sound.
         unsafe {
             std::slice::from_raw_parts(
                 self as *const Self as *const u8,
@@ -487,6 +502,18 @@ mod tests {
         tx::{DeployContractPayload, InvokeContractPayload, Transaction},
     };
     use zyanya_database::create_temp_db;
+
+    #[test]
+    fn test_contract_storage_key_as_ref_layout() {
+        // F-M-06: verify the AsRef<[u8]> byte slice is exactly contract_address || key.to_le_bytes().
+        let addr = [0x11u8; 32];
+        let key: u64 = 0x0706050403020100;
+        let csk = ContractStorageKey::new(addr, key);
+        let bytes = csk.as_ref();
+        let expected: Vec<u8> = addr.iter().copied().chain(key.to_le_bytes()).collect();
+        assert_eq!(bytes, expected.as_slice());
+        assert_eq!(bytes.len(), 40);
+    }
 
     #[test]
     fn test_smart_contract_end_to_end_integration() {

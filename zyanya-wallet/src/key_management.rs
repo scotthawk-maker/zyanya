@@ -93,7 +93,16 @@ impl WalletKeypair {
 
     /// Load a keypair from a 64-character hex secret key string
     pub fn from_secret_hex(hex_str: &str, prefix: Prefix) -> Result<Self, KeyManagementError> {
-        let clean = hex_str.trim().trim_start_matches("0x");
+        // F-M-04: use strip_prefix (strips at most one "0x") instead of trim_start_matches
+        // which would strip repeated "0x0x..." prefixes and silently accept malformed input.
+        let trimmed = hex_str.trim();
+        let clean = trimmed.strip_prefix("0x").or_else(|| trimmed.strip_prefix("0X")).unwrap_or(trimmed);
+        if clean.len() != 64 {
+            return Err(KeyManagementError::InvalidHex(format!(
+                "secret key hex must be 64 characters, got {}",
+                clean.len()
+            )));
+        }
         let mut bytes = [0u8; 32];
         faster_hex::hex_decode(clean.as_bytes(), &mut bytes)
             .map_err(|e| KeyManagementError::InvalidHex(e.to_string()))?;
@@ -256,6 +265,20 @@ mod tests {
         // Importing without passphrase or different passphrase gives different address
         let restored_different = WalletKeypair::from_mnemonic(&phrase, None, Prefix::Devnet).unwrap();
         assert_ne!(wallet.address.to_string(), restored_different.address.to_string());
+    }
+
+    #[test]
+    fn test_from_secret_hex_rejects_double_prefix() {
+        // F-M-04: "0x0x<64hex>" must not be silently accepted as a valid key.
+        // strip_prefix removes at most one "0x", leaving "0x<64hex>" which is 66 chars → error.
+        let wallet = WalletKeypair::generate(Prefix::Devnet);
+        let hex = wallet.secret_hex();
+        let double = format!("0x0x{hex}");
+        assert!(WalletKeypair::from_secret_hex(&double, Prefix::Devnet).is_err(),
+            "double-prefixed hex must be rejected");
+        // single prefix still works
+        let single = format!("0x{hex}");
+        assert!(WalletKeypair::from_secret_hex(&single, Prefix::Devnet).is_ok());
     }
 
     #[test]

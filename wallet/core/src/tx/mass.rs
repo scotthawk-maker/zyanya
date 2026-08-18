@@ -343,12 +343,20 @@ impl MassCalculator {
     }
 
     pub fn calc_storage_mass_output_harmonic_single(&self, output_value: u64) -> u64 {
-        self.storage_mass_parameter / output_value
+        // F-M-14: avoid division-by-zero panic; return 0 when output_value is 0.
+        self.storage_mass_parameter.checked_div(output_value).unwrap_or(0)
     }
 
     pub fn calc_storage_mass_input_mean_arithmetic(&self, total_input_value: u64, number_of_inputs: u64) -> u64 {
-        let mean_input_value = total_input_value / number_of_inputs;
-        number_of_inputs.saturating_mul(self.storage_mass_parameter / mean_input_value)
+        // F-M-14: guard against division by zero for both the mean and the final quotient.
+        if number_of_inputs == 0 {
+            return 0;
+        }
+        let mean_input_value = total_input_value.checked_div(number_of_inputs).unwrap_or(0);
+        if mean_input_value == 0 {
+            return 0;
+        }
+        number_of_inputs.saturating_mul(self.storage_mass_parameter.checked_div(mean_input_value).unwrap_or(0))
     }
 
     pub fn calc_storage_mass(&self, output_harmonic: u64, total_input_value: u64, number_of_inputs: u64) -> u64 {

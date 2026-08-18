@@ -1077,7 +1077,7 @@ impl RpcClientManager {
             });
         }
 
-        let buyer_u64 = parse_u64_key(&user_address.to_string()).unwrap_or(1);
+        let buyer_u64 = parse_u64_key(&user_address.to_string())?;
         let payload = ContractPayload::Invoke(InvokeContractPayload {
             contract_address,
             entry_point: 4,
@@ -1233,7 +1233,7 @@ impl RpcClientManager {
             });
         }
 
-        let seller_u64 = parse_u64_key(&user_address.to_string()).unwrap_or(1);
+        let seller_u64 = parse_u64_key(&user_address.to_string())?;
         let payload = ContractPayload::Invoke(InvokeContractPayload {
             contract_address,
             entry_point: 5,
@@ -1469,7 +1469,10 @@ impl RpcClientManager {
         let token_in_val: u64 = match token_in.to_lowercase().as_str() {
             "a" | "0" | "zyan" => 0,
             "b" | "1" | "ghost" => 1,
-            _ => token_in.parse::<u64>().unwrap_or(0),
+            _ => match token_in.parse::<u64>() {
+                Ok(v) => v,
+                Err(_) => return Err(format!("unknown token_in: {token_in}")),
+            },
         };
         let parameters = vec![token_in_val, amount_in];
         let res = client.invoke_contract(contract_address, 2, parameters, gas, 1, 0).await.map_err(|e| e.to_string())?;

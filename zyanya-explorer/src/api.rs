@@ -149,14 +149,28 @@ pub async fn api_contract_state_handler(
     Path(address): Path<String>,
     Query(query): Query<StateQuery>,
 ) -> Response {
-    let key_val = query.key.as_deref().map(|k| {
-        let clean = k.trim();
-        if let Some(rest) = clean.strip_prefix("0x").or_else(|| clean.strip_prefix("0X")) {
-            u64::from_str_radix(rest, 16).unwrap_or(0)
-        } else {
-            clean.parse::<u64>().unwrap_or(0)
+    // F-M-01: return 400 Bad Request on invalid key instead of silently coercing to 0.
+    let key_val: u64 = match &query.key {
+        Some(k) => {
+            let clean = k.trim();
+            if let Some(rest) = clean.strip_prefix("0x").or_else(|| clean.strip_prefix("0X")) {
+                match u64::from_str_radix(rest, 16) {
+                    Ok(v) => v,
+                    Err(_) => {
+                        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": format!("invalid hex key: {k}") }))).into_response();
+                    }
+                }
+            } else {
+                match clean.parse::<u64>() {
+                    Ok(v) => v,
+                    Err(_) => {
+                        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": format!("invalid key: {k}") }))).into_response();
+                    }
+                }
+            }
         }
-    }).unwrap_or(0);
+        None => 0,
+    };
 
     match client.get_contract_state_key(&address, key_val).await {
         Ok(val) => Json(serde_json::json!({

@@ -6,16 +6,23 @@ pub fn decrypt_mnemonic<T: AsRef<[u8]>>(
     EncryptedMnemonic { cipher, salt }: EncryptedMnemonic<T>,
     pass: &[u8],
 ) -> Result<String> {
-    let params = argon2::ParamsBuilder::new().t_cost(1).m_cost(64 * 1024).p_cost(num_threads).output_len(32).build().unwrap();
+    // F-M-11: validate inputs before slicing / building Argon2 params to avoid panics
+    // and undefined behavior on malformed Go-wallet files.
+    if cipher.as_ref().len() < 24 {
+        return Err(format!("cipher too short: {} bytes (need at least 24 for nonce)", cipher.as_ref().len()).into());
+    }
+    // Clamp the Argon2 parallelism to a sane range to avoid panicking on implausible values.
+    let num_threads = num_threads.clamp(1, 64);
+    let params = argon2::ParamsBuilder::new().t_cost(1).m_cost(64 * 1024).p_cost(num_threads).output_len(32).build()?;
     let mut key = [0u8; 32];
     argon2::Argon2::new(argon2::Algorithm::Argon2id, Default::default(), params)
-        .hash_password_into(pass, salt.as_ref(), &mut key[..])
-        .unwrap();
+        .hash_password_into(pass, salt.as_ref(), &mut key[..])?;
     let mut aead = chacha20poly1305::XChaCha20Poly1305::new(Key::from_slice(&key));
     let (nonce, ciphertext) = cipher.as_ref().split_at(24);
 
     let decrypted = aead.decrypt(nonce.into(), ciphertext)?;
-    Ok(unsafe { String::from_utf8_unchecked(decrypted) })
+    // F-M-11: validate UTF-8 instead of using from_utf8_unchecked (UB on malformed data).
+    Ok(String::from_utf8(decrypted)?)
 }
 
 #[cfg(not(target_arch = "wasm32"))]

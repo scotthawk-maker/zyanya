@@ -321,11 +321,17 @@ impl VM {
 
                     match call_result {
                         Ok(res) => {
+                            // F-M-02: refund unused gas using checked arithmetic.
                             let unused = child_vm.gas_meter.gas_limit().saturating_sub(child_vm.gas_meter.used_gas());
-                            self.gas_meter.refund(unused);
+                            self.gas_meter.refund(unused)?;
                             self.stack.push(res.return_value.unwrap_or(0))?;
                         }
                         Err(_) => {
+                            // F-M-02: refund the unused gas from the failed child so a
+                            // failing CALL does not burn the entire forwarded gas.
+                            let unused = child_vm.gas_meter.gas_limit().saturating_sub(child_vm.gas_meter.used_gas());
+                            // A refund underflow here would be a VM-internal bug; surface it.
+                            let _ = self.gas_meter.refund(unused);
                             self.stack.push(0)?;
                         }
                     }

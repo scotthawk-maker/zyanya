@@ -774,7 +774,7 @@ macro_rules! construct_uint {
                 $crate::uint::faster_hex::hex_encode(&bytes, &mut hex).expect("The output is exactly twice the size of the input");
                 let first_non_zero = hex.iter().position(|&x| x != b'0').unwrap_or(hex.len() - 1);
                 // The string is hex encoded so must be valid UTF8.
-                let str = unsafe { core::str::from_utf8_unchecked(&hex[first_non_zero..]) };
+                let str = core::str::from_utf8(&hex[first_non_zero..]).expect("hex output is valid UTF-8");
                 f.pad_integral(true, "0x", str)
             }
         }
@@ -833,7 +833,7 @@ macro_rules! construct_uint {
                 }
 
                 // SAFETY: everything up to `curr` is valid UTF8 because `DEC_DIGITS_LUT` is.
-                let buf_str = unsafe { std::str::from_utf8_unchecked(&buf[curr..]) };
+                let buf_str = std::str::from_utf8(&buf[curr..]).expect("decimal output is valid UTF-8");
                 f.pad_integral(true, "", buf_str)
             }
         }
@@ -851,7 +851,7 @@ macro_rules! construct_uint {
                     }
                 }
                 // We only wrote '0' and '1' so this is always valid UTF-8
-                let buf_str = unsafe { std::str::from_utf8_unchecked(&buf[first_one..]) };
+                let buf_str = std::str::from_utf8(&buf[first_one..]).expect("binary output is valid UTF-8");
                 f.pad_integral(true, "0b", buf_str)
             }
         }
@@ -865,7 +865,7 @@ macro_rules! construct_uint {
                     let mut hex = [0u8; Self::BYTES * 2];
                     let bytes = self.to_be_bytes();
                     $crate::uint::faster_hex::hex_encode(&bytes, &mut hex).expect("The output is exactly twice the size of the input");
-                    let hex_str = unsafe { std::str::from_utf8_unchecked(&hex) };
+                    let hex_str = std::str::from_utf8(&hex).expect("hex output is valid UTF-8");
                     serializer.serialize_str(hex_str)
                 } else {
                     use $crate::uint::serde::ser::SerializeTuple;

@@ -17,8 +17,14 @@ impl GasMeter {
     }
 
     /// Deduct gas for an operation.
+    ///
+    /// F-M-02: use `checked_add` instead of `saturating_add` so that an overflow is
+    /// surfaced as an `OutOfGas` error rather than silently masked.
     pub fn consume(&mut self, amount: u64) -> Result<(), VMError> {
-        let new_used = self.used_gas.saturating_add(amount);
+        let new_used = self.used_gas.checked_add(amount).ok_or(VMError::OutOfGas {
+            limit: self.gas_limit,
+            requested: u64::MAX,
+        })?;
         if new_used > self.gas_limit {
             return Err(VMError::OutOfGas {
                 limit: self.gas_limit,
@@ -45,7 +51,14 @@ impl GasMeter {
     }
 
     /// Refund gas (e.g. unused forwarded gas from a child VM call).
-    pub fn refund(&mut self, amount: u64) {
-        self.used_gas = self.used_gas.saturating_sub(amount);
+    ///
+    /// F-M-02: use `checked_sub` instead of `saturating_sub` and return an error on
+    /// underflow so that a negative gas refund is not silently masked.
+    pub fn refund(&mut self, amount: u64) -> Result<(), VMError> {
+        self.used_gas = self.used_gas.checked_sub(amount).ok_or(VMError::OutOfGas {
+            limit: self.gas_limit,
+            requested: 0,
+        })?;
+        Ok(())
     }
 }

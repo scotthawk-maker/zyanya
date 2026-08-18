@@ -5,6 +5,7 @@
 use crate::imports::*;
 use zyanya_bip32::PrivateKey;
 use zyanya_consensus_core::{sign::sign_with_multiple_v2, tx::SignableTransaction};
+use zeroize::Zeroize;
 
 pub trait SignerT: Send + Sync + 'static {
     fn try_sign(&self, transaction: SignableTransaction, addresses: &[Address]) -> Result<SignableTransaction>;
@@ -15,6 +16,16 @@ struct Inner {
     account: Arc<dyn Account>,
     payment_secret: Option<Secret>,
     keys: Mutex<AHashMap<Address, [u8; 32]>>,
+}
+
+impl Drop for Inner {
+    fn drop(&mut self) {
+        if let Ok(mut keys) = self.keys.lock() {
+            for (_addr, key) in keys.iter_mut() {
+                key.zeroize();
+            }
+        }
+    }
 }
 
 pub struct Signer {
@@ -50,7 +61,7 @@ impl SignerT for Signer {
         let keys = self.inner.keys.lock().unwrap();
         let mut keys_for_signing = addresses.iter().map(|address| *keys.get(address).unwrap()).collect::<Vec<_>>();
         // TODO - refactor for multisig
-        let signable_tx = sign_with_multiple_v2(mutable_tx, &keys_for_signing).fully_signed()?;
+        let signable_tx = sign_with_multiple_v2(mutable_tx, &keys_for_signing)?.fully_signed()?;
         keys_for_signing.zeroize();
         Ok(signable_tx)
     }
@@ -60,6 +71,14 @@ impl SignerT for Signer {
 
 struct KeydataSignerInner {
     keys: HashMap<Address, [u8; 32]>,
+}
+
+impl Drop for KeydataSignerInner {
+    fn drop(&mut self) {
+        for (_addr, key) in self.keys.iter_mut() {
+            key.zeroize();
+        }
+    }
 }
 
 pub struct KeydataSigner {
@@ -77,7 +96,7 @@ impl SignerT for KeydataSigner {
     fn try_sign(&self, mutable_tx: SignableTransaction, addresses: &[Address]) -> Result<SignableTransaction> {
         let mut keys_for_signing = addresses.iter().map(|address| *self.inner.keys.get(address).unwrap()).collect::<Vec<_>>();
         // TODO - refactor for multisig
-        let signable_tx = sign_with_multiple_v2(mutable_tx, &keys_for_signing).fully_signed()?;
+        let signable_tx = sign_with_multiple_v2(mutable_tx, &keys_for_signing)?.fully_signed()?;
         keys_for_signing.zeroize();
         Ok(signable_tx)
     }

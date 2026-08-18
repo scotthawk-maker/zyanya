@@ -199,7 +199,7 @@ impl PrvKeyDataStore for Inner {
         let wallet_secret = ctx.wallet_secret().await;
         let prv_key_data_info = Arc::new((&prv_key_data).into());
         self.cache().prv_key_data_info.insert(prv_key_data.id, prv_key_data_info)?;
-        let mut prv_key_data_map: Decrypted<PrvKeyDataMap> = self.cache().prv_key_data.decrypt(wallet_secret.clone())?;
+        let mut prv_key_data_map: Decrypted<PrvKeyDataMap> = self.cache().prv_key_data.decrypt(wallet_secret)?;
         prv_key_data_map.insert(prv_key_data.id, prv_key_data);
         self.cache().prv_key_data.replace(prv_key_data_map.encrypt(wallet_secret)?);
         self.set_modified(true);
@@ -208,7 +208,7 @@ impl PrvKeyDataStore for Inner {
 
     async fn remove(&self, wallet_secret: &Secret, prv_key_data_id: &PrvKeyDataId) -> Result<()> {
         let wallet_secret = ctx.wallet_secret().await;
-        let mut prv_key_data_map: Decrypted<PrvKeyDataMap> = self.cache().prv_key_data.decrypt(wallet_secret.clone())?;
+        let mut prv_key_data_map: Decrypted<PrvKeyDataMap> = self.cache().prv_key_data.decrypt(wallet_secret)?;
         prv_key_data_map.remove(prv_key_data_id);
         self.cache().prv_key_data.replace(prv_key_data_map.encrypt(wallet_secret)?);
         self.set_modified(true);

@@ -96,6 +96,11 @@ pub fn sign(mut signable_tx: SignableTransaction, schnorr_key: secp256k1::Keypai
 }
 
 /// Sign a transaction using schnorr
+///
+/// F-M-20: deprecated — `sign_with_multiple` maps keys by SEC1 pubkey but looks up
+/// by the full script_public_key script, which never matches for the standard
+/// pay-to-public-key form. Use [`sign_with_multiple_v2`] instead.
+#[deprecated(since = "0.1.0", note = "use sign_with_multiple_v2 instead; key lookup never matches")]
 pub fn sign_with_multiple(mut mutable_tx: SignableTransaction, privkeys: Vec<[u8; 32]>) -> SignableTransaction {
     let mut map = BTreeMap::new();
     for privkey in privkeys {
@@ -121,12 +126,15 @@ pub fn sign_with_multiple(mut mutable_tx: SignableTransaction, privkeys: Vec<[u8
 }
 
 /// TODO (aspect) - merge this with `v1` fn above or refactor wallet core to use the script engine.
-/// Sign a transaction using schnorr
+/// Sign a transaction using schnorr.
+///
+/// F-M-20: returns `Result<Signed, Error>` and propagates errors instead of panicking
+/// on an invalid private key or a missing UTXO entry.
 #[allow(clippy::result_large_err)]
-pub fn sign_with_multiple_v2(mut mutable_tx: SignableTransaction, privkeys: &[[u8; 32]]) -> Signed {
+pub fn sign_with_multiple_v2(mut mutable_tx: SignableTransaction, privkeys: &[[u8; 32]]) -> Result<Signed, Error> {
     let mut map = BTreeMap::new();
     for privkey in privkeys {
-        let schnorr_key = secp256k1::Keypair::from_seckey_slice(secp256k1::SECP256K1, privkey).unwrap();
+        let schnorr_key = secp256k1::Keypair::from_seckey_slice(secp256k1::SECP256K1, privkey).map_err(Error::Secp256k1Error)?;
         let schnorr_public_key = schnorr_key.public_key().x_only_public_key().0;
         let script_pub_key_script = once(0x20).chain(schnorr_public_key.serialize().into_iter()).chain(once(0xac)).collect_vec();
         map.insert(script_pub_key_script, schnorr_key);
@@ -135,10 +143,11 @@ pub fn sign_with_multiple_v2(mut mutable_tx: SignableTransaction, privkeys: &[[u
     let reused_values = SigHashReusedValuesUnsync::new();
     let mut additional_signatures_required = false;
     for i in 0..mutable_tx.tx.inputs.len() {
-        let script = mutable_tx.entries[i].as_ref().unwrap().script_public_key.script();
+        let entry = mutable_tx.entries.get(i).and_then(|e| e.as_ref()).ok_or_else(|| Error::Message(format!("missing UTXO entry for input {i}")))?;
+        let script = entry.script_public_key.script();
         if let Some(schnorr_key) = map.get(script) {
             let sig_hash = calc_schnorr_signature_hash(&mutable_tx.as_verifiable(), i, SIG_HASH_ALL, &reused_values);
-            let msg = secp256k1::Message::from_digest_slice(sig_hash.as_bytes().as_slice()).unwrap();
+            let msg = secp256k1::Message::from_digest_slice(sig_hash.as_bytes().as_slice()).map_err(Error::Secp256k1Error)?;
             let sig: [u8; 64] = *schnorr_key.sign_schnorr(msg).as_ref();
             // This represents OP_DATA_65 <SIGNATURE+SIGHASH_TYPE> (since signature length is 64 bytes and SIGHASH_TYPE is one byte)
             mutable_tx.tx.inputs[i].signature_script = std::iter::once(65u8).chain(sig).chain([SIG_HASH_ALL.to_u8()]).collect();
@@ -147,9 +156,9 @@ pub fn sign_with_multiple_v2(mut mutable_tx: SignableTransaction, privkeys: &[[u
         }
     }
     if additional_signatures_required {
-        Signed::Partially(mutable_tx)
+        Ok(Signed::Partially(mutable_tx))
     } else {
-        Signed::Fully(mutable_tx)
+        Ok(Signed::Fully(mutable_tx))
     }
 }
 
@@ -191,6 +200,7 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
+    #[allow(deprecated)]
     fn test_and_verify_sign() {
         let secp = Secp256k1::new();
         let (secret_key, public_key) = secp.generate_keypair(&mut rand::thread_rng());

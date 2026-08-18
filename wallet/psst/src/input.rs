@@ -105,6 +105,14 @@ impl Add for Input {
         // todo discuss merging. if sequence is equal - combine, otherwise use input which has bigger sequence number as is
         self.sequence = self.sequence.max(rhs.sequence);
         self.min_time = self.min_time.max(rhs.min_time);
+        // F-M-16: detect conflicting signatures for the same pubkey before merging.
+        for (pubkey, sig) in &rhs.partial_sigs {
+            if let Some(existing) = self.partial_sigs.get(pubkey) {
+                if existing != sig {
+                    return Err(CombineError::ConflictingPartialSig { pubkey: *pubkey });
+                }
+            }
+        }
         self.partial_sigs.extend(rhs.partial_sigs);
         // todo combine sighash? or always use sighash all since all signatures must be passed after completion of construction step
         // self.sighash_type
@@ -165,4 +173,6 @@ pub enum CombineError {
     NotCompatibleUnknownField(CombineMapErr<String, serde_value::Value>),
     #[error("Two different proprietary values")]
     NotCompatibleProprietary(CombineMapErr<String, serde_value::Value>),
+    #[error("Conflicting partial signature for pubkey {pubkey}")]
+    ConflictingPartialSig { pubkey: secp256k1::PublicKey },
 }

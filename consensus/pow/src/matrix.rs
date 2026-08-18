@@ -1,6 +1,5 @@
 use crate::xoshiro::XoShiRo256PlusPlus;
 use zyanya_hashes::{Hash, KHeavyHash};
-use std::mem::MaybeUninit;
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Matrix([[u16; 64]; 64]);
@@ -93,14 +92,12 @@ impl Matrix {
     }
 
     pub fn heavy_hash(&self, hash: Hash) -> Hash {
-        // SAFETY: An uninitialized MaybrUninit is always safe.
-        let mut vec: [MaybeUninit<u8>; 64] = unsafe { MaybeUninit::uninit().assume_init() };
-        for (i, element) in hash.as_bytes().into_iter().enumerate() {
-            vec[2 * i].write(element >> 4);
-            vec[2 * i + 1].write(element & 0x0F);
-        }
-        // SAFETY: The loop above wrote into all indexes.
-        let vec: [u8; 64] = unsafe { std::mem::transmute(vec) };
+        // F-M-05: replace unsafe MaybeUninit + transmute with a safe array_from_fn
+        // that performs the same nibble expansion: vec[2*i] = byte >> 4, vec[2*i+1] = byte & 0x0F.
+        let vec: [u8; 64] = array_from_fn(|i| {
+            let element = hash.as_bytes()[i / 2];
+            if i % 2 == 0 { element >> 4 } else { element & 0x0F }
+        });
 
         // Matrix-vector multiplication, convert to 4 bits, and then combine back to 8 bits.
         let mut product: [u8; 32] = array_from_fn(|i| {
