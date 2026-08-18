@@ -374,7 +374,7 @@ pub trait Account: AnySync + Send + Sync + 'static {
     ) -> Result<Bundle, Error> {
         let settings = GeneratorSettings::try_new_with_account(self.clone().as_dyn_arc(), destination, priority_fee_sompi, payload)?;
         let keydata = self.prv_key_data(wallet_secret).await?;
-        let signer = Arc::new(PSSBSigner::new(self.clone().as_dyn_arc(), keydata, payment_secret));
+        let signer = Arc::new(PSSBSigner::new(self.clone().as_dyn_arc(), keydata, payment_secret)?);
         let generator = Generator::try_new(settings, None, Some(abortable))?;
         let psst_generator = PSSTGenerator::new(generator, signer, self.wallet().address_prefix()?);
         bundle_from_psst_generator(psst_generator).await
@@ -388,7 +388,7 @@ pub trait Account: AnySync + Send + Sync + 'static {
         sign_for_address: Option<&Address>,
     ) -> Result<Bundle, Error> {
         let keydata = self.prv_key_data(wallet_secret).await?;
-        let signer = Arc::new(PSSBSigner::new(self.clone().as_dyn_arc(), keydata.clone(), payment_secret.clone()));
+        let signer = Arc::new(PSSBSigner::new(self.clone().as_dyn_arc(), keydata.clone(), payment_secret.clone())?);
 
         let network_id = self.wallet().clone().network_id()?;
         let derivation = self.as_derivation_capable()?;

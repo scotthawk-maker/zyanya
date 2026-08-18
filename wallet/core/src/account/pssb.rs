@@ -36,8 +36,11 @@ pub struct PSSBSigner {
 }
 
 impl PSSBSigner {
-    pub fn new(account: Arc<dyn Account>, keydata: PrvKeyData, payment_secret: Option<Secret>) -> Self {
-        Self { inner: Arc::new(PSSBSignerInner { keydata, account, payment_secret, keys: Mutex::new(AHashMap::new()) }) }
+    pub fn new(account: Arc<dyn Account>, keydata: PrvKeyData, payment_secret: Option<Secret>) -> Result<Self> {
+        if account.minimum_signatures() == 0 {
+            return Err(Error::InvalidArgument("minimum_signatures must be at least 1".to_string()));
+        }
+        Ok(Self { inner: Arc::new(PSSBSignerInner { keydata, account, payment_secret, keys: Mutex::new(AHashMap::new()) }) })
     }
 
     pub fn ingest(&self, addresses: &[Address]) -> Result<()> {

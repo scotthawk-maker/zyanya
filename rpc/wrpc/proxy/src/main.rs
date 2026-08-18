@@ -75,6 +75,7 @@ async fn main() -> Result<()> {
         listen_address: interface.unwrap_or_else(|| format!("wrpc://127.0.0.1:{proxy_port}")),
         grpc_proxy_address: Some(grpc_proxy_address.unwrap_or_else(|| format!("grpc://127.0.0.1:{zyanyad_port}"))),
         verbose,
+        rpc_auth_token: None,
         // ..Options::default()
     });
     log_info!("");
@@ -96,7 +97,7 @@ async fn main() -> Result<()> {
     log_info!("Zyanya wRPC server is listening on {}", options.listen_address);
     log_info!("Using `{encoding}` protocol encoding");
 
-    let config = WebSocketConfig { max_message_size: Some(1024 * 1024 * 1024), ..Default::default() };
+    let config = WebSocketConfig { max_message_size: Some(64 * 1024 * 1024), ..Default::default() };
     let listener = server.bind(&options.listen_address).await?;
     server.listen(listener, Some(config)).await?;
 

@@ -576,6 +576,8 @@ do you confirm? (answer y/n or pass --yes to the Zyanyad command line to confirm
         system_info,
     ));
     let grpc_service_broadcasters: usize = 3; // TODO: add a command line argument or derive from other arg/config/host-related fields
+    // F-C-13 FOLLOW-UP: extract the RPC auth token before `config` is moved into the gRPC service.
+    let rpc_auth_token = config.rpc_auth_token.clone();
     let grpc_service = if !args.disable_grpc {
         Some(Arc::new(GrpcService::new(
             grpc_server_addr,
@@ -624,6 +626,7 @@ do you confirm? (answer y/n or pass --yes to the Zyanyad command line to confirm
                 WrpcServerOptions {
                     listen_address: listen_address.to_address(&network.network_type, &encoding).to_string(), // TODO: use a normalized ContextualNetAddress instead of a String
                     verbose: args.wrpc_verbose,
+                    rpc_auth_token: rpc_auth_token.clone(),
                     ..WrpcServerOptions::default()
                 },
             ))

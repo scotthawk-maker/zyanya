@@ -84,6 +84,9 @@ struct Inner {
 
     /// When true, stops sending messages to the outgoing route
     is_closed: AtomicBool,
+
+    /// Optional bearer token supplied by the client (F-C-13)
+    auth_token: Option<String>,
 }
 
 impl Drop for Inner {
@@ -175,7 +178,25 @@ impl Router {
             debug!("GRPC, Route to handler got empty payload, client: {}", connection);
             return Err(GrpcServerError::InvalidRequestPayload);
         }
-        let rpc_op = request.payload.as_ref().unwrap().into();
+        let rpc_op: ZyanyadPayloadOps = request.payload.as_ref().unwrap().into();
+
+        // F-C-13: Enforce bearer-token auth on state-changing RPC methods.
+        // When a token is configured on the server, requests that require auth
+        // must supply a matching bearer token. Fail closed when token is missing/mismatched.
+        if rpc_op.requires_auth() {
+            if let Some(expected) = &self.server_context.rpc_auth_token {
+                if connection.auth_token() != Some(expected.as_str()) {
+                    debug!("GRPC, Unauthorized request for {:?} from client: {}", rpc_op, connection);
+                    let response = ZyanyadResponse {
+                        id: request.id,
+                        payload: Some(rpc_op.to_error_response(zyanya_rpc_core::RpcError::Unauthorized.into())),
+                    };
+                    connection.enqueue(response).await?;
+                    return Ok(());
+                }
+            }
+        }
+
         let route = self.get_or_subscribe(connection, rpc_op);
         match route.policy {
             RoutingPolicy::Enqueue => match route.send(request).await {
@@ -220,6 +241,7 @@ impl Connection {
         manager_sender: MpscSender<ManagerEvent>,
         mut incoming_stream: Streaming<ZyanyadRequest>,
         outgoing_route: GrpcSender,
+        auth_token: Option<String>,
     ) -> Self {
         let (shutdown_sender, mut shutdown_receiver) = oneshot_channel();
         let mut router = Router::new(server_context.clone(), interface.clone());
@@ -232,6 +254,7 @@ impl Connection {
                 server_context,
                 mutable_state: Mutex::new(InnerMutableState::new(Some(shutdown_sender))),
                 is_closed: AtomicBool::new(false),
+                auth_token,
             }),
         };
         let connection_clone = connection.clone();
@@ -316,6 +339,11 @@ impl Connection {
 
     pub fn notifier(&self) -> Arc<GrpcNotifier> {
         self.inner.server_context.notifier.clone()
+    }
+
+    /// Returns the bearer token supplied by the client, if any (F-C-13).
+    pub fn auth_token(&self) -> Option<&str> {
+        self.inner.auth_token.as_deref()
     }
 
     pub fn get_or_register_listener_id(&self) -> GrpcServerResult<ListenerId> {

@@ -68,6 +68,10 @@ pub struct Config {
 
     /// A scale factor to apply to memory allocation bounds
     pub ram_scale: f64,
+
+    /// Optional bearer token required for state-changing RPC methods.
+    /// When `None`, authentication is disabled (current behavior).
+    pub rpc_auth_token: Option<String>,
 }
 
 impl Config {
@@ -95,6 +99,7 @@ impl Config {
             initial_utxo_set: Default::default(),
             disable_upnp: false,
             ram_scale: 1.0,
+            rpc_auth_token: None,
         }
     }
 

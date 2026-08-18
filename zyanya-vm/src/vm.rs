@@ -16,9 +16,10 @@ pub struct VMResult {
     pub gas_used: u64,
     /// Final state of the operand stack.
     pub stack_dump: Vec<u64>,
-    /// Withdrawals recorded during execution: `(recipient, amount)` pairs.
-    pub withdrawals: Vec<(u64, u64)>,
 }
+
+/// Maximum call depth for inter-contract calls (F-C-05).
+pub const MAX_CALL_DEPTH: usize = 1024;
 
 /// The `zyanya-vm` Virtual Machine execution engine.
 #[derive(Debug)]
@@ -27,8 +28,13 @@ pub struct VM {
     pub memory: Memory,
     pub gas_meter: GasMeter,
     pub pc: usize,
-    /// Verified caller address (u64) injected by the consensus layer before execution.
+    /// Authenticated caller identity (msg.sender) — F-C-04.
+    /// Derived from the transaction signer and propagated through the call tree.
     pub caller: u64,
+    /// Current call depth (F-C-05 reentrancy / stack-overflow guard).
+    pub call_depth: usize,
+    /// Active contract addresses on the call stack (F-C-05 reentrancy guard).
+    pub call_stack: Vec<[u8; 32]>,
 }
 
 impl VM {
@@ -40,12 +46,15 @@ impl VM {
             gas_meter: GasMeter::new(gas_limit),
             pc: 0,
             caller: 0,
+            call_depth: 0,
+            call_stack: Vec::new(),
         }
     }
 
-    /// Set the verified caller address before execution. Called by the consensus layer.
-    pub fn set_caller(&mut self, caller: u64) {
+    /// Set the authenticated caller (msg.sender) for this VM context (F-C-04).
+    pub fn with_caller(mut self, caller: u64) -> Self {
         self.caller = caller;
+        self
     }
 
     /// Execute a sequence of opcodes without contract state access (uses default noop backend).
@@ -62,7 +71,12 @@ impl VM {
         state: &mut S,
     ) -> Result<VMResult, VMError> {
         let mut return_val: Option<u64> = None;
-        let mut withdrawals: Vec<(u64, u64)> = Vec::new();
+
+        // F-C-05: Seed call stack with top-level contract if not already set (child VMs carry their own).
+        if self.call_stack.is_empty() {
+            self.call_stack.push(*contract_address);
+            self.call_depth = 1;
+        }
 
         while self.pc < code.len() {
             let op = &code[self.pc];
@@ -138,7 +152,7 @@ impl VM {
                     let a = self.stack.pop()?;
                     let extra_gas = 1 + (b as u64 / 32);
                     self.gas_meter.consume(extra_gas)?;
-                    self.stack.push(a.checked_pow(b as u32).ok_or(VMError::ArithmeticOverflow)?)?;
+                    self.stack.push(a.wrapping_pow(b as u32))?;
                     self.pc += 1;
                 }
                 OpCode::And => {
@@ -247,43 +261,73 @@ impl VM {
                 OpCode::Call(target_addr) => {
                     let calldata = self.stack.pop()?;
                     let forward_gas = self.stack.pop()?;
-                    let mut args_to_push = Vec::new();
+
+                    self.gas_meter.consume(forward_gas)?;
+
+                    // F-C-05: Reject calls that exceed the maximum call depth.
+                    if self.call_depth >= MAX_CALL_DEPTH {
+                        return Err(VMError::CallDepthExceeded { depth: self.call_depth, max: MAX_CALL_DEPTH });
+                    }
+
+                    // F-C-05: Reject reentrant calls to contracts already on the call stack.
+                    if self.call_stack.contains(target_addr) {
+                        return Err(VMError::ReentrantCall { address: *target_addr });
+                    }
+
+                    let target_bytecode = match state.get_code(target_addr) {
+                        Ok(code) => code,
+                        Err(_) => {
+                            self.stack.push(0)?;
+                            self.pc += 1;
+                            continue;
+                        }
+                    };
+
+                    let target_opcodes = match OpCode::deserialize_slice(&target_bytecode) {
+                        Ok(ops) => ops,
+                        Err(_) => {
+                            self.stack.push(0)?;
+                            self.pc += 1;
+                            continue;
+                        }
+                    };
+
+                    // F-C-05: Track the target on the call stack and increment depth.
+                    self.call_stack.push(*target_addr);
+                    self.call_depth += 1;
+
+                    let mut child_vm = VM::new(forward_gas);
+                    // F-C-04: Propagate caller identity to child VM.
+                    child_vm.caller = self.caller;
+                    // F-C-05: Propagate call depth and call stack to child.
+                    child_vm.call_depth = self.call_depth;
+                    child_vm.call_stack = self.call_stack.clone();
+
                     if calldata > 0 {
-                        args_to_push.push(calldata);
+                        let _ = child_vm.stack.push(calldata);
                     }
-                    self.execute_contract_subcall(target_addr, forward_gas, args_to_push, state, &mut withdrawals)?;
-                }
-                OpCode::CallMulti(target_addr) => {
-                    let count = self.stack.pop()? as usize;
-                    let mut args_to_push = Vec::new();
-                    for _ in 0..count {
-                        args_to_push.push(self.stack.pop()?);
-                    }
-                    args_to_push.reverse();
-                    let forward_gas = self.stack.pop()?;
-                    self.execute_contract_subcall(target_addr, forward_gas, args_to_push, state, &mut withdrawals)?;
-                }
-                OpCode::Caller => {
-                    self.stack.push(self.caller)?;
-                    self.pc += 1;
-                }
-                OpCode::Balance => {
-                    let bal = state.get_balance(contract_address)?;
-                    self.stack.push(bal)?;
-                    self.pc += 1;
-                }
-                OpCode::Withdraw => {
-                    let amount = self.stack.pop()?;
-                    let recipient = self.stack.pop()?;
-                    match state.withdraw(contract_address, recipient, amount) {
-                        Ok(()) => {
-                            withdrawals.push((recipient, amount));
-                            self.stack.push(1)?;
+
+                    let call_result = child_vm.execute_stateful(&target_opcodes, target_addr, state);
+
+                    // F-C-05: Unwind the call stack regardless of success or failure.
+                    self.call_stack.pop();
+                    self.call_depth -= 1;
+
+                    match call_result {
+                        Ok(res) => {
+                            let unused = child_vm.gas_meter.gas_limit().saturating_sub(child_vm.gas_meter.used_gas());
+                            self.gas_meter.refund(unused);
+                            self.stack.push(res.return_value.unwrap_or(0))?;
                         }
                         Err(_) => {
                             self.stack.push(0)?;
                         }
                     }
+                    self.pc += 1;
+                }
+                // F-C-04: CALLER opcode pushes the authenticated caller (msg.sender) onto the stack.
+                OpCode::Caller => {
+                    self.stack.push(self.caller)?;
                     self.pc += 1;
                 }
                 OpCode::Return => {
@@ -297,69 +341,6 @@ impl VM {
             return_value: return_val,
             gas_used: self.gas_meter.used_gas(),
             stack_dump: self.stack.as_slice().to_vec(),
-            withdrawals,
         })
-    }
-
-    fn execute_contract_subcall<S: StateBackend>(
-        &mut self,
-        target_addr: &[u8; 32],
-        forward_gas: u64,
-        args_to_push: Vec<u64>,
-        state: &mut S,
-        withdrawals: &mut Vec<(u64, u64)>,
-    ) -> Result<(), VMError> {
-        let actual_target_addr: [u8; 32] = if *target_addr == [0u8; 32] {
-            let addr_val = self.stack.pop()?;
-            if addr_val <= 255 {
-                [addr_val as u8; 32]
-            } else {
-                let mut a = [0u8; 32];
-                a[0..8].copy_from_slice(&addr_val.to_le_bytes());
-                a
-            }
-        } else {
-            *target_addr
-        };
-
-        self.gas_meter.consume(forward_gas)?;
-
-        let target_bytecode = match state.get_code(&actual_target_addr) {
-            Ok(code) => code,
-            Err(_) => {
-                self.stack.push(0)?;
-                self.pc += 1;
-                return Ok(());
-            }
-        };
-
-        let target_opcodes = match OpCode::deserialize_slice(&target_bytecode) {
-            Ok(ops) => ops,
-            Err(_) => {
-                self.stack.push(0)?;
-                self.pc += 1;
-                return Ok(());
-            }
-        };
-
-        let mut child_vm = VM::new(forward_gas);
-        child_vm.set_caller(self.caller);
-        for arg in args_to_push {
-            let _ = child_vm.stack.push(arg);
-        }
-
-        match child_vm.execute_stateful(&target_opcodes, &actual_target_addr, state) {
-            Ok(res) => {
-                let unused = child_vm.gas_meter.gas_limit().saturating_sub(child_vm.gas_meter.used_gas());
-                self.gas_meter.refund(unused);
-                withdrawals.extend(res.withdrawals);
-                self.stack.push(res.return_value.unwrap_or(0))?;
-            }
-            Err(_) => {
-                self.stack.push(0)?;
-            }
-        }
-        self.pc += 1;
-        Ok(())
     }
 }

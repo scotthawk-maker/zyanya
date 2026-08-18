@@ -712,6 +712,9 @@ impl Wallet {
         account_name: Option<String>,
         minimum_signatures: u16,
     ) -> Result<Arc<dyn Account>> {
+        if minimum_signatures == 0 {
+            return Err(Error::InvalidArgument("minimum_signatures must be at least 1".to_string()));
+        }
         let account_store = self.inner.store.clone().as_account_store()?;
 
         let account: Arc<dyn Account> = if prv_key_data_args.is_not_empty() {

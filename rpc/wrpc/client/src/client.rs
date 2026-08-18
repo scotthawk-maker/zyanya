@@ -438,10 +438,10 @@ impl ZyanyaRpcClient {
         self.inner.set_default_url(options.url.as_deref());
         self.inner.rpc_ctl.set_descriptor(options.url.clone());
 
-        // 1Gb message and frame size limits (on native and NodeJs platforms)
+        // 64MB message and frame size limits (on native and NodeJs platforms)
         let ws_config = WebSocketConfig {
-            max_message_size: Some(1024 * 1024 * 1024),
-            max_frame_size: Some(1024 * 1024 * 1024),
+            max_message_size: Some(64 * 1024 * 1024),
+            max_frame_size: Some(64 * 1024 * 1024),
             accept_unmasked_frames: false,
             resolver: Some(self.inner.clone()),
             ..Default::default()

@@ -44,7 +44,21 @@ impl Payload {
     }
 
     pub fn try_load(storage: &AccountStorage) -> Result<Self> {
-        Ok(Self::try_from_slice(storage.serialized.as_slice())?)
+        let payload = Self::try_from_slice(storage.serialized.as_slice())?;
+        payload.validate()?;
+        Ok(payload)
+    }
+
+    fn validate(&self) -> Result<()> {
+        if self.xpub_keys.len() > 1 {
+            if self.minimum_signatures == 0 {
+                return Err(Error::InvalidArgument("minimum_signatures must be at least 1".to_string()));
+            }
+            if self.minimum_signatures as usize > self.xpub_keys.len() {
+                return Err(Error::InvalidArgument("minimum_signatures exceeds the number of xpub keys".to_string()));
+            }
+        }
+        Ok(())
     }
 }
 
@@ -125,6 +139,9 @@ impl WatchOnly {
                 .await?
             }
             _ => {
+                if minimum_signatures == 0 {
+                    return Err(Error::InvalidArgument("minimum_signatures must be at least 1".to_string()));
+                }
                 AddressDerivationManager::new(
                     wallet,
                     MULTISIG_ACCOUNT_KIND.into(),

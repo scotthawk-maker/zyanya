@@ -1,0 +1,76 @@
+[package]
+name = "workflow-websocket"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+keywords = ["wasm","websocket","browser","rpc"]
+categories = ["web-programming::websocket","web-programming::http-client","api-bindings"]
+exclude = ["/.*", "/test"]
+description = """
+WebSocket crate (client and server) providing an async Rust API
+that functions uniformly in native and in browser (WASM32)
+environments. This crate allows you to develop WebSocket-driven
+data exchange that function uniformly in web and desktop applications.
+"""
+
+[lib]
+crate-type = ["cdylib", "lib"]
+doctest = false
+
+[features]
+delay-reconnect = []
+# enable to make connection options available in the generated TypeScript bindings
+wasm32-sdk = []
+# enable to provide manual control over the WebSocket Ping messages
+ping-pong = []
+native-tls = ["tokio-tungstenite/native-tls"]
+native-tls-vendored = ["tokio-tungstenite/native-tls-vendored"]
+rustls-tls-native-roots = ["tokio-tungstenite/rustls-tls-native-roots"]
+rustls-tls-webpki-roots = ["tokio-tungstenite/rustls-tls-webpki-roots"]
+default = ["native-tls"]
+
+[dependencies]
+async-channel.workspace = true
+async-std.workspace = true
+async-trait.workspace = true
+cfg-if.workspace = true
+downcast-rs.workspace = true
+futures-util.workspace = true
+futures.workspace = true
+js-sys.workspace = true
+thiserror.workspace = true
+triggered.workspace = true
+wasm-bindgen.workspace = true
+workflow-core.workspace = true
+workflow-log.workspace = true
+workflow-task.workspace = true
+workflow-wasm.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+ahash.workspace = true
+tokio-tungstenite.workspace = true
+tokio.workspace = true
+tungstenite.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen-futures.workspace = true
+
+[target.'cfg(not(target_arch = "bpf"))'.dependencies.web-sys]
+workspace = true
+features = [
+    "console",
+    "BinaryType",
+    "Blob",
+    "CloseEvent",
+    "DomException",
+    "ErrorEvent",
+    "FileReader",
+    "MessageEvent",
+    "ProgressEvent",
+    "WebSocket",
+]
+
+[lints.clippy]
+multiple_bound_locations = "allow"

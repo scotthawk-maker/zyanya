@@ -41,8 +41,8 @@ pub enum ConnectionError {
     ProtocolError(#[from] ProtocolError),
 }
 
-/// Maximum P2P decoded gRPC message size to send and receive
-const P2P_MAX_MESSAGE_SIZE: usize = 1024 * 1024 * 1024; // 1GB
+/// Maximum P2P decoded gRPC message size to send and receive (32 MB)
+const P2P_MAX_MESSAGE_SIZE: usize = 32 * 1024 * 1024; // 32MB
 
 /// Handles Router creation for both server and client-side new connections
 #[derive(Clone)]
@@ -75,7 +75,8 @@ impl ConnectionHandler {
             let proto_server = ProtoP2pServer::new(connection_handler)
                 .accept_compressed(tonic::codec::CompressionEncoding::Gzip)
                 .send_compressed(tonic::codec::CompressionEncoding::Gzip)
-                .max_decoding_message_size(P2P_MAX_MESSAGE_SIZE);
+                .max_decoding_message_size(P2P_MAX_MESSAGE_SIZE)
+                .max_encoding_message_size(P2P_MAX_MESSAGE_SIZE);
 
             // TODO: check whether we should set tcp_keepalive
             let serve_result = TonicServer::builder()
@@ -115,7 +116,8 @@ impl ConnectionHandler {
         let mut client = ProtoP2pClient::new(channel)
             .send_compressed(tonic::codec::CompressionEncoding::Gzip)
             .accept_compressed(tonic::codec::CompressionEncoding::Gzip)
-            .max_decoding_message_size(P2P_MAX_MESSAGE_SIZE);
+            .max_decoding_message_size(P2P_MAX_MESSAGE_SIZE)
+            .max_encoding_message_size(P2P_MAX_MESSAGE_SIZE);
 
         let (outgoing_route, outgoing_receiver) = mpsc_channel(Self::outgoing_network_channel_size());
         let incoming_stream = client.message_stream(ReceiverStream::new(outgoing_receiver)).await?.into_inner();

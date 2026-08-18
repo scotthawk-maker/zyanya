@@ -71,6 +71,7 @@ impl AsyncService for GrpcService {
             self.core_service.subscription_context(),
             self.broadcasters,
             self.counters.clone(),
+            self.config.rpc_auth_token.clone(),
         );
 
         // Signal the server was started

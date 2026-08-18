@@ -9,7 +9,7 @@ use zyanya_consensus_core::hashing::sighash::{calc_schnorr_signature_hash, SigHa
 use zyanya_consensus_core::hashing::sighash_type::SIG_HASH_ALL;
 use zyanya_consensus_core::sign::verify;
 use zyanya_consensus_core::tx::{ContractPayload, DeployContractPayload, InvokeContractPayload, SignableTransaction, Transaction, TransactionInput, TransactionOutput, UtxoEntry};
-use crate::api::{UnsignedBuyReq, UnsignedSellReq, UnsignedStakeReq, UnsignedUnstakeReq, UnsignedClaimRewardsReq};
+use crate::api::{UnsignedBuyReq, UnsignedSellReq};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,11 +59,74 @@ pub struct TokenMetadata {
     pub icon_uri: Option<String>,
 }
 
+/// Strip characters that could enable HTML/script injection from all
+/// user-controlled metadata fields.  This is a defense-in-depth measure
+/// (F-C-16): because transaction signatures do not cover the metadata
+/// fields, a client can tamper with them after signing.  By rejecting /
+/// neutralising HTML delimiters at the storage boundary we prevent stored
+/// XSS payloads from ever being persisted.
+pub fn sanitize_metadata(metadata: &mut TokenMetadata) {
+    /// Remove `<`, `>`, `"`, `'` and backtick characters from a string.
+    fn strip_dangerous(s: &str) -> String {
+        s.chars()
+            .filter(|&c| c != '<' && c != '>' && c != '"' && c != '\'' && c != '`')
+            .collect()
+    }
+
+    if let Some(ref mut v) = metadata.name {
+        *v = strip_dangerous(v);
+    }
+    if let Some(ref mut v) = metadata.symbol {
+        *v = strip_dangerous(v);
+    }
+    if let Some(ref mut v) = metadata.description {
+        *v = strip_dangerous(v);
+    }
+    if let Some(ref mut v) = metadata.twitter {
+        *v = strip_dangerous(v);
+    }
+    if let Some(ref mut v) = metadata.telegram {
+        *v = strip_dangerous(v);
+    }
+    if let Some(ref mut v) = metadata.website {
+        *v = strip_dangerous(v);
+    }
+    if let Some(ref mut v) = metadata.icon_uri {
+        *v = strip_dangerous(v);
+    }
+}
+
+/// F-C-16 FOLLOW-UP: compute a deterministic blake2b-256 hash of the sanitized
+/// token metadata. Each field is length-prefixed (u64 LE) to avoid field-boundary
+/// ambiguity. `None` fields hash as empty strings.
+pub fn compute_metadata_hash(m: &TokenMetadata) -> [u8; 32] {
+    let mut h = blake2b_simd::Params::new().hash_length(32).to_state();
+    for field in [
+        m.name.as_deref(),
+        m.symbol.as_deref(),
+        m.description.as_deref(),
+        m.twitter.as_deref(),
+        m.telegram.as_deref(),
+        m.website.as_deref(),
+        m.icon_uri.as_deref(),
+    ] {
+        let bytes = field.unwrap_or("").as_bytes();
+        h.update(&(bytes.len() as u64).to_le_bytes());
+        h.update(bytes);
+    }
+    let hash = h.finalize();
+    let mut result = [0u8; 32];
+    result.copy_from_slice(&hash.as_bytes()[..32]);
+    result
+}
+
 #[derive(Clone)]
 pub struct RpcClientManager {
     rpc_url: String,
     client: Arc<RwLock<Option<GrpcClient>>>,
     pub metadata_store: Arc<tokio::sync::Mutex<std::collections::HashMap<String, TokenMetadata>>>,
+    /// F-C-16 FOLLOW-UP: committed metadata hashes per contract address.
+    pub metadata_hash_store: Arc<tokio::sync::Mutex<std::collections::HashMap<String, [u8; 32]>>>,
     pub metadata_path: String,
     pub icons_dir: String,
 }
@@ -246,6 +309,7 @@ impl RpcClientManager {
             rpc_url,
             client: Arc::new(RwLock::new(None)),
             metadata_store: Arc::new(tokio::sync::Mutex::new(loaded_map)),
+            metadata_hash_store: Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new())),
             metadata_path,
             icons_dir,
         }
@@ -253,10 +317,32 @@ impl RpcClientManager {
 
     pub async fn get_token_metadata(&self, address: &str) -> Option<TokenMetadata> {
         let store = self.metadata_store.lock().await;
-        store.get(address).or_else(|| store.get(&address.to_lowercase())).cloned()
+        let metadata = store.get(address).or_else(|| store.get(&address.to_lowercase()))?.clone();
+        // F-C-16 FOLLOW-UP: verify stored metadata matches the committed hash.
+        // If no committed hash is recorded, allow the metadata (legacy/unsigned).
+        // If a committed hash exists but doesn't match, return None (tampered).
+        let hash_store = self.metadata_hash_store.lock().await;
+        if let Some(committed_hash) = hash_store.get(address).or_else(|| hash_store.get(&address.to_lowercase())) {
+            let recomputed = compute_metadata_hash(&metadata);
+            if &recomputed != committed_hash {
+                log::warn!("F-C-16: metadata hash mismatch for {} — tampered metadata rejected", address);
+                return None;
+            }
+        }
+        Some(metadata)
     }
 
-    pub async fn save_token_metadata(&self, address: &str, metadata: TokenMetadata) -> Result<(), String> {
+    pub async fn save_token_metadata(&self, address: &str, mut metadata: TokenMetadata) -> Result<(), String> {
+        // F-C-16: sanitise all user-controlled metadata fields before storing
+        // so that unsigned/tampered metadata cannot inject HTML/script payloads.
+        sanitize_metadata(&mut metadata);
+        // F-C-16 FOLLOW-UP: store the committed hash (if provided) for later verification.
+        let committed_hash = compute_metadata_hash(&metadata);
+        {
+            let mut hash_store = self.metadata_hash_store.lock().await;
+            hash_store.insert(address.to_string(), committed_hash);
+            hash_store.insert(address.to_lowercase(), committed_hash);
+        }
         let mut store = self.metadata_store.lock().await;
         store.insert(address.to_string(), metadata.clone());
         store.insert(address.to_lowercase(), metadata);
@@ -795,11 +881,49 @@ impl RpcClientManager {
         }
 
         let bytecode = zyanya_vm::bonding_curve_token::bonding_curve_bytecode();
+
+        // F-C-16 FOLLOW-UP: Build token metadata, sanitize it, compute the metadata
+        // hash, and include it in the deploy payload so it becomes part of the signed
+        // transaction. The sanitized values are stored in SignableTxData so the client
+        // signs and returns the same values.
+        //
+        // The icon_uri must be deterministic and available BEFORE the tx is constructed
+        // (since the metadata_hash is part of the payload). We use a blake2b hash of the
+        // icon data as the filename instead of the contract address (which is only known
+        // after the tx id is computed).
+        let icon_uri = if let Some(ref base64_str) = req.icon_base64 {
+            if !base64_str.trim().is_empty() {
+                let mut icon_hasher = blake2b_simd::Params::new().hash_length(16).to_state();
+                icon_hasher.update(base64_str.as_bytes());
+                let icon_id = icon_hasher.finalize().to_hex().to_string();
+                match self.save_token_icon(&icon_id, base64_str) {
+                    Ok(uri) => Some(uri),
+                    Err(_) => Some(format!("/token-icons/{}.png", icon_id)),
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        let mut metadata = TokenMetadata {
+            name: Some(name.clone()),
+            symbol: Some(symbol.clone()),
+            description: req.description.clone(),
+            twitter: req.twitter.clone(),
+            telegram: req.telegram.clone(),
+            website: req.website.clone(),
+            icon_uri: icon_uri.clone(),
+        };
+        sanitize_metadata(&mut metadata);
+        let metadata_hash = compute_metadata_hash(&metadata);
+
         let payload = ContractPayload::Deploy(DeployContractPayload {
             bytecode,
             max_gas: gas,
             gas_price: 1,
             deposit_amount: 0,
+            metadata_hash,
         });
         let payload_bytes = payload.to_bytes().map_err(|e| e.to_string())?;
 
@@ -827,19 +951,6 @@ impl RpcClientManager {
             sighashes.push(hash.to_string());
         }
 
-        let icon_uri = if let Some(ref base64_str) = req.icon_base64 {
-            if !base64_str.trim().is_empty() {
-                match self.save_token_icon(&contract_address, base64_str) {
-                    Ok(uri) => Some(uri),
-                    Err(_) => Some(format!("/token-icons/{}.png", contract_address)),
-                }
-            } else {
-                Some(format!("/token-icons/{}.png", contract_address))
-            }
-        } else {
-            Some(format!("/token-icons/{}.png", contract_address))
-        };
-
         let tx_data = SignableTxData {
             tx: unsigned_tx,
             entries,
@@ -847,11 +958,11 @@ impl RpcClientManager {
             slope,
             name: name.clone(),
             symbol: symbol.clone(),
-            description: req.description.clone(),
-            twitter: req.twitter.clone(),
-            telegram: req.telegram.clone(),
-            website: req.website.clone(),
-            icon_uri: icon_uri.clone(),
+            description: metadata.description.clone(),
+            twitter: metadata.twitter.clone(),
+            telegram: metadata.telegram.clone(),
+            website: metadata.website.clone(),
+            icon_uri: metadata.icon_uri.clone(),
         };
 
         let json_bytes = serde_json::to_vec(&tx_data).map_err(|e| e.to_string())?;
@@ -1209,6 +1320,31 @@ impl RpcClientManager {
             return Err(format!("Signature verification failed: {:?}", e));
         }
 
+        // F-C-16 FOLLOW-UP: Verify that the token metadata hash in the deploy payload
+        // matches the recomputed hash from the SignableTxData metadata. This prevents
+        // metadata tampering after signing.
+        if let Ok(zyanya_consensus_core::tx::ContractPayload::Deploy(deploy)) =
+            zyanya_consensus_core::tx::ContractPayload::from_slice(&data.tx.payload)
+        {
+            let mut metadata = TokenMetadata {
+                name: Some(data.name.clone()),
+                symbol: Some(data.symbol.clone()),
+                description: data.description.clone(),
+                twitter: data.twitter.clone(),
+                telegram: data.telegram.clone(),
+                website: data.website.clone(),
+                icon_uri: data.icon_uri.clone(),
+            };
+            sanitize_metadata(&mut metadata);
+            let recomputed_hash = compute_metadata_hash(&metadata);
+            if deploy.metadata_hash != recomputed_hash {
+                return Err(format!(
+                    "Metadata hash mismatch: payload hash does not match recomputed hash. \
+                     Metadata may have been tampered with after signing."
+                ));
+            }
+        }
+
         let rpc_tx = RpcTransaction::from(&signable_tx.tx);
         let tx_id = client.submit_transaction(rpc_tx, false).await
             .map_err(|e| format!("SubmitTransaction RPC failed: {}", e))?;
@@ -1507,478 +1643,6 @@ impl RpcClientManager {
         }
 
         Ok(dexes)
-    }
-
-    pub async fn get_token_graduation(&self, address: &str) -> Result<serde_json::Value, String> {
-        let contract_address = RpcHash::from_str(address)
-            .map_err(|e| format!("Invalid token address: {}", e))?;
-        let client = self.ensure_connected().await?;
-
-        let total_supply = client.get_contract_state(contract_address, 0).await.map(|r| r.value).unwrap_or(0);
-        let slope = client.get_contract_state(contract_address, 1).await.map(|r| r.value).unwrap_or(1);
-        let reserve = client.get_contract_state(contract_address, 2).await.map(|r| r.value).unwrap_or(0);
-
-        let threshold_val = client.get_contract_state(contract_address, 7).await.map(|r| r.value).unwrap_or(0);
-        let target_reserve_sompi = if threshold_val > 0 { threshold_val } else { 1_000_000_000u64 };
-        let progress_percent = ((reserve as f64 / target_reserve_sompi as f64) * 100.0).min(100.0);
-        let graduated = reserve >= target_reserve_sompi;
-
-        let store = self.metadata_store.lock().await;
-        let meta = store.get(address).or_else(|| store.get(&address.to_lowercase()));
-        let name = meta.and_then(|m| m.name.clone()).unwrap_or_else(|| "Bonding Curve Token".to_string());
-        let symbol = meta.and_then(|m| m.symbol.clone()).unwrap_or_else(|| "TOKEN".to_string());
-
-        Ok(serde_json::json!({
-            "token_address": address,
-            "name": name,
-            "symbol": symbol,
-            "total_supply": total_supply,
-            "slope": slope,
-            "reserve_sompi": reserve,
-            "reserve_zyan": reserve as f64 / 100_000_000.0,
-            "target_reserve_sompi": target_reserve_sompi,
-            "target_reserve_zyan": target_reserve_sompi as f64 / 100_000_000.0,
-            "progress_percent": (progress_percent * 100.0).round() / 100.0,
-            "graduated": graduated,
-        }))
-    }
-
-    pub async fn get_staking_info(&self, caller_str: Option<String>) -> Result<serde_json::Value, String> {
-        let staking_addr_str = "0xfe81d430cd2aa0d0299c0926c2f20e21de1929d9966aebf06cab4bf588faf631";
-        let staking_addr = RpcHash::from_str("fe81d430cd2aa0d0299c0926c2f20e21de1929d9966aebf06cab4bf588faf631").unwrap();
-        let client = self.ensure_connected().await?;
-
-        let total_staked = client.get_contract_state(staking_addr, 0).await.map(|r| r.value).unwrap_or(100_000_000);
-        let total_rewards = client.get_contract_state(staking_addr, 1).await.map(|r| r.value).unwrap_or(25_000_000);
-
-        let caller_u64 = caller_str.as_deref().and_then(|s| parse_u64_key(s).ok()).unwrap_or(0);
-        let user_staked = if caller_u64 > 0 {
-            let stake_key = caller_u64 * 1000 + 10;
-            client.get_contract_state(staking_addr, stake_key).await.map(|r| r.value).unwrap_or(0)
-        } else {
-            0
-        };
-
-        let user_claimed = if caller_u64 > 0 {
-            let reward_key = caller_u64 * 1000 + 20;
-            client.get_contract_state(staking_addr, reward_key).await.map(|r| r.value).unwrap_or(0)
-        } else {
-            0
-        };
-
-        let user_pending = if user_staked > 0 && total_staked > 0 {
-            let entitlement = (user_staked * total_rewards) / total_staked;
-            entitlement.saturating_sub(user_claimed)
-        } else {
-            0
-        };
-
-        let est_apy = if total_staked > 0 {
-            ((total_rewards as f64 / total_staked as f64) * 100.0).min(500.0)
-        } else {
-            18.5
-        };
-
-        Ok(serde_json::json!({
-            "staking_contract": staking_addr_str,
-            "total_staked_sompi": total_staked,
-            "total_staked_zyan": total_staked as f64 / 100_000_000.0,
-            "total_rewards_sompi": total_rewards,
-            "total_rewards_zyan": total_rewards as f64 / 100_000_000.0,
-            "estimated_apy_percent": (est_apy * 10.0).round() / 10.0,
-            "user_staked_sompi": user_staked,
-            "user_staked_zyan": user_staked as f64 / 100_000_000.0,
-            "user_pending_rewards_sompi": user_pending,
-            "user_pending_rewards_zyan": user_pending as f64 / 100_000_000.0,
-        }))
-    }
-
-    pub async fn build_unsigned_stake_tx(&self, req: UnsignedStakeReq) -> Result<serde_json::Value, String> {
-        let client = self.ensure_connected().await?;
-        let staking_addr_str = "fe81d430cd2aa0d0299c0926c2f20e21de1929d9966aebf06cab4bf588faf631";
-        let contract_address = RpcHash::from_str(staking_addr_str).unwrap();
-
-        let gas = req.gas.unwrap_or(100_000);
-        let user_address = parse_user_address(&req.address)?;
-        let amount = req.amount;
-
-        let gas_fee = gas.saturating_mul(1);
-        let required_zyan = amount.saturating_add(gas_fee);
-
-        let utxo_resp = client.get_utxos_by_addresses(vec![user_address.clone()]).await.unwrap_or_default();
-        let virtual_daa_score = client.get_server_info().await.map(|s| s.virtual_daa_score).unwrap_or(0);
-
-        let mut selected_utxos = Vec::new();
-        let mut total_in = 0u64;
-
-        for entry in utxo_resp {
-            if entry.utxo_entry.block_daa_score + 10 <= virtual_daa_score {
-                let outpoint = zyanya_consensus_core::tx::TransactionOutpoint::from(entry.outpoint);
-                let utxo_entry = zyanya_consensus_core::tx::UtxoEntry::from(entry.utxo_entry);
-                total_in += utxo_entry.amount;
-                selected_utxos.push((outpoint, utxo_entry));
-                if total_in >= required_zyan {
-                    break;
-                }
-            }
-        }
-
-        let mut inputs = Vec::new();
-        let mut entries = Vec::new();
-
-        if !selected_utxos.is_empty() {
-            for (outpoint, entry) in selected_utxos {
-                inputs.push(TransactionInput {
-                    previous_outpoint: outpoint,
-                    signature_script: vec![],
-                    sequence: 0,
-                    sig_op_count: 1,
-                });
-                entries.push(entry);
-            }
-        } else {
-            let dummy_outpoint = zyanya_consensus_core::tx::TransactionOutpoint::new(
-                zyanya_consensus_core::tx::TransactionId::from_bytes([0u8; 32]),
-                0,
-            );
-            let dummy_script = zyanya_txscript::pay_to_address_script(&user_address);
-            let dummy_entry = UtxoEntry::new(required_zyan, dummy_script, 0, false);
-            inputs.push(TransactionInput {
-                previous_outpoint: dummy_outpoint,
-                signature_script: vec![],
-                sequence: 0,
-                sig_op_count: 1,
-            });
-            entries.push(dummy_entry);
-            total_in = required_zyan;
-        }
-
-        let mut outputs = Vec::new();
-        let change = total_in.saturating_sub(required_zyan);
-        if change > 0 {
-            let script_pub_key = zyanya_txscript::pay_to_address_script(&user_address);
-            outputs.push(TransactionOutput {
-                value: change,
-                script_public_key: script_pub_key,
-            });
-        }
-
-        let caller_u64 = parse_u64_key(&user_address.to_string()).unwrap_or(1);
-        let payload = ContractPayload::Invoke(InvokeContractPayload {
-            contract_address,
-            entry_point: 1,
-            parameters: vec![caller_u64, amount],
-            max_gas: gas,
-            gas_price: 1,
-            deposit_amount: amount,
-        });
-        let payload_bytes = payload.to_bytes().map_err(|e| e.to_string())?;
-
-        let unsigned_tx = Transaction::new(
-            0,
-            inputs,
-            outputs,
-            0,
-            zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
-            gas,
-            payload_bytes,
-        );
-
-        let signable_tx = SignableTransaction::with_entries(unsigned_tx.clone(), entries.clone());
-        let reused_values = SigHashReusedValuesUnsync::new();
-        let mut sighashes = Vec::new();
-        for i in 0..unsigned_tx.inputs.len() {
-            let hash = calc_schnorr_signature_hash(&signable_tx.as_verifiable(), i, SIG_HASH_ALL, &reused_values);
-            sighashes.push(hash.to_string());
-        }
-
-        let tx_data = SignableTxData {
-            tx: unsigned_tx,
-            entries,
-            contract_address: staking_addr_str.to_string(),
-            slope: 0,
-            name: "Stake ZYAN".to_string(),
-            symbol: "STAKE".to_string(),
-            description: None,
-            twitter: None,
-            telegram: None,
-            website: None,
-            icon_uri: None,
-        };
-
-        let json_bytes = serde_json::to_vec(&tx_data).map_err(|e| e.to_string())?;
-        let unsigned_tx_hex = zyanya_utils::hex::ToHex::to_hex(&json_bytes);
-
-        Ok(serde_json::json!({
-            "unsigned_tx": unsigned_tx_hex,
-            "sighashes": sighashes,
-            "contract_address": staking_addr_str,
-            "amount_zyan": amount as f64 / 100_000_000.0,
-            "summary": {
-                "action": "Stake ZYAN",
-                "amount_sompi": amount,
-                "fee_zyan": gas_fee as f64 / 100_000_000.0,
-                "user_address": user_address.to_string(),
-                "input_count": tx_data.tx.inputs.len(),
-            }
-        }))
-    }
-
-    pub async fn build_unsigned_unstake_tx(&self, req: UnsignedUnstakeReq) -> Result<serde_json::Value, String> {
-        let client = self.ensure_connected().await?;
-        let staking_addr_str = "fe81d430cd2aa0d0299c0926c2f20e21de1929d9966aebf06cab4bf588faf631";
-        let contract_address = RpcHash::from_str(staking_addr_str).unwrap();
-
-        let gas = req.gas.unwrap_or(100_000);
-        let user_address = parse_user_address(&req.address)?;
-        let amount = req.amount;
-
-        let gas_fee = gas.saturating_mul(1);
-
-        let utxo_resp = client.get_utxos_by_addresses(vec![user_address.clone()]).await.unwrap_or_default();
-        let virtual_daa_score = client.get_server_info().await.map(|s| s.virtual_daa_score).unwrap_or(0);
-
-        let mut selected_utxos = Vec::new();
-        let mut total_in = 0u64;
-
-        for entry in utxo_resp {
-            if entry.utxo_entry.block_daa_score + 10 <= virtual_daa_score {
-                let outpoint = zyanya_consensus_core::tx::TransactionOutpoint::from(entry.outpoint);
-                let utxo_entry = zyanya_consensus_core::tx::UtxoEntry::from(entry.utxo_entry);
-                total_in += utxo_entry.amount;
-                selected_utxos.push((outpoint, utxo_entry));
-                if total_in >= gas_fee {
-                    break;
-                }
-            }
-        }
-
-        let mut inputs = Vec::new();
-        let mut entries = Vec::new();
-
-        if !selected_utxos.is_empty() {
-            for (outpoint, entry) in selected_utxos {
-                inputs.push(TransactionInput {
-                    previous_outpoint: outpoint,
-                    signature_script: vec![],
-                    sequence: 0,
-                    sig_op_count: 1,
-                });
-                entries.push(entry);
-            }
-        } else {
-            let dummy_outpoint = zyanya_consensus_core::tx::TransactionOutpoint::new(
-                zyanya_consensus_core::tx::TransactionId::from_bytes([0u8; 32]),
-                0,
-            );
-            let dummy_script = zyanya_txscript::pay_to_address_script(&user_address);
-            let dummy_entry = UtxoEntry::new(gas_fee, dummy_script, 0, false);
-            inputs.push(TransactionInput {
-                previous_outpoint: dummy_outpoint,
-                signature_script: vec![],
-                sequence: 0,
-                sig_op_count: 1,
-            });
-            entries.push(dummy_entry);
-            total_in = gas_fee;
-        }
-
-        let mut outputs = Vec::new();
-        let change = total_in.saturating_sub(gas_fee);
-        if change > 0 {
-            let script_pub_key = zyanya_txscript::pay_to_address_script(&user_address);
-            outputs.push(TransactionOutput {
-                value: change,
-                script_public_key: script_pub_key,
-            });
-        }
-
-        let caller_u64 = parse_u64_key(&user_address.to_string()).unwrap_or(1);
-        let payload = ContractPayload::Invoke(InvokeContractPayload {
-            contract_address,
-            entry_point: 2,
-            parameters: vec![caller_u64, amount],
-            max_gas: gas,
-            gas_price: 1,
-            deposit_amount: 0,
-        });
-        let payload_bytes = payload.to_bytes().map_err(|e| e.to_string())?;
-
-        let unsigned_tx = Transaction::new(
-            0,
-            inputs,
-            outputs,
-            0,
-            zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
-            gas,
-            payload_bytes,
-        );
-
-        let signable_tx = SignableTransaction::with_entries(unsigned_tx.clone(), entries.clone());
-        let reused_values = SigHashReusedValuesUnsync::new();
-        let mut sighashes = Vec::new();
-        for i in 0..unsigned_tx.inputs.len() {
-            let hash = calc_schnorr_signature_hash(&signable_tx.as_verifiable(), i, SIG_HASH_ALL, &reused_values);
-            sighashes.push(hash.to_string());
-        }
-
-        let tx_data = SignableTxData {
-            tx: unsigned_tx,
-            entries,
-            contract_address: staking_addr_str.to_string(),
-            slope: 0,
-            name: "Unstake ZYAN".to_string(),
-            symbol: "UNSTAKE".to_string(),
-            description: None,
-            twitter: None,
-            telegram: None,
-            website: None,
-            icon_uri: None,
-        };
-
-        let json_bytes = serde_json::to_vec(&tx_data).map_err(|e| e.to_string())?;
-        let unsigned_tx_hex = zyanya_utils::hex::ToHex::to_hex(&json_bytes);
-
-        Ok(serde_json::json!({
-            "unsigned_tx": unsigned_tx_hex,
-            "sighashes": sighashes,
-            "contract_address": staking_addr_str,
-            "amount_zyan": amount as f64 / 100_000_000.0,
-            "summary": {
-                "action": "Unstake ZYAN",
-                "amount_sompi": amount,
-                "fee_zyan": gas_fee as f64 / 100_000_000.0,
-                "user_address": user_address.to_string(),
-                "input_count": tx_data.tx.inputs.len(),
-            }
-        }))
-    }
-
-    pub async fn build_unsigned_claim_rewards_tx(&self, req: UnsignedClaimRewardsReq) -> Result<serde_json::Value, String> {
-        let client = self.ensure_connected().await?;
-        let staking_addr_str = "fe81d430cd2aa0d0299c0926c2f20e21de1929d9966aebf06cab4bf588faf631";
-        let contract_address = RpcHash::from_str(staking_addr_str).unwrap();
-
-        let gas = req.gas.unwrap_or(100_000);
-        let user_address = parse_user_address(&req.address)?;
-
-        let gas_fee = gas.saturating_mul(1);
-
-        let utxo_resp = client.get_utxos_by_addresses(vec![user_address.clone()]).await.unwrap_or_default();
-        let virtual_daa_score = client.get_server_info().await.map(|s| s.virtual_daa_score).unwrap_or(0);
-
-        let mut selected_utxos = Vec::new();
-        let mut total_in = 0u64;
-
-        for entry in utxo_resp {
-            if entry.utxo_entry.block_daa_score + 10 <= virtual_daa_score {
-                let outpoint = zyanya_consensus_core::tx::TransactionOutpoint::from(entry.outpoint);
-                let utxo_entry = zyanya_consensus_core::tx::UtxoEntry::from(entry.utxo_entry);
-                total_in += utxo_entry.amount;
-                selected_utxos.push((outpoint, utxo_entry));
-                if total_in >= gas_fee {
-                    break;
-                }
-            }
-        }
-
-        let mut inputs = Vec::new();
-        let mut entries = Vec::new();
-
-        if !selected_utxos.is_empty() {
-            for (outpoint, entry) in selected_utxos {
-                inputs.push(TransactionInput {
-                    previous_outpoint: outpoint,
-                    signature_script: vec![],
-                    sequence: 0,
-                    sig_op_count: 1,
-                });
-                entries.push(entry);
-            }
-        } else {
-            let dummy_outpoint = zyanya_consensus_core::tx::TransactionOutpoint::new(
-                zyanya_consensus_core::tx::TransactionId::from_bytes([0u8; 32]),
-                0,
-            );
-            let dummy_script = zyanya_txscript::pay_to_address_script(&user_address);
-            let dummy_entry = UtxoEntry::new(gas_fee, dummy_script, 0, false);
-            inputs.push(TransactionInput {
-                previous_outpoint: dummy_outpoint,
-                signature_script: vec![],
-                sequence: 0,
-                sig_op_count: 1,
-            });
-            entries.push(dummy_entry);
-            total_in = gas_fee;
-        }
-
-        let mut outputs = Vec::new();
-        let change = total_in.saturating_sub(gas_fee);
-        if change > 0 {
-            let script_pub_key = zyanya_txscript::pay_to_address_script(&user_address);
-            outputs.push(TransactionOutput {
-                value: change,
-                script_public_key: script_pub_key,
-            });
-        }
-
-        let caller_u64 = parse_u64_key(&user_address.to_string()).unwrap_or(1);
-        let payload = ContractPayload::Invoke(InvokeContractPayload {
-            contract_address,
-            entry_point: 4,
-            parameters: vec![caller_u64],
-            max_gas: gas,
-            gas_price: 1,
-            deposit_amount: 0,
-        });
-        let payload_bytes = payload.to_bytes().map_err(|e| e.to_string())?;
-
-        let unsigned_tx = Transaction::new(
-            0,
-            inputs,
-            outputs,
-            0,
-            zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
-            gas,
-            payload_bytes,
-        );
-
-        let signable_tx = SignableTransaction::with_entries(unsigned_tx.clone(), entries.clone());
-        let reused_values = SigHashReusedValuesUnsync::new();
-        let mut sighashes = Vec::new();
-        for i in 0..unsigned_tx.inputs.len() {
-            let hash = calc_schnorr_signature_hash(&signable_tx.as_verifiable(), i, SIG_HASH_ALL, &reused_values);
-            sighashes.push(hash.to_string());
-        }
-
-        let tx_data = SignableTxData {
-            tx: unsigned_tx,
-            entries,
-            contract_address: staking_addr_str.to_string(),
-            slope: 0,
-            name: "Claim Staking Rewards".to_string(),
-            symbol: "CLAIM".to_string(),
-            description: None,
-            twitter: None,
-            telegram: None,
-            website: None,
-            icon_uri: None,
-        };
-
-        let json_bytes = serde_json::to_vec(&tx_data).map_err(|e| e.to_string())?;
-        let unsigned_tx_hex = zyanya_utils::hex::ToHex::to_hex(&json_bytes);
-
-        Ok(serde_json::json!({
-            "unsigned_tx": unsigned_tx_hex,
-            "sighashes": sighashes,
-            "contract_address": staking_addr_str,
-            "summary": {
-                "action": "Claim Staking Rewards",
-                "fee_zyan": gas_fee as f64 / 100_000_000.0,
-                "user_address": user_address.to_string(),
-                "input_count": tx_data.tx.inputs.len(),
-            }
-        }))
     }
 }
 

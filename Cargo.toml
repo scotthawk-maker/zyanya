@@ -296,6 +296,7 @@ workflow-log = { version = "0.18.0" }
 workflow-node = { version = "0.18.0" }
 workflow-nw = { version = "0.18.0" }
 workflow-rpc = { version = "0.18.0", default-features = false, features = ["rustls-tls-webpki-roots"] }
+workflow-websocket = { version = "0.18.0", default-features = false, features = ["rustls-tls-webpki-roots"] }
 workflow-serializer = { version = "0.18.0" }
 workflow-store = { version = "0.18.0" }
 workflow-terminal = { version = "0.18.0" }
@@ -346,3 +347,8 @@ strip = false
 
 [workspace.lints.clippy]
 empty_docs = "allow"
+
+[patch.crates-io]
+# F-C-13: vendored workflow-websocket with header/query token extraction
+# for wRPC WebSocket bearer-token authentication.
+workflow-websocket = { path = "vendor/workflow-websocket" }

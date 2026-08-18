@@ -7,7 +7,13 @@
 
 contract BondingCurveToken {
     // Entry point 0: Init(slope)
+    // F-C-04: Gate init to owner only — prevents arbitrary re-init that resets slope/supply/reserve.
     fn init(slope) {
+        let sender = caller();
+        // Only owner (holder key 1) can init. In production this would be the deployer's address.
+        if (sender != 1) {
+            return 0;
+        }
         sstore(1, slope);
         sstore(0, 0);
         sstore(2, 0);
@@ -15,7 +21,12 @@ contract BondingCurveToken {
     }
 
     // Entry point 1: Transfer(from, to, amount)
+    // F-C-04: Verify caller == from to prevent unauthorized transfers.
     fn transfer(from, to, amount) {
+        let sender = caller();
+        if (from != sender) {
+            return 0;
+        }
         let from_bal = sload(from);
         if (from_bal < amount) {
             return 0;
@@ -37,7 +48,12 @@ contract BondingCurveToken {
     }
 
     // Entry point 4: Buy(caller, tokens_to_mint)
-    fn buy(caller, tokens_to_mint) {
+    // F-C-04: Verify caller == caller_param to prevent unauthorized buys.
+    fn buy(caller_param, tokens_to_mint) {
+        let sender = caller();
+        if (caller_param != sender) {
+            return 0;
+        }
         let slope = sload(1);
         let supply = sload(0);
         let k = tokens_to_mint;
@@ -45,14 +61,19 @@ contract BondingCurveToken {
         sstore(0, supply + k);
         let reserve = sload(2);
         sstore(2, reserve + cost);
-        let user_bal = sload(caller);
-        sstore(caller, user_bal + k);
+        let user_bal = sload(caller_param);
+        sstore(caller_param, user_bal + k);
         return cost;
     }
 
     // Entry point 5: Sell(caller, tokens_in)
-    fn sell(caller, tokens_in) {
-        let user_bal = sload(caller);
+    // F-C-04: Verify caller == caller_param to prevent unauthorized sells.
+    fn sell(caller_param, tokens_in) {
+        let sender = caller();
+        if (caller_param != sender) {
+            return 0;
+        }
+        let user_bal = sload(caller_param);
         if (user_bal < tokens_in) {
             return 0;
         }
@@ -64,7 +85,7 @@ contract BondingCurveToken {
         if (reserve < refund) {
             return 0;
         }
-        sstore(caller, user_bal - k);
+        sstore(caller_param, user_bal - k);
         sstore(0, supply - k);
         sstore(2, reserve - refund);
         return refund;

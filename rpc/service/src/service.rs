@@ -12,6 +12,10 @@ use zyanya_consensus_core::{
     block::Block,
     coinbase::MinerData,
     config::Config,
+    config::constants::contract::{
+        MAX_CONTRACT_BYTECODE_SIZE, MAX_CONTRACT_CALLDATA_SIZE, MAX_CONTRACT_PARAMETERS,
+        MAX_CONTRACT_MAX_GAS,
+    },
     constants::MAX_SOMPI,
     network::NetworkType,
     tx::{Transaction, COINBASE_TRANSACTION_INDEX},
@@ -588,11 +592,26 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
         _connection: Option<&DynRpcConnection>,
         request: DeployContractRequest,
     ) -> RpcResult<DeployContractResponse> {
+        // F-C-10: Reject oversized bytecode and unbounded gas before any processing.
+        if request.bytecode.len() > MAX_CONTRACT_BYTECODE_SIZE {
+            return Err(RpcError::General(format!(
+                "bytecode size {} exceeds maximum {}",
+                request.bytecode.len(), MAX_CONTRACT_BYTECODE_SIZE
+            )));
+        }
+        if request.max_gas > MAX_CONTRACT_MAX_GAS {
+            return Err(RpcError::General(format!(
+                "max_gas {} exceeds maximum {}",
+                request.max_gas, MAX_CONTRACT_MAX_GAS
+            )));
+        }
+
         let payload = zyanya_consensus_core::tx::ContractPayload::Deploy(zyanya_consensus_core::tx::DeployContractPayload {
             bytecode: request.bytecode.clone(),
             max_gas: request.max_gas,
             gas_price: request.gas_price,
             deposit_amount: request.deposit_amount,
+            metadata_hash: [0u8; 32],
         });
         let payload_bytes = payload.to_bytes().map_err(|e| RpcError::General(e.to_string()))?;
 
@@ -610,37 +629,22 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
         let contract_address = zyanya_consensus::model::stores::contract::derive_contract_address(&tx.id(), 0);
         let session = self.consensus_manager.consensus().unguarded_session();
 
-        // Try submitting via transaction pool first
-        let submit_res = self.flow_context.submit_rpc_transaction(&session, tx.clone(), Orphan::Forbidden).await;
-
-        let (gas_used, success) = match submit_res {
-            Ok(_) => (request.max_gas, true),
-            Err(_) => {
-                // Fallback to direct execution for input-less RPC convenience txs
-                let mut cache = zyanya_consensus::model::stores::contract::ContractStateCache::new();
-                let processor = zyanya_consensus::model::stores::contract::ContractProcessor::new();
-
-                let outcome = processor.process_contract_tx(&tx, &mut cache);
-                let (g_used, succ) = outcome.map(|o| (o.gas_used, o.success)).unwrap_or((0, false));
-
-                if succ {
-                    for (addr, code) in cache.code {
-                        let hash_addr = zyanya_hashes::Hash::from_bytes(addr);
-                        let _ = session.write_contract_code(hash_addr, code);
-                    }
-                    for ((addr, key), val) in cache.storage {
-                        let _ = session.write_contract_storage(addr, key, val);
-                    }
-                }
-                (g_used, succ)
-            }
-        };
+        // F-C-01 fix: submit via transaction pool only — never bypass consensus.
+        // State-changing contract operations must go through the mempool and consensus validation.
+        self.flow_context
+            .submit_rpc_transaction(&session, tx.clone(), Orphan::Forbidden)
+            .await
+            .map_err(|err| {
+                let err = RpcError::RejectedTransaction(tx.id(), err.to_string());
+                debug!("{err}");
+                err
+            })?;
 
         Ok(DeployContractResponse {
             contract_address,
             transaction_id: tx.id(),
-            gas_used,
-            success,
+            gas_used: request.max_gas,
+            success: true,
         })
     }
 
@@ -649,8 +653,21 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
         _connection: Option<&DynRpcConnection>,
         request: InvokeContractRequest,
     ) -> RpcResult<InvokeContractResponse> {
+        // F-C-10: Reject oversized parameters and unbounded gas before any processing.
+        if request.parameters.len() > MAX_CONTRACT_PARAMETERS {
+            return Err(RpcError::General(format!(
+                "parameters length {} exceeds maximum {}",
+                request.parameters.len(), MAX_CONTRACT_PARAMETERS
+            )));
+        }
+        if request.max_gas > MAX_CONTRACT_MAX_GAS {
+            return Err(RpcError::General(format!(
+                "max_gas {} exceeds maximum {}",
+                request.max_gas, MAX_CONTRACT_MAX_GAS
+            )));
+        }
+
         let session = self.consensus_manager.consensus().unguarded_session();
-        let bytecode = session.get_contract_code(request.contract_address).unwrap_or_default();
 
         let payload = zyanya_consensus_core::tx::ContractPayload::Invoke(zyanya_consensus_core::tx::InvokeContractPayload {
             contract_address: request.contract_address,
@@ -673,55 +690,22 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
             payload_bytes,
         );
 
-        let submit_res = self.flow_context.submit_rpc_transaction(&session, tx.clone(), Orphan::Forbidden).await;
-
-        let (gas_used, return_value, success) = match submit_res {
-            Ok(_) => (request.max_gas, None, true),
-            Err(_) => {
-                let mut cache = zyanya_consensus::model::stores::contract::ContractStateCache::new();
-                let session_clone = session.clone();
-                cache.fallback_storage = Some(std::sync::Arc::new(move |addr, key| {
-                    session_clone.get_contract_storage(addr, key).unwrap_or(0)
-                }));
-                let session_clone_bal = session.clone();
-                cache.fallback_balance = Some(std::sync::Arc::new(move |addr| {
-                    let hash_addr = zyanya_hashes::Hash::from_bytes(addr);
-                    session_clone_bal.get_contract_balance(hash_addr).unwrap_or(0)
-                }));
-                let addr_bytes: [u8; 32] = request.contract_address.as_bytes().try_into().unwrap();
-                if !bytecode.is_empty() {
-                    cache.code.insert(addr_bytes, bytecode);
-                }
-
-                let processor = zyanya_consensus::model::stores::contract::ContractProcessor::new();
-
-                let outcome = processor.process_contract_tx(&tx, &mut cache);
-                let (g_used, ret_val, succ) = outcome
-                    .map(|o| (o.gas_used, o.return_value, o.success))
-                    .unwrap_or((0, None, false));
-
-                if succ {
-                    for (addr, code) in cache.code {
-                        let hash_addr = zyanya_hashes::Hash::from_bytes(addr);
-                        let _ = session.write_contract_code(hash_addr, code);
-                    }
-                    for ((addr, key), val) in cache.storage {
-                        let _ = session.write_contract_storage(addr, key, val);
-                    }
-                    for (addr, bal) in cache.balances {
-                        let hash_addr = zyanya_hashes::Hash::from_bytes(addr);
-                        let _ = session.write_contract_balance(hash_addr, bal);
-                    }
-                }
-                (g_used, ret_val, succ)
-            }
-        };
+        // F-C-01 fix: submit via transaction pool only — never bypass consensus.
+        // State-changing contract operations must go through the mempool and consensus validation.
+        self.flow_context
+            .submit_rpc_transaction(&session, tx.clone(), Orphan::Forbidden)
+            .await
+            .map_err(|err| {
+                let err = RpcError::RejectedTransaction(tx.id(), err.to_string());
+                debug!("{err}");
+                err
+            })?;
 
         Ok(InvokeContractResponse {
             transaction_id: tx.id(),
-            gas_used,
-            return_value,
-            success,
+            gas_used: request.max_gas,
+            return_value: None,
+            success: true,
         })
     }
 
@@ -730,7 +714,8 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
         _connection: Option<&DynRpcConnection>,
         request: GetContractStateRequest,
     ) -> RpcResult<GetContractStateResponse> {
-        let addr_bytes: [u8; 32] = request.contract_address.as_bytes().try_into().unwrap();
+        let addr_bytes: [u8; 32] = request.contract_address.as_bytes().try_into()
+            .map_err(|_| RpcError::General("invalid contract address length".to_string()))?;
         let session = self.consensus_manager.consensus().unguarded_session();
         let val = session.get_contract_storage(addr_bytes, request.key).unwrap_or(0);
         Ok(GetContractStateResponse { value: val })
@@ -751,6 +736,20 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
         _connection: Option<&DynRpcConnection>,
         request: CallContractRequest,
     ) -> RpcResult<CallContractResponse> {
+        // F-C-10: Reject oversized calldata and unbounded gas before VM execution.
+        if request.calldata.len() > MAX_CONTRACT_CALLDATA_SIZE {
+            return Err(RpcError::General(format!(
+                "calldata size {} exceeds maximum {}",
+                request.calldata.len(), MAX_CONTRACT_CALLDATA_SIZE
+            )));
+        }
+        if request.max_gas > MAX_CONTRACT_MAX_GAS {
+            return Err(RpcError::General(format!(
+                "max_gas {} exceeds maximum {}",
+                request.max_gas, MAX_CONTRACT_MAX_GAS
+            )));
+        }
+
         let session = self.consensus_manager.consensus().unguarded_session();
         let bytecode = match session.get_contract_code(request.contract_address) {
             Ok(code) if !code.is_empty() => code,
@@ -787,29 +786,17 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
                 let hash_addr = zyanya_hashes::Hash::from_bytes(*contract_address);
                 self.session.get_contract_code(hash_addr).map_err(|e| zyanya_vm::VMError::StorageError(e.to_string()))
             }
+        }
 
-            fn get_balance(&self, contract_address: &[u8; 32]) -> Result<u64, zyanya_vm::VMError> {
-                // Delegate to the inherent lookup (with fallback) — qualify via ContractStateCache
-                // to avoid infinite recursion through this trait method.
-                Ok(zyanya_consensus::model::stores::contract::ContractStateCache::get_balance(&self.cache, contract_address))
-            }
-
-            fn withdraw(&mut self, contract_address: &[u8; 32], _recipient: u64, amount: u64) -> Result<(), zyanya_vm::VMError> {
-                let current = zyanya_consensus::model::stores::contract::ContractStateCache::get_balance(&self.cache, contract_address);
-                let new_balance = current.checked_sub(amount).ok_or_else(|| {
-                    zyanya_vm::VMError::InsufficientBalance { have: current, need: amount }
-                })?;
-                self.cache.balances.insert(*contract_address, new_balance);
-                Ok(())
-            }
-         }
-
+        // F-C-04: Read-only simulation — caller defaults to 0. Caller-gated contracts
+        // will return 0 unless a caller is supplied (acceptable for a discarded-cache simulation).
         let mut vm = zyanya_vm::VM::new(request.max_gas);
         let mut state = RpcDbStateBackend {
             session: &session,
             cache: zyanya_consensus::model::stores::contract::ContractStateCache::new(),
         };
-        let addr_bytes: [u8; 32] = request.contract_address.as_bytes().try_into().unwrap();
+        let addr_bytes: [u8; 32] = request.contract_address.as_bytes().try_into()
+            .map_err(|_| RpcError::General("invalid contract address length".to_string()))?;
 
         if request.calldata.is_empty() {
             let _ = vm.stack.push(0);

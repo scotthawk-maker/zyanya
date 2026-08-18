@@ -20,6 +20,16 @@ use zyanya_txscript::{
     extract_script_pub_key_address, multisig_redeem_script, multisig_redeem_script_ecdsa, pay_to_script_hash_script,
 };
 
+pub(crate) fn validate_minimum_signatures(minimum_signatures: usize, key_count: usize) -> Result<()> {
+    if minimum_signatures == 0 {
+        return Err("The minimum amount of signatures must be at least 1".to_string().into());
+    }
+    if key_count < minimum_signatures {
+        return Err(format! {"The minimum amount of signatures ({}) is greater than the amount of provided public keys ({key_count})", minimum_signatures}.into());
+    }
+    Ok(())
+}
+
 #[derive(Default, Clone, Debug, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct AddressDerivationMeta([u32; 2]);
 
@@ -67,9 +77,7 @@ impl AddressManager {
         minimum_signatures: usize,
     ) -> Result<Self> {
         let length = pubkey_managers.len();
-        if length < minimum_signatures {
-            return Err(format!{"The minimum amount of signatures ({}) is greater than the amount of provided public keys ({length})", minimum_signatures}.into());
-        }
+        validate_minimum_signatures(minimum_signatures, length)?;
 
         for m in pubkey_managers.iter() {
             m.set_index(index)?;
@@ -445,6 +453,7 @@ pub fn create_multisig_address(
     prefix: Prefix,
     ecdsa: bool,
 ) -> Result<Address> {
+    validate_minimum_signatures(minimum_signatures, keys.len())?;
     let script = if !ecdsa {
         multisig_redeem_script(keys.iter().map(|pk| pk.x_only_public_key().0.serialize()), minimum_signatures)
     } else {
@@ -493,9 +502,7 @@ pub fn create_address(
     account_kind: Option<AccountKind>,
 ) -> Result<Address> {
     let length = keys.len();
-    if length < minimum_signatures {
-        return Err(format!{"The minimum amount of signatures ({}) is greater than the amount of provided public keys ({length})", minimum_signatures}.into());
-    }
+    validate_minimum_signatures(minimum_signatures, length)?;
 
     if length > 1 {
         return create_multisig_address(minimum_signatures, keys, prefix, ecdsa);

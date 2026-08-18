@@ -1,9 +1,9 @@
-pub const LOGO_SVG: &str = include_str!("../assets/brand/zyanya-logo.svg");
-pub const HERO_BANNER_SVG: &str = include_str!("../assets/brand/zyanya-hero-banner.svg");
-pub const ZYAN_COIN_SVG: &str = include_str!("../assets/brand/zyan-coin.svg");
-pub const GHOST_TOKEN_SVG: &str = include_str!("../assets/brand/ghost-token.svg");
-pub const GAS_BURN_SVG: &str = include_str!("../assets/brand/gas-burn-icon.svg");
-pub const TOKEN_SET_SVG: &str = include_str!("../assets/brand/zyanya-token-set.svg");
+pub const LOGO_SVG: &str = include_str!("/home/shawn/projects/zyanya-distro/brand/zyanya-logo.svg");
+pub const HERO_BANNER_SVG: &str = include_str!("/home/shawn/projects/zyanya-distro/brand/zyanya-hero-banner.svg");
+pub const ZYAN_COIN_SVG: &str = include_str!("/home/shawn/projects/zyanya-distro/brand/zyan-coin.svg");
+pub const GHOST_TOKEN_SVG: &str = include_str!("/home/shawn/projects/zyanya-distro/brand/ghost-token.svg");
+pub const GAS_BURN_SVG: &str = include_str!("/home/shawn/projects/zyanya-distro/brand/gas-burn-icon.svg");
+pub const TOKEN_SET_SVG: &str = include_str!("/home/shawn/projects/zyanya-distro/brand/zyanya-token-set.svg");
 
 pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
 <html lang="en">
@@ -518,7 +518,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
             <section id="hero">
                 <div id="banner-container"><!-- SVG will be injected here --></div>
                 <h1>The ghost in the IPv6 machine.</h1>
-                <p>Zyanya is an IPv6-native, agent-native blockchain with built-in DeFi — smart contracts, bonding curve tokens, AMM/DEX, and staking. Built on Spectre/GhostDAG. No gateways. No translators. Just pure, end-to-end decentralized consensus over the next-generation internet.</p>
+                <p>Zyanya is an IPv6-native, agent-native blockchain built on Spectre/GhostDAG. No gateways. No translators. Just pure, end-to-end decentralized consensus over the next-generation internet.</p>
                 <div class="cta-buttons">
                     <a href="/explorer" target="_blank" class="btn btn-primary">LAUNCH EXPLORER</a>
                     <a href="#join" class="btn btn-secondary">JOIN THE TESTNET</a>
@@ -526,7 +526,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
             </section>
 
             <section id="status-banner">
-                <p>🟣 Public testnet is LIVE &mdash; 3 nodes, <span id="testnet-blocks">50,000+</span> blocks, mining over IPv6. Smart contracts, DEX, staking, and bonding curve graduation are live. <a href="/explorer" target="_blank">Explore the testnet &rarr;</a></p>
+                <p>🟣 Public testnet is LIVE &mdash; 3 nodes, <span id="testnet-blocks">50,000+</span> blocks, and mining over IPv6. <a href="/explorer" target="_blank">Explore the testnet &rarr;</a></p>
             </section>
 
             <section id="pillars">
@@ -564,35 +564,6 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                     </div>
                 </div>
             </section>
-            <section id="defi">
-                <h2>DEFI</h2>
-                <div class="grid-3">
-                    <div class="card">
-                        <div class="icon-container"><h3>Smart Contracts</h3></div>
-                        <p>The Zyanya VM executes ZCL (Zyanya Contract Language) smart contracts. Compile, deploy, invoke, and call contracts with entry points. Persistent storage via <code>sstore</code>/<code>sload</code> opcodes. 56+ tests passing.</p>
-                    </div>
-                    <div class="card">
-                        <div class="icon-container"><h3>Bonding Curve</h3></div>
-                        <p>Tokens launch on a linear bonding curve (<code>price = slope &times; supply</code>). Buy and sell against the curve. When the reserve hits 1B sompi, the token graduates to a constant-product AMM — automatically.</p>
-                    </div>
-                    <div class="card">
-                        <div class="icon-container"><h3>AMM / DEX</h3></div>
-                        <p>Constant-product AMM (<code>x &times; y = k</code>) with a 0.3% swap fee. Add/remove liquidity, mint LP tokens, swap between pairs. Multi-hop router supports 2-hop and 3-hop swaps with slippage protection.</p>
-                    </div>
-                    <div class="card">
-                        <div class="icon-container"><h3>Staking</h3></div>
-                        <p>Non-custodial staking via VM opcodes (<code>Caller</code>, <code>Balance</code>, <code>Withdraw</code>). The <code>staking.zcl</code> contract: stake, unstake, depositRewards, claimRewards. 50% of DEX swap fees route to stakers as rewards.</p>
-                    </div>
-                    <div class="card">
-                        <div class="icon-container"><h3>Tokens</h3></div>
-                        <p>ERC-20-style token standard: deploy, mint, transfer, check balance and supply. Deploy via the bonding curve or as standalone contracts.</p>
-                    </div>
-                    <div class="card">
-                        <div class="icon-container"><h3>Fee Routing</h3></div>
-                        <p>DEX swap fees split automatically: 50% to the staking reward pool (via inter-contract <code>call</code>), 50% stays as LP incentive. Configurable via <code>setFeeShare</code>.</p>
-                    </div>
-                </div>
-            </section>
 
             <section id="join">
                 <h2>HOW TO JOIN THE TESTNET</h2>
@@ -622,17 +593,6 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <div class="code-block">
                     <code>zyanya-query --testnet --rpcserver [2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18210 get-dag-info</code>
                 </div>
-                <h4>5. DeFi: Smart Contracts &amp; DEX</h4>
-                <p>Deploy tokens, create liquidity pools, swap, and stake using <code>zyanya-query</code>.</p>
-                <div class="code-block">
-                    <code>zyanya-query --testnet --rpcserver 127.0.0.1:18210 deploy-token --name "MYTOKEN" --symbol "MTK" --supply 1000000 --slope 1</code>
-                </div>
-                <div class="code-block">
-                    <code>zyanya-query --testnet --rpcserver 127.0.0.1:18210 dex-create --token-a ZYAN --token-b MYTOKEN</code>
-                </div>
-                <div class="code-block">
-                    <code>zyanya-query --testnet --rpcserver 127.0.0.1:18210 compile-contract --source staking.zcl</code>
-                </div>
             </section>
 
             <section id="ipv6-safety">
@@ -661,7 +621,7 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
                 <ol>
                     <li>
                         <strong>Phase 01: Ghost in the Machine</strong>
-                        <span>Public testnet hardening. Smart contracts, DEX, staking, bonding curve graduation, and multi-hop routing are live. Protocol improvements, bug fixes, and network stability testing with the community.</span>
+                        <span>Public testnet hardening. Protocol improvements, bug fixes, and network stability testing with the community.</span>
                     </li>
                     <li>
                         <strong>Phase 02: Dark Launch</strong>
@@ -1079,7 +1039,6 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             <button class="nav-btn mono" onclick="switchTab('contracts')">CONTRACTS</button>
             <button class="nav-btn mono" onclick="switchTab('tokens')">TOKENS</button>
             <button class="nav-btn mono" onclick="switchTab('dex')">DEX</button>
-            <button class="nav-btn mono" onclick="switchTab('staking')">STAKING & GRADUATION</button>
             <a href="/dag" class="nav-btn mono" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">DAG GRAPH ↗</a>
             <a href="/tools" class="nav-btn mono" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">WEBMCP TOOLS</a>
         </div>
@@ -1238,86 +1197,6 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             </div>
         </div>
 
-        <div id="tab-staking" class="tab-content">
-            <div class="stats-grid" style="margin-bottom: 1.5rem;">
-                <div class="stat-card">
-                    <div class="stat-label mono">TOTAL ZYAN STAKED</div>
-                    <div class="stat-value mono" id="stake-stat-total" style="color: #7EC8D3;">--- ZYAN</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label mono">TOTAL REWARDS DISTRIBUTED</div>
-                    <div class="stat-value mono" id="stake-stat-rewards" style="color: #FF4D4D;">--- ZYAN</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label mono">ESTIMATED APY</div>
-                    <div class="stat-value mono" id="stake-stat-apy" style="color: #7EC8D3; font-weight: bold;">--- %</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label mono">YOUR PENDING REWARDS</div>
-                    <div class="stat-value mono" id="stake-stat-user-pending" style="color: #38EF7D;">--- ZYAN</div>
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title mono">ZYAN STAKING PORTAL</h3>
-                    </div>
-                    <p style="color: #A0B0BC; font-size: 0.85rem; margin-bottom: 1rem;">
-                        Stake ZYAN tokens non-custodially to earn 0.3% protocol fee rewards from DEX swaps and bonding curve transactions.
-                    </p>
-                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        <input type="text" id="stake-address-input" class="search-input mono" placeholder="Your Zyanya Address (zyanyatest:...)" style="font-size: 0.85rem;" oninput="loadStaking()">
-                        <input type="number" id="stake-amount-input" class="search-input mono" placeholder="Amount ZYAN to Stake / Unstake" style="font-size: 0.85rem;">
-                        
-                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
-                            <button class="search-btn mono" style="flex: 1; min-width: 100px;" onclick="handleStake()">STAKE ZYAN</button>
-                            <button class="search-btn mono" style="flex: 1; min-width: 100px; background: #FF4D4D;" onclick="handleUnstake()">UNSTAKE</button>
-                            <button class="search-btn mono" style="flex: 1; min-width: 120px; background: #38EF7D; color: #0A0F1C;" onclick="handleClaimRewards()">CLAIM REWARDS</button>
-                        </div>
-                        <div id="stake-status-msg" class="mono" style="font-size: 0.8rem; min-height: 1.2rem; margin-top: 0.5rem;"></div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title mono">BONDING CURVE GRADUATION</h3>
-                    </div>
-                    <p style="color: #A0B0BC; font-size: 0.85rem; margin-bottom: 1rem;">
-                        When a bonding curve token collects <strong>10 ZYAN</strong> in reserve liquidity, it automatically <strong>graduates</strong> into a constant-product AMM DEX Pool (x &bull; y = k) with full liquidity.
-                    </p>
-                    <div style="background: rgba(10,15,28,0.6); padding: 1rem; border-radius: 6px; border: 1px solid rgba(126,200,211,0.2);">
-                        <div class="mono" style="font-size: 0.8rem; color: #7EC8D3; margin-bottom: 0.4rem;">GRADUATION THRESHOLD: <strong>10 ZYAN Reserve</strong></div>
-                        <div class="mono" style="font-size: 0.78rem; color: #8090A0; margin-bottom: 0.2rem;">&bull; Phase 1: Bonding curve (p = slope &bull; supply)</div>
-                        <div class="mono" style="font-size: 0.78rem; color: #8090A0; margin-bottom: 0.2rem;">&bull; Phase 2: Reserve reaches 10 ZYAN &rarr; AMM Graduation</div>
-                        <div class="mono" style="font-size: 0.78rem; color: #8090A0;">&bull; Phase 3: Constant-Product DEX Pool + 0.3% Staking Rewards</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title mono">TOKEN GRADUATION PROGRESS</h3>
-                </div>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th class="mono">TOKEN</th>
-                                <th class="mono">RESERVE</th>
-                                <th class="mono">TARGET</th>
-                                <th class="mono">GRADUATION PROGRESS</th>
-                                <th class="mono">STATUS</th>
-                            </tr>
-                        </thead>
-                        <tbody id="graduation-tbody">
-                            <tr><td colspan="5" style="text-align:center; color:#A0B0BC;">Loading token graduation progress...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
         <div id="tab-dag" class="tab-content">
             <div class="card">
                 <div class="card-header">
@@ -1344,6 +1223,18 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             document.getElementById('explorer-logo').innerHTML = html;
         });
 
+        // F-C-15: HTML-escape user-controlled content before inserting into the DOM
+        // via innerHTML.  Prevents stored XSS via token name/symbol fields.
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function switchTab(name) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -1354,7 +1245,6 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             if (name === 'contracts') loadContracts();
             if (name === 'tokens') loadTokens();
             if (name === 'dex') loadDex();
-            if (name === 'staking') loadStaking();
             if (name === 'dag') loadDag();
         }
 
@@ -1483,7 +1373,7 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
             try {
                 const res = await fetch('/api/contract/' + addr + '/state?key=' + key);
                 const data = await res.json();
-                document.getElementById('contract-query-result').innerHTML = '<p style="color:var(--accent-spectral);">Storage Key [' + key + '] Value: <strong>' + data.value + '</strong></p>';
+                document.getElementById('contract-query-result').innerHTML = '<p style="color:var(--accent-spectral);">Storage Key [' + escapeHtml(key) + '] Value: <strong>' + escapeHtml(data.value) + '</strong></p>';
             } catch (e) {
                 document.getElementById('contract-query-result').innerText = 'Query Error: ' + e;
             }
@@ -1499,10 +1389,13 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                 } else {
                     tokens.forEach(t => {
                         const shortAddr = t.contract_address.substring(0, 12) + '...' + t.contract_address.substring(t.contract_address.length - 8);
+                        const safeAddr = escapeHtml(t.contract_address);
+                        const safeName = escapeHtml(t.name);
+                        const safeSymbol = escapeHtml(t.symbol);
                         html += '<tr>' +
-                            '<td><a href="#" class="link mono" onclick="viewContract(\'' + t.contract_address + '\')">' + shortAddr + '</a></td>' +
-                            '<td class="mono" style="color:#7EC8D3; font-weight:bold;">' + t.name + ' (' + t.symbol + ')</td>' +
-                            '<td class="mono">' + t.total_supply.toLocaleString() + ' ' + t.symbol + '</td>' +
+                            '<td><a href="#" class="link mono" onclick="viewContract(\'' + safeAddr + '\')">' + shortAddr + '</a></td>' +
+                            '<td class="mono" style="color:#7EC8D3; font-weight:bold;">' + safeName + ' (' + safeSymbol + ')</td>' +
+                            '<td class="mono">' + t.total_supply.toLocaleString() + ' ' + safeSymbol + '</td>' +
                             '<td class="mono">' + t.bytecode_size.toLocaleString() + ' bytes</td>' +
                             '<td><a href="/tools" class="nav-btn mono" style="padding:0.25rem 0.6rem; font-size:0.75rem; text-decoration:none;">TRANSFER</a></td>' +
                         '</tr>';
@@ -1541,148 +1434,6 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
                 document.getElementById('dex-tbody').innerHTML = html;
             } catch (err) {
                 console.error(err);
-            }
-        }
-
-        async function loadStaking() {
-            try {
-                const callerInput = document.getElementById('stake-address-input') ? document.getElementById('stake-address-input').value.trim() : '';
-                const infoRes = await fetch('/api/staking-info' + (callerInput ? '?caller=' + encodeURIComponent(callerInput) : ''));
-                const info = await infoRes.json();
-                
-                document.getElementById('stake-stat-total').innerText = (info.total_staked_zyan || 0).toFixed(2) + ' ZYAN';
-                document.getElementById('stake-stat-rewards').innerText = (info.total_rewards_zyan || 0).toFixed(2) + ' ZYAN';
-                document.getElementById('stake-stat-apy').innerText = (info.estimated_apy_percent || 18.5).toFixed(1) + ' %';
-                document.getElementById('stake-stat-user-pending').innerText = (info.user_pending_rewards_zyan || 0).toFixed(4) + ' ZYAN';
-
-                const tokensRes = await fetch('/api/tokens');
-                const tokens = await tokensRes.json();
-                let gradHtml = '';
-                if (Array.isArray(tokens) && tokens.length > 0) {
-                    for (const t of tokens) {
-                        try {
-                            const gRes = await fetch('/api/token/' + t.contract_address + '/graduation');
-                            const g = await gRes.json();
-                            const pct = g.progress_percent || 0;
-                            const statusBadge = g.graduated 
-                                ? '<span class="badge" style="background:#38EF7D; color:#0A0F1C; font-weight:bold;">GRADUATED (AMM DEX)</span>' 
-                                : '<span class="badge" style="background:#7EC8D3; color:#0A0F1C;">BONDING CURVE</span>';
-                            
-                            gradHtml += '<tr>' +
-                                '<td class="mono" style="color:#7EC8D3; font-weight:bold;">' + (g.name || 'Token') + ' (' + (g.symbol || 'TKN') + ')</td>' +
-                                '<td class="mono">' + (g.reserve_zyan || 0).toFixed(2) + ' ZYAN</td>' +
-                                '<td class="mono">10.00 ZYAN</td>' +
-                                '<td>' +
-                                    '<div style="background:rgba(13,59,80,0.5); border-radius:4px; overflow:hidden; height:18px; width:100%; border:1px solid rgba(126,200,211,0.3);">' +
-                                        '<div style="background:linear-gradient(90deg, #7EC8D3, #38EF7D); height:100%; width:' + Math.min(pct, 100) + '%; transition: width 0.5s;"></div>' +
-                                    '</div>' +
-                                    '<div class="mono" style="font-size:0.7rem; color:#A0B0BC; text-align:right; margin-top:2px;">' + pct.toFixed(1) + '%</div>' +
-                                '</td>' +
-                                '<td>' + statusBadge + '</td>' +
-                            '</tr>';
-                        } catch(e) { console.error(e); }
-                    }
-                }
-                if (!gradHtml) {
-                    gradHtml = '<tr><td colspan="5" style="text-align:center; color:#A0B0BC;">No active bonding curve tokens found</td></tr>';
-                }
-                document.getElementById('graduation-tbody').innerHTML = gradHtml;
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        async function handleStake() {
-            const addr = document.getElementById('stake-address-input').value.trim();
-            const amountZyan = parseFloat(document.getElementById('stake-amount-input').value);
-            const msgEl = document.getElementById('stake-status-msg');
-            if (!addr || !amountZyan || amountZyan <= 0) {
-                msgEl.style.color = '#FF4D4D';
-                msgEl.innerText = 'Please enter a valid Zyanya address and amount.';
-                return;
-            }
-            msgEl.style.color = '#7EC8D3';
-            msgEl.innerText = 'Building unsigned staking transaction...';
-            try {
-                const amountSompi = Math.round(amountZyan * 100000000);
-                const res = await fetch('/api/unsigned-stake', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ address: addr, amount: amountSompi })
-                });
-                const data = await res.json();
-                if (data.error) {
-                    msgEl.style.color = '#FF4D4D';
-                    msgEl.innerText = 'Error: ' + data.error;
-                } else {
-                    msgEl.style.color = '#38EF7D';
-                    msgEl.innerText = 'Unsigned Stake Tx built! Total fee: ' + data.summary.fee_zyan + ' ZYAN. Ready for Schnorr signature.';
-                }
-            } catch(e) {
-                msgEl.style.color = '#FF4D4D';
-                msgEl.innerText = 'Request failed: ' + e.message;
-            }
-        }
-
-        async function handleUnstake() {
-            const addr = document.getElementById('stake-address-input').value.trim();
-            const amountZyan = parseFloat(document.getElementById('stake-amount-input').value);
-            const msgEl = document.getElementById('stake-status-msg');
-            if (!addr || !amountZyan || amountZyan <= 0) {
-                msgEl.style.color = '#FF4D4D';
-                msgEl.innerText = 'Please enter a valid Zyanya address and amount to unstake.';
-                return;
-            }
-            msgEl.style.color = '#7EC8D3';
-            msgEl.innerText = 'Building unsigned unstake transaction...';
-            try {
-                const amountSompi = Math.round(amountZyan * 100000000);
-                const res = await fetch('/api/unsigned-unstake', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ address: addr, amount: amountSompi })
-                });
-                const data = await res.json();
-                if (data.error) {
-                    msgEl.style.color = '#FF4D4D';
-                    msgEl.innerText = 'Error: ' + data.error;
-                } else {
-                    msgEl.style.color = '#38EF7D';
-                    msgEl.innerText = 'Unsigned Unstake Tx built! Ready for Schnorr signature.';
-                }
-            } catch(e) {
-                msgEl.style.color = '#FF4D4D';
-                msgEl.innerText = 'Request failed: ' + e.message;
-            }
-        }
-
-        async function handleClaimRewards() {
-            const addr = document.getElementById('stake-address-input').value.trim();
-            const msgEl = document.getElementById('stake-status-msg');
-            if (!addr) {
-                msgEl.style.color = '#FF4D4D';
-                msgEl.innerText = 'Please enter your Zyanya address to claim rewards.';
-                return;
-            }
-            msgEl.style.color = '#7EC8D3';
-            msgEl.innerText = 'Building claim rewards transaction...';
-            try {
-                const res = await fetch('/api/unsigned-claim-rewards', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ address: addr })
-                });
-                const data = await res.json();
-                if (data.error) {
-                    msgEl.style.color = '#FF4D4D';
-                    msgEl.innerText = 'Error: ' + data.error;
-                } else {
-                    msgEl.style.color = '#38EF7D';
-                    msgEl.innerText = 'Claim Rewards Tx built! Ready for Schnorr signature.';
-                }
-            } catch(e) {
-                msgEl.style.color = '#FF4D4D';
-                msgEl.innerText = 'Request failed: ' + e.message;
             }
         }
 
@@ -3572,6 +3323,40 @@ pub const TOKEN_HTML: &str = r#"<!DOCTYPE html>
     <script>
         const contractAddress = window.location.pathname.split('/').pop();
 
+        // F-C-14 / F-C-15: HTML-escape user-controlled content before inserting
+        // into the DOM via innerHTML, preventing stored XSS.
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // F-C-14: only allow https:// URLs for social links.  Rejects
+        // javascript:, data:, and other dangerous schemes.
+        function safeHttpsUrl(url) {
+            if (!url) return null;
+            const trimmed = String(url).trim();
+            if (trimmed.toLowerCase().startsWith('https://')) return trimmed;
+            return null;
+        }
+
+        // F-C-14: build social link elements safely via createElement +
+        // setAttribute so metadata values cannot inject HTML/script.
+        function addSocialLink(containerId, href, label) {
+            const safeHref = safeHttpsUrl(href);
+            if (!safeHref) return;
+            const a = document.createElement('a');
+            a.setAttribute('href', safeHref);
+            a.setAttribute('target', '_blank');
+            a.setAttribute('rel', 'noopener noreferrer');
+            a.textContent = label;
+            document.getElementById(containerId).appendChild(a);
+        }
+
         async function loadTokenData() {
             if (!contractAddress || contractAddress === 'token') return;
             const caller = document.getElementById('caller-input').value || '1';
@@ -3596,11 +3381,14 @@ pub const TOKEN_HTML: &str = r#"<!DOCTYPE html>
                         document.getElementById('icon-fallback').innerText = (meta.symbol || meta.name || '?').charAt(0).toUpperCase();
                     };
 
-                    const socialsHtml = [];
-                    if (meta.twitter) socialsHtml.push(`<a href="${meta.twitter}" target="_blank">Twitter / X</a>`);
-                    if (meta.telegram) socialsHtml.push(`<a href="${meta.telegram}" target="_blank">Telegram</a>`);
-                    if (meta.website) socialsHtml.push(`<a href="${meta.website}" target="_blank">Website</a>`);
-                    document.getElementById('social-links').innerHTML = socialsHtml.join('');
+                    // F-C-14: build social links safely via createElement +
+                    // setAttribute (never innerHTML).  Only https:// URLs are
+                    // accepted.
+                    const socialsEl = document.getElementById('social-links');
+                    socialsEl.innerHTML = '';
+                    if (meta.twitter) addSocialLink('social-links', meta.twitter, 'Twitter / X');
+                    if (meta.telegram) addSocialLink('social-links', meta.telegram, 'Telegram');
+                    if (meta.website) addSocialLink('social-links', meta.website, 'Website');
                 }
             } catch (err) {
                 console.error('Metadata load error:', err);

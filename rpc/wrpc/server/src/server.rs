@@ -109,7 +109,7 @@ impl Server {
         }
     }
 
-    pub async fn connect(&self, peer: &SocketAddr, messenger: Arc<Messenger>) -> Result<Connection> {
+    pub async fn connect(&self, peer: &SocketAddr, messenger: Arc<Messenger>, auth_token: Option<String>) -> Result<Connection> {
         // log_trace!("WebSocket connected: {}", peer);
         let id = self.inner.next_connection_id.fetch_add(1, Ordering::SeqCst);
 
@@ -134,7 +134,7 @@ impl Server {
         } else {
             None
         };
-        let connection = Connection::new(id, peer, messenger, grpc_client);
+        let connection = Connection::new(id, peer, messenger, grpc_client, auth_token);
         if self.inner.options.grpc_proxy_address.is_some() {
             // log_trace!("starting gRPC");
             connection.grpc_client().start(Some(connection.grpc_client_notify_target())).await;
@@ -214,6 +214,11 @@ impl Server {
 
     pub fn verbose(&self) -> bool {
         self.inner.options.verbose
+    }
+
+    /// F-C-13 FOLLOW-UP: returns the configured bearer token, if any.
+    pub fn rpc_auth_token(&self) -> Option<&str> {
+        self.inner.options.rpc_auth_token.as_deref()
     }
 
     pub async fn join(&self) -> Result<()> {

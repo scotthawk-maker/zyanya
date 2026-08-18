@@ -14,3 +14,7 @@ testing/integration/perflogs*
 Servers.toml
 release
 Cargo.lock
+adws/adw_data/sessions/
+adws/adw_data/sssf.db*
+adws/adw_data/sssf.db
+*.jsonl

@@ -5,14 +5,7 @@ pub const BONDING_CURVE_ASM: &str = r#"
 // Key 0: Total Supply
 // Key 1: Slope
 // Key 2: Reserve
-// Key 3: Phase (0=bonding, 1=frozen, 2=AMM)
-// Key 4: AMM X Reserve (ZYAN side)
-// Key 5: AMM Y Supply (token side)
-// Key 6: AMM K (constant product)
-// Key 7: Graduation Threshold (default 1_000_000_000)
 // Key <address>: Holder Balance
-// NOTE: Storage keys 0-7 are reserved for contract state. User balances use
-// key = address (u64). Use addresses > 7 to avoid collisions (tests use 100, 200, etc.)
 
 // --- Check Initialization ---
 PUSH 1
@@ -53,24 +46,9 @@ EQ
 JUMPIF :op_sell
 
 DUP
-PUSH 7
-EQ
-JUMPIF :op_amm_swap
-
-DUP
 PUSH 6
 EQ
 JUMPIF :op_price
-
-DUP
-PUSH 8
-EQ
-JUMPIF :op_set_graduation_threshold
-
-DUP
-PUSH 9
-EQ
-JUMPIF :op_get_graduation_threshold
 
 POP
 PUSH 0
@@ -84,6 +62,16 @@ JUMP :op_init
 :op_init
 POP
 STORE 0
+
+// F-C-04: Gate init to owner only (holder key 1)
+CALLER
+PUSH 1
+EQ
+JUMPIF :init_auth_ok
+PUSH 0
+RETURN
+
+:init_auth_ok
 LOAD 0
 PUSH 1
 SWAP
@@ -96,14 +84,6 @@ PUSH 0
 PUSH 2
 SWAP
 SSTORE
-PUSH 0
-PUSH 3
-SWAP
-SSTORE
-PUSH 1000000000
-PUSH 7
-SWAP
-SSTORE
 PUSH 1
 RETURN
 
@@ -114,6 +94,15 @@ STORE 0
 STORE 1
 STORE 2
 
+// F-C-04: Verify from == caller (msg.sender)
+CALLER
+LOAD 0
+EQ
+JUMPIF :transfer_auth_ok
+PUSH 0
+RETURN
+
+:transfer_auth_ok
 LOAD 0
 SLOAD
 DUP
@@ -159,18 +148,18 @@ RETURN
 // --- Entry Point 4: Buy(caller, tokens_to_mint) ---
 :op_buy
 POP
-// Phase guard: only allow buy if phase == 0
-PUSH 3
-SLOAD
-PUSH 0
-EQ
-JUMPIF :op_buy_proceed
-PUSH 0
-RETURN
-:op_buy_proceed
 STORE 0
 STORE 1
 
+// F-C-04: Verify caller_param == caller (msg.sender)
+CALLER
+LOAD 0
+EQ
+JUMPIF :buy_auth_ok
+PUSH 0
+RETURN
+
+:buy_auth_ok
 PUSH 2
 PUSH 0
 SLOAD
@@ -223,18 +212,18 @@ RETURN
 // --- Entry Point 5: Sell(caller, tokens_in) ---
 :op_sell
 POP
-// Phase guard: only allow sell if phase == 0
-PUSH 3
-SLOAD
-PUSH 0
-EQ
-JUMPIF :op_sell_proceed
-PUSH 0
-RETURN
-:op_sell_proceed
 STORE 0
 STORE 1
 
+// F-C-04: Verify caller_param == caller (msg.sender)
+CALLER
+LOAD 0
+EQ
+JUMPIF :sell_auth_ok
+PUSH 0
+RETURN
+
+:sell_auth_ok
 LOAD 0
 SLOAD
 STORE 3
@@ -317,158 +306,6 @@ PUSH 0
 SLOAD
 MUL
 RETURN
-
-// --- Entry Point 7: AMM Swap(caller, token_in_amount, is_x_to_y) ---
-:op_amm_swap
-POP
-STORE 0    // caller
-STORE 1    // token_in_amount
-STORE 2    // is_x_to_y
-
-// Phase guard: only allow if phase == 2
-PUSH 3
-SLOAD
-PUSH 2
-EQ
-JUMPIF :amm_proceed
-PUSH 0
-RETURN
-
-:amm_proceed
-// Check direction
-LOAD 2
-PUSH 1
-EQ
-JUMPIF :amm_x_to_y
-
-// --- Y to X (sell tokens for ZYAN) ---
-// Check holder balance >= token_in_amount
-LOAD 0
-SLOAD        // holder[caller]
-LOAD 1       // token_in_amount
-GTE
-JUMPIF :amm_y_to_x_calc
-PUSH 0
-RETURN
-
-:amm_y_to_x_calc
-// new_y = y_supply + token_in_amount
-PUSH 5
-SLOAD        // y_supply
-LOAD 1
-ADD
-STORE 3      // mem[3] = new_y
-
-// new_x = k / new_y
-PUSH 6
-SLOAD        // k
-LOAD 3
-DIV
-STORE 4      // mem[4] = new_x
-
-// zyan_out = x_reserve - new_x
-PUSH 4
-SLOAD        // x_reserve
-LOAD 4
-SUB
-STORE 5      // mem[5] = zyan_out
-
-// Update holder balance: holder[caller] -= token_in_amount
-LOAD 0
-SLOAD        // holder[caller]
-LOAD 1
-SUB
-LOAD 0
-SWAP
-SSTORE
-
-// Update x_reserve = new_x
-LOAD 4
-PUSH 4
-SWAP
-SSTORE
-
-// Update y_supply = new_y
-LOAD 3
-PUSH 5
-SWAP
-SSTORE
-
-// Return zyan_out
-LOAD 5
-RETURN
-
-// --- X to Y (buy tokens with ZYAN) ---
-:amm_x_to_y
-// new_x = x_reserve + token_in_amount
-PUSH 4
-SLOAD        // x_reserve
-LOAD 1
-ADD
-STORE 3      // mem[3] = new_x
-
-// new_y = k / new_x
-PUSH 6
-SLOAD        // k
-LOAD 3
-DIV
-STORE 4      // mem[4] = new_y
-
-// tokens_out = y_supply - new_y
-PUSH 5
-SLOAD        // y_supply
-LOAD 4
-SUB
-STORE 5      // mem[5] = tokens_out
-
-// Update holder balance: holder[caller] += tokens_out
-LOAD 0
-SLOAD        // holder[caller]
-LOAD 5
-ADD
-LOAD 0
-SWAP
-SSTORE
-
-// Update x_reserve = new_x
-LOAD 3
-PUSH 4
-SWAP
-SSTORE
-
-// Update y_supply = new_y
-LOAD 4
-PUSH 5
-SWAP
-SSTORE
-
-// Return tokens_out
-LOAD 5
-RETURN
-
-// --- Entry Point 8: setGraduationThreshold(new_threshold) ---
-:op_set_graduation_threshold
-POP
-PUSH 7
-SWAP
-SSTORE
-PUSH 1
-RETURN
-
-// --- Entry Point 9: getGraduationThreshold ---
-:op_get_graduation_threshold
-POP
-PUSH 7
-SLOAD
-DUP
-PUSH 0
-EQ
-JUMPIF :get_default_threshold
-RETURN
-:get_default_threshold
-POP
-PUSH 1000000000
-RETURN
 "#;
 
 pub fn bonding_curve_bytecode() -> Vec<u8> {
@@ -491,6 +328,7 @@ mod tests {
 
         // 0. Deploy Initialization (as node consensus does)
         let mut vm = VM::new(100_000);
+        vm.caller = 1; // F-C-04: init gated to caller=1
         vm.stack.push(1).unwrap(); // slope = 1
         vm.stack.push(0).unwrap(); // entry point 0 on deploy
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Deploy failed");
@@ -498,6 +336,7 @@ mod tests {
 
         // 1. Init: slope = 2 (entry point 0)
         let mut vm = VM::new(100_000);
+        vm.caller = 1; // F-C-04: init gated to caller=1
         vm.stack.push(2).unwrap(); // slope = 2
         vm.stack.push(0).unwrap(); // entry point 0
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Init failed");
@@ -506,6 +345,7 @@ mod tests {
 
         // 2. Buy caller 1, k=10 (entry point 4)
         let mut vm = VM::new(100_000);
+        vm.caller = caller1; // F-C-04: caller must match caller_param
         vm.stack.push(10).unwrap(); // k = 10
         vm.stack.push(caller1).unwrap(); // caller = 1
         vm.stack.push(4).unwrap(); // entry point 4
@@ -517,6 +357,7 @@ mod tests {
 
         // 3. Buy caller 2, k=5 (entry point 4)
         let mut vm = VM::new(100_000);
+        vm.caller = caller2; // F-C-04: caller must match caller_param
         vm.stack.push(5).unwrap(); // k = 5
         vm.stack.push(caller2).unwrap(); // caller = 2
         vm.stack.push(4).unwrap(); // entry point 4
@@ -534,6 +375,7 @@ mod tests {
 
         // 5. Sell caller 1, k=10 (entry point 5)
         let mut vm = VM::new(100_000);
+        vm.caller = caller1; // F-C-04: caller must match caller_param
         vm.stack.push(10).unwrap(); // k = 10
         vm.stack.push(caller1).unwrap(); // caller = 1
         vm.stack.push(5).unwrap(); // entry point 5
@@ -557,6 +399,7 @@ mod tests {
 
         // 8. Sell caller 1, k=10 should FAIL (return 0) because balance[1]=0
         let mut vm = VM::new(100_000);
+        vm.caller = caller1; // F-C-04: caller must match caller_param
         vm.stack.push(10).unwrap(); // k = 10
         vm.stack.push(caller1).unwrap(); // caller = 1
         vm.stack.push(5).unwrap(); // entry point 5
@@ -575,6 +418,7 @@ mod tests {
 
         // Step 1: Deploy contract
         let mut vm = VM::new(100_000);
+        vm.caller = 1; // F-C-04: init gated to caller=1
         vm.stack.push(1).unwrap(); // slope = 1
         vm.stack.push(0).unwrap(); // entry_point 0
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
@@ -582,6 +426,7 @@ mod tests {
 
         // Step 2: Init slope = 10
         let mut vm = VM::new(100_000);
+        vm.caller = 1; // F-C-04: init gated to caller=1
         vm.stack.push(10).unwrap(); // slope
         vm.stack.push(0).unwrap();  // entry_point 0
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
@@ -601,6 +446,7 @@ mod tests {
 
         // Step 5: Buy 50 tokens for Alice (entry point 4)
         let mut vm = VM::new(100_000);
+        vm.caller = alice; // F-C-04: caller must match caller_param
         vm.stack.push(50).unwrap();    // tokens_to_mint
         vm.stack.push(alice).unwrap(); // caller
         vm.stack.push(4).unwrap();     // entry_point 4
@@ -614,6 +460,7 @@ mod tests {
 
         // Step 6: Transfer 15 tokens from Alice to Bob (entry point 1)
         let mut vm = VM::new(100_000);
+        vm.caller = alice; // F-C-04: caller must match `from` parameter
         vm.stack.push(15).unwrap();   // amount
         vm.stack.push(bob).unwrap();  // to
         vm.stack.push(alice).unwrap();// from
@@ -625,6 +472,7 @@ mod tests {
 
         // Step 7: Sell 15 tokens for Bob (entry point 5)
         let mut vm = VM::new(100_000);
+        vm.caller = bob; // F-C-04: caller must match caller_param
         vm.stack.push(15).unwrap();  // tokens_in
         vm.stack.push(bob).unwrap(); // caller
         vm.stack.push(5).unwrap();   // entry_point 5
@@ -645,6 +493,7 @@ mod tests {
 
         // 1. Fresh contract init with slope = 11 (entry point 0, params = [11])
         let mut vm = VM::new(100_000);
+        vm.caller = 1; // F-C-04: init gated to caller=1
         vm.stack.push(11).unwrap(); // slope = 11
         vm.stack.push(0).unwrap();  // entry_point = 0
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Init failed");
@@ -654,6 +503,7 @@ mod tests {
         // 2. Buy 10 tokens for user (entry point 4)
         // Cost formula: slope * (2 * supply * k + k^2) / 2 = 11 * (0 + 100) / 2 = 550
         let mut vm = VM::new(100_000);
+        vm.caller = user; // F-C-04: caller must match caller_param
         vm.stack.push(10).unwrap();   // k = 10
         vm.stack.push(user).unwrap(); // caller
         vm.stack.push(4).unwrap();    // entry_point 4
@@ -664,6 +514,7 @@ mod tests {
         // 3. Sell 10 tokens for user (entry point 5)
         // Refund formula: slope * (2 * 10 * 10 - 100) / 2 = 11 * 100 / 2 = 550
         let mut vm = VM::new(100_000);
+        vm.caller = user; // F-C-04: caller must match caller_param
         vm.stack.push(10).unwrap();   // k = 10
         vm.stack.push(user).unwrap(); // caller
         vm.stack.push(5).unwrap();    // entry_point 5
@@ -674,46 +525,12 @@ mod tests {
         // 4. Already-initialized contract calling init(slope = 5) (entry point 0)
         // Should dispatch correctly to :op_init and set slope = 5
         let mut vm = VM::new(100_000);
+        vm.caller = 1; // F-C-04: init gated to caller=1
         vm.stack.push(5).unwrap(); // new slope = 5
         vm.stack.push(0).unwrap(); // entry_point = 0
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Re-init failed");
         assert_eq!(res.return_value, Some(1));
         assert_eq!(state.get(&addr, 1), 5, "Slope updated to 5");
-    }
-
-    #[test]
-    fn test_bonding_curve_graduation_threshold_get_set() {
-        let bytecode = bonding_curve_bytecode();
-        let opcodes = OpCode::deserialize_slice(&bytecode).expect("Failed to deserialize bytecode");
-        let mut state = MockStateBackend::new();
-        let addr = [0x99u8; 32];
-
-        // 1. Init (slope = 1)
-        let mut vm = VM::new(100_000);
-        vm.stack.push(1).unwrap();
-        vm.stack.push(0).unwrap();
-        let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
-        assert_eq!(res.return_value, Some(1));
-
-        // 2. Query default graduation threshold (EP 9) -> 1_000_000_000
-        let mut vm = VM::new(100_000);
-        vm.stack.push(9).unwrap();
-        let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
-        assert_eq!(res.return_value, Some(1_000_000_000), "Default threshold should be 1B");
-
-        // 3. Set graduation threshold to 500_000_000 (EP 8)
-        let mut vm = VM::new(100_000);
-        vm.stack.push(500_000_000).unwrap();
-        vm.stack.push(8).unwrap();
-        let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
-        assert_eq!(res.return_value, Some(1), "setGraduationThreshold should return 1");
-        assert_eq!(state.get(&addr, 7), 500_000_000, "Key 7 state should be 500_000_000");
-
-        // 4. Query updated graduation threshold (EP 9) -> 500_000_000
-        let mut vm = VM::new(100_000);
-        vm.stack.push(9).unwrap();
-        let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
-        assert_eq!(res.return_value, Some(500_000_000), "Updated threshold should be 500M");
     }
 }
 

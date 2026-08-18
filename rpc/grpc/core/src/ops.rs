@@ -113,3 +113,31 @@ pub enum ZyanyadPayloadOps {
     // The conversion from a notification ResponsePayload into ZyanyadPayloadOps fails.
 }
 }
+
+impl ZyanyadPayloadOps {
+    /// Returns `true` for state-changing / admin RPC methods that require
+    /// bearer-token authentication when a token is configured.
+    /// Read-only methods remain open.
+    pub fn requires_auth(&self) -> bool {
+        matches!(
+            self,
+            ZyanyadPayloadOps::DeployContract
+                | ZyanyadPayloadOps::InvokeContract
+                | ZyanyadPayloadOps::Shutdown
+                | ZyanyadPayloadOps::Ban
+                | ZyanyadPayloadOps::Unban
+                | ZyanyadPayloadOps::AddPeer
+                | ZyanyadPayloadOps::ResolveFinalityConflict
+                | ZyanyadPayloadOps::SubmitBlock
+                | ZyanyadPayloadOps::SubmitTransaction
+                | ZyanyadPayloadOps::SubmitTransactionReplacement
+                // notification start/stop (state-changing subscription commands)
+                | ZyanyadPayloadOps::NotifyUtxosChanged
+                | ZyanyadPayloadOps::StopNotifyingUtxosChanged
+                | ZyanyadPayloadOps::NotifyPruningPointUtxoSetOverride
+                | ZyanyadPayloadOps::StopNotifyingPruningPointUtxoSetOverride
+                | ZyanyadPayloadOps::NotifyVirtualChainChanged
+                | ZyanyadPayloadOps::NotifyVirtualDaaScoreChanged
+        )
+    }
+}

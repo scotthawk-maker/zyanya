@@ -62,6 +62,15 @@ STORE 0
 STORE 1
 STORE 2
 
+// F-C-04: Verify from == caller (msg.sender)
+CALLER
+LOAD 0
+EQ
+JUMPIF :transfer_auth_ok
+PUSH 0
+RETURN
+
+:transfer_auth_ok
 LOAD 0
 SLOAD
 DUP
@@ -110,6 +119,16 @@ POP
 STORE 0
 STORE 1
 
+// F-C-04: Gate mint to owner only (Key 1 stores owner address)
+CALLER
+PUSH 1
+SLOAD
+EQ
+JUMPIF :mint_auth_ok
+PUSH 0
+RETURN
+
+:mint_auth_ok
 PUSH 0
 SLOAD
 LOAD 1
@@ -186,6 +205,7 @@ mod tests {
 
         // 5. Transfer 100 tokens from owner (1) to recipient (2) (Entry Point 0)
         let mut vm = VM::new(100_000);
+        vm.caller = owner; // F-C-04: caller must match `from` parameter
         vm.stack.push(100).unwrap(); // amount
         vm.stack.push(recipient).unwrap(); // to
         vm.stack.push(owner).unwrap(); // from
@@ -210,6 +230,7 @@ mod tests {
 
         // 7. Mint 50,000 tokens to recipient (2) (Entry Point 3)
         let mut vm = VM::new(100_000);
+        vm.caller = owner; // F-C-04: caller must match owner (stored at Key 1)
         vm.stack.push(50_000).unwrap(); // amount
         vm.stack.push(recipient).unwrap(); // to
         vm.stack.push(3).unwrap(); // entry_point = 3
@@ -232,6 +253,7 @@ mod tests {
 
         // Attempt to transfer 200 tokens from owner (1) to recipient (2) -> should fail
         let mut vm = VM::new(100_000);
+        vm.caller = 1; // F-C-04: caller must match `from` for auth to pass, then insufficient balance fails
         vm.stack.push(200).unwrap(); // amount
         vm.stack.push(2).unwrap(); // to
         vm.stack.push(1).unwrap(); // from

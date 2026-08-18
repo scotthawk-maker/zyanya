@@ -224,45 +224,27 @@ impl CodeGenerator {
                 "call" => {
                     if args.len() < 3 {
                         return Err(CodegenError::InvalidBuiltinArgs(
-                            "call requires at least 3 arguments (addr, gas, calldata...)".into(),
+                            "call requires 3 arguments (addr, gas, calldata)".into(),
                         ));
                     }
-                    // Format: call(addr, gas, calldata...)
-                    // If addr is a variable, push it onto stack first for dynamic call evaluation.
-                    let is_dynamic_addr = matches!(&args[0], Expression::Variable(_));
-                    if is_dynamic_addr {
-                        self.generate_expression(&args[0], symbols, current_fn, fn_idx)?;
-                    }
-
+                    // Format: call(addr, gas, calldata)
+                    // Stack for CALL opcode: forward_gas first, calldata second, CALL <addr>
                     self.generate_expression(&args[1], symbols, current_fn, fn_idx)?; // gas
-
-                    let is_multi = args.len() > 3;
-                    if !is_multi {
-                        self.generate_expression(&args[2], symbols, current_fn, fn_idx)?; // single calldata
-                    } else {
-                        let num_calldata = args.len() - 2;
-                        for arg in &args[2..] {
-                            self.generate_expression(arg, symbols, current_fn, fn_idx)?;
-                        }
-                        self.lines.push(format!("PUSH {}", num_calldata));
-                    }
+                    self.generate_expression(&args[2], symbols, current_fn, fn_idx)?; // calldata
 
                     let addr_str = match &args[0] {
-                        Expression::Number(n) => {
-                            let hex = format!("{:x}", n);
-                            if hex.len() == 1 || hex.len() == 2 {
-                                format!("0x{}", hex.repeat(32))
-                            } else {
-                                format!("0x{:064x}", n)
-                            }
-                        }
+                        Expression::Variable(v) => v.clone(),
+                        Expression::Number(n) => format!("0x{:064x}", n),
                         _ => "0x0000000000000000000000000000000000000000000000000000000000000000".into(),
                     };
-                    if is_multi {
-                        self.lines.push(format!("CALLMULTI {}", addr_str));
-                    } else {
-                        self.lines.push(format!("CALL {}", addr_str));
+                    self.lines.push(format!("CALL {}", addr_str));
+                }
+                "caller" => {
+                    if !args.is_empty() {
+                        return Err(CodegenError::InvalidBuiltinArgs("caller requires 0 arguments".into()));
                     }
+                    // F-C-04: Push the authenticated caller (msg.sender) onto the stack.
+                    self.lines.push("CALLER".into());
                 }
                 _ => {
                     // Function call fallback

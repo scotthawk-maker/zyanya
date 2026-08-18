@@ -167,6 +167,33 @@ impl RpcApiOps {
                 | RpcApiOps::Unsubscribe
         )
     }
+
+    /// F-C-13 FOLLOW-UP: Returns `true` for state-changing / admin wRPC methods
+    /// that require bearer-token authentication when a token is configured.
+    /// Read-only methods remain open.
+    pub fn requires_auth(&self) -> bool {
+        matches!(
+            self,
+            RpcApiOps::DeployContract
+                | RpcApiOps::InvokeContract
+                | RpcApiOps::Shutdown
+                | RpcApiOps::Ban
+                | RpcApiOps::Unban
+                | RpcApiOps::AddPeer
+                | RpcApiOps::ResolveFinalityConflict
+                | RpcApiOps::SubmitBlock
+                | RpcApiOps::SubmitTransaction
+                | RpcApiOps::SubmitTransactionReplacement
+                | RpcApiOps::NotifyUtxosChanged
+                | RpcApiOps::NotifyPruningPointUtxoSetOverride
+                | RpcApiOps::NotifyVirtualChainChanged
+                | RpcApiOps::NotifyVirtualDaaScoreChanged
+                | RpcApiOps::NotifyBlockAdded
+                | RpcApiOps::NotifyNewBlockTemplate
+                | RpcApiOps::NotifyFinalityConflict
+                | RpcApiOps::NotifySinkBlueScoreChanged
+        )
+    }
 }
 
 impl From<RpcApiOps> for u32 {

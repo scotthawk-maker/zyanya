@@ -54,11 +54,18 @@ pub struct ServerContext {
     pub core_service: DynRpcService,
     /// The notifier relaying RPC core notifications to connections
     pub notifier: Arc<Notifier<Notification, Connection>>,
+    /// Optional bearer token required for state-changing RPC methods (F-C-13).
+    /// When `None`, authentication is disabled.
+    pub rpc_auth_token: Option<String>,
 }
 
 impl ServerContext {
-    pub fn new(core_service: DynRpcService, notifier: Arc<Notifier<Notification, Connection>>) -> Self {
-        Self { core_service, notifier }
+    pub fn new(
+        core_service: DynRpcService,
+        notifier: Arc<Notifier<Notification, Connection>>,
+        rpc_auth_token: Option<String>,
+    ) -> Self {
+        Self { core_service, notifier, rpc_auth_token }
     }
 }
 
@@ -89,6 +96,7 @@ impl ConnectionHandler {
         subscription_context: SubscriptionContext,
         broadcasters: usize,
         counters: Arc<TowerConnectionCounters>,
+        rpc_auth_token: Option<String>,
     ) -> Self {
         // This notifier UTXOs subscription granularity to rpc-core notifier
         let policies = MutationPolicies::new(UtxosChangedMutationPolicy::AddressSet);
@@ -114,7 +122,7 @@ impl ConnectionHandler {
             broadcasters,
             policies,
         ));
-        let server_context = ServerContext::new(core_service, notifier);
+        let server_context = ServerContext::new(core_service, notifier, rpc_auth_token);
         let interface = Arc::new(Factory::new_interface(server_context.clone(), network_bps));
         let running = Default::default();
 
@@ -136,7 +144,8 @@ impl ConnectionHandler {
             let protowire_server = RpcServer::new(connection_handler)
                 .accept_compressed(CompressionEncoding::Gzip)
                 .send_compressed(CompressionEncoding::Gzip)
-                .max_decoding_message_size(RPC_MAX_MESSAGE_SIZE);
+                .max_decoding_message_size(RPC_MAX_MESSAGE_SIZE)
+                .max_encoding_message_size(RPC_MAX_MESSAGE_SIZE);
 
             // TODO: check whether we should set tcp_keepalive
             // const GRPC_KEEP_ALIVE_PING_INTERVAL: Duration = Duration::from_secs(5);
@@ -254,6 +263,13 @@ impl Rpc for ConnectionHandler {
 
         debug!("GRPC, Incoming message stream from {:?}", remote_address);
 
+        // F-C-13: Extract optional bearer token from the Authorization metadata header.
+        let auth_token = request
+            .metadata()
+            .get("authorization")
+            .and_then(|v| v.to_str().ok())
+            .map(|v| v.strip_prefix("Bearer ").unwrap_or(v).to_string());
+
         // Build the in/out pipes
         let (outgoing_route, outgoing_receiver) = mpsc_channel(Self::outgoing_route_channel_size());
         let incoming_stream = request.into_inner();
@@ -266,6 +282,7 @@ impl Rpc for ConnectionHandler {
             self.manager_sender(),
             incoming_stream,
             outgoing_route,
+            auth_token,
         );
 
         // Try to get the connection registered into the central Manager

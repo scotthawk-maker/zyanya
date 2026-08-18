@@ -354,6 +354,10 @@ impl Generator {
             destination_utxo_context,
         } = settings;
 
+        if minimum_signatures == 0 {
+            return Err(Error::InvalidArgument("minimum_signatures must be at least 1".to_string()));
+        }
+
         let network_type = NetworkType::from(network_id);
         let network_params = NetworkParams::from(network_id);
         let mass_calculator = MassCalculator::new(&network_id.into());

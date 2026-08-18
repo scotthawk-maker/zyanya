@@ -51,6 +51,9 @@ struct ConnectionInner {
     pub grpc_client: Option<Arc<GrpcClient>>,
     // not using an atomic in case an Id will change type in the future...
     pub listener_id: Mutex<Option<ListenerId>>,
+    /// F-C-13 FOLLOW-UP: bearer token supplied by the client on the WebSocket
+    /// upgrade request. Used to authenticate state-changing wRPC methods.
+    pub auth_token: Option<String>,
 }
 
 impl ConnectionInner {
@@ -83,12 +86,12 @@ pub struct Connection {
 }
 
 impl Connection {
-    pub fn new(id: u64, peer: &SocketAddr, messenger: Arc<Messenger>, grpc_client: Option<Arc<GrpcClient>>) -> Connection {
+    pub fn new(id: u64, peer: &SocketAddr, messenger: Arc<Messenger>, grpc_client: Option<Arc<GrpcClient>>, auth_token: Option<String>) -> Connection {
         // If a GrpcClient is provided, it has to come configured in direct mode
         assert!(grpc_client.is_none() || grpc_client.as_ref().unwrap().notification_mode() == NotificationMode::Direct);
         // Should a gRPC client be provided, no listener_id is required for subscriptions so the listener id is set to default
         let listener_id = Mutex::new(grpc_client.clone().map(|_| ListenerId::default()));
-        Connection { inner: Arc::new(ConnectionInner { id, peer: *peer, messenger, grpc_client, listener_id }) }
+        Connection { inner: Arc::new(ConnectionInner { id, peer: *peer, messenger, grpc_client, listener_id, auth_token }) }
     }
 
     /// Obtain the connection id
@@ -123,6 +126,11 @@ impl Connection {
 
     pub fn peer(&self) -> &SocketAddr {
         &self.inner.peer
+    }
+
+    /// F-C-13 FOLLOW-UP: returns the bearer token supplied by the client, if any.
+    pub fn auth_token(&self) -> Option<&str> {
+        self.inner.auth_token.as_deref()
     }
 
     /// Creates a WebSocket [`Message`] that can be posted to the connection ([`Messenger`]) sink

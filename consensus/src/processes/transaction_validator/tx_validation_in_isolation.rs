@@ -43,7 +43,7 @@ impl TransactionValidator {
         if !tx.inputs.is_empty() {
             return Err(TxRuleError::CoinbaseHasInputs(tx.inputs.len()));
         }
-        let outputs_limit = (self.ghostdag_k as u64 + 2) * 13;
+        let outputs_limit = (self.mergeset_size_limit + 1) * 13;
         if tx.outputs.len() as u64 > outputs_limit {
             return Err(TxRuleError::CoinbaseTooManyOutputs(tx.outputs.len(), outputs_limit));
         }
@@ -159,6 +159,20 @@ fn check_contract_payload_in_isolation(tx: &Transaction) -> TxResult<()> {
         return Ok(());
     }
 
+    use zyanya_consensus_core::config::constants::contract::{
+        MAX_CONTRACT_BYTECODE_SIZE, MAX_CONTRACT_PARAMETERS, MAX_CONTRACT_PAYLOAD_SIZE,
+    };
+
+    // F-C-10: Reject oversized payloads BEFORE borsh deserialization.
+    // Borsh reads a u32 length prefix and allocates that many elements —
+    // a crafted length prefix of 0xFFFFFFFF can OOM the node.
+    if tx.payload.len() > MAX_CONTRACT_PAYLOAD_SIZE {
+        return Err(TxRuleError::InvalidContractPayload(format!(
+            "contract payload size {} exceeds maximum {}",
+            tx.payload.len(), MAX_CONTRACT_PAYLOAD_SIZE
+        )));
+    }
+
     let payload = zyanya_consensus_core::tx::ContractPayload::from_slice(&tx.payload)
         .map_err(|e| TxRuleError::InvalidContractPayload(e.to_string()))?;
 
@@ -166,6 +180,13 @@ fn check_contract_payload_in_isolation(tx: &Transaction) -> TxResult<()> {
         zyanya_consensus_core::tx::ContractPayload::Deploy(deploy) => {
             if deploy.bytecode.is_empty() {
                 return Err(TxRuleError::InvalidContractPayload("empty bytecode".to_string()));
+            }
+            // F-C-10: Bound bytecode size (consensus rule).
+            if deploy.bytecode.len() > MAX_CONTRACT_BYTECODE_SIZE {
+                return Err(TxRuleError::InvalidContractPayload(format!(
+                    "bytecode size {} exceeds maximum {}",
+                    deploy.bytecode.len(), MAX_CONTRACT_BYTECODE_SIZE
+                )));
             }
             if deploy.max_gas == 0 {
                 return Err(TxRuleError::InvalidContractPayload("zero max gas".to_string()));
@@ -178,6 +199,13 @@ fn check_contract_payload_in_isolation(tx: &Transaction) -> TxResult<()> {
             }
         }
         zyanya_consensus_core::tx::ContractPayload::Invoke(invoke) => {
+            // F-C-10: Bound parameters count (consensus rule).
+            if invoke.parameters.len() > MAX_CONTRACT_PARAMETERS {
+                return Err(TxRuleError::InvalidContractPayload(format!(
+                    "parameters length {} exceeds maximum {}",
+                    invoke.parameters.len(), MAX_CONTRACT_PARAMETERS
+                )));
+            }
             if invoke.max_gas == 0 {
                 return Err(TxRuleError::InvalidContractPayload("zero max gas".to_string()));
             }
@@ -218,6 +246,7 @@ mod tests {
             params.max_signature_script_len,
             params.max_script_public_key_len,
             params.ghostdag_k,
+            params.mergeset_size_limit,
             params.coinbase_payload_script_public_key_max_len,
             params.coinbase_maturity,
             Default::default(),
@@ -321,6 +350,7 @@ mod tests {
                 max_gas: 5000,
                 gas_price: 1,
                 deposit_amount: 0,
+                metadata_hash: [0u8; 32],
             },
         )
         .to_bytes()

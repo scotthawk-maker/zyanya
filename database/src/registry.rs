@@ -50,6 +50,8 @@ pub enum DatabaseStorePrefixes {
     ContractStorage = 61,
     ContractBalance = 62,
     ContractMeta = 63,
+    /// F-C-16: committed blake2b metadata hash per contract.
+    ContractMetadataHash = 64,
 
     // ---- Metadata ----
     MultiConsensusMetadata = 124,

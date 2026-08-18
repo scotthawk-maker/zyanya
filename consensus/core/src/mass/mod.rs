@@ -11,33 +11,41 @@ use zyanya_hashes::HASH_SIZE;
 // calculation.
 pub fn transaction_estimated_serialized_size(tx: &Transaction) -> u64 {
     let mut size: u64 = 0;
-    size += 2; // Tx version (u16)
-    size += 8; // Number of inputs (u64)
-    let inputs_size: u64 = tx.inputs.iter().map(transaction_input_estimated_serialized_size).sum();
-    size += inputs_size;
+    size = size.saturating_add(2); // Tx version (u16)
+    size = size.saturating_add(8); // Number of inputs (u64)
+    let inputs_size: u64 = tx
+        .inputs
+        .iter()
+        .map(transaction_input_estimated_serialized_size)
+        .fold(0u64, |acc, x| acc.saturating_add(x));
+    size = size.saturating_add(inputs_size);
 
-    size += 8; // number of outputs (u64)
-    let outputs_size: u64 = tx.outputs.iter().map(transaction_output_estimated_serialized_size).sum();
-    size += outputs_size;
+    size = size.saturating_add(8); // number of outputs (u64)
+    let outputs_size: u64 = tx
+        .outputs
+        .iter()
+        .map(transaction_output_estimated_serialized_size)
+        .fold(0u64, |acc, x| acc.saturating_add(x));
+    size = size.saturating_add(outputs_size);
 
-    size += 8; // lock time (u64)
-    size += SUBNETWORK_ID_SIZE as u64;
-    size += 8; // gas (u64)
-    size += HASH_SIZE as u64; // payload hash
+    size = size.saturating_add(8); // lock time (u64)
+    size = size.saturating_add(SUBNETWORK_ID_SIZE as u64);
+    size = size.saturating_add(8); // gas (u64)
+    size = size.saturating_add(HASH_SIZE as u64); // payload hash
 
-    size += 8; // length of the payload (u64)
-    size += tx.payload.len() as u64;
+    size = size.saturating_add(8); // length of the payload (u64)
+    size = size.saturating_add(tx.payload.len() as u64);
     size
 }
 
 fn transaction_input_estimated_serialized_size(input: &TransactionInput) -> u64 {
-    let mut size = 0;
-    size += outpoint_estimated_serialized_size();
+    let mut size: u64 = 0;
+    size = size.saturating_add(outpoint_estimated_serialized_size());
 
-    size += 8; // length of signature script (u64)
-    size += input.signature_script.len() as u64;
+    size = size.saturating_add(8); // length of signature script (u64)
+    size = size.saturating_add(input.signature_script.len() as u64);
 
-    size += 8; // sequence (uint64)
+    size = size.saturating_add(8); // sequence (uint64)
     size
 }
 
@@ -50,10 +58,10 @@ const fn outpoint_estimated_serialized_size() -> u64 {
 
 pub fn transaction_output_estimated_serialized_size(output: &TransactionOutput) -> u64 {
     let mut size: u64 = 0;
-    size += 8; // value (u64)
-    size += 2; // output.ScriptPublicKey.Version (u16)
-    size += 8; // length of script public key (u64)
-    size += output.script_public_key.script().len() as u64;
+    size = size.saturating_add(8); // value (u64)
+    size = size.saturating_add(2); // output.ScriptPublicKey.Version (u16)
+    size = size.saturating_add(8); // length of script public key (u64)
+    size = size.saturating_add(output.script_public_key.script().len() as u64);
     size
 }
 
@@ -90,18 +98,24 @@ impl MassCalculator {
         }
 
         let size = transaction_estimated_serialized_size(tx);
-        let mass_for_size = size * self.mass_per_tx_byte;
+        let mass_for_size = size.saturating_mul(self.mass_per_tx_byte);
         let total_script_public_key_size: u64 = tx
             .outputs
             .iter()
-            .map(|output| 2 /* script public key version (u16) */ + output.script_public_key.script().len() as u64)
-            .sum();
-        let total_script_public_key_mass = total_script_public_key_size * self.mass_per_script_pub_key_byte;
+            .map(|output| 2u64.saturating_add(output.script_public_key.script().len() as u64))
+            .fold(0u64, |acc, x| acc.saturating_add(x));
+        let total_script_public_key_mass = total_script_public_key_size.saturating_mul(self.mass_per_script_pub_key_byte);
 
-        let total_sigops: u64 = tx.inputs.iter().map(|input| input.sig_op_count as u64).sum();
-        let total_sigops_mass = total_sigops * self.mass_per_sig_op;
+        let total_sigops: u64 = tx
+            .inputs
+            .iter()
+            .map(|input| input.sig_op_count as u64)
+            .fold(0u64, |acc, x| acc.saturating_add(x));
+        let total_sigops_mass = total_sigops.saturating_mul(self.mass_per_sig_op);
 
-        mass_for_size + total_script_public_key_mass + total_sigops_mass
+        mass_for_size
+            .saturating_add(total_script_public_key_mass)
+            .saturating_add(total_sigops_mass)
     }
 
     /// Calculates the storage mass for this populated transaction.

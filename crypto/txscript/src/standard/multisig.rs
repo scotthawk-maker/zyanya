@@ -10,12 +10,17 @@ pub enum Error {
     // provided public keys.
     #[error("too many required signatures")]
     ErrTooManyRequiredSigs,
+    #[error("at least one signature is required")]
+    ErrZeroRequiredSigs,
     #[error(transparent)]
     ScriptBuilderError(#[from] ScriptBuilderError),
     #[error("provided public keys should not be empty")]
     EmptyKeys,
 }
 pub fn multisig_redeem_script(pub_keys: impl Iterator<Item = impl Borrow<[u8; 32]>>, required: usize) -> Result<Vec<u8>, Error> {
+    if required == 0 {
+        return Err(Error::ErrZeroRequiredSigs);
+    }
     if pub_keys.size_hint().1.is_some_and(|upper| upper < required) {
         return Err(Error::ErrTooManyRequiredSigs);
     }
@@ -42,6 +47,9 @@ pub fn multisig_redeem_script(pub_keys: impl Iterator<Item = impl Borrow<[u8; 32
 }
 
 pub fn multisig_redeem_script_ecdsa(pub_keys: impl Iterator<Item = impl Borrow<[u8; 33]>>, required: usize) -> Result<Vec<u8>, Error> {
+    if required == 0 {
+        return Err(Error::ErrZeroRequiredSigs);
+    }
     if pub_keys.size_hint().1.is_some_and(|upper| upper < required) {
         return Err(Error::ErrTooManyRequiredSigs);
     }
@@ -115,8 +123,16 @@ mod tests {
 
     #[test]
     fn test_empty_keys() {
-        let result = multisig_redeem_script(empty::<[u8; 32]>(), 0);
+        let result = multisig_redeem_script(empty::<[u8; 32]>(), 1);
         assert_eq!(result, Err(Error::EmptyKeys));
+    }
+
+    #[test]
+    fn test_zero_required_sigs() {
+        let result = multisig_redeem_script(iter::once([0u8; 32]), 0);
+        assert_eq!(result, Err(Error::ErrZeroRequiredSigs));
+        let result = multisig_redeem_script_ecdsa(iter::once(&[0u8; 33]), 0);
+        assert_eq!(result, Err(Error::ErrZeroRequiredSigs));
     }
 
     fn check_multisig_scenario(inputs: Vec<Input>, required: usize, is_ok: bool, is_ecdsa: bool) {

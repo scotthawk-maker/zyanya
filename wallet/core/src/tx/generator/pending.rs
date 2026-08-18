@@ -92,6 +92,9 @@ impl PendingTransaction {
         fees: u64,
         kind: DataKind,
     ) -> Result<Self> {
+        if minimum_signatures == 0 {
+            return Err(Error::InvalidArgument("minimum_signatures must be at least 1".to_string()));
+        }
         let id = transaction.id();
         let entries = utxo_entries.iter().map(|e| e.utxo.as_ref().into()).collect::<Vec<_>>();
         let signable_tx = Mutex::new(SignableTransaction::with_entries(transaction, entries));

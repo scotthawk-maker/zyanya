@@ -1,3 +1,28 @@
+pub mod contract {
+    //!
+    //! A module for constants bounding contract bytecode and calldata sizes.
+    //! These are shared between the RPC layer and consensus validation to
+    //! ensure all nodes enforce identical limits (consensus rule).
+    //!
+
+    /// Maximum size of a deployed contract bytecode (1 MB).
+    pub const MAX_CONTRACT_BYTECODE_SIZE: usize = 1024 * 1024;
+
+    /// Maximum size of contract call data / parameters in bytes (64 KB).
+    pub const MAX_CONTRACT_CALLDATA_SIZE: usize = 64 * 1024;
+
+    /// Maximum number of u64 parameters (64 KB / 8).
+    pub const MAX_CONTRACT_PARAMETERS: usize = MAX_CONTRACT_CALLDATA_SIZE / 8;
+
+    /// Upper bound on the serialized contract payload before borsh deserialization.
+    /// Covers the largest deploy (bytecode) plus invoke (parameters) plus fixed field overhead.
+    pub const MAX_CONTRACT_PAYLOAD_SIZE: usize =
+        MAX_CONTRACT_BYTECODE_SIZE + MAX_CONTRACT_CALLDATA_SIZE + 1024;
+
+    /// Server-side cap on client-supplied max_gas (CPU DoS hardening).
+    pub const MAX_CONTRACT_MAX_GAS: u64 = 100_000_000;
+}
+
 pub mod consensus {
     //!
     //! A module for constants which directly impact consensus.

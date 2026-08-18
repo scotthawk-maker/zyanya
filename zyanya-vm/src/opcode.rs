@@ -73,19 +73,12 @@ pub enum OpCode {
     SStore,
 
     // --- Inter-Contract Call ---
-    /// Call another contract at specified 32-byte address with single calldata argument.
+    /// Call another contract at specified 32-byte address.
     Call([u8; 32]),
-    /// Call another contract at specified 32-byte address with multiple arguments.
-    CallMulti([u8; 32]),
 
-    // --- Contract Context ---
-    /// Push the verified caller's address (u64) onto the stack. Set by the consensus layer.
+    /// Push the authenticated caller (msg.sender) address onto the stack.
+    /// F-C-04: provides authenticated caller identity for contract authorization.
     Caller,
-    /// Push the contract's own ZYAN balance onto the stack.
-    Balance,
-    /// Withdraw ZYAN from the contract to a recipient. Pops `amount` then `recipient`,
-    /// pushes 1 on success or 0 on failure.
-    Withdraw,
 
     /// Return from execution with top stack value as result.
     Return,
@@ -123,10 +116,7 @@ impl OpCode {
             OpCode::SLoad => 100,
             OpCode::SStore => 500,
             OpCode::Call(_) => 200,
-            OpCode::CallMulti(_) => 250,
-            OpCode::Caller => 1,
-            OpCode::Balance => 3,
-            OpCode::Withdraw => 10,
+            OpCode::Caller => 2,
             OpCode::Return => 1,
         }
     }
@@ -182,13 +172,7 @@ impl OpCode {
                     bytes.push(0x60);
                     bytes.extend_from_slice(addr);
                 }
-                OpCode::CallMulti(addr) => {
-                    bytes.push(0x61);
-                    bytes.extend_from_slice(addr);
-                }
-                OpCode::Caller => bytes.push(0x70),
-                OpCode::Balance => bytes.push(0x71),
-                OpCode::Withdraw => bytes.push(0x72),
+                OpCode::Caller => bytes.push(0x61),
                 OpCode::Return => bytes.push(0xF0),
             }
         }
@@ -280,18 +264,7 @@ impl OpCode {
                     cursor += 32;
                     opcodes.push(OpCode::Call(addr));
                 }
-                0x61 => {
-                    if cursor + 32 > bytes.len() {
-                        return Err(VMError::UnexpectedEndOfCode(cursor));
-                    }
-                    let mut addr = [0u8; 32];
-                    addr.copy_from_slice(&bytes[cursor..cursor + 32]);
-                    cursor += 32;
-                    opcodes.push(OpCode::CallMulti(addr));
-                }
-                0x70 => opcodes.push(OpCode::Caller),
-                0x71 => opcodes.push(OpCode::Balance),
-                0x72 => opcodes.push(OpCode::Withdraw),
+                0x61 => opcodes.push(OpCode::Caller),
                 0xF0 => opcodes.push(OpCode::Return),
                 unknown => return Err(VMError::InvalidOpcode(unknown)),
             }
@@ -348,10 +321,7 @@ impl fmt::Display for OpCode {
             OpCode::SLoad => write!(f, "SLOAD"),
             OpCode::SStore => write!(f, "SSTORE"),
             OpCode::Call(addr) => write!(f, "CALL 0x{}", addr.as_slice().to_hex()),
-            OpCode::CallMulti(addr) => write!(f, "CALLMULTI 0x{}", addr.as_slice().to_hex()),
             OpCode::Caller => write!(f, "CALLER"),
-            OpCode::Balance => write!(f, "BALANCE"),
-            OpCode::Withdraw => write!(f, "WITHDRAW"),
             OpCode::Return => write!(f, "RETURN"),
         }
     }

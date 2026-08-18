@@ -139,6 +139,10 @@ pub struct DeployContractPayload {
     pub max_gas: u64,
     pub gas_price: u64,
     pub deposit_amount: u64,
+    /// F-C-16: blake2b-256 hash of the sanitized token metadata.
+    /// Bound to the signed deploy transaction so metadata cannot be
+    /// tampered with after deployment. `[0; 32]` for non-token deploys.
+    pub metadata_hash: [u8; 32],
 }
 
 /// Contract invocation transaction payload
@@ -752,6 +756,7 @@ mod tests {
             max_gas: 50000,
             gas_price: 10,
             deposit_amount: 1000,
+            metadata_hash: [0u8; 32],
         });
 
         let bin = deploy.to_bytes().unwrap();

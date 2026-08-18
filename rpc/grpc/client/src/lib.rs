@@ -567,7 +567,8 @@ impl Inner {
         client = client
             .send_compressed(CompressionEncoding::Gzip)
             .accept_compressed(CompressionEncoding::Gzip)
-            .max_decoding_message_size(RPC_MAX_MESSAGE_SIZE);
+            .max_decoding_message_size(RPC_MAX_MESSAGE_SIZE)
+            .max_encoding_message_size(RPC_MAX_MESSAGE_SIZE);
 
         // Prepare a request receiver stream
         let stream_receiver = request_receiver.clone();
