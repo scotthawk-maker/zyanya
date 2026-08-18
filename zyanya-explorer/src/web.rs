@@ -2879,6 +2879,17 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
     <script>
         let currentWallet = null; // { privKeyHex, pubKeyHex, address }
 
+        // F-H-26: HTML-escape user-controlled error strings before rendering via innerHTML
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function bytesToHex(bytes) {
             return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
         }
@@ -3042,7 +3053,7 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
                 const unsignedData = await unsignedRes.json();
 
                 if (!unsignedRes.ok || !unsignedData.unsigned_tx) {
-                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Unsigned tx build error: ${unsignedData.error || 'Failed'}</span>`;
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Unsigned tx build error: ${escapeHtml(unsignedData.error || 'Failed')}</span>`;
                     return;
                 }
 
@@ -3094,11 +3105,11 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
                         </div>
                     `;
                 } else {
-                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Submission Error: ${submitData.error || 'Submit failed'}</span>`;
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Submission Error: ${escapeHtml(submitData.error || 'Submit failed')}</span>`;
                 }
 
             } catch (err) {
-                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network/Crypto error: ${err.message}</span>`;
+                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network/Crypto error: ${escapeHtml(err.message)}</span>`;
             }
         }
 
@@ -3448,10 +3459,10 @@ pub const TOKEN_HTML: &str = r#"<!DOCTYPE html>
                     statusEl.innerHTML = `<span style="color: var(--accent-green)">Bought ${data.returnValue || amount} tokens!</span>`;
                     loadTokenData();
                 } else {
-                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Buy failed: ${data.error || 'Unknown error'}</span>`;
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Buy failed: ${escapeHtml(data.error || 'Unknown error')}</span>`;
                 }
             } catch (err) {
-                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network error: ${err.message}</span>`;
+                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network error: ${escapeHtml(err.message)}</span>`;
             }
         }
 
@@ -3476,10 +3487,10 @@ pub const TOKEN_HTML: &str = r#"<!DOCTYPE html>
                     statusEl.innerHTML = `<span style="color: var(--accent-green)">Sold ${amount} tokens for ${data.returnValue || 0} ZYAN refund!</span>`;
                     loadTokenData();
                 } else {
-                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Sell failed: ${data.error || 'Unknown error'}</span>`;
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Sell failed: ${escapeHtml(data.error || 'Unknown error')}</span>`;
                 }
             } catch (err) {
-                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network error: ${err.message}</span>`;
+                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network error: ${escapeHtml(err.message)}</span>`;
             }
         }
 
@@ -5362,6 +5373,17 @@ pub const DAG_HTML: &str = r###"<!DOCTYPE html>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // F-H-26: HTML-escape user-controlled error strings before rendering via innerHTML
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         const fetchAndInject = (id, url) => {
             const container = document.getElementById(id);
             if (!container) return;
@@ -5773,7 +5795,7 @@ pub const DAG_HTML: &str = r###"<!DOCTYPE html>
                     </div>
                 `;
             } catch (err) {
-                body.innerHTML = `<div style="color: var(--side-red); padding: 1rem;">Failed to load block details: ${err.message}</div>`;
+                body.innerHTML = `<div style="color: var(--side-red); padding: 1rem;">Failed to load block details: ${escapeHtml(err.message)}</div>`;
             }
         }
 

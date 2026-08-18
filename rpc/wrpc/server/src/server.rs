@@ -43,6 +43,8 @@ struct ServerInner {
     pub sockets: Mutex<HashMap<u64, Connection>>,
     pub rpc_core: Option<RpcCore>,
     pub options: Arc<Options>,
+    /// F-H-23: Maximum number of simultaneous WebSocket connections.
+    pub max_connections: usize,
 }
 
 #[derive(Clone)]
@@ -51,6 +53,9 @@ pub struct Server {
 }
 
 const WRPC_SERVER: &str = "wrpc-server";
+
+/// F-H-23: Default maximum number of simultaneous WebSocket connections.
+const DEFAULT_MAX_CONNECTIONS: usize = 256;
 
 impl Server {
     pub fn new(tasks: usize, encoding: Encoding, core_service: Option<Arc<RpcCoreService>>, options: Arc<Options>) -> Self {
@@ -98,6 +103,7 @@ impl Server {
                 sockets: Mutex::new(HashMap::new()),
                 rpc_core,
                 options,
+                max_connections: DEFAULT_MAX_CONNECTIONS,
             }),
         }
     }
@@ -111,6 +117,20 @@ impl Server {
 
     pub async fn connect(&self, peer: &SocketAddr, messenger: Arc<Messenger>, auth_token: Option<String>) -> Result<Connection> {
         // log_trace!("WebSocket connected: {}", peer);
+
+        // F-H-23: Reject new connections when the limit is reached to prevent
+        // unbounded WebSocket resource exhaustion.
+        {
+            let sockets = self.inner.sockets.lock()?;
+            if sockets.len() >= self.inner.max_connections {
+                return Err(WebSocketError::Other(format!(
+                    "wRPC connection limit reached ({})",
+                    self.inner.max_connections
+                ))
+                .into());
+            }
+        }
+
         let id = self.inner.next_connection_id.fetch_add(1, Ordering::SeqCst);
 
         let grpc_client = if let Some(grpc_proxy_address) = &self.inner.options.grpc_proxy_address {

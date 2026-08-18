@@ -156,7 +156,7 @@ from!(item: RpcResult<&zyanya_rpc_core::SubmitBlockResponse>, protowire::SubmitB
 from!(item: &zyanya_rpc_core::GetBlockTemplateRequest, protowire::GetBlockTemplateRequestMessage, {
     Self {
         pay_address: (&item.pay_address).into(),
-        extra_data: String::from_utf8(item.extra_data.clone()).expect("extra data has to be valid UTF-8"),
+        extra_data: String::from_utf8_lossy(&item.extra_data).into_owned(),
     }
 });
 from!(item: RpcResult<&zyanya_rpc_core::GetBlockTemplateResponse>, protowire::GetBlockTemplateResponseMessage, {

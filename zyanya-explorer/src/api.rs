@@ -584,6 +584,9 @@ pub async fn api_compile_contract_handler(
     State(client): State<Arc<RpcClientManager>>,
     Json(payload): Json<CompileContractReq>,
 ) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
     match client.compile_contract(&payload.source) {
         Ok(res) => Json(res).into_response(),
         Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),

@@ -13,7 +13,7 @@ use tokio::sync::oneshot::{channel as oneshot_channel, Sender as OneshotSender};
 use workflow_rpc::server::prelude::*;
 pub use workflow_rpc::server::{Encoding as WrpcEncoding, WebSocketConfig, WebSocketCounters};
 
-static MAX_WRPC_MESSAGE_SIZE: usize = 64 * 1024 * 1024; // 64MB
+pub const MAX_WRPC_MESSAGE_SIZE: usize = 64 * 1024 * 1024; // 64MB
 
 /// Options for configuring the wRPC server
 pub struct Options {
