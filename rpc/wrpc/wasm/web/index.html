@@ -1,0 +1,12 @@
+<html>
+    <head>
+        <script type="module">
+            import * as zyanya from './zyanya-rpc/zyanya-rpc.js';
+            (async () => {
+                await zyanya.default('./zyanya-rpc/zyanya-rpc_bg.wasm');
+                console.log(zyanya.version());
+            })();
+        </script>
+    </head>
+    <body></body>
+</html>

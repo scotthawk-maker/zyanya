@@ -1,0 +1,387 @@
+name: Build and upload assets
+on:
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            TARGET: linux-gnu/amd64
+          - os: ubuntu-latest
+            TARGET: linux-gnu/aarch64
+          - os: ubuntu-latest
+            TARGET: linux-gnu/riscv64
+          - os: ubuntu-latest
+            TARGET: linux-gnu/powerpc64
+          - os: ubuntu-latest
+            TARGET: linux-gnu/powerpc64le
+          - os: ubuntu-latest
+            TARGET: linux-musl/amd64
+          - os: ubuntu-latest
+            TARGET: linux-musl/aarch64
+          - os: windows-latest
+            TARGET: windows-gnullvm/amd64
+          - os: windows-latest
+            TARGET: windows-msvc/amd64
+          - os: macos-latest
+            TARGET: macos/amd64
+          - os: macos-latest
+            TARGET: macos/aarch64
+    name: Building, ${{ matrix.TARGET }}
+    steps:
+      - name: Fix CRLF on Windows
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache Toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/x-tools
+          key: ${{ runner.os }}-musl-${{ hashFiles('**/musl-toolchain/build-amd64.sh', '**/musl-toolchain/build-aarch64.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-musl-
+
+      - name: Install protoc on Linux
+        if: runner.os == 'Linux'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: protoc
+
+      - name: Install protoc on macOS
+        if: runner.os == 'macOS'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: protoc
+
+      - name: Install msys2 on Windows
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: clang64
+          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-protobuf zip
+
+      - name: Build on Linux for linux-gnu/amd64
+        if: matrix.TARGET == 'linux-gnu/amd64'
+        env:
+          TARGET_CC: x86_64-linux-gnu-gcc
+          TARGET_CXX: x86_64-linux-gnu-g++
+          RUSTFLAGS: -C linker=x86_64-linux-gnu-gcc
+        run: |
+          rustup target add x86_64-unknown-linux-gnu
+          cargo build --target x86_64-unknown-linux-gnu --bin spectred --release
+          cargo build --target x86_64-unknown-linux-gnu --bin rothschild --release
+          cargo build --target x86_64-unknown-linux-gnu --bin spectre-wallet --release
+          mkdir bin || true
+          cp target/x86_64-unknown-linux-gnu/release/spectred bin/
+          cp target/x86_64-unknown-linux-gnu/release/rothschild bin/
+          cp target/x86_64-unknown-linux-gnu/release/spectre-wallet bin/
+          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-gnu-amd64.zip"
+          zip -r "${archive}" ./bin/*
+
+      - name: Build on Linux for linux-gnu/aarch64
+        if: matrix.TARGET == 'linux-gnu/aarch64'
+        env:
+          TARGET_CC: aarch64-linux-gnu-gcc
+          TARGET_CXX: aarch64-linux-gnu-g++
+          RUSTFLAGS: -C linker=aarch64-linux-gnu-gcc
+        run: |
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          rustup target add aarch64-unknown-linux-gnu
+          cargo build --target aarch64-unknown-linux-gnu --bin spectred --release
+          cargo build --target aarch64-unknown-linux-gnu --bin rothschild --release
+          cargo build --target aarch64-unknown-linux-gnu --bin spectre-wallet --release
+          mkdir bin || true
+          cp target/aarch64-unknown-linux-gnu/release/spectred bin/
+          cp target/aarch64-unknown-linux-gnu/release/rothschild bin/
+          cp target/aarch64-unknown-linux-gnu/release/spectre-wallet bin/
+          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-gnu-aarch64.zip"
+          zip -r "${archive}" ./bin/*
+
+      - name: Build on Linux for linux-gnu/riscv64
+        if: matrix.TARGET == 'linux-gnu/riscv64'
+        env:
+          TARGET_CC: riscv64-linux-gnu-gcc
+          TARGET_CXX: riscv64-linux-gnu-g++
+          RUSTFLAGS: -C linker=riscv64-linux-gnu-gcc -latomic
+        run: |
+          sudo apt-get install -y gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+          rustup target add riscv64gc-unknown-linux-gnu
+          cargo build --target riscv64gc-unknown-linux-gnu --bin spectred --release
+          cargo build --target riscv64gc-unknown-linux-gnu --bin rothschild --release
+          cargo build --target riscv64gc-unknown-linux-gnu --bin spectre-wallet --release
+          mkdir bin || true
+          cp target/riscv64gc-unknown-linux-gnu/release/spectred bin/
+          cp target/riscv64gc-unknown-linux-gnu/release/rothschild bin/
+          cp target/riscv64gc-unknown-linux-gnu/release/spectre-wallet bin/
+          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-gnu-riscv64gc.zip"
+          zip -r "${archive}" ./bin/*
+
+      - name: Build on Linux for linux-gnu/powerpc64
+        if: matrix.TARGET == 'linux-gnu/powerpc64'
+        env:
+          TARGET_CC: powerpc64-linux-gnu-gcc
+          TARGET_CXX: powerpc64-linux-gnu-g++
+          RUSTFLAGS: -C linker=powerpc64-linux-gnu-gcc
+        run: |
+          sudo apt-get install -y gcc-powerpc64-linux-gnu g++-powerpc64-linux-gnu
+          rustup target add powerpc64-unknown-linux-gnu
+          cargo build --target powerpc64-unknown-linux-gnu --bin spectred --release
+          cargo build --target powerpc64-unknown-linux-gnu --bin rothschild --release
+          cargo build --target powerpc64-unknown-linux-gnu --bin spectre-wallet --release
+          mkdir bin || true
+          cp target/powerpc64-unknown-linux-gnu/release/spectred bin/
+          cp target/powerpc64-unknown-linux-gnu/release/rothschild bin/
+          cp target/powerpc64-unknown-linux-gnu/release/spectre-wallet bin/
+          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-gnu-powerpc64.zip"
+          zip -r "${archive}" ./bin/*
+
+      - name: Build on Linux for linux-gnu/powerpc64le
+        if: matrix.TARGET == 'linux-gnu/powerpc64le'
+        env:
+          TARGET_CC: powerpc64le-linux-gnu-gcc
+          TARGET_CXX: powerpc64le-linux-gnu-g++
+          RUSTFLAGS: -C linker=powerpc64le-linux-gnu-gcc
+        run: |
+          sudo apt-get install -y gcc-powerpc64le-linux-gnu g++-powerpc64le-linux-gnu
+          rustup target add powerpc64le-unknown-linux-gnu
+          cargo build --target powerpc64le-unknown-linux-gnu --bin spectred --release
+          cargo build --target powerpc64le-unknown-linux-gnu --bin rothschild --release
+          cargo build --target powerpc64le-unknown-linux-gnu --bin spectre-wallet --release
+          mkdir bin || true
+          cp target/powerpc64le-unknown-linux-gnu/release/spectred bin/
+          cp target/powerpc64le-unknown-linux-gnu/release/rothschild bin/
+          cp target/powerpc64le-unknown-linux-gnu/release/spectre-wallet bin/
+          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-gnu-powerpc64le.zip"
+          zip -r "${archive}" ./bin/*
+
+      - name: Build on Linux for linux-musl/amd64
+        if: matrix.TARGET == 'linux-musl/amd64'
+
+        # We're using musl to make the binaries statically linked and portable
+        run: |
+          rustup target add x86_64-unknown-linux-musl
+          cargo fetch --target x86_64-unknown-linux-musl
+
+          # Run build script for musl toolchain.
+          source musl-toolchain/build-amd64.sh
+          cd "${GITHUB_WORKSPACE}"
+
+          # Build for musl.
+          cargo --verbose build --bin spectred --bin rothschild --bin spectre-wallet --release --target x86_64-unknown-linux-musl
+          mkdir bin || true
+          cp target/x86_64-unknown-linux-musl/release/spectred bin/
+          cp target/x86_64-unknown-linux-musl/release/rothschild bin/
+          cp target/x86_64-unknown-linux-musl/release/spectre-wallet bin/
+          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-musl-amd64.zip"
+          zip -r "${archive}" ./bin/*
+
+      - name: Build on Linux for linux-musl/aarch64
+        if: matrix.TARGET == 'linux-musl/aarch64'
+
+        # We're using musl to make the binaries statically linked and portable.
+        run: |
+          rustup target add aarch64-unknown-linux-musl
+          cargo fetch --target aarch64-unknown-linux-musl
+
+          # Run build script for musl toolchain.
+          source musl-toolchain/build-aarch64.sh
+          cd "${GITHUB_WORKSPACE}"
+
+          # Build for musl.
+          cargo --verbose build --bin spectred --bin rothschild --bin spectre-wallet --release --target aarch64-unknown-linux-musl
+          mkdir bin || true
+          cp target/aarch64-unknown-linux-musl/release/spectred bin/
+          cp target/aarch64-unknown-linux-musl/release/rothschild bin/
+          cp target/aarch64-unknown-linux-musl/release/spectre-wallet bin/
+          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-musl-aarch64.zip"
+          zip -r "${archive}" ./bin/*
+
+      - name: Build on Windows for windows-gnullvm/amd64
+        if: matrix.TARGET == 'windows-gnullvm/amd64'
+
+        # We're using clang to link only the ucrt library statically.
+        env:
+          RUSTFLAGS: -L/clang64/lib -lstatic=c++
+        shell: msys2 {0}
+        run: |
+          export PATH="${PATH}:/c/Users/runneradmin/.cargo/bin" # manually override path to select proper msys2 build tools.
+          pacman -U --noconfirm \
+            https://repo.msys2.org/mingw/clang64/mingw-w64-clang-x86_64-clang-18.1.8-2-any.pkg.tar.zst \
+            https://repo.msys2.org/mingw/clang64/mingw-w64-clang-x86_64-clang-libs-18.1.8-2-any.pkg.tar.zst \
+            https://repo.msys2.org/mingw/clang64/mingw-w64-clang-x86_64-compiler-rt-18.1.8-2-any.pkg.tar.zst \
+            https://repo.msys2.org/mingw/clang64/mingw-w64-clang-x86_64-libc++-18.1.8-2-any.pkg.tar.zst \
+            https://repo.msys2.org/mingw/clang64/mingw-w64-clang-x86_64-libunwind-18.1.8-2-any.pkg.tar.zst \
+            https://repo.msys2.org/mingw/clang64/mingw-w64-clang-x86_64-lld-18.1.8-2-any.pkg.tar.zst \
+            https://repo.msys2.org/mingw/clang64/mingw-w64-clang-x86_64-llvm-18.1.8-2-any.pkg.tar.zst \
+            https://repo.msys2.org/mingw/clang64/mingw-w64-clang-x86_64-llvm-libs-18.1.8-2-any.pkg.tar.zst
+          rustup target add x86_64-pc-windows-gnullvm
+          cargo build --target x86_64-pc-windows-gnullvm --bin spectred --release
+          cargo build --target x86_64-pc-windows-gnullvm --bin rothschild --release
+          cargo build --target x86_64-pc-windows-gnullvm --bin spectre-wallet --release
+          mkdir bin || true
+          cp target/x86_64-pc-windows-gnullvm/release/spectred.exe bin/
+          cp target/x86_64-pc-windows-gnullvm/release/rothschild.exe bin/
+          cp target/x86_64-pc-windows-gnullvm/release/spectre-wallet.exe bin/
+          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-windows-gnullvm-amd64.zip"
+          zip -r "${archive}" ./bin/*
+
+      - name: Build on Windows for windows-msvc/amd64
+        if: matrix.TARGET == 'windows-msvc/amd64'
+        shell: msys2 {0}
+        run: |
+          export PATH="${PATH}:/c/Users/runneradmin/.cargo/bin" # manually override path to select proper msys2 build tools.
+          rustup target add x86_64-pc-windows-msvc
+          cargo build --target x86_64-pc-windows-msvc --bin spectred --release
+          cargo build --target x86_64-pc-windows-msvc --bin rothschild --release
+          cargo build --target x86_64-pc-windows-msvc --bin spectre-wallet --release
+          mkdir bin || true
+          cp target/x86_64-pc-windows-msvc/release/spectred.exe bin/
+          cp target/x86_64-pc-windows-msvc/release/rothschild.exe bin/
+          cp target/x86_64-pc-windows-msvc/release/spectre-wallet.exe bin/
+          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-windows-msvc-amd64.zip"
+          zip -r "${archive}" ./bin/*
+
+      - name: Build on macOS for macos/amd64
+        if: matrix.TARGET == 'macos/amd64'
+        run: |
+          rustup target add x86_64-apple-darwin
+          cargo build --target x86_64-apple-darwin --bin spectred --release
+          cargo build --target x86_64-apple-darwin --bin rothschild --release
+          cargo build --target x86_64-apple-darwin --bin spectre-wallet --release
+          mkdir bin || true
+          cp target/x86_64-apple-darwin/release/spectred bin/
+          cp target/x86_64-apple-darwin/release/rothschild bin/
+          cp target/x86_64-apple-darwin/release/spectre-wallet bin/
+          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-macos-amd64.zip"
+          zip -r "${archive}" ./bin/*
+
+      - name: Build on macOS for macos/aarch64
+        if: matrix.TARGET == 'macos/aarch64'
+        run: |
+          rustup target add aarch64-apple-darwin
+          cargo build --target aarch64-apple-darwin --bin spectred --release
+          cargo build --target aarch64-apple-darwin --bin rothschild --release
+          cargo build --target aarch64-apple-darwin --bin spectre-wallet --release
+          mkdir bin || true
+          cp target/aarch64-apple-darwin/release/spectred bin/
+          cp target/aarch64-apple-darwin/release/rothschild bin/
+          cp target/aarch64-apple-darwin/release/spectre-wallet bin/
+          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-macos-aarch64.zip"
+          zip -r "${archive}" ./bin/*
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            bin/*.zip
+
+  build-wasm:
+    runs-on: ubuntu-latest
+    name: Building WASM32 SDK
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install Protoc
+        uses: taiki-e/install-action@v2
+        with:
+          tool: protoc
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install llvm
+        id: install_llvm
+        continue-on-error: true
+        run: |
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+          sudo apt-get install -y clang-15 lldb-15 lld-15 clangd-15 clang-tidy-15 clang-format-15 clang-tools-15 llvm-15-dev lld-15 lldb-15 llvm-15-tools libomp-15-dev libc++-15-dev libc++abi-15-dev libclang-common-15-dev libclang-15-dev libclang-cpp15-dev libunwind-15-dev
+          # Make Clang 15 default
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-15/bin/clang++ 100
+          sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-15/bin/clang 100
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/lib/llvm-15/bin/clang-format 100
+          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/lib/llvm-15/bin/clang-tidy 100
+          sudo update-alternatives --install /usr/bin/run-clang-tidy run-clang-tidy /usr/lib/llvm-15/bin/run-clang-tidy 100
+          # Alias cc to clang
+          sudo update-alternatives --install /usr/bin/cc cc /usr/lib/llvm-15/bin/clang 0
+          sudo update-alternatives --install /usr/bin/c++ c++ /usr/lib/llvm-15/bin/clang++ 0
+
+      - name: Install gcc-multilib
+        # gcc-multilib allows clang to find gnu libraries properly
+        run: sudo apt install -y gcc-multilib
+
+      - name: Install stable toolchain
+        if: steps.install_llvm.outcome == 'success' && steps.install_llvm.conclusion == 'success'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+
+      - name: Add wasm32 target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Install NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install NodeJS dependencies
+        run: npm install --global typedoc typescript
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build WASM32 SDK
+        env:
+          TARGET_CC: clang
+          TARGET_CFLAGS: -I/usr/include
+        run: |
+          cd wasm
+          bash build-release
+          mv release/spectre-wasm32-sdk.zip ../spectre-wasm32-sdk-${{ github.event.release.tag_name }}.zip
+
+          archive="spectre-wasm32-sdk-${{ github.event.release.tag_name }}.zip"
+          asset_name="spectre-wasm32-sdk-${{ github.event.release.tag_name }}.zip"
+          echo "archive=${archive}" >> $GITHUB_ENV
+          echo "asset_name=${asset_name}" >> $GITHUB_ENV
+
+      - name: Upload WASM32 SDK
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: "./${{ env.archive }}"
+          asset_name: "${{ env.asset_name }}"
+          asset_content_type: application/zip

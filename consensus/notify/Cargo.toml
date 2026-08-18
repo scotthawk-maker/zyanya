@@ -1,0 +1,25 @@
+[package]
+name = "zyanya-consensus-notify"
+description = "Zyanya consensus notifier"
+rust-version.workspace = true
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+include.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+async-channel.workspace = true
+cfg-if.workspace = true
+derive_more.workspace = true
+futures.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-core.workspace = true
+zyanya-hashes.workspace = true
+zyanya-notify.workspace = true
+zyanya-utils.workspace = true
+log.workspace = true
+paste.workspace = true
+thiserror.workspace = true
+triggered.workspace = true

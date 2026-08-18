@@ -1,0 +1,60 @@
+[package]
+name = "zyanya-rpc-core"
+description = "Zyanya RPC core"
+rust-version.workspace = true
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+include.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+wasm32-sdk = [
+    "zyanya-consensus-client/wasm32-sdk",
+    "zyanya-consensus-wasm/wasm32-sdk"
+]
+
+[dependencies]
+zyanya-addresses.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensus-client.workspace = true
+zyanya-consensus-notify.workspace = true
+zyanya-consensus-wasm.workspace = true
+zyanya-core.workspace = true
+zyanya-hashes.workspace = true
+zyanya-index-core.workspace = true
+zyanya-math.workspace = true
+zyanya-mining-errors.workspace = true
+zyanya-notify.workspace = true
+zyanya-txscript.workspace = true
+zyanya-utils.workspace = true
+zyanya-rpc-macros.workspace = true
+
+async-channel.workspace = true
+async-trait.workspace = true
+borsh.workspace = true
+cfg-if.workspace = true
+derive_more.workspace = true
+downcast.workspace = true
+faster-hex.workspace = true
+hex.workspace = true
+js-sys.workspace = true
+log.workspace = true
+paste.workspace = true
+rand.workspace = true
+serde-wasm-bindgen.workspace = true
+serde.workspace = true
+smallvec.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
+wasm-bindgen.workspace = true
+workflow-core.workspace = true
+workflow-serializer.workspace = true
+workflow-wasm.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

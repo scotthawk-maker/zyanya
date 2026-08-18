@@ -1,0 +1,100 @@
+// Bonding Curve Token Contract in Zyanya Contract Language (ZCL)
+// Storage Layout:
+// Key 0: Total Supply
+// Key 1: Slope
+// Key 2: Reserve
+// Key <address>: Holder Balance
+
+contract BondingCurveToken {
+    // Entry point 0: Init(slope)
+    // F-C-04: Gate init to owner only — prevents arbitrary re-init that resets slope/supply/reserve.
+    fn init(slope) {
+        let sender = caller();
+        // Only owner (holder key 1) can init. In production this would be the deployer's address.
+        if (sender != 1) {
+            return 0;
+        }
+        sstore(1, slope);
+        sstore(0, 0);
+        sstore(2, 0);
+        return 1;
+    }
+
+    // Entry point 1: Transfer(from, to, amount)
+    // F-C-04: Verify caller == from to prevent unauthorized transfers.
+    fn transfer(from, to, amount) {
+        let sender = caller();
+        if (from != sender) {
+            return 0;
+        }
+        let from_bal = sload(from);
+        if (from_bal < amount) {
+            return 0;
+        }
+        sstore(from, from_bal - amount);
+        let to_bal = sload(to);
+        sstore(to, to_bal + amount);
+        return 1;
+    }
+
+    // Entry point 2: BalanceOf(holder)
+    fn balance_of(holder) {
+        return sload(holder);
+    }
+
+    // Entry point 3: TotalSupply()
+    fn total_supply() {
+        return sload(0);
+    }
+
+    // Entry point 4: Buy(caller, tokens_to_mint)
+    // F-C-04: Verify caller == caller_param to prevent unauthorized buys.
+    fn buy(caller_param, tokens_to_mint) {
+        let sender = caller();
+        if (caller_param != sender) {
+            return 0;
+        }
+        let slope = sload(1);
+        let supply = sload(0);
+        let k = tokens_to_mint;
+        let cost = (slope * (2 * supply * k + k * k)) / 2;
+        sstore(0, supply + k);
+        let reserve = sload(2);
+        sstore(2, reserve + cost);
+        let user_bal = sload(caller_param);
+        sstore(caller_param, user_bal + k);
+        return cost;
+    }
+
+    // Entry point 5: Sell(caller, tokens_in)
+    // F-C-04: Verify caller == caller_param to prevent unauthorized sells.
+    fn sell(caller_param, tokens_in) {
+        let sender = caller();
+        if (caller_param != sender) {
+            return 0;
+        }
+        let user_bal = sload(caller_param);
+        if (user_bal < tokens_in) {
+            return 0;
+        }
+        let slope = sload(1);
+        let supply = sload(0);
+        let k = tokens_in;
+        let refund = (slope * (2 * supply * k - k * k)) / 2;
+        let reserve = sload(2);
+        if (reserve < refund) {
+            return 0;
+        }
+        sstore(caller_param, user_bal - k);
+        sstore(0, supply - k);
+        sstore(2, reserve - refund);
+        return refund;
+    }
+
+    // Entry point 6: Price()
+    fn price() {
+        let slope = sload(1);
+        let supply = sload(0);
+        return slope * supply;
+    }
+}

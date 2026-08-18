@@ -1,0 +1,21 @@
+// Counter contract in Zyanya Contract Language (ZCL)
+contract Counter {
+    state {
+        count: u64 = 0,
+    }
+
+    fn init() {
+        sstore(0, 0);
+        return 0;
+    }
+
+    fn increment(n) {
+        let count = sload(0);
+        sstore(0, count + n);
+        return sload(0);
+    }
+
+    fn get() {
+        return sload(0);
+    }
+}

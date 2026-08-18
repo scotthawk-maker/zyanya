@@ -1,0 +1,29 @@
+[package]
+name = "zyanya-utxoindex"
+description = "Zyanya UTXO index"
+rust-version.workspace = true
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+include.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+futures.workspace = true
+zyanya-consensus-core.workspace = true
+zyanya-consensusmanager.workspace = true
+zyanya-core.workspace = true
+zyanya-database.workspace = true
+zyanya-hashes.workspace = true
+zyanya-index-core.workspace = true
+zyanya-utils.workspace = true
+log.workspace = true
+parking_lot.workspace = true
+rocksdb.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+zyanya-consensus.workspace = true
+rand = { workspace = true, features = ["small_rng"] }

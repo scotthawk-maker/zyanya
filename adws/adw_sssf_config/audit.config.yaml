@@ -1,0 +1,114 @@
+defaults:
+  coding_agent: pi
+  model: ollama/deepseek-v4-pro:cloud
+  thinking: high
+  harness_engineering: []
+  tools:
+    - read
+    - bash
+    - edit
+    - write
+    - grep
+    - find
+    - ls
+  protected_files:
+    - adws/adw_modules/
+    - adws/adw_sssf_config/
+    - adws/adw_*.py
+  data_dir: adws/adw_data
+
+observability:
+  db: adws/adw_data/sssf.db
+  poll_ms: 500
+
+agents:
+  - name: planner
+    model: ollama/deepseek-v4-pro:cloud
+    thinking: high
+    color: "#a78bfa"
+    purpose: Plan the security audit by identifying files to review and attack surfaces to check.
+    prompt_engineering:
+      system: adws/adw_data/prompt_engineering/planner/system.md
+      user: adws/adw_data/prompt_engineering/planner/user.md
+    writes:
+      - specs/
+    tools:
+      - read
+      - grep
+      - find
+      - ls
+      - bash
+      - write
+
+  - name: builder
+    model: ollama/glm-5.2:cloud
+    thinking: high
+    color: "#22d3ee"
+    purpose: Execute the audit by reading source files and documenting security findings.
+    prompt_engineering:
+      system: adws/adw_data/prompt_engineering/builder/system.md
+      user: adws/adw_data/prompt_engineering/builder/user.md
+    tools:
+      - read
+      - grep
+      - find
+      - ls
+      - bash
+      - edit
+      - write
+
+  - name: scout
+    model: ollama/deepseek-v4-pro:cloud
+    thinking: medium
+    color: "#fbbf24"
+    purpose: Map the codebase structure, find security-critical code paths, and identify potential vulnerabilities. Read-only.
+    prompt_engineering:
+      system: adws/adw_data/prompt_engineering/scout/system.md
+      user: adws/adw_data/prompt_engineering/scout/user.md
+    writes: []
+    tools:
+      - read
+      - grep
+      - find
+      - ls
+      - bash
+      - write
+
+  - name: reviewer
+    model: ollama/glm-5.2:cloud
+    thinking: high
+    color: "#fb7185"
+    purpose: Review audit findings for accuracy, completeness, and severity rating. Validate each finding is a real vulnerability.
+    prompt_engineering:
+      system: adws/adw_data/prompt_engineering/reviewer/system.md
+      user: adws/adw_data/prompt_engineering/reviewer/user.md
+    writes: []
+    tools:
+      - read
+      - grep
+      - find
+      - ls
+      - bash
+      - write
+
+  - name: documenter
+    model: ollama/glm-5.2:cloud
+    thinking: medium
+    color: "#e879f9"
+    purpose: Write the final audit report from the findings, formatted by severity with remediation recommendations.
+    prompt_engineering:
+      system: adws/adw_data/prompt_engineering/documenter/system.md
+      user: adws/adw_data/prompt_engineering/documenter/user.md
+    writes:
+      - audit_reports/
+      - docs/
+      - "**/*.md"
+      - "*.md"
+    tools:
+      - read
+      - grep
+      - find
+      - ls
+      - bash
+      - write
+      - edit
