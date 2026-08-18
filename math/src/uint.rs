@@ -170,6 +170,36 @@ macro_rules! construct_uint {
                 if carry { Self::MAX } else { sum }
             }
 
+            #[inline]
+            pub fn checked_add(self, other: Self) -> Option<Self> {
+                let (sum, carry) = self.overflowing_add(other);
+                if carry { None } else { Some(sum) }
+            }
+
+            #[inline]
+            pub fn checked_add_u64(self, other: u64) -> Option<Self> {
+                let (sum, carry) = self.overflowing_add_u64(other);
+                if carry { None } else { Some(sum) }
+            }
+
+            #[inline]
+            pub fn checked_sub(self, other: Self) -> Option<Self> {
+                let (sum, carry) = self.overflowing_sub(other);
+                if carry { None } else { Some(sum) }
+            }
+
+            #[inline]
+            pub fn checked_mul(self, other: Self) -> Option<Self> {
+                let (product, carry) = self.overflowing_mul(other);
+                if carry { None } else { Some(product) }
+            }
+
+            #[inline]
+            pub fn checked_mul_u64(self, other: u64) -> Option<Self> {
+                let (product, carry) = self.overflowing_mul_u64(other);
+                if carry { None } else { Some(product) }
+            }
+
             /// Multiplication by u64
             #[inline]
             pub fn overflowing_mul_u64(self, other: u64) -> (Self, bool) {
@@ -530,9 +560,7 @@ macro_rules! construct_uint {
             #[inline]
             #[track_caller]
             fn add(self, other: $name) -> $name {
-                let (sum, carry) = self.overflowing_add(other);
-                debug_assert!(!carry, "attempt to add with overflow"); // Check in debug that it didn't overflow
-                sum
+                self.checked_add(other).expect("attempt to add with overflow")
             }
         }
 
@@ -542,9 +570,7 @@ macro_rules! construct_uint {
             #[inline]
             #[track_caller]
             fn add(self, other: u64) -> $name {
-                let (sum, carry) = self.overflowing_add_u64(other);
-                debug_assert!(!carry, "attempt to add with overflow"); // Check in debug that it didn't overflow
-                sum
+                self.checked_add_u64(other).expect("attempt to add with overflow")
             }
         }
 
@@ -554,9 +580,7 @@ macro_rules! construct_uint {
             #[inline]
             #[track_caller]
             fn sub(self, other: $name) -> $name {
-                let (sum, carry) = self.overflowing_sub(other);
-                debug_assert!(!carry, "attempt to subtract with overflow"); // Check in debug that it didn't overflow
-                sum
+                self.checked_sub(other).expect("attempt to subtract with overflow")
             }
         }
 
@@ -566,9 +590,7 @@ macro_rules! construct_uint {
             #[inline]
             #[track_caller]
             fn mul(self, other: $name) -> $name {
-                let (product, carry) = self.overflowing_mul(other);
-                debug_assert!(!carry, "attempt to multiply with overflow"); // Check in debug that it didn't overflow
-                product
+                self.checked_mul(other).expect("attempt to multiply with overflow")
             }
         }
 
@@ -578,9 +600,7 @@ macro_rules! construct_uint {
             #[inline]
             #[track_caller]
             fn mul(self, other: u64) -> $name {
-                let (product, carry) = self.overflowing_mul_u64(other);
-                debug_assert!(!carry, "attempt to multiply with overflow"); // Check in debug that it didn't overflow
-                product
+                self.checked_mul_u64(other).expect("attempt to multiply with overflow")
             }
         }
 
