@@ -194,7 +194,14 @@ pub async fn api_dag_handler(
 ) -> Response {
     let limit = pagination.limit.unwrap_or(20).min(100);
     let offset = pagination.offset.unwrap_or(0);
-    match client.get_dag_graph(limit + offset).await {
+    // F-M-37: use checked addition to avoid integer overflow on `limit + offset`.
+    let end = match limit.checked_add(offset) {
+        Some(v) => v,
+        None => {
+            return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "pagination limit + offset overflow" }))).into_response();
+        }
+    };
+    match client.get_dag_graph(end).await {
         Ok(mut dag) => {
             dag.nodes = dag.nodes.into_iter().skip(offset).take(limit).collect();
             Json(dag).into_response()

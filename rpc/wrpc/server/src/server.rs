@@ -164,7 +164,10 @@ impl Server {
         Ok(connection)
     }
 
-    pub async fn disconnect(&self, connection: Connection) {
+
+    /// F-M-26: returns `Err` on a poisoned sockets mutex instead of unwrapping
+    /// (which would panic the server task). Callers should log and ignore.
+    pub async fn disconnect(&self, connection: Connection) -> std::result::Result<(), WebSocketError> {
         // log_info!("WebSocket disconnected: {}", connection.peer());
         if let Some(rpc_core) = &self.inner.rpc_core {
             if let Some(listener_id) = connection.listener_id() {
@@ -177,10 +180,17 @@ impl Server {
             let _ = connection.grpc_client().join().await;
         }
 
-        self.inner.sockets.lock().unwrap().remove(&connection.id());
+        // F-M-26: avoid panicking on a poisoned sockets mutex; surface the
+        // error so the caller can log it without crashing the server task.
+        self.inner
+            .sockets
+            .lock()
+            .map_err(|e| WebSocketError::Other(format!("sockets mutex poisoned: {e}")))?
+            .remove(&connection.id());
 
         // FIXME: determine if messenger should be closed explicitly
         // connection.close();
+        Ok(())
     }
 
     #[inline(always)]

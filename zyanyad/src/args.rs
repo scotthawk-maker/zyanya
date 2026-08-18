@@ -475,6 +475,15 @@ impl Args {
             println!("\nNOTE: The flag --enable-mainnet-mining is deprecated and defaults to true also w/o explicit setting\n")
         }
 
+        // F-M-39: validate ram_scale at parse time — must be a finite, positive
+        // value below 1000 to prevent unbounded mempool/memory scaling.
+        if !args.ram_scale.is_finite() || args.ram_scale <= 0.0 || args.ram_scale >= 1000.0 {
+            return Err(clap::Error::raw(
+                clap::error::ErrorKind::ValueValidation,
+                format!("--ram-scale must be > 0 and < 1000, got {}", args.ram_scale),
+            ));
+        }
+
         Ok(args)
     }
 }

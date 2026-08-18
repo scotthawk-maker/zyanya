@@ -342,7 +342,19 @@ impl RequestTransactionsFlow {
         loop {
             let msg = dequeue!(self.incoming_route, Payload::RequestTransactions)?;
             let tx_ids: Vec<_> = msg.try_into()?;
-            for transaction_id in tx_ids {
+            // F-M-24: cap the number of transaction IDs honored per request to
+            // prevent a malicious/buggy peer from forcing the node to relay an
+            // unbounded number of transactions (bandwidth amplification).
+            const MAX_TX_PER_REQUEST: usize = 100;
+            if tx_ids.len() > MAX_TX_PER_REQUEST {
+                warn!(
+                    "peer {} requested {} txs in a single RequestTransactionsMessage; truncating to {}",
+                    self.router.identity(),
+                    tx_ids.len(),
+                    MAX_TX_PER_REQUEST
+                );
+            }
+            for transaction_id in tx_ids.into_iter().take(MAX_TX_PER_REQUEST) {
                 if let Some(mutable_tx) =
                     self.ctx.mining_manager().clone().get_transaction(transaction_id, TransactionQuery::TransactionsOnly).await
                 {

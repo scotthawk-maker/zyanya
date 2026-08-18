@@ -27,6 +27,12 @@ pub use stores::NetAddress;
 const MAX_ADDRESSES: usize = 4096;
 const MAX_CONNECTION_FAILED_COUNT: u64 = 3;
 
+/// F-M-25: helper used by [`RandomWeightedIterator`] to log a non-fatal
+/// `WeightedError` instead of panicking.
+fn log_weighted_error(e: rand::distributions::WeightedError) {
+    warn!("RandomWeightedIterator weight update failed: {e}; degrading to empty iterator");
+}
+
 /// Initial failure count for addresses learned from trusted sources
 /// (connected peers, DNS seeds, local addresses).
 const TRUSTED_INITIAL_FAILED_COUNT: u64 = 1;
@@ -312,7 +318,10 @@ impl AddressManager {
         self.address_store.iterate_addresses()
     }
 
-    pub fn iterate_prioritized_random_addresses(&self, exceptions: HashSet<NetAddress>) -> impl ExactSizeIterator<Item = NetAddress> {
+    pub fn iterate_prioritized_random_addresses(
+        &self,
+        exceptions: HashSet<NetAddress>,
+    ) -> Result<impl ExactSizeIterator<Item = NetAddress>, rand::distributions::WeightedError> {
         self.address_store.iterate_prioritized_random_addresses(exceptions)
     }
 
@@ -476,7 +485,7 @@ mod address_store_with_cache {
         pub fn iterate_prioritized_random_addresses(
             &self,
             exceptions: HashSet<NetAddress>,
-        ) -> impl ExactSizeIterator<Item = NetAddress> {
+        ) -> Result<impl ExactSizeIterator<Item = NetAddress>, rand::distributions::WeightedError> {
             let exceptions: HashSet<AddressKey> = exceptions.into_iter().map(|addr| addr.into()).collect();
             let mut prefix_counter: HashMap<PrefixBucket, usize> = HashMap::new();
             let (mut weights, filtered_addresses): (Vec<f64>, Vec<NetAddress>) = self
@@ -516,15 +525,17 @@ mod address_store_with_cache {
     }
 
     impl RandomWeightedIterator {
-        pub fn new(weights: Vec<f64>, addresses: Vec<NetAddress>) -> Self {
+        /// F-M-25: returns `Err` for a non-recoverable `WeightedError` instead of
+        /// panicking, so callers (connection manager) can degrade gracefully.
+        pub fn new(weights: Vec<f64>, addresses: Vec<NetAddress>) -> Result<Self, WeightedError> {
             assert_eq!(weights.len(), addresses.len());
             let remaining = weights.iter().filter(|&&w| w > 0.0).count();
             let weighted_index = match WeightedIndex::new(weights) {
                 Ok(index) => Some(index),
                 Err(WeightedError::NoItem) => None,
-                Err(e) => panic!("{e}"),
+                Err(e) => return Err(e),
             };
-            Self { weighted_index, remaining, addresses }
+            Ok(Self { weighted_index, remaining, addresses })
         }
     }
 
@@ -538,7 +549,12 @@ mod address_store_with_cache {
                 match weighted_index.update_weights(&[(i, &0f64)]) {
                     Ok(_) => {}
                     Err(WeightedError::AllWeightsZero) => self.weighted_index = None,
-                    Err(e) => panic!("{e}"),
+                    // F-M-25: log and degrade to an empty iterator instead of
+                    // panicking on an invalid weight update.
+                    Err(e) => {
+                        crate::log_weighted_error(e);
+                        self.weighted_index = None;
+                    }
                 }
                 self.remaining -= 1;
                 if self.remaining == 0 {
@@ -576,11 +592,11 @@ mod address_store_with_cache {
         #[test]
         fn test_weighted_iterator() {
             let address = NetAddress::new(IpAddr::V6(Ipv6Addr::LOCALHOST).into(), 1);
-            let iter = RandomWeightedIterator::new(vec![0.2, 0.3, 0.0], vec![address, address, address]);
+            let iter = RandomWeightedIterator::new(vec![0.2, 0.3, 0.0], vec![address, address, address]).unwrap();
             assert_eq!(iter.len(), 2);
             assert_eq!(iter.count(), 2);
 
-            let iter = RandomWeightedIterator::new(vec![], vec![]);
+            let iter = RandomWeightedIterator::new(vec![], vec![]).unwrap();
             assert_eq!(iter.len(), 0);
             assert_eq!(iter.count(), 0);
         }
@@ -650,6 +666,7 @@ mod address_store_with_cache {
                 let prioritized_address_distribution = am
                     .lock()
                     .iterate_prioritized_random_addresses(HashSet::new())
+                    .unwrap()
                     .take(num_of_buckets)
                     .map(|addr| addr.prefix_bucket().as_u64() as f64)
                     .collect_vec();

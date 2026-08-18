@@ -5755,13 +5755,13 @@ pub const DAG_HTML: &str = r###"<!DOCTYPE html>
             const blockType = node.is_chain_block ? 'Chain Block (Blue)' : 'Side Block (Red)';
 
             tooltip.innerHTML = `
-                <h4>Block ${node.short_hash}</h4>
+                <h4>Block ${escapeHtml(node.short_hash)}</h4>
                 <div class="tt-row"><span class="tt-label">Type:</span> <span class="${badgeClass}">${blockType}</span></div>
                 ${isSink ? '<div class="tt-row"><span class="tt-label">Status:</span> <span style="color:#7EC8D3;font-weight:bold;">★ SINK (Latest Tip)</span></div>' : ''}
                 <div class="tt-row"><span class="tt-label">Blue Score:</span> <span class="tt-val">${node.blue_score.toLocaleString()}</span></div>
                 <div class="tt-row"><span class="tt-label">DAA Score:</span> <span class="tt-val">${node.daa_score.toLocaleString()}</span></div>
-                <div class="tt-row"><span class="tt-label">Parents (${parentCount}):</span> <span class="tt-val">${node.parents ? node.parents.map(p => p.substring(0, 6)).join(', ') : 'None'}</span></div>
-                <div class="tt-row"><span class="tt-label">Selected Parent:</span> <span class="tt-val">${node.selected_parent ? node.selected_parent.substring(0, 8) + '...' : 'None'}</span></div>
+                <div class="tt-row"><span class="tt-label">Parents (${parentCount}):</span> <span class="tt-val">${node.parents ? node.parents.map(p => escapeHtml(p.substring(0, 6))).join(', ') : 'None'}</span></div>
+                <div class="tt-row"><span class="tt-label">Selected Parent:</span> <span class="tt-val">${node.selected_parent ? escapeHtml(node.selected_parent.substring(0, 8)) + '...' : 'None'}</span></div>
                 <div style="margin-top:0.4rem; font-size:0.75rem; color:#7EC8D3; text-align:center;">👉 Click to view detailed info</div>
             `;
             tooltip.style.left = `${left}px`;
@@ -5784,12 +5784,12 @@ pub const DAG_HTML: &str = r###"<!DOCTYPE html>
                 const block = await res.json();
                 
                 body.innerHTML = `
-                    <div class="tt-row" style="margin-bottom:0.75rem;"><span class="tt-label">Block Hash:</span> <span class="tt-val" style="word-break:break-all; font-size:0.85rem;">${block.hash || hash}</span></div>
+                    <div class="tt-row" style="margin-bottom:0.75rem;"><span class="tt-label">Block Hash:</span> <span class="tt-val" style="word-break:break-all; font-size:0.85rem;">${escapeHtml(block.hash || hash)}</span></div>
                     <div class="tt-row"><span class="tt-label">Blue Score:</span> <span class="tt-val">${block.blue_score ? block.blue_score.toLocaleString() : 'N/A'}</span></div>
                     <div class="tt-row"><span class="tt-label">DAA Score:</span> <span class="tt-val">${block.daa_score ? block.daa_score.toLocaleString() : 'N/A'}</span></div>
                     <div class="tt-row"><span class="tt-label">Is Chain Block:</span> <span class="tt-val">${block.is_chain_block ? 'YES (Blue)' : 'NO (Red)'}</span></div>
-                    <div class="tt-row"><span class="tt-label">Parents:</span> <span class="tt-val" style="word-break:break-all;">${block.parents ? block.parents.join('<br>') : 'None'}</span></div>
-                    <div class="tt-row"><span class="tt-label">Selected Parent:</span> <span class="tt-val" style="word-break:break-all;">${block.selected_parent || 'None'}</span></div>
+                    <div class="tt-row"><span class="tt-label">Parents:</span> <span class="tt-val" style="word-break:break-all;">${block.parents ? block.parents.map(p => escapeHtml(p)).join('<br>') : 'None'}</span></div>
+                    <div class="tt-row"><span class="tt-label">Selected Parent:</span> <span class="tt-val" style="word-break:break-all;">${escapeHtml(block.selected_parent || 'None')}</span></div>
                     <div style="margin-top: 1.25rem; text-align: right;">
                         <a href="/explorer?block=${hash}" target="_blank" style="color: var(--spectral-blue); font-weight: bold; text-decoration: underline;">Open in Explorer Tab ↗</a>
                     </div>

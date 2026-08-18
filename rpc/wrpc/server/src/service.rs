@@ -87,7 +87,11 @@ impl RpcHandler for ZyanyaRpcHandler {
     /// before dropping it. This is the last chance to cleanup and resources owned by
     /// this connection. Delegate to Server.
     async fn disconnect(self: Arc<Self>, ctx: Self::Context, _result: WebSocketResult<()>) {
-        self.server.disconnect(ctx).await;
+        // F-M-26: disconnect now returns Result; log any error instead of
+        // ignoring a potential panic on a poisoned sockets mutex.
+        if let Err(err) = self.server.disconnect(ctx).await {
+            warn!("wRPC server disconnect error: {err}");
+        }
     }
 }
 

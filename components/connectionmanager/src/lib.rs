@@ -172,7 +172,16 @@ impl ConnectionManager {
         }
 
         let mut missing_connections = self.outbound_target - active_outbound.len();
-        let mut addr_iter = self.address_manager.lock().iterate_prioritized_random_addresses(active_outbound);
+        // F-M-25: `iterate_prioritized_random_addresses` now returns a `Result`; if
+        // the weighted-index construction fails we log and degrade to an empty
+        // iterator instead of panicking the whole outbound-connection task.
+        let mut addr_iter = match self.address_manager.lock().iterate_prioritized_random_addresses(active_outbound) {
+            Ok(iter) => iter,
+            Err(e) => {
+                zyanya_core::warn!("Connection manager: failed to build prioritized address iterator: {e}; skipping this round");
+                return;
+            }
+        };
 
         let mut progressing = true;
         let mut connecting = true;
