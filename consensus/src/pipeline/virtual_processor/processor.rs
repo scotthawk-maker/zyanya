@@ -1349,19 +1349,18 @@ enum MergesetIncreaseResult {
 }
 
 /// Derive a u64 caller identity from a UTXO entry's script_public_key (F-C-04).
-/// Mirrors `zyanya_wallet::wallet_ops::holder_u64`: extract the address payload
-/// via `extract_script_pub_key_address` and take the first 8 bytes as little-endian u64.
-/// Returns 0 on failure (non-standard scripts or short payloads), which will fail
-/// CALLER-based auth checks in contracts — fail-closed is the safe default.
+/// Mirrors `zyanya_wallet::wallet_ops::holder_u64`: uses blake2b-256 hash of the
+/// full address payload and takes the first 8 bytes as little-endian u64.
+/// Returns 0 on failure (non-standard scripts or address extraction errors), which
+/// will fail CALLER-based auth checks in contracts — fail-closed is the safe default.
 fn derive_caller_from_script_pub_key(script_public_key: &zyanya_consensus_core::tx::ScriptPublicKey) -> u64 {
     use zyanya_addresses::Prefix;
     match zyanya_txscript::extract_script_pub_key_address(script_public_key, Prefix::Mainnet) {
         Ok(addr) => {
-            if addr.payload.len() >= 8 {
-                u64::from_le_bytes(addr.payload[0..8].try_into().unwrap_or([0u8; 8]))
-            } else {
-                0
-            }
+            let mut hasher = blake2b_simd::Params::new().hash_length(32).to_state();
+            hasher.update(addr.payload.as_slice());
+            let hash = hasher.finalize();
+            u64::from_le_bytes(hash.as_bytes()[0..8].try_into().unwrap())
         }
         Err(_) => 0,
     }

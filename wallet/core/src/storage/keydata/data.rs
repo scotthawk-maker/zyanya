@@ -17,7 +17,7 @@ pub enum PrvKeyDataVariantKind {
     SecretKey,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 #[serde(tag = "key-variant", content = "key-data")]
 pub enum PrvKeyDataVariant {
@@ -96,6 +96,12 @@ impl PrvKeyDataVariant {
     }
 }
 
+impl std::fmt::Debug for PrvKeyDataVariant {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("PrvKeyDataVariant([REDACTED])")
+    }
+}
+
 impl Zeroize for PrvKeyDataVariant {
     fn zeroize(&mut self) {
         match self {
@@ -114,7 +120,7 @@ impl Drop for PrvKeyDataVariant {
 
 impl ZeroizeOnDrop for PrvKeyDataVariant {}
 
-#[derive(Clone, Debug, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PrvKeyDataPayload {
     prv_key_variant: PrvKeyDataVariant,
@@ -174,6 +180,12 @@ impl PrvKeyDataPayload {
     }
 }
 
+impl std::fmt::Debug for PrvKeyDataPayload {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PrvKeyDataPayload").field("prv_key_variant", &"[REDACTED]").finish()
+    }
+}
+
 impl Zeroize for PrvKeyDataPayload {
     fn zeroize(&mut self) {
         self.prv_key_variant.zeroize();
@@ -188,7 +200,7 @@ impl Drop for PrvKeyDataPayload {
 
 impl ZeroizeOnDrop for PrvKeyDataPayload {}
 
-#[derive(Clone, Debug, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PrvKeyData {
     pub id: PrvKeyDataId,
@@ -234,6 +246,16 @@ impl PrvKeyData {
         }
 
         Ok(prv_key_data)
+    }
+}
+
+impl std::fmt::Debug for PrvKeyData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PrvKeyData")
+            .field("id", &self.id)
+            .field("name", &self.name)
+            .field("payload", &"[REDACTED]")
+            .finish()
     }
 }
 
@@ -313,5 +335,13 @@ mod tests {
         }
 
         Ok(())
+    }
+
+    #[test]
+    fn test_prv_key_data_debug_redacted() {
+        let v = PrvKeyDataVariant::Mnemonic("abandon abandon abandon abandon abandon abandon".to_string());
+        let dbg = format!("{:?}", v);
+        assert!(!dbg.contains("abandon"));
+        assert!(dbg.contains("REDACTED"));
     }
 }

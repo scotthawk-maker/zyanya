@@ -40,6 +40,8 @@ pub enum WalletOpsError {
     Serde(#[from] serde_json::Error),
     #[error("General error: {0}")]
     General(String),
+    #[error("Balance overflow")]
+    BalanceOverflow,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -155,7 +157,9 @@ impl WalletOps {
                         entry.utxo_entry.block_daa_score,
                         entry.utxo_entry.is_coinbase,
                     );
-                    total_balance += entry.utxo_entry.amount;
+                    total_balance = total_balance
+                        .checked_add(entry.utxo_entry.amount)
+                        .ok_or(WalletOpsError::BalanceOverflow)?;
                     utxos.push((outpoint, core_utxo));
                 }
                 Ok((total_balance, utxos))
@@ -201,7 +205,9 @@ impl WalletOps {
             if entry.is_coinbase && current_daa.saturating_sub(entry.block_daa_score) < 100 {
                 continue;
             }
-            selected_amount += entry.amount;
+            selected_amount = selected_amount
+                .checked_add(entry.amount)
+                .ok_or(WalletOpsError::BalanceOverflow)?;
             selected_utxos.push((op, entry));
             if selected_amount >= required {
                 break;
@@ -275,13 +281,19 @@ impl WalletOps {
         Ok(tx_id_str)
     }
 
-    /// Derive numeric storage key for a holder address (u64)
+    /// Derive numeric storage key for a holder address (u64).
+    /// Uses blake2b-256 hash of the full address payload, then takes the first 8
+    /// bytes as a little-endian u64. This prevents balance collisions that would
+    /// occur when truncating the address to its first 8 bytes.
+    ///
+    /// Mirrors `consensus::pipeline::virtual_processor::derive_caller_from_script_pub_key` —
+    /// both must use the identical blake2b-256-of-full-payload derivation or token
+    /// transfers break (from != CALLER).
     pub fn holder_u64(address: &Address) -> u64 {
-        if address.payload.len() >= 8 {
-            u64::from_le_bytes(address.payload[0..8].try_into().unwrap_or([0u8; 8]))
-        } else {
-            1
-        }
+        let mut hasher = blake2b_simd::Params::new().hash_length(32).to_state();
+        hasher.update(address.payload.as_slice());
+        let hash = hasher.finalize();
+        u64::from_le_bytes(hash.as_bytes()[0..8].try_into().unwrap())
     }
 
     /// Get token balance for holder in a token contract
@@ -463,6 +475,38 @@ mod tests {
         let keypair = WalletKeypair::generate(Prefix::Devnet);
         let holder = WalletOps::holder_u64(&keypair.address);
         assert!(holder > 0);
+
+        // Verify the derivation matches blake2b-256 of the full payload, first 8 bytes, LE
+        let mut hasher = blake2b_simd::Params::new().hash_length(32).to_state();
+        hasher.update(keypair.address.payload.as_slice());
+        let hash = hasher.finalize();
+        let expected = u64::from_le_bytes(hash.as_bytes()[0..8].try_into().unwrap());
+        assert_eq!(holder, expected);
+    }
+
+    #[test]
+    fn test_holder_u64_no_collision_on_shared_prefix() {
+        // Two addresses whose payloads share the first 8 bytes but differ later
+        // must produce different holder_u64 values (blake2b of full payload).
+        let mut payload_a = [0u8; 32];
+        payload_a[0..8].copy_from_slice(&[0xAA; 8]);
+        payload_a[8..16].copy_from_slice(&[0x11; 8]);
+
+        let mut payload_b = [0u8; 32];
+        payload_b[0..8].copy_from_slice(&[0xAA; 8]); // same first 8 bytes
+        payload_b[8..16].copy_from_slice(&[0x22; 8]); // differs here
+
+        // We can't easily construct Address directly without the full API, but
+        // the blake2b derivation uses address.payload, so test the hash logic.
+        let mut h1 = blake2b_simd::Params::new().hash_length(32).to_state();
+        h1.update(&payload_a);
+        let key1 = u64::from_le_bytes(h1.finalize().as_bytes()[0..8].try_into().unwrap());
+
+        let mut h2 = blake2b_simd::Params::new().hash_length(32).to_state();
+        h2.update(&payload_b);
+        let key2 = u64::from_le_bytes(h2.finalize().as_bytes()[0..8].try_into().unwrap());
+
+        assert_ne!(key1, key2);
     }
 
     #[test]

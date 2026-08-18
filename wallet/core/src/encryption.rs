@@ -11,7 +11,7 @@ use chacha20poly1305::{
 };
 use sha2::{Digest, Sha256};
 use std::ops::{Deref, DerefMut};
-use zeroize::Zeroize;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 /// Encryption algorithms supported by the Wallet framework.
 #[derive(Default, Clone, Copy, Debug, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
@@ -95,10 +95,30 @@ impl<T> From<T> for Encryptable<T> {
 }
 
 /// Abstract decrypted data container.
-#[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
+#[derive(Clone, BorshSerialize, BorshDeserialize)]
 pub struct Decrypted<T>(pub(crate) T)
 where
     T: BorshSerialize + BorshDeserialize;
+
+impl<T> std::fmt::Debug for Decrypted<T>
+where
+    T: BorshSerialize + BorshDeserialize,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("Decrypted").field(&"[REDACTED]").finish()
+    }
+}
+
+impl<T> Zeroize for Decrypted<T>
+where
+    T: BorshSerialize + BorshDeserialize + Zeroize,
+{
+    fn zeroize(&mut self) {
+        self.0.zeroize();
+    }
+}
+
+impl<T> ZeroizeOnDrop for Decrypted<T> where T: BorshSerialize + BorshDeserialize + Zeroize {}
 
 impl<T> AsRef<T> for Decrypted<T>
 where
