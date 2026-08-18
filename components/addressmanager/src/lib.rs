@@ -27,6 +27,14 @@ pub use stores::NetAddress;
 const MAX_ADDRESSES: usize = 4096;
 const MAX_CONNECTION_FAILED_COUNT: u64 = 3;
 
+/// Initial failure count for addresses learned from trusted sources
+/// (connected peers, DNS seeds, local addresses).
+const TRUSTED_INITIAL_FAILED_COUNT: u64 = 1;
+/// Initial failure count for addresses learned from untrusted sources
+/// (peer-advertised AddressesMessage). Equal to MAX_CONNECTION_FAILED_COUNT so
+/// untrusted addresses are evicted first and dropped after one failure.
+const UNTRUSTED_INITIAL_FAILED_COUNT: u64 = MAX_CONNECTION_FAILED_COUNT;
+
 const UPNP_DEADLINE_SEC: u64 = 2 * 60;
 const UPNP_EXTEND_PERIOD: u64 = UPNP_DEADLINE_SEC / 2;
 
@@ -251,9 +259,14 @@ impl AddressManager {
         }
     }
 
-    pub fn add_address(&mut self, address: NetAddress) {
+    pub fn add_address(&mut self, address: NetAddress, trusted: bool) {
         if address.ip.is_loopback() || address.ip.is_unspecified() {
             debug!("[Address manager] skipping local address {}", address.ip);
+            return;
+        }
+        // Reject invalid ports (port 0 is never a valid peer address).
+        if address.port == 0 {
+            debug!("[Address manager] skipping address with invalid port {}", address);
             return;
         }
 
@@ -261,8 +274,17 @@ impl AddressManager {
             return;
         }
 
-        // We mark `connection_failed_count` as 0 only after first success
-        self.address_store.set(address, 1);
+        // We mark `connection_failed_count` as 0 only after first success.
+        // Untrusted addresses start with a high failure count so they are evicted
+        // first and dropped after a single connection failure.
+        let initial_count = if trusted { TRUSTED_INITIAL_FAILED_COUNT } else { UNTRUSTED_INITIAL_FAILED_COUNT };
+        self.address_store.set(address, initial_count);
+    }
+
+    /// Updates the set of currently-connected peer addresses, so that eviction
+    /// (`keep_limit`) never displaces a connected peer.
+    pub fn set_connected(&mut self, connected: HashSet<NetAddress>) {
+        self.address_store.set_connected(connected);
     }
 
     pub fn mark_connection_failure(&mut self, address: NetAddress) {
@@ -307,7 +329,12 @@ impl AddressManager {
         const MAX_BANNED_TIME: u64 = 24 * 60 * 60 * 1000;
         match self.banned_address_store.get(ip.into()).unwrap_option() {
             Some(timestamp) => {
-                if unix_now() - timestamp.0 > MAX_BANNED_TIME {
+                // Use saturating_sub to avoid u64 underflow when the ban timestamp
+                // is in the future (clock skew or manipulation). A future timestamp
+                // yields elapsed == 0, keeping the peer banned until the clock
+                // catches up — i.e. no ban bypass.
+                let elapsed = unix_now().saturating_sub(timestamp.0);
+                if elapsed > MAX_BANNED_TIME {
                     self.unban(ip);
                     false
                 } else {
@@ -355,6 +382,9 @@ mod address_store_with_cache {
     pub struct Store {
         db_store: DbAddressesStore,
         addresses: HashMap<AddressKey, Entry>,
+        /// Set of addresses that are currently connected, used by `keep_limit`
+        /// to protect connected peers from eviction.
+        connected: HashSet<AddressKey>,
     }
 
     impl Store {
@@ -366,7 +396,11 @@ mod address_store_with_cache {
                 addresses.insert(key, entry);
             }
 
-            Self { db_store, addresses }
+            Self { db_store, addresses, connected: HashSet::new() }
+        }
+
+        pub fn set_connected(&mut self, connected: HashSet<NetAddress>) {
+            self.connected = connected.into_iter().map(|a| a.into()).collect();
         }
 
         pub fn has(&mut self, address: NetAddress) -> bool {
@@ -385,9 +419,22 @@ mod address_store_with_cache {
 
         fn keep_limit(&mut self) {
             while self.addresses.len() > MAX_ADDRESSES {
-                let to_remove =
-                    self.addresses.iter().max_by(|a, b| (a.1).connection_failed_count.cmp(&(b.1).connection_failed_count)).unwrap();
-                self.remove_by_key(*to_remove.0);
+                // Evict the highest-failure-count address that is NOT currently
+                // connected, so connected peers are protected from eviction.
+                // Only fall back to connected peers if every address is connected.
+                let to_remove = self
+                    .addresses
+                    .iter()
+                    .filter(|(key, _)| !self.connected.contains(key))
+                    .max_by(|a, b| (a.1).connection_failed_count.cmp(&(b.1).connection_failed_count))
+                    .or_else(|| {
+                        self.addresses
+                            .iter()
+                            .max_by(|a, b| (a.1).connection_failed_count.cmp(&(b.1).connection_failed_count))
+                    })
+                    .map(|(key, _)| *key)
+                    .unwrap();
+                self.remove_by_key(to_remove);
             }
         }
 
@@ -401,6 +448,7 @@ mod address_store_with_cache {
 
         fn remove_by_key(&mut self, key: AddressKey) {
             self.addresses.remove(&key);
+            self.connected.remove(&key);
             self.db_store.remove(key).unwrap()
         }
 
@@ -517,11 +565,13 @@ mod address_store_with_cache {
         use address_manager::AddressManager;
         use rv::{dist::Uniform, misc::ks_test as one_way_ks_test, traits::Cdf};
         use zyanya_consensus_core::config::{params::SIMNET_PARAMS, Config};
-        use zyanya_core::task::tick::TickService;
+        use zyanya_core::{task::tick::TickService, time::unix_now};
         use zyanya_database::create_temp_db;
         use zyanya_database::prelude::ConnBuilder;
         use zyanya_utils::networking::IpAddress;
         use std::net::{IpAddr, Ipv6Addr};
+        use crate::stores::banned_address_store::{ConnectionBanTimestamp, BannedAddressesStore, BannedAddressesStoreReader};
+        use zyanya_database::prelude::StoreResultExtensions;
 
         #[test]
         fn test_weighted_iterator() {
@@ -568,7 +618,7 @@ mod address_store_with_cache {
                         ))
                         .unwrap(),
                         18111,
-                    ));
+                    ), true);
                     num_of_addresses += 1;
                 }
 
@@ -619,6 +669,139 @@ mod address_store_with_cache {
                 significance
             );
             assert!(adjusted_p <= significance);
+        }
+
+        #[test]
+        fn test_is_banned_future_timestamp_no_underflow() {
+            // F-H-22: a ban with a future timestamp must NOT cause a u64 underflow
+            // that bypasses the ban.
+            let db = create_temp_db!(ConnBuilder::default().with_files_limit(10));
+            let config = Config::new(SIMNET_PARAMS);
+            let (am, _) = AddressManager::new(Arc::new(config), db.1, Arc::new(TickService::default()));
+            let mut am_guard = am.lock();
+
+            let ip = IpAddress::from_str("1.2.3.4").unwrap();
+
+            // Insert a ban with a timestamp 10 seconds in the future.
+            let future_ts = unix_now() + 10_000;
+            am_guard.banned_address_store.set(ip.into(), ConnectionBanTimestamp(future_ts)).unwrap();
+
+            // The peer should remain banned (no underflow bypass).
+            assert!(am_guard.is_banned(ip));
+        }
+
+        #[test]
+        fn test_is_banned_expired_is_unbanned() {
+            let db = create_temp_db!(ConnBuilder::default().with_files_limit(10));
+            let config = Config::new(SIMNET_PARAMS);
+            let (am, _) = AddressManager::new(Arc::new(config), db.1, Arc::new(TickService::default()));
+            let mut am_guard = am.lock();
+
+            let ip = IpAddress::from_str("5.6.7.8").unwrap();
+
+            // Insert a ban with a timestamp 25 hours ago (beyond the 24h MAX_BANNED_TIME).
+            const MAX_BANNED_TIME: u64 = 24 * 60 * 60 * 1000;
+            let old_ts = unix_now().saturating_sub(MAX_BANNED_TIME + 60_000);
+            am_guard.banned_address_store.set(ip.into(), ConnectionBanTimestamp(old_ts)).unwrap();
+
+            // The ban should be expired and removed.
+            assert!(!am_guard.is_banned(ip));
+            assert!(am_guard.banned_address_store.get(ip.into()).unwrap_option().is_none());
+        }
+
+        #[test]
+        fn test_add_address_rejects_invalid_port() {
+            let db = create_temp_db!(ConnBuilder::default().with_files_limit(10));
+            let config = Config::new(SIMNET_PARAMS);
+            let (am, _) = AddressManager::new(Arc::new(config), db.1, Arc::new(TickService::default()));
+            let mut am_guard = am.lock();
+
+            let ip = IpAddress::from_str("8.8.8.8").unwrap();
+            // Port 0 should be rejected.
+            am_guard.add_address(NetAddress::new(ip, 0), true);
+            assert_eq!(am_guard.get_all_addresses().len(), 0);
+
+            // A valid port should be accepted.
+            am_guard.add_address(NetAddress::new(ip, 18111), true);
+            assert_eq!(am_guard.get_all_addresses().len(), 1);
+        }
+
+        #[test]
+        fn test_untrusted_addresses_evicted_first() {
+            // F-H-21: untrusted addresses (high failure count) should be evicted
+            // before trusted addresses (low failure count).
+            let db = create_temp_db!(ConnBuilder::default().with_files_limit(10));
+            let config = Config::new(SIMNET_PARAMS);
+            let (am, _) = AddressManager::new(Arc::new(config), db.1, Arc::new(TickService::default()));
+            let mut am_guard = am.lock();
+
+            // Add a trusted address (failure count = 1).
+            let trusted_ip = IpAddress::from_str("10.0.0.1").unwrap();
+            am_guard.add_address(NetAddress::new(trusted_ip, 18111), true);
+
+            // Add an untrusted address (failure count = MAX_CONNECTION_FAILED_COUNT).
+            let untrusted_ip = IpAddress::from_str("10.0.0.2").unwrap();
+            am_guard.add_address(NetAddress::new(untrusted_ip, 18111), false);
+
+            // Both should be present.
+            assert_eq!(am_guard.get_all_addresses().len(), 2);
+
+            // Fill the store up to MAX_ADDRESSES with trusted addresses so the next
+            // add triggers eviction. The untrusted address (highest failure count)
+            // should be evicted first.
+            // We need MAX_ADDRESSES - 1 more addresses (already have 2) to exceed
+            // the limit and trigger eviction. Use subnet 11.x to avoid collisions
+            // with the 10.x test addresses.
+            for i in 0..(MAX_ADDRESSES - 1) as u32 {
+                let high = (i / 256) as u8;
+                let low = (i % 256) as u8;
+                let ip = IpAddress::from_str(&format!("11.{}.{}.1", high, low)).unwrap();
+                am_guard.add_address(NetAddress::new(ip, 18111), true);
+            }
+
+            // The store should be at MAX_ADDRESSES.
+            assert_eq!(am_guard.get_all_addresses().len(), MAX_ADDRESSES);
+
+            // The untrusted address should have been evicted (it had the highest
+            // connection_failed_count).
+            let remaining: Vec<NetAddress> = am_guard.get_all_addresses();
+            assert!(remaining.iter().all(|a| a.ip != untrusted_ip), "untrusted address should have been evicted first");
+            // The trusted address should still be present.
+            assert!(remaining.iter().any(|a| a.ip == trusted_ip), "trusted address should survive eviction");
+        }
+
+        #[test]
+        fn test_connected_peer_not_evicted() {
+            // F-H-21: a connected peer must never be evicted by keep_limit.
+            let db = create_temp_db!(ConnBuilder::default().with_files_limit(10));
+            let config = Config::new(SIMNET_PARAMS);
+            let (am, _) = AddressManager::new(Arc::new(config), db.1, Arc::new(TickService::default()));
+            let mut am_guard = am.lock();
+
+            // Add a high-failure-count (untrusted) address and mark it as connected.
+            let connected_ip = IpAddress::from_str("192.168.1.1").unwrap();
+            let connected_addr = NetAddress::new(connected_ip, 18111);
+            am_guard.add_address(connected_addr, false);
+
+            let mut connected_set = HashSet::new();
+            connected_set.insert(connected_addr);
+            am_guard.set_connected(connected_set);
+
+            // Fill the store past MAX_ADDRESSES with trusted (low-failure) addresses.
+            // Use subnet 11.x to avoid collision with the 192.168 connected address.
+            for i in 0..MAX_ADDRESSES as u32 {
+                let high = (i / 256) as u8;
+                let low = (i % 256) as u8;
+                let ip = IpAddress::from_str(&format!("11.{}.{}.1", high, low)).unwrap();
+                am_guard.add_address(NetAddress::new(ip, 18111), true);
+            }
+
+            assert_eq!(am_guard.get_all_addresses().len(), MAX_ADDRESSES);
+
+            // The connected address must still be present even though it had the
+            // highest failure count.
+            let remaining: Vec<NetAddress> = am_guard.get_all_addresses();
+            assert!(remaining.iter().any(|a| a.ip == connected_ip), "connected peer must not be evicted");
         }
     }
 }

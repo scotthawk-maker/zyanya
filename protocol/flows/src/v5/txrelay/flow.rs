@@ -26,6 +26,15 @@ use tokio::time::timeout;
 
 pub(crate) const MAX_TPS_THRESHOLD: u64 = 3000;
 
+/// Maximum number of transactions a peer may relay per second before being banned.
+const MAX_TX_RELAY_PER_SECOND: u64 = 100;
+/// Sliding window (ms) for the tx relay rate limit.
+const TX_RELAY_WINDOW_MS: u64 = 1000;
+/// Maximum number of spam/non-standard transactions tolerated per window before banning.
+const MAX_SPAM_TXS_PER_WINDOW: u64 = 100;
+/// Sliding window (ms) for the spam counter.
+const SPAM_WINDOW_MS: u64 = 60_000;
+
 enum Response {
     Transaction(Transaction),
     NotFound(TransactionId),
@@ -52,6 +61,12 @@ pub struct RelayTransactionsFlow {
 
     /// Track the number of spam txs coming from this peer
     spam_counter: u64,
+    /// Start of the current spam counting window
+    spam_window_start: u64,
+    /// Number of transactions relayed by this peer in the current window
+    tx_relay_count: u64,
+    /// Start of the current tx relay rate-limit window
+    tx_relay_window_start: u64,
 }
 
 /// Holds the state information for whether we will throttle tx relay or not
@@ -74,7 +89,16 @@ impl Flow for RelayTransactionsFlow {
 
 impl RelayTransactionsFlow {
     pub fn new(ctx: FlowContext, router: Arc<Router>, invs_route: IncomingRoute, msg_route: IncomingRoute) -> Self {
-        Self { ctx, router, invs_route, msg_route, spam_counter: 0 }
+        Self {
+            ctx,
+            router,
+            invs_route,
+            msg_route,
+            spam_counter: 0,
+            spam_window_start: unix_now(),
+            tx_relay_count: 0,
+            tx_relay_window_start: unix_now(),
+        }
     }
 
     pub fn invs_channel_size() -> usize {
@@ -87,6 +111,14 @@ impl RelayTransactionsFlow {
         // Incoming tx flow capacity must correlate with the max number of invs per tx inv
         // message, since this effectively becomes the upper-bound on number of tx requests
         MAX_INV_PER_TX_INV_MSG
+    }
+
+    /// Bans the peer's IP via the address manager and returns a `MisbehavingPeer`
+    /// error. The `Flow::launch` wrapper disconnects the peer on any `Err`.
+    fn ban_peer(&self, reason: &str) -> ProtocolError {
+        let ip = self.router.net_address().ip().into();
+        self.ctx.address_manager.lock().ban(ip);
+        ProtocolError::MisbehavingPeer(reason.to_owned())
     }
 
     async fn start_impl(&mut self) -> Result<(), ProtocolError> {
@@ -215,6 +247,21 @@ impl RelayTransactionsFlow {
                 transactions.push(transaction);
             }
         }
+
+        // Per-peer tx relay rate limit (F-H-20): ban peers exceeding the rate.
+        let now = unix_now();
+        if now.saturating_sub(self.tx_relay_window_start) >= TX_RELAY_WINDOW_MS {
+            self.tx_relay_window_start = now;
+            self.tx_relay_count = 0;
+        }
+        self.tx_relay_count += transactions.len() as u64;
+        if self.tx_relay_count > MAX_TX_RELAY_PER_SECOND {
+            return Err(self.ban_peer(&format!(
+                "peer {} exceeded tx relay rate limit ({} tx/sec)",
+                self.router, MAX_TX_RELAY_PER_SECOND
+            )));
+        }
+
         let insert_results = self
             .ctx
             .mining_manager()
@@ -231,7 +278,19 @@ impl RelayTransactionsFlow {
                 }
                 Err(MiningManagerError::MempoolError(RuleError::RejectSpamTransaction(_)))
                 | Err(MiningManagerError::MempoolError(RuleError::RejectNonStandard(..))) => {
+                    // F-H-20: ban peers that send too many spam/non-standard txs.
+                    let now = unix_now();
+                    if now.saturating_sub(self.spam_window_start) >= SPAM_WINDOW_MS {
+                        self.spam_window_start = now;
+                        self.spam_counter = 0;
+                    }
                     self.spam_counter += 1;
+                    if self.spam_counter > MAX_SPAM_TXS_PER_WINDOW {
+                        return Err(self.ban_peer(&format!(
+                            "peer {} sent {} spam/non-standard txs",
+                            self.router, self.spam_counter
+                        )));
+                    }
                     if self.spam_counter % 100 == 0 {
                         zyanya_core::warn!("Peer {} has shared {} spam/non-standard txs ({:?})", self.router, self.spam_counter, res);
                     }
