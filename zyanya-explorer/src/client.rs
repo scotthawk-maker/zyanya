@@ -96,11 +96,37 @@ pub fn sanitize_metadata(metadata: &mut TokenMetadata) {
     }
 }
 
+/// F-C-16 FOLLOW-UP: compute a deterministic blake2b-256 hash of the sanitized
+/// token metadata. Each field is length-prefixed (u64 LE) to avoid field-boundary
+/// ambiguity. `None` fields hash as empty strings.
+pub fn compute_metadata_hash(m: &TokenMetadata) -> [u8; 32] {
+    let mut h = blake2b_simd::Params::new().hash_length(32).to_state();
+    for field in [
+        m.name.as_deref(),
+        m.symbol.as_deref(),
+        m.description.as_deref(),
+        m.twitter.as_deref(),
+        m.telegram.as_deref(),
+        m.website.as_deref(),
+        m.icon_uri.as_deref(),
+    ] {
+        let bytes = field.unwrap_or("").as_bytes();
+        h.update(&(bytes.len() as u64).to_le_bytes());
+        h.update(bytes);
+    }
+    let hash = h.finalize();
+    let mut result = [0u8; 32];
+    result.copy_from_slice(&hash.as_bytes()[..32]);
+    result
+}
+
 #[derive(Clone)]
 pub struct RpcClientManager {
     rpc_url: String,
     client: Arc<RwLock<Option<GrpcClient>>>,
     pub metadata_store: Arc<tokio::sync::Mutex<std::collections::HashMap<String, TokenMetadata>>>,
+    /// F-C-16 FOLLOW-UP: committed metadata hashes per contract address.
+    pub metadata_hash_store: Arc<tokio::sync::Mutex<std::collections::HashMap<String, [u8; 32]>>>,
     pub metadata_path: String,
     pub icons_dir: String,
 }
@@ -283,6 +309,7 @@ impl RpcClientManager {
             rpc_url,
             client: Arc::new(RwLock::new(None)),
             metadata_store: Arc::new(tokio::sync::Mutex::new(loaded_map)),
+            metadata_hash_store: Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new())),
             metadata_path,
             icons_dir,
         }
@@ -290,13 +317,32 @@ impl RpcClientManager {
 
     pub async fn get_token_metadata(&self, address: &str) -> Option<TokenMetadata> {
         let store = self.metadata_store.lock().await;
-        store.get(address).or_else(|| store.get(&address.to_lowercase())).cloned()
+        let metadata = store.get(address).or_else(|| store.get(&address.to_lowercase()))?.clone();
+        // F-C-16 FOLLOW-UP: verify stored metadata matches the committed hash.
+        // If no committed hash is recorded, allow the metadata (legacy/unsigned).
+        // If a committed hash exists but doesn't match, return None (tampered).
+        let hash_store = self.metadata_hash_store.lock().await;
+        if let Some(committed_hash) = hash_store.get(address).or_else(|| hash_store.get(&address.to_lowercase())) {
+            let recomputed = compute_metadata_hash(&metadata);
+            if &recomputed != committed_hash {
+                log::warn!("F-C-16: metadata hash mismatch for {} — tampered metadata rejected", address);
+                return None;
+            }
+        }
+        Some(metadata)
     }
 
     pub async fn save_token_metadata(&self, address: &str, mut metadata: TokenMetadata) -> Result<(), String> {
         // F-C-16: sanitise all user-controlled metadata fields before storing
         // so that unsigned/tampered metadata cannot inject HTML/script payloads.
         sanitize_metadata(&mut metadata);
+        // F-C-16 FOLLOW-UP: store the committed hash (if provided) for later verification.
+        let committed_hash = compute_metadata_hash(&metadata);
+        {
+            let mut hash_store = self.metadata_hash_store.lock().await;
+            hash_store.insert(address.to_string(), committed_hash);
+            hash_store.insert(address.to_lowercase(), committed_hash);
+        }
         let mut store = self.metadata_store.lock().await;
         store.insert(address.to_string(), metadata.clone());
         store.insert(address.to_lowercase(), metadata);
@@ -835,11 +881,49 @@ impl RpcClientManager {
         }
 
         let bytecode = zyanya_vm::bonding_curve_token::bonding_curve_bytecode();
+
+        // F-C-16 FOLLOW-UP: Build token metadata, sanitize it, compute the metadata
+        // hash, and include it in the deploy payload so it becomes part of the signed
+        // transaction. The sanitized values are stored in SignableTxData so the client
+        // signs and returns the same values.
+        //
+        // The icon_uri must be deterministic and available BEFORE the tx is constructed
+        // (since the metadata_hash is part of the payload). We use a blake2b hash of the
+        // icon data as the filename instead of the contract address (which is only known
+        // after the tx id is computed).
+        let icon_uri = if let Some(ref base64_str) = req.icon_base64 {
+            if !base64_str.trim().is_empty() {
+                let mut icon_hasher = blake2b_simd::Params::new().hash_length(16).to_state();
+                icon_hasher.update(base64_str.as_bytes());
+                let icon_id = icon_hasher.finalize().to_hex().to_string();
+                match self.save_token_icon(&icon_id, base64_str) {
+                    Ok(uri) => Some(uri),
+                    Err(_) => Some(format!("/token-icons/{}.png", icon_id)),
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        let mut metadata = TokenMetadata {
+            name: Some(name.clone()),
+            symbol: Some(symbol.clone()),
+            description: req.description.clone(),
+            twitter: req.twitter.clone(),
+            telegram: req.telegram.clone(),
+            website: req.website.clone(),
+            icon_uri: icon_uri.clone(),
+        };
+        sanitize_metadata(&mut metadata);
+        let metadata_hash = compute_metadata_hash(&metadata);
+
         let payload = ContractPayload::Deploy(DeployContractPayload {
             bytecode,
             max_gas: gas,
             gas_price: 1,
             deposit_amount: 0,
+            metadata_hash,
         });
         let payload_bytes = payload.to_bytes().map_err(|e| e.to_string())?;
 
@@ -867,19 +951,6 @@ impl RpcClientManager {
             sighashes.push(hash.to_string());
         }
 
-        let icon_uri = if let Some(ref base64_str) = req.icon_base64 {
-            if !base64_str.trim().is_empty() {
-                match self.save_token_icon(&contract_address, base64_str) {
-                    Ok(uri) => Some(uri),
-                    Err(_) => Some(format!("/token-icons/{}.png", contract_address)),
-                }
-            } else {
-                Some(format!("/token-icons/{}.png", contract_address))
-            }
-        } else {
-            Some(format!("/token-icons/{}.png", contract_address))
-        };
-
         let tx_data = SignableTxData {
             tx: unsigned_tx,
             entries,
@@ -887,11 +958,11 @@ impl RpcClientManager {
             slope,
             name: name.clone(),
             symbol: symbol.clone(),
-            description: req.description.clone(),
-            twitter: req.twitter.clone(),
-            telegram: req.telegram.clone(),
-            website: req.website.clone(),
-            icon_uri: icon_uri.clone(),
+            description: metadata.description.clone(),
+            twitter: metadata.twitter.clone(),
+            telegram: metadata.telegram.clone(),
+            website: metadata.website.clone(),
+            icon_uri: metadata.icon_uri.clone(),
         };
 
         let json_bytes = serde_json::to_vec(&tx_data).map_err(|e| e.to_string())?;
@@ -1247,6 +1318,31 @@ impl RpcClientManager {
         if let Err(e) = verify(&signable_tx.as_verifiable()) {
             log::warn!("Signature verification failed: {:?}", e);
             return Err(format!("Signature verification failed: {:?}", e));
+        }
+
+        // F-C-16 FOLLOW-UP: Verify that the token metadata hash in the deploy payload
+        // matches the recomputed hash from the SignableTxData metadata. This prevents
+        // metadata tampering after signing.
+        if let Ok(zyanya_consensus_core::tx::ContractPayload::Deploy(deploy)) =
+            zyanya_consensus_core::tx::ContractPayload::from_slice(&data.tx.payload)
+        {
+            let mut metadata = TokenMetadata {
+                name: Some(data.name.clone()),
+                symbol: Some(data.symbol.clone()),
+                description: data.description.clone(),
+                twitter: data.twitter.clone(),
+                telegram: data.telegram.clone(),
+                website: data.website.clone(),
+                icon_uri: data.icon_uri.clone(),
+            };
+            sanitize_metadata(&mut metadata);
+            let recomputed_hash = compute_metadata_hash(&metadata);
+            if deploy.metadata_hash != recomputed_hash {
+                return Err(format!(
+                    "Metadata hash mismatch: payload hash does not match recomputed hash. \
+                     Metadata may have been tampered with after signing."
+                ));
+            }
         }
 
         let rpc_tx = RpcTransaction::from(&signable_tx.tx);

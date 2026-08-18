@@ -53,6 +53,14 @@ impl ToTokens for RpcTable {
                     interface.method(#rpc_api_ops::#handler, method!(|server_ctx: #server_ctx_type, connection_ctx: #connection_ctx_type, request: Serializable<#request_type>| async move {
                         let verbose = server_ctx.verbose();
                         if verbose { workflow_log::log_info!("request: {:?}",request); }
+                        // F-C-13 FOLLOW-UP: enforce bearer-token auth on state-changing methods.
+                        if #rpc_api_ops::#handler.requires_auth() {
+                            if let Some(expected) = server_ctx.rpc_auth_token() {
+                                if connection_ctx.auth_token() != Some(expected) {
+                                    return Err(ServerError::Text("Unauthorized".to_string()));
+                                }
+                            }
+                        }
                         // TODO: RPC-CONNECT
                         let response: #response_type = server_ctx.rpc_service(&connection_ctx).#fn_call(None, request.into_inner()).await
                             .map_err(|e|ServerError::Text(e.to_string()))?;

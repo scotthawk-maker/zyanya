@@ -611,6 +611,7 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
             max_gas: request.max_gas,
             gas_price: request.gas_price,
             deposit_amount: request.deposit_amount,
+            metadata_hash: [0u8; 32],
         });
         let payload_bytes = payload.to_bytes().map_err(|e| RpcError::General(e.to_string()))?;
 

@@ -75,6 +75,7 @@ async fn main() -> Result<()> {
         listen_address: interface.unwrap_or_else(|| format!("wrpc://127.0.0.1:{proxy_port}")),
         grpc_proxy_address: Some(grpc_proxy_address.unwrap_or_else(|| format!("grpc://127.0.0.1:{zyanyad_port}"))),
         verbose,
+        rpc_auth_token: None,
         // ..Options::default()
     });
     log_info!("");

@@ -350,6 +350,7 @@ mod tests {
                 max_gas: 5000,
                 gas_price: 1,
                 deposit_amount: 0,
+                metadata_hash: [0u8; 32],
             },
         )
         .to_bytes()

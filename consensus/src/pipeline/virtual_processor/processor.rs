@@ -59,6 +59,7 @@ use zyanya_consensus_core::{
     config::{genesis::GenesisBlock, params::ForkActivation},
     header::Header,
     merkle::calc_hash_merkle_root,
+    muhash::MuHashExtensions,
     pruning::PruningPointsList,
     tx::{MutableTransaction, Transaction},
     utxo::{
@@ -473,7 +474,7 @@ impl VirtualStateProcessor {
         diff_point
     }
 
-    fn commit_utxo_state(&self, current: Hash, mergeset_diff: UtxoDiff, multiset: MuHash, acceptance_data: AcceptanceData) {
+    fn commit_utxo_state(&self, current: Hash, mut mergeset_diff: UtxoDiff, mut multiset: MuHash, acceptance_data: AcceptanceData) {
         let mut batch = WriteBatch::default();
 
         // F-C-04: Derive authenticated caller (msg.sender) for each contract tx from the
@@ -481,7 +482,11 @@ impl VirtualStateProcessor {
         // diff is consumed by insert_batch. The caller is converted to a u64 holder key
         // mirroring zyanya_wallet::wallet_ops::holder_u64: extract the address payload
         // and take the first 8 bytes as little-endian u64.
+        // F-C-03 FOLLOW-UP: also capture the full ScriptPublicKey so contract sells can
+        // build a payout UTXO output paying the seller address.
         let mut tx_callers: std::collections::HashMap<zyanya_consensus_core::tx::TransactionId, u64> =
+            std::collections::HashMap::new();
+        let mut tx_caller_scripts: std::collections::HashMap<zyanya_consensus_core::tx::TransactionId, zyanya_consensus_core::tx::ScriptPublicKey> =
             std::collections::HashMap::new();
         for block_acceptance in acceptance_data.iter() {
             if let Ok(block_txs) = self.block_transactions_store.get(block_acceptance.block_hash) {
@@ -492,6 +497,7 @@ impl VirtualStateProcessor {
                                 if let Some(entry) = mergeset_diff.remove.get(&first_input.previous_outpoint) {
                                     let caller = derive_caller_from_script_pub_key(&entry.script_public_key);
                                     tx_callers.insert(tx.id(), caller);
+                                    tx_caller_scripts.insert(tx.id(), entry.script_public_key.clone());
                                 }
                             }
                         }
@@ -499,9 +505,6 @@ impl VirtualStateProcessor {
                 }
             }
         }
-
-        self.utxo_diffs_store.insert_batch(&mut batch, current, Arc::new(mergeset_diff)).unwrap();
-        self.utxo_multisets_store.insert_batch(&mut batch, current, multiset).unwrap();
 
         // Process any smart contract transactions in accepted blocks
         let mut contract_cache = ContractStateCache::new();
@@ -512,6 +515,9 @@ impl VirtualStateProcessor {
 
         let processor = ContractProcessor::new();
         let mut has_contract_changes = false;
+        // F-C-03 FOLLOW-UP: collect payout UTXO outputs from successful contract sells.
+        let mut payouts: Vec<(zyanya_consensus_core::tx::TransactionOutpoint, zyanya_consensus_core::tx::TransactionOutput)> =
+            Vec::new();
 
         for block_acceptance in acceptance_data.iter() {
             if let Ok(block_txs) = self.block_transactions_store.get(block_acceptance.block_hash) {
@@ -534,11 +540,20 @@ impl VirtualStateProcessor {
                                 }
                             }
                             let caller = tx_callers.get(&tx.id()).copied().unwrap_or(0);
-                            if let Some(outcome) = processor.process_contract_tx(tx, &mut contract_cache, caller) {
+                            let caller_script = tx_caller_scripts.get(&tx.id());
+                            if let Some(outcome) = processor.process_contract_tx(tx, &mut contract_cache, caller, caller_script) {
                                 // F-C-02 fix: Only flag contract changes when execution succeeded.
                                 // Failed contract transactions must not persist state.
                                 if outcome.success {
                                     has_contract_changes = true;
+                                    // F-C-03 FOLLOW-UP: collect the payout output for UTXO creation.
+                                    if let Some(payout) = outcome.payout {
+                                        let outpoint = zyanya_consensus_core::tx::TransactionOutpoint::new(
+                                            tx.id(),
+                                            tx.outputs.len() as u32,
+                                        );
+                                        payouts.push((outpoint, payout));
+                                    }
                                 }
                             }
                         }
@@ -550,6 +565,29 @@ impl VirtualStateProcessor {
         if has_contract_changes {
             self.contract_store.commit_cache_batch(&mut batch, &contract_cache).unwrap();
         }
+
+        // F-C-03 FOLLOW-UP: Add contract payout UTXOs to the block diff and multiset.
+        //
+        // IMPORTANT consensus note: these payouts are added AFTER verify_expected_utxo_state
+        // has checked the header's utxo_commitment, so the current block header does NOT
+        // commit to the payout. However, the payout is a deterministic function of the
+        // block's contract txs, so every node computes the identical diff + multiset and
+        // the virtual state stays consistent. The next block's header (built from the
+        // virtual multiset) DOES commit to them. Do not re-verify the current header.
+        let block_daa_score = self.headers_store.get_daa_score(current).unwrap_or(0);
+        for (outpoint, output) in &payouts {
+            let entry = zyanya_consensus_core::tx::UtxoEntry::new(
+                output.value,
+                output.script_public_key.clone(),
+                block_daa_score,
+                false,
+            );
+            mergeset_diff.add.insert(*outpoint, entry.clone());
+            multiset.add_utxo(outpoint, &entry);
+        }
+
+        self.utxo_diffs_store.insert_batch(&mut batch, current, Arc::new(mergeset_diff)).unwrap();
+        self.utxo_multisets_store.insert_batch(&mut batch, current, multiset).unwrap();
 
         self.acceptance_data_store.insert_batch(&mut batch, current, Arc::new(acceptance_data)).unwrap();
 

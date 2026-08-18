@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use rocksdb::WriteBatch;
 use serde::{Deserialize, Serialize};
-use zyanya_consensus_core::tx::{ContractPayload, Transaction, TransactionId};
+use zyanya_consensus_core::tx::{ContractPayload, Transaction, TransactionId, TransactionOutput, ScriptPublicKey};
 use zyanya_database::prelude::{BatchDbWriter, CachePolicy, CachedDbAccess, StoreResult, DB};
 use zyanya_database::registry::DatabaseStorePrefixes;
 use zyanya_hashes::{Hash, HasherBase, TransactionSigningHash};
@@ -57,6 +57,8 @@ pub struct ContractStateCache {
     pub code: HashMap<[u8; 32], Vec<u8>>,
     pub storage: HashMap<([u8; 32], u64), u64>,
     pub balances: HashMap<[u8; 32], u64>,
+    /// F-C-16: committed metadata hash per contract address.
+    pub metadata_hash: HashMap<[u8; 32], [u8; 32]>,
     pub fallback_storage: Option<Arc<dyn Fn([u8; 32], u64) -> u64 + Send + Sync>>,
     pub fallback_balance: Option<Arc<dyn Fn([u8; 32]) -> u64 + Send + Sync>>,
 }
@@ -67,6 +69,7 @@ impl std::fmt::Debug for ContractStateCache {
             .field("code", &self.code)
             .field("storage", &self.storage)
             .field("balances", &self.balances)
+            .field("metadata_hash", &self.metadata_hash)
             .field("has_fallback", &self.fallback_storage.is_some())
             .field("has_fallback_balance", &self.fallback_balance.is_some())
             .finish()
@@ -120,6 +123,8 @@ pub struct DbContractStore {
     code_access: CachedDbAccess<Hash, Vec<u8>>,
     storage_access: CachedDbAccess<ContractStorageKey, u64>,
     balance_access: CachedDbAccess<Hash, u64>,
+    /// F-C-16: persistent storage of committed metadata hashes.
+    metadata_hash_access: CachedDbAccess<Hash, [u8; 32]>,
 }
 
 impl DbContractStore {
@@ -128,7 +133,8 @@ impl DbContractStore {
             db: db.clone(),
             code_access: CachedDbAccess::new(db.clone(), cache_policy, DatabaseStorePrefixes::ContractCode.into()),
             storage_access: CachedDbAccess::new(db.clone(), cache_policy, DatabaseStorePrefixes::ContractStorage.into()),
-            balance_access: CachedDbAccess::new(db, cache_policy, DatabaseStorePrefixes::ContractBalance.into()),
+            balance_access: CachedDbAccess::new(db.clone(), cache_policy, DatabaseStorePrefixes::ContractBalance.into()),
+            metadata_hash_access: CachedDbAccess::new(db, cache_policy, DatabaseStorePrefixes::ContractMetadataHash.into()),
         }
     }
 
@@ -143,6 +149,11 @@ impl DbContractStore {
 
     pub fn get_balance(&self, contract_address: Hash) -> StoreResult<u64> {
         self.balance_access.read(contract_address)
+    }
+
+    /// F-C-16: Retrieve the committed metadata hash for a contract.
+    pub fn get_metadata_hash(&self, contract_address: Hash) -> StoreResult<[u8; 32]> {
+        self.metadata_hash_access.read(contract_address)
     }
 
     pub fn commit_cache_batch(&self, batch: &mut WriteBatch, cache: &ContractStateCache) -> StoreResult<()> {
@@ -163,6 +174,12 @@ impl DbContractStore {
             self.balance_access.write(&mut writer, hash_addr, *bal)?;
         }
 
+        // F-C-16: persist committed metadata hashes.
+        for (addr, hash) in &cache.metadata_hash {
+            let hash_addr = Hash::from_bytes(*addr);
+            self.metadata_hash_access.write(&mut writer, hash_addr, *hash)?;
+        }
+
         Ok(())
     }
 }
@@ -178,6 +195,9 @@ pub struct ContractExecutionOutcome {
     pub miner_fee: u64,
     pub return_value: Option<u64>,
     pub success: bool,
+    /// F-C-03: UTXO payout output created on successful contract sell/withdrawal.
+    /// When `Some`, the virtual processor adds this output to the block UTXO diff.
+    pub payout: Option<TransactionOutput>,
 }
 
 /// Processor for executing smart contract transactions in GhostDAG order.
@@ -193,11 +213,14 @@ impl ContractProcessor {
     ///
     /// `caller` is the authenticated transaction signer (msg.sender), derived from the first
     /// input's UTXO script_public_key. F-C-04: this prevents spoofing the `from`/`caller` parameter.
+    /// `caller_script_public_key` is the full script of the first input's spent UTXO, used to
+    /// build the payout UTXO output on contract sells (F-C-03).
     pub fn process_contract_tx(
         &self,
         tx: &Transaction,
         cache: &mut ContractStateCache,
         caller: u64,
+        caller_script_public_key: Option<&ScriptPublicKey>,
     ) -> Option<ContractExecutionOutcome> {
         if !tx.subnetwork_id.is_smart_contract() {
             return None;
@@ -230,12 +253,16 @@ impl ContractProcessor {
                             miner_fee: miner,
                             return_value: None,
                             success: false,
+                            payout: None,
                         });
                     }
                 };
 
                 // Only after successful validation, install the contract code.
                 cache.code.insert(addr_bytes, deploy.bytecode.clone());
+
+                // F-C-16: store the committed metadata hash so it can be verified on retrieval.
+                cache.metadata_hash.insert(addr_bytes, deploy.metadata_hash);
 
                 // F-C-02 fix: Credit deposit only after successful validation.
                 if deploy.deposit_amount > 0 {
@@ -259,6 +286,7 @@ impl ContractProcessor {
                     miner_fee: miner,
                     return_value: None,
                     success: true,
+                    payout: None,
                 })
             }
             ContractPayload::Invoke(invoke) => {
@@ -281,6 +309,7 @@ impl ContractProcessor {
                             miner_fee: miner,
                             return_value: None,
                             success: false,
+                            payout: None,
                         });
                     }
                 };
@@ -300,6 +329,7 @@ impl ContractProcessor {
                             miner_fee: miner,
                             return_value: None,
                             success: false,
+                            payout: None,
                         });
                     }
                 };
@@ -341,6 +371,7 @@ impl ContractProcessor {
                                     miner_fee: miner,
                                     return_value: None,
                                     success: false,
+                                    payout: None,
                                 });
                             }
                             // F-C-03 fix: Deduct cost from the contract balance on buy.
@@ -349,20 +380,67 @@ impl ContractProcessor {
                             let contract_bal = temp_cache.get_balance(&addr_bytes);
                             temp_cache.balances.insert(addr_bytes, contract_bal.saturating_sub(cost));
                         } else if invoke.entry_point == 5 {
-                            // F-C-03 fix: Sell must create a UTXO output paying the seller the refund.
-                            // The consensus virtual processor does not currently have UTXO-output-creation
-                            // plumbing for contract payouts. Rather than silently destroying the refund
-                            // (the previous bug), we fail closed: reject the sell so no state is committed.
-                            // This disables sell until proper UTXO payout plumbing is implemented.
+                            // F-C-03 FOLLOW-UP: Sell now creates a UTXO payout output paying the
+                            // seller the refund amount. The refund is the VM return value (ret_val).
+                            // Deduct the refund from the contract balance (ZYAN custody decreases).
+                            let refund = ret_val;
+                            let contract_bal = temp_cache.get_balance(&addr_bytes);
+                            temp_cache.balances.insert(addr_bytes, contract_bal.saturating_sub(refund));
+
+                            // Build the payout output paying the seller address. Fail closed if
+                            // the caller's script public key is missing or cannot be resolved to an
+                            // address — never pay to an unknown address.
+                            let payout = match caller_script_public_key {
+                                Some(spk) => {
+                                    use zyanya_addresses::Prefix;
+                                    match zyanya_txscript::extract_script_pub_key_address(spk, Prefix::Mainnet) {
+                                        Ok(seller_address) => {
+                                            let script_public_key = zyanya_txscript::pay_to_address_script(&seller_address);
+                                            Some(TransactionOutput::new(refund, script_public_key))
+                                        }
+                                        Err(_) => {
+                                            // Cannot resolve seller address — fail closed.
+                                            return Some(ContractExecutionOutcome {
+                                                tx_id: tx.id(),
+                                                contract_address,
+                                                gas_used: invoke.max_gas,
+                                                gas_fee: total_fee,
+                                                burned_fee: burned,
+                                                miner_fee: miner,
+                                                return_value: None,
+                                                success: false,
+                                                payout: None,
+                                            });
+                                        }
+                                    }
+                                }
+                                None => {
+                                    // No caller script available — fail closed.
+                                    return Some(ContractExecutionOutcome {
+                                        tx_id: tx.id(),
+                                        contract_address,
+                                        gas_used: invoke.max_gas,
+                                        gas_fee: total_fee,
+                                        burned_fee: burned,
+                                        miner_fee: miner,
+                                        return_value: None,
+                                        success: false,
+                                        payout: None,
+                                    });
+                                }
+                            };
+
+                            *cache = temp_cache;
                             return Some(ContractExecutionOutcome {
                                 tx_id: tx.id(),
                                 contract_address,
-                                gas_used: invoke.max_gas,
+                                gas_used: res.gas_used,
                                 gas_fee: total_fee,
                                 burned_fee: burned,
                                 miner_fee: miner,
-                                return_value: None,
-                                success: false,
+                                return_value: res.return_value,
+                                success: true,
+                                payout,
                             });
                         }
 
@@ -376,6 +454,7 @@ impl ContractProcessor {
                             miner_fee: miner,
                             return_value: res.return_value,
                             success: true,
+                            payout: None,
                         })
                     }
                     Err(_) => {
@@ -391,6 +470,7 @@ impl ContractProcessor {
                             miner_fee: miner,
                             return_value: None,
                             success: false,
+                            payout: None,
                         })
                     }
                 }
@@ -447,6 +527,7 @@ mod tests {
             max_gas: 10000,
             gas_price: 10,
             deposit_amount: 5000,
+            metadata_hash: [0u8; 32],
         });
 
         let deploy_tx = Transaction::new(
@@ -461,7 +542,7 @@ mod tests {
 
         // 3. Process deploy transaction
         let deploy_outcome = processor
-            .process_contract_tx(&deploy_tx, &mut cache, 1)
+            .process_contract_tx(&deploy_tx, &mut cache, 1, None)
             .expect("Deploy transaction processing failed");
 
         assert!(deploy_outcome.success, "Deploy contract execution failed");
@@ -497,7 +578,7 @@ mod tests {
 
         // 5. Process invoke transaction
         let invoke_outcome = processor
-            .process_contract_tx(&invoke_tx, &mut cache, 1)
+            .process_contract_tx(&invoke_tx, &mut cache, 1, None)
             .expect("Invoke transaction processing failed");
 
         assert!(invoke_outcome.success, "Invoke contract execution failed");
@@ -537,9 +618,10 @@ mod tests {
             max_gas: 100_000,
             gas_price: 1,
             deposit_amount: 0,
+            metadata_hash: [0u8; 32],
         });
         let deploy_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, deploy_payload.to_bytes().unwrap());
-        let deploy_outcome = processor.process_contract_tx(&deploy_tx, &mut cache, 1).unwrap();
+        let deploy_outcome = processor.process_contract_tx(&deploy_tx, &mut cache, 1, None).unwrap();
         assert!(deploy_outcome.success, "Token deployment failed");
         let token_addr = deploy_outcome.contract_address;
 
@@ -553,7 +635,7 @@ mod tests {
             deposit_amount: 0,
         });
         let supply_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, supply_payload.to_bytes().unwrap());
-        let supply_outcome = processor.process_contract_tx(&supply_tx, &mut cache, 1).unwrap();
+        let supply_outcome = processor.process_contract_tx(&supply_tx, &mut cache, 1, None).unwrap();
         assert_eq!(supply_outcome.return_value, Some(1_000_000));
 
         // 3. Query Owner Balance (entry_point = 1, holder = 1)
@@ -566,7 +648,7 @@ mod tests {
             deposit_amount: 0,
         });
         let owner_bal_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, owner_bal_payload.to_bytes().unwrap());
-        let owner_bal_outcome = processor.process_contract_tx(&owner_bal_tx, &mut cache, 1).unwrap();
+        let owner_bal_outcome = processor.process_contract_tx(&owner_bal_tx, &mut cache, 1, None).unwrap();
         assert_eq!(owner_bal_outcome.return_value, Some(1_000_000));
 
         // 4. Transfer 100 GHOST from owner (1) to recipient (2) (entry_point = 0, params = [1, 2, 100])
@@ -579,12 +661,12 @@ mod tests {
             deposit_amount: 0,
         });
         let transfer_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, transfer_payload.to_bytes().unwrap());
-        let transfer_outcome = processor.process_contract_tx(&transfer_tx, &mut cache, 1).unwrap();
+        let transfer_outcome = processor.process_contract_tx(&transfer_tx, &mut cache, 1, None).unwrap();
         assert!(transfer_outcome.success);
         assert_eq!(transfer_outcome.return_value, Some(1));
 
         // 5. Query both balances
-        let owner_bal_outcome = processor.process_contract_tx(&owner_bal_tx, &mut cache, 1).unwrap();
+        let owner_bal_outcome = processor.process_contract_tx(&owner_bal_tx, &mut cache, 1, None).unwrap();
         assert_eq!(owner_bal_outcome.return_value, Some(999_900));
 
         let recip_bal_payload = ContractPayload::Invoke(InvokeContractPayload {
@@ -596,7 +678,7 @@ mod tests {
             deposit_amount: 0,
         });
         let recip_bal_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, recip_bal_payload.to_bytes().unwrap());
-        let recip_bal_outcome = processor.process_contract_tx(&recip_bal_tx, &mut cache, 1).unwrap();
+        let recip_bal_outcome = processor.process_contract_tx(&recip_bal_tx, &mut cache, 1, None).unwrap();
         assert_eq!(recip_bal_outcome.return_value, Some(100));
 
         // 6. Commit to RocksDB store and verify persistent state

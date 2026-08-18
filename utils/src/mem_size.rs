@@ -78,6 +78,14 @@ impl<T: MemSizeEstimator> MemSizeEstimator for Arc<T> {
     }
 }
 
+/// F-C-16: arrays of `MemSizeEstimator` elements (e.g. `[u8; 32]`)
+/// implement a trivial static-size byte estimation.
+impl<T: MemSizeEstimator, const N: usize> MemSizeEstimator for [T; N] {
+    fn estimate_mem_bytes(&self) -> usize {
+        size_of::<Self>()
+    }
+}
+
 impl<T: MemSizeEstimator> MemSizeEstimator for RwLock<T> {
     fn estimate_mem_bytes(&self) -> usize {
         self.read().estimate_mem_bytes() + size_of::<Self>()

@@ -20,11 +20,15 @@ pub struct Options {
     pub listen_address: String,
     pub grpc_proxy_address: Option<String>,
     pub verbose: bool,
+    /// F-C-13 FOLLOW-UP: optional bearer token for authenticating state-changing methods.
+    /// When `Some`, wRPC clients must supply the token via the `Authorization: Bearer`
+    /// header or `?token=` query parameter on the WebSocket upgrade request.
+    pub rpc_auth_token: Option<String>,
 }
 
 impl Default for Options {
     fn default() -> Self {
-        Options { listen_address: "127.0.0.1:19110".to_owned(), verbose: false, grpc_proxy_address: None }
+        Options { listen_address: "127.0.0.1:19110".to_owned(), verbose: false, grpc_proxy_address: None, rpc_auth_token: None }
     }
 }
 
@@ -70,16 +74,12 @@ impl RpcHandler for ZyanyaRpcHandler {
         _receiver: &mut WebSocketReceiver,
         messenger: Arc<Messenger>,
     ) -> WebSocketResult<Connection> {
-        // TODO - discuss and implement handshake
-        // handshake::greeting(
-        //     std::time::Duration::from_millis(3000),
-        //     sender,
-        //     receiver,
-        //     Box::pin(|msg| if msg != "zyanya" { Err(WebSocketError::NegotiationFailure) } else { Ok(()) }),
-        // )
-        // .await
+        // F-C-13 FOLLOW-UP: Extract the bearer token from the WebSocket HTTP upgrade
+        // request (Authorization header or ?token= query parameter), captured by the
+        // vendored workflow-websocket handshake callback.
+        let auth_token = workflow_websocket::server::take_handshake_token(peer);
 
-        let connection = self.server.connect(peer, messenger).await.map_err(|err| err.to_string())?;
+        let connection = self.server.connect(peer, messenger, auth_token).await.map_err(|err| err.to_string())?;
         Ok(connection)
     }
 
