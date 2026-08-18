@@ -36,7 +36,8 @@ use zyanya_consensusmanager::{spawn_blocking, ConsensusProxy};
 use zyanya_core::{debug, error, info, time::Stopwatch, warn};
 use zyanya_mining_errors::{manager::MiningManagerError, mempool::RuleError};
 use std::sync::Arc;
-use tokio::sync::mpsc::UnboundedSender;
+// F-L-31: use a bounded channel sender to prevent unbounded queue growth.
+use tokio::sync::mpsc::Sender;
 
 pub struct MiningManager {
     config: Arc<Config>,
@@ -629,7 +630,7 @@ impl MiningManager {
     pub fn revalidate_high_priority_transactions(
         &self,
         consensus: &dyn ConsensusApi,
-        transaction_ids_sender: UnboundedSender<Vec<TransactionId>>,
+        transaction_ids_sender: Sender<Vec<TransactionId>>,
     ) {
         const TRANSACTION_CHUNK_SIZE: usize = 1000;
 
@@ -781,7 +782,10 @@ impl MiningManager {
                 }
             }
             if !valid_ids.is_empty() {
-                let _ = transaction_ids_sender.send(valid_ids);
+                // F-L-31: use blocking_send in sync context and log on error (receiver dropped/full).
+                if transaction_ids_sender.blocking_send(valid_ids).is_err() {
+                    warn!("revalidation channel receiver dropped or full; transaction IDs not sent");
+                }
             }
             drop(_swo);
             drop(mempool);
@@ -929,7 +933,7 @@ impl MiningManagerProxy {
     pub async fn revalidate_high_priority_transactions(
         self,
         consensus: &ConsensusProxy,
-        transaction_ids_sender: UnboundedSender<Vec<TransactionId>>,
+        transaction_ids_sender: Sender<Vec<TransactionId>>,
     ) {
         consensus.clone().spawn_blocking(move |c| self.inner.revalidate_high_priority_transactions(c, transaction_ids_sender)).await;
     }

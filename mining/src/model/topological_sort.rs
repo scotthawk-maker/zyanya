@@ -65,7 +65,7 @@ impl<T: AsRef<Transaction> + Clone> TopologicalSort for Vec<T> {
             }
             sorted.push(self[current].clone());
         }
-        assert_eq!(sorted.len(), self.len(), "by definition, cryptographically no cycle can exist in a DAG of transactions");
+        debug_assert_eq!(sorted.len(), self.len(), "by definition, cryptographically no cycle can exist in a DAG of transactions");
 
         sorted
     }

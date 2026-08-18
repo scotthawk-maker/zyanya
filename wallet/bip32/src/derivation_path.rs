@@ -26,7 +26,7 @@ impl<'de> Deserialize<'de> for DerivationPath {
         impl<'de> de::Visitor<'de> for DerivationPathVisitor {
             type Value = DerivationPath;
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-                formatter.write_str("a string containing list of permissions separated by a '+'")
+                formatter.write_str("a BIP32 derivation path string (e.g. m/44'/123456'/0')")
             }
 
             fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
@@ -126,7 +126,13 @@ impl FromStr for DerivationPath {
             return Err(Error::String(format!("Derivation don't start with `{PREFIX}/`")));
         }
 
-        Ok(DerivationPath { path: path.map(str::parse).collect::<Result<_>>()? })
+        let segments: Vec<ChildNumber> = path.map(str::parse).collect::<Result<_>>()?;
+        if segments.len() > 100 {
+            return Err(Error::String(
+                "Derivation path exceeds maximum of 100 segments".to_string(),
+            ));
+        }
+        Ok(DerivationPath { path: segments })
     }
 }
 

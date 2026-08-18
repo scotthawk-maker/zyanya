@@ -51,6 +51,10 @@ impl Payload {
     }
 
     fn validate(&self) -> Result<()> {
+        // F-L-16: reject more than 255 xpub keys to prevent u8 overflow in sig_op_count.
+        if self.xpub_keys.len() > u8::MAX as usize {
+            return Err(Error::InvalidArgument("xpub_keys exceeds 255".to_string()));
+        }
         if self.minimum_signatures == 0 {
             return Err(Error::InvalidArgument("minimum_signatures must be at least 1".to_string()));
         }
@@ -207,7 +211,8 @@ impl Account for MultiSig {
     }
 
     fn sig_op_count(&self) -> u8 {
-        u8::try_from(self.xpub_keys.len()).unwrap()
+        // F-L-16: use unwrap_or instead of unwrap to prevent panic on > 255 keys.
+        u8::try_from(self.xpub_keys.len()).unwrap_or(u8::MAX)
     }
 
     fn minimum_signatures(&self) -> u16 {

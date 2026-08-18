@@ -804,6 +804,9 @@ macro_rules! construct_uint {
                     let d2 = (rem % 100) << 1;
                     curr -= 4;
 
+                    // F-L-43: bounds-check LUT indices to catch div_rem_u64 regressions.
+                    debug_assert!(d1 < 200 && d2 < 200);
+
                     buf[curr] = DEC_DIGITS_LUT[d1];
                     buf[curr + 1] = DEC_DIGITS_LUT[d1 + 1];
                     buf[curr + 2] = DEC_DIGITS_LUT[d2];
@@ -817,6 +820,8 @@ macro_rules! construct_uint {
                     let d1 = (n % 100) << 1;
                     n /= 100;
                     curr -= 2;
+                    // F-L-43: bounds-check LUT index.
+                    debug_assert!((d1 as usize) < 200);
                     buf[curr] = DEC_DIGITS_LUT[d1 as usize];
                     buf[curr + 1] = DEC_DIGITS_LUT[d1 + 1 as usize];
                 }
@@ -828,6 +833,8 @@ macro_rules! construct_uint {
                 } else {
                     let d1 = n << 1;
                     curr -= 2;
+                    // F-L-43: bounds-check LUT index.
+                    debug_assert!(d1 < 200);
                     buf[curr] = DEC_DIGITS_LUT[d1];
                     buf[curr + 1] = DEC_DIGITS_LUT[d1 + 1];
                 }

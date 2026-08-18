@@ -28,7 +28,7 @@ where
 {
     use serde::de::Error;
     let buff: &[u8] = Deserialize::deserialize(deserializer)?;
-    T::from_hex(str::from_utf8(buff).unwrap()).map_err(D::Error::custom)
+    T::from_hex(str::from_utf8(buff).map_err(D::Error::custom)?).map_err(D::Error::custom)
 }
 
 /// Little endian format of full slice content

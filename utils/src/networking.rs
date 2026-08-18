@@ -118,7 +118,8 @@ impl IpAddress {
         ];
 
         for curr_net in unroutable_nets {
-            if IpNet::from_str(curr_net).unwrap().contains(&self.0) {
+            // F-L-45: use expect with a clear message instead of silent unwrap.
+            if IpNet::from_str(curr_net).expect("unroutable_nets contains invalid CIDR").contains(&self.0) {
                 return false;
             }
         }

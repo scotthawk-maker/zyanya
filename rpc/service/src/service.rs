@@ -980,8 +980,14 @@ NOTE: This error usually indicates an RPC conversion error between the node and 
                     let time_between_headers = next_header.timestamp.checked_sub(header.timestamp).unwrap_or_default();
                     let score_between_query_and_header = (curr_daa_score - header.daa_score) as f64;
                     let score_between_headers = (next_header.daa_score - header.daa_score) as f64;
-                    // Interpolate the timestamp delta using the estimated fraction based on DAA scores
-                    ((time_between_headers as f64) * (score_between_query_and_header / score_between_headers)) as u64
+                    // F-L-27: guard against division by zero when score_between_headers is 0.0.
+                    let time_adjustment = if score_between_headers == 0.0 {
+                        time_between_headers
+                    } else {
+                        // Interpolate the timestamp delta using the estimated fraction based on DAA scores
+                        ((time_between_headers as f64) * (score_between_query_and_header / score_between_headers)) as u64
+                    };
+                    time_adjustment
                 };
 
                 let daa_score_timestamp = header.timestamp.checked_add(time_adjustment).unwrap_or(u64::MAX);

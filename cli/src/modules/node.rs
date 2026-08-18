@@ -96,7 +96,7 @@ impl Node {
         if argv.is_empty() {
             return self.display_help(ctx, argv).await;
         }
-        let zyanyad = ctx.daemons().zyanyad();
+        let zyanyad = ctx.daemons().zyanyad().ok_or(Error::custom("No zyanyad daemon configured, please use 'node select' to select a binary."))?;
         match argv.remove(0).as_str() {
             "start" => {
                 let mute = self.mute.load(Ordering::SeqCst);

@@ -29,6 +29,12 @@ impl Sink {
     }
 }
 
+// F-L-28: SAFETY: `Sink` wraps `js_sys::Function`/`Object` which are not
+// inherently `Send`. However, `Sink` is only used in single-threaded WASM
+// contexts (wasm_bindgen executes on a single thread), so sending it across
+// threads cannot occur in practice. This impl enables `Sink` to be stored in
+// types that require `Send` for ergonomic reasons without introducing UB in
+// the single-threaded WASM runtime.
 unsafe impl Send for Sink {}
 
 impl Sink {

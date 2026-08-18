@@ -80,16 +80,18 @@ impl Daemons {
         self
     }
 
-    pub fn zyanyad(&self) -> Arc<dyn ZyanyadCtl + Send + Sync + 'static> {
-        self.zyanyad.as_ref().expect("accessing Daemons::zyanyad while zyanyad option is None").clone()
+    /// F-L-38: returns Option instead of panicking when zyanyad is not configured.
+    pub fn zyanyad(&self) -> Option<Arc<dyn ZyanyadCtl + Send + Sync + 'static>> {
+        self.zyanyad.clone()
     }
 
     pub fn try_zyanyad(&self) -> Option<Arc<dyn ZyanyadCtl + Send + Sync + 'static>> {
         self.zyanyad.clone()
     }
 
-    pub fn cpu_miner(&self) -> Arc<dyn CpuMinerCtl + Send + Sync + 'static> {
-        self.cpu_miner.as_ref().expect("accessing Daemons::cpu_miner while cpu_miner option is None").clone()
+    /// F-L-38: returns Option instead of panicking when cpu_miner is not configured.
+    pub fn cpu_miner(&self) -> Option<Arc<dyn CpuMinerCtl + Send + Sync + 'static>> {
+        self.cpu_miner.clone()
     }
 
     pub fn try_cpu_miner(&self) -> Option<Arc<dyn CpuMinerCtl + Send + Sync + 'static>> {

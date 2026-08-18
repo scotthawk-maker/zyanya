@@ -33,12 +33,16 @@ impl Deref for DB {
     }
 }
 
-/// Deletes an existing DB if it exists
-pub fn delete_db(db_dir: PathBuf) {
+/// Deletes an existing DB if it exists.
+///
+/// F-L-36: returns a  instead of panicking on RocksDB destroy failure
+/// or invalid path encoding.
+pub fn delete_db(db_dir: PathBuf) -> std::result::Result<(), Box<dyn std::error::Error>> {
     if !db_dir.exists() {
-        return;
+        return Ok(());
     }
     let options = rocksdb::Options::default();
-    let path = db_dir.to_str().unwrap();
-    <DBWithThreadMode<MultiThreaded>>::destroy(&options, path).expect("DB is expected to be deletable");
+    let path = db_dir.to_str().ok_or_else(|| format!("delete_db: path contains invalid UTF-8: {:?}", db_dir))?;
+    <DBWithThreadMode<MultiThreaded>>::destroy(&options, path).map_err(|e| -> Box<dyn std::error::Error> { Box::new(e) })?;
+    Ok(())
 }

@@ -65,12 +65,12 @@ pub(crate) async fn create(
     let hint = term.ask(false, "Create phishing hint (optional, press <enter> to skip): ").await?.trim().to_string();
     let hint = hint.is_not_empty().then_some(hint).map(Hint::from);
 
-    let wallet_secret = Secret::new(term.ask(true, "Enter wallet encryption password: ").await?.trim().as_bytes().to_vec());
+    let wallet_secret = Secret::from(term.ask(true, "Enter wallet encryption password: ").await?);
     if wallet_secret.as_ref().is_empty() {
         return Err(Error::WalletSecretRequired);
     }
     let wallet_secret_validate =
-        Secret::new(term.ask(true, "Re-enter wallet encryption password: ").await?.trim().as_bytes().to_vec());
+        Secret::from(term.ask(true, "Re-enter wallet encryption password: ").await?);
     if wallet_secret_validate.as_ref() != wallet_secret.as_ref() {
         return Err(Error::WalletSecretMatch);
     }
@@ -105,11 +105,11 @@ pub(crate) async fn create(
 
     let payment_secret = term.ask(true, "Enter bip39 mnemonic passphrase (optional): ").await?;
     let payment_secret =
-        if payment_secret.trim().is_empty() { None } else { Some(Secret::new(payment_secret.trim().as_bytes().to_vec())) };
+        if payment_secret.trim().is_empty() { None } else { Some(Secret::from(payment_secret)) };
 
     if let Some(payment_secret) = payment_secret.as_ref() {
         let payment_secret_validate =
-            Secret::new(term.ask(true, "Please re-enter mnemonic passphrase: ").await?.trim().as_bytes().to_vec());
+            Secret::from(term.ask(true, "Please re-enter mnemonic passphrase: ").await?);
         if payment_secret_validate.as_ref() != payment_secret.as_ref() {
             return Err(Error::PaymentSecretMatch);
         }

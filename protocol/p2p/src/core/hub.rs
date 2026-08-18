@@ -138,7 +138,10 @@ impl Hub {
 
     /// Broadcast a message to only some number of peers
     pub async fn broadcast_to_some_peers(&self, msg: ZyanyadMessage, num_peers: usize) {
-        assert!(num_peers > 0);
+        // F-L-22: return early instead of asserting when no peers are requested.
+        if num_peers == 0 {
+            return;
+        }
 
         let peers = self.select_some_peers(num_peers);
 

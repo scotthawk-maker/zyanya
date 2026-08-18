@@ -185,14 +185,15 @@ impl Args {
             .collect()
     }
 
-    pub fn network(&self) -> NetworkId {
+    /// F-L-37: returns  instead of panicking on conflicting network flags.
+    pub fn network(&self) -> std::result::Result<NetworkId, String> {
         match (self.mainnet, self.testnet, self.devnet, self.simnet) {
-            (true, false, false, false) => NetworkId::new(NetworkType::Mainnet),
-            (false, true, false, false) => NetworkId::with_suffix(NetworkType::Testnet, self.testnet_suffix),
-            (false, false, true, false) => NetworkId::new(NetworkType::Devnet),
-            (false, false, false, true) => NetworkId::new(NetworkType::Simnet),
-            (false, false, false, false) => NetworkId::new(NetworkType::Mainnet),
-            _ => panic!("only a single net should be activated"),
+            (true, false, false, false) => Ok(NetworkId::new(NetworkType::Mainnet)),
+            (false, true, false, false) => Ok(NetworkId::with_suffix(NetworkType::Testnet, self.testnet_suffix)),
+            (false, false, true, false) => Ok(NetworkId::new(NetworkType::Devnet)),
+            (false, false, false, true) => Ok(NetworkId::new(NetworkType::Simnet)),
+            (false, false, false, false) => Ok(NetworkId::new(NetworkType::Mainnet)),
+            _ => Err("only a single net should be activated".into()),
         }
     }
 }
@@ -346,6 +347,19 @@ Setting to 0 prevents the preallocation and sets the maximum to {}, leading to 0
                 .long("uacomment")
                 .action(ArgAction::Append)
                 .require_equals(true)
+                // F-L-32: validate uacomment input — max 256 chars, printable ASCII, no '/'.
+                .value_parser(clap::builder::ValueParser::new(|s: &str| -> Result<String, String> {
+                    if s.len() > 256 {
+                        return Err("uacomment must be ≤ 256 characters".into());
+                    }
+                    if !s.chars().all(|c| c.is_ascii_graphic() || c == ' ') {
+                        return Err("uacomment must be printable ASCII".into());
+                    }
+                    if s.contains('/') {
+                        return Err("uacomment must not contain '/'".into());
+                    }
+                    Ok(s.to_string())
+                }))
                 .help("Comment to add to the user agent -- See BIP 14 for more information."),
         )
         .arg(
@@ -592,18 +606,18 @@ mod tests {
     #[test]
     fn test_args_network_resolution() {
         let args = Args::parse(["zyanyad"]).unwrap();
-        assert_eq!(args.network(), NetworkId::new(NetworkType::Mainnet));
+        assert_eq!(args.network().unwrap(), NetworkId::new(NetworkType::Mainnet));
 
         let args = Args::parse(["zyanyad", "--testnet"]).unwrap();
-        assert_eq!(args.network(), NetworkId::with_suffix(NetworkType::Testnet, 10));
+        assert_eq!(args.network().unwrap(), NetworkId::with_suffix(NetworkType::Testnet, 10));
 
         let args = Args::parse(["zyanyad", "--devnet"]).unwrap();
-        assert_eq!(args.network(), NetworkId::new(NetworkType::Devnet));
+        assert_eq!(args.network().unwrap(), NetworkId::new(NetworkType::Devnet));
 
         let args = Args::parse(["zyanyad", "--simnet"]).unwrap();
-        assert_eq!(args.network(), NetworkId::new(NetworkType::Simnet));
+        assert_eq!(args.network().unwrap(), NetworkId::new(NetworkType::Simnet));
 
         let args = Args::parse(["zyanyad", "--mainnet"]).unwrap();
-        assert_eq!(args.network(), NetworkId::new(NetworkType::Mainnet));
+        assert_eq!(args.network().unwrap(), NetworkId::new(NetworkType::Mainnet));
     }
 }

@@ -853,7 +853,8 @@ mod tests {
     fn bytes_str(bytes: &[u8]) -> String {
         let mut hex = [0u8; 64];
         faster_hex::hex_encode(bytes, &mut hex).expect("The output is exactly twice the size of the input");
-        unsafe { std::str::from_utf8_unchecked(&hex) }.to_string()
+        // F-L-17: use safe UTF-8 validation instead of from_utf8_unchecked.
+        std::str::from_utf8(&hex).expect("hex output is valid UTF-8").to_string()
     }
 
     #[tokio::test]

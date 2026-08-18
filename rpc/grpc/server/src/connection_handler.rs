@@ -5,7 +5,7 @@ use crate::{
     request_handler::{factory::Factory, interface::Interface},
 };
 use futures::{FutureExt, Stream};
-use zyanya_core::{debug, info, warn};
+use zyanya_core::{debug, error, info, warn};
 use zyanya_grpc_core::{
     protowire::{
         rpc_server::{Rpc, RpcServer},
@@ -166,7 +166,8 @@ impl ConnectionHandler {
 
             match serve_result {
                 Ok(_) => info!("GRPC Server stopped on: {}", serve_address),
-                Err(err) => panic!("GRPC Server {serve_address} stopped with error: {err:?}"),
+                // F-L-26: log instead of panicking on serve error.
+                Err(err) => error!("GRPC Server {serve_address} stopped with error: {err:?}"),
             }
         });
 

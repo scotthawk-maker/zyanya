@@ -15,6 +15,14 @@ use serde::{Deserialize, Serialize};
 /// F-M-35: write a file with 0600 permissions (owner-only read/write) so that
 /// token metadata/icons written to the /tmp fallback are not world-readable.
 /// On non-Unix targets the mode call is a no-op.
+/// F-L-30: Atomically write a file via temp file + rename to prevent
+/// torn writes from corrupting metadata files.
+fn write_atomic(path: &std::path::Path, data: &[u8]) -> std::io::Result<()> {
+    let tmp = path.with_extension("json.tmp");
+    std::fs::write(&tmp, data)?;
+    std::fs::rename(&tmp, path)
+}
+
 fn write_private(path: &std::path::Path, data: &[u8]) -> std::io::Result<()> {
     use std::io::Write;
     let mut opts = std::fs::OpenOptions::new();
@@ -403,7 +411,7 @@ impl RpcClientManager {
         let json = serde_json::to_string_pretty(&*store)
             .map_err(|e| format!("Failed to serialize metadata: {}", e))?;
 
-        if let Err(e) = std::fs::write(&self.metadata_path, &json) {
+        if let Err(e) = write_atomic(std::path::Path::new(&self.metadata_path), json.as_bytes()) {
             // F-M-35: write the fallback metadata file with 0600 perms so it is
             // not world-readable.
             let fallback = std::path::Path::new("/tmp/zyanya-token-metadata.json");
@@ -432,7 +440,7 @@ impl RpcClientManager {
         let filename = format!("{}.png", address);
         let mut path = std::path::Path::new(&self.icons_dir).join(&filename);
 
-        if let Err(_) = std::fs::write(&path, &decoded) {
+        if let Err(_) = write_atomic(&path, &decoded) {
             // F-M-35: create the fallback directory with 0700 perms and write the
             // icon file with 0600 perms so token icons are not world-readable.
             let tmp_dir = std::path::Path::new("/tmp/zyanya-token-icons");

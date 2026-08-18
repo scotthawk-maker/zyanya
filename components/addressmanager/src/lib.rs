@@ -298,7 +298,7 @@ impl AddressManager {
             return;
         }
 
-        let new_count = self.address_store.get(address).connection_failed_count + 1;
+        let new_count = self.address_store.get(address).connection_failed_count.saturating_add(1);
         if new_count > MAX_CONNECTION_FAILED_COUNT {
             self.address_store.remove(address);
         } else {

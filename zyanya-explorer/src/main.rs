@@ -4,7 +4,7 @@ mod web;
 
 use axum::{
     body::Body,
-    extract::Request,
+    extract::{ConnectInfo, Request, State},
     http::{header, HeaderValue, StatusCode},
     middleware::{self, Next},
     response::Response,
@@ -13,11 +13,52 @@ use axum::{
 };
 use clap::Parser;
 use socket2::{Domain, Protocol, Socket, Type};
-use std::net::SocketAddr;
+use std::collections::HashMap;
+use std::net::{IpAddr, SocketAddr};
 use std::sync::Arc;
+use std::time::Instant;
 use tokio::net::TcpListener;
+use tokio::sync::Mutex;
 use crate::api::*;
 use crate::client::RpcClientManager;
+
+/// F-L-29: Per-IP rate limiter state (100 req/sec fixed window).
+type RateLimitState = Arc<Mutex<HashMap<IpAddr, (Instant, u32)>>>;
+
+/// F-L-29: Rate-limit middleware — 100 requests per second per IP.
+async fn rate_limit(
+    State(state): State<RateLimitState>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    req: Request,
+    next: Next,
+) -> Response {
+    let ip = addr.ip();
+    let mut map = state.lock().await;
+    let now = Instant::now();
+    let entry = map.entry(ip).or_insert((now, 0));
+    if now.duration_since(entry.0).as_secs() >= 1 {
+        *entry = (now, 0);
+    }
+    entry.1 += 1;
+    if entry.1 > 100 {
+        drop(map);
+        return Response::builder()
+            .status(StatusCode::TOO_MANY_REQUESTS)
+            .body(Body::from("rate limit exceeded
+"))
+            .unwrap();
+    }
+    drop(map);
+    next.run(req).await
+}
+
+/// F-L-33: Security headers middleware.
+async fn security_headers(req: Request, next: Next) -> Response {
+    let mut resp = next.run(req).await;
+    resp.headers_mut().insert(header::X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
+    resp.headers_mut().insert(header::X_FRAME_OPTIONS, HeaderValue::from_static("DENY"));
+    resp
+}
 
 #[derive(Parser, Debug)]
 #[command(
@@ -143,6 +184,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(e) => eprintln!(" [!] Warning: Node RPC connection pending ({})", e),
     }
 
+    // F-L-29: per-IP rate limiter state (100 req/sec).
+    let rate_limit_state: RateLimitState = Arc::new(Mutex::new(HashMap::new()));
+
     let app = Router::new()
         .route("/", get(landing_handler))
         .route("/explorer", get(explorer_handler))
@@ -186,12 +230,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_state(client_mgr)
         // F-M-31: enforce a same-origin CORS policy on all routes. Never emits
         // `Access-Control-Allow-Origin: *`.
+        .layer(middleware::from_fn(security_headers))
+        .layer(middleware::from_fn_with_state(rate_limit_state.clone(), rate_limit))
         .layer(middleware::from_fn(cors_same_origin));
 
     println!(" [*] Server running at http://{}/", cli.listen);
     println!("===============================================================");
 
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
 
     Ok(())
 }

@@ -22,6 +22,12 @@ pub enum AssemblerError {
 
     #[error("Duplicate label '{0}' on line {1}")]
     DuplicateLabel(String, usize),
+
+    #[error("Invalid label definition on line {0}: a label must be the only token on the line")]
+    InvalidLabel(usize),
+
+    #[error("Invalid jump target '{0}' on line {1}: numeric targets must be valid opcode indices")]
+    InvalidJumpTarget(String, usize),
 }
 
 /// A minimal assembler for `zyanya-vm`.
@@ -57,8 +63,25 @@ impl Assembler {
             }
 
             // Check if label definition (starts with ':' or ends with ':')
-            if trimmed.starts_with(':') || trimmed.ends_with(':') {
-                let label_name = trimmed.trim_matches(':').trim().to_string();
+            // F-L-02: a label definition is valid only when the ENTIRE trimmed line
+            // is a label — i.e. `:name` or `name:` with no additional tokens.
+            // A line like `:loop PUSH 1` is rejected so the opcode is not swallowed.
+            if trimmed.starts_with(':') {
+                let rest = trimmed[1..].trim();
+                if rest.is_empty() || rest.contains(char::is_whitespace) {
+                    return Err(AssemblerError::InvalidLabel(line_num));
+                }
+                let label_name = rest.to_string();
+                if labels.contains_key(&label_name) {
+                    return Err(AssemblerError::DuplicateLabel(label_name, line_num));
+                }
+                labels.insert(label_name, current_byte_offset);
+            } else if trimmed.ends_with(':') {
+                let rest = trimmed[..trimmed.len() - 1].trim();
+                if rest.is_empty() || rest.contains(char::is_whitespace) {
+                    return Err(AssemblerError::InvalidLabel(line_num));
+                }
+                let label_name = rest.to_string();
                 if labels.contains_key(&label_name) {
                     return Err(AssemblerError::DuplicateLabel(label_name, line_num));
                 }
@@ -184,6 +207,14 @@ fn resolve_target(arg: &str, labels: &HashMap<String, usize>, line_num: usize) -
     if let Some(&target) = labels.get(clean_arg) {
         Ok(target)
     } else if let Ok(val) = parse_u64(arg) {
+        // F-L-02: numeric JUMP targets are interpreted as byte offsets into the
+        // serialized bytecode, consistent with label resolution. The VM's
+        // `deserialize_slice` validates that the byte offset lands on a valid
+        // opcode boundary and converts it to an opcode index. Reject negative
+        // or implausibly large values up front.
+        if val > (1 << 31) {
+            return Err(AssemblerError::InvalidJumpTarget(arg.to_string(), line_num));
+        }
         Ok(val as usize)
     } else {
         Err(AssemblerError::UndefinedLabel(arg.to_string(), line_num))

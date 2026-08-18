@@ -37,7 +37,8 @@ mod tests {
     };
     use zyanya_utils::mem_size::MemSizeEstimator;
     use std::{iter::once, sync::Arc};
-    use tokio::sync::mpsc::{error::TryRecvError, unbounded_channel};
+    // F-L-31: use a bounded channel to match the production sender type.
+    use tokio::sync::mpsc::{channel, error::TryRecvError};
 
     const TARGET_TIME_PER_BLOCK: u64 = 1_000;
     const MAX_BLOCK_MASS: u64 = 500_000;
@@ -1027,7 +1028,7 @@ mod tests {
         assert!(result.is_ok(), "the insertion in the mempool of the spending transaction failed");
 
         // Revalidate, to make sure spending_tx is still valid
-        let (tx, mut rx) = unbounded_channel();
+        let (tx, mut rx) = channel(1024);
         mining_manager.revalidate_high_priority_transactions(consensus.as_ref(), tx);
         let result = rx.blocking_recv();
         assert!(result.is_some(), "the revalidation of high-priority transactions must yield one message");
@@ -1051,7 +1052,7 @@ mod tests {
         );
 
         // Revalidate again, this time valid_txs should be empty
-        let (tx, mut rx) = unbounded_channel();
+        let (tx, mut rx) = channel(1024);
         mining_manager.revalidate_high_priority_transactions(consensus.as_ref(), tx);
         assert_eq!(
             Err(TryRecvError::Disconnected),

@@ -403,7 +403,10 @@ impl Router {
 
     /// Enqueues a locally-originated message to be sent to the network peer
     pub async fn enqueue(&self, msg: ZyanyadMessage) -> Result<(), ProtocolError> {
-        assert!(msg.payload.is_some(), "Zyanyad P2P message should always have a value");
+        // F-L-23: return an error instead of asserting when the payload is missing.
+        if msg.payload.is_none() {
+            return Err(ProtocolError::Other("Zyanyad P2P message should always have a value"));
+        }
         match self.outgoing_route.try_send(msg) {
             Ok(_) => Ok(()),
             Err(TrySendError::Closed(_)) => Err(ProtocolError::ConnectionClosed),
@@ -448,7 +451,10 @@ impl Router {
         self.routing_map_by_id.write().clear();
 
         // Send a close notification to the central Hub
-        self.hub_sender.send(HubEvent::PeerClosing(self.clone())).await.expect("hub receiver should never drop before senders");
+        // F-L-25: log and continue instead of panicking if the hub receiver dropped.
+        if self.hub_sender.send(HubEvent::PeerClosing(self.clone())).await.is_err() {
+            warn!("hub receiver dropped; peer closing notification skipped");
+        }
 
         true
     }

@@ -1,6 +1,9 @@
 use crate::error::VMError;
 
 /// Maximum depth allowed for the operand stack.
+///
+/// F-L-03: per-call operand stack is bounded to 1024; total cross-call depth is
+/// bounded by the call-depth limit enforced in the VM (F-C-05).
 pub const MAX_STACK_DEPTH: usize = 1024;
 
 /// Operand stack for storing 64-bit integer values during VM execution.

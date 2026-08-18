@@ -5,7 +5,7 @@ use crate::pb::{
 };
 use crate::{ConnectionInitializer, Router};
 use futures::FutureExt;
-use zyanya_core::{debug, info};
+use zyanya_core::{debug, error, info, warn};
 use zyanya_utils::networking::{IpAddress, NetAddress};
 use zyanya_utils_tower::{
     counters::TowerConnectionCounters,
@@ -107,7 +107,8 @@ impl ConnectionHandler {
 
             match serve_result {
                 Ok(_) => info!("P2P Server stopped: {}", serve_address),
-                Err(err) => panic!("P2P, Server {serve_address} stopped with error: {err:?}"),
+                // F-L-26: log instead of panicking on serve error.
+                Err(err) => error!("P2P, Server {serve_address} stopped with error: {err:?}"),
             }
         });
         Ok(termination_sender)
@@ -147,7 +148,10 @@ impl ConnectionHandler {
         match self.initializer.initialize_connection(router.clone()).await {
             Ok(()) => {
                 // Notify the central Hub about the new peer
-                self.hub_sender.send(HubEvent::NewPeer(router.clone())).await.expect("hub receiver should never drop before senders");
+                // F-L-25: log and continue instead of panicking if the hub receiver dropped.
+                if self.hub_sender.send(HubEvent::NewPeer(router.clone())).await.is_err() {
+                    warn!("hub receiver dropped; peer notification skipped");
+                }
             }
 
             Err(err) => {
@@ -272,7 +276,10 @@ impl ProtoP2p for ConnectionHandler {
         let router = Router::new(remote_address, false, self.hub_sender.clone(), incoming_stream, outgoing_route).await;
 
         // Notify the central Hub about the new peer
-        self.hub_sender.send(HubEvent::NewPeer(router)).await.expect("hub receiver should never drop before senders");
+        // F-L-25: log and continue instead of panicking if the hub receiver dropped.
+        if self.hub_sender.send(HubEvent::NewPeer(router)).await.is_err() {
+            warn!("hub receiver dropped; peer notification skipped");
+        }
 
         // Give tonic a receiver stream (messages sent to it will be forwarded to the network peer).
         // Wrap the stream with a ConnectionGuardStream so the connection slot is released when the

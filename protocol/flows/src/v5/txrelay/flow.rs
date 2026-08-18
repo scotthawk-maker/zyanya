@@ -172,7 +172,7 @@ impl RelayTransactionsFlow {
         // To reduce the P2P TPS to below the threshold, we need to request up to a max of
         // whatever the balances overage. If MAX_TPS_THRESHOLD is 3000 and the current TPS is 4000,
         // then we can only request up to 2000 (MAX - (4000 - 3000)) to average out into the threshold.
-        let curr_p2p_tps = 1000 * snapshot_delta.low_priority_tx_counts / (snapshot_delta.elapsed_time.as_millis().max(1) as u64);
+        let curr_p2p_tps = 1000u64.saturating_mul(snapshot_delta.low_priority_tx_counts) / (snapshot_delta.elapsed_time.as_millis().max(1) as u64);
         let overage = if should_throttle && curr_p2p_tps > MAX_TPS_THRESHOLD { curr_p2p_tps - MAX_TPS_THRESHOLD } else { 0 };
 
         let limit = MAX_TPS_THRESHOLD.saturating_sub(overage);
@@ -381,7 +381,7 @@ fn check_tx_throttling(throttling_state: &mut ThrottlingState, next_snapshot: P2
     throttling_state.curr_snapshot = next_snapshot;
 
     if snapshot_delta.low_priority_tx_counts > 0 {
-        let tps = 1000 * snapshot_delta.low_priority_tx_counts / snapshot_delta.elapsed_time.as_millis().max(1) as u64;
+        let tps = 1000u64.saturating_mul(snapshot_delta.low_priority_tx_counts) / snapshot_delta.elapsed_time.as_millis().max(1) as u64;
         if !throttling_state.should_throttle && tps > MAX_TPS_THRESHOLD {
             warn!("P2P tx relay threshold exceeded. Throttling relay. Current: {}, Max: {}", tps, MAX_TPS_THRESHOLD);
             throttling_state.should_throttle = true;

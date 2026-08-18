@@ -152,7 +152,7 @@ pub fn get_app_dir_from_args(args: &Args) -> PathBuf {
 
 /// Get the log directory from the supplied [`Args`].
 pub fn get_log_dir(args: &Args) -> Option<String> {
-    let network = args.network();
+    let network = args.network().unwrap_or_else(|e| { eprintln!("Error: {e}"); std::process::exit(1); });
     let app_dir = get_app_dir_from_args(args);
 
     // Logs directory is usually under the application directory, unless otherwise specified
@@ -211,7 +211,7 @@ pub fn create_core(args: Args, fd_total_budget: i32) -> (Arc<Core>, Arc<RpcCoreS
 /// (dropped) before the `Core` is shut down.
 ///
 pub fn create_core_with_runtime(runtime: &Runtime, args: &Args, fd_total_budget: i32) -> (Arc<Core>, Arc<RpcCoreService>) {
-    let network = args.network();
+    let network = args.network().unwrap_or_else(|e| { eprintln!("Error: {e}"); std::process::exit(1); });
     let mut fd_remaining = fd_total_budget;
     let utxo_files_limit = if args.utxoindex {
         let utxo_files_limit = fd_remaining * 10 / 100;

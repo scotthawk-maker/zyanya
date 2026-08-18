@@ -194,7 +194,7 @@ impl Zeroize for Encrypted {
 
 impl std::fmt::Debug for Encrypted {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Encrypted").field("encryption_kind", &self.encryption_kind).field("payload", &self.payload.to_hex()).finish()
+        f.debug_struct("Encrypted").field("encryption_kind", &self.encryption_kind).field("payload", &"[ENCRYPTED]").finish()
     }
 }
 

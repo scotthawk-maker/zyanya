@@ -1,6 +1,7 @@
 use crate::{connection::*, router::*, server::*};
 use async_trait::async_trait;
 use zyanya_core::{
+    error,
     info,
     task::service::{AsyncService, AsyncServiceError, AsyncServiceFuture},
     trace, warn,
@@ -156,10 +157,12 @@ impl WrpcService {
                     let serve_result = self.server.listen(listener, Some(config)).await;
                     match serve_result {
                         Ok(_) => info!("WRPC Server stopped on: {}", listen_address),
-                        Err(err) => panic!("WRPC Server {listen_address} stopped with error: {err:?}"),
+                        // F-L-26: log instead of panicking on serve error.
+                        Err(err) => error!("WRPC Server {listen_address} stopped with error: {err:?}"),
                     }
                 }
-                Err(err) => panic!("WRPC Server bind error on {listen_address}: {err:?}"),
+                // F-L-26: log instead of panicking on bind error.
+                Err(err) => error!("WRPC Server bind error on {listen_address}: {err:?}"),
             }
         });
 

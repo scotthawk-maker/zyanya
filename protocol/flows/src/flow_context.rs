@@ -51,7 +51,7 @@ use std::{
     time::Duration,
 };
 use tokio::sync::{
-    mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
+    mpsc::{channel, unbounded_channel, Receiver, Sender, UnboundedReceiver, UnboundedSender},
     RwLock as AsyncRwLock,
 };
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
@@ -576,7 +576,8 @@ impl FlowContext {
             tokio::spawn(async move {
                 mining_manager.clone().expire_low_priority_transactions(&consensus_clone).await;
                 if context.should_rebroadcast().await {
-                    let (tx, mut rx) = unbounded_channel();
+                    // F-L-31: use a bounded channel to prevent unbounded queue growth.
+                    let (tx, mut rx) = channel(1024);
                     tokio::spawn(async move {
                         mining_manager.revalidate_high_priority_transactions(&consensus_clone, tx).await;
                     });
