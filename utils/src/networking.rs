@@ -2,6 +2,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use ipnet::IpNet;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::{
     fmt::Display,
     net::{AddrParseError, IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
@@ -352,6 +353,19 @@ impl PeerId {
 
     pub fn from_slice(bytes: &[u8]) -> Result<Self, uuid::Error> {
         Ok(Uuid::from_slice(bytes)?.into())
+    }
+
+    /// Derive a deterministic peer identity from a socket address (IP:port).
+    ///
+    /// This binds the peer identity to the actual connection endpoint so that peers
+    /// cannot spoof arbitrary self-declared identities during the P2P handshake (F-H-19).
+    pub fn from_socket_addr(addr: &SocketAddr) -> Self {
+        let mut hasher = Sha256::new();
+        hasher.update(addr.to_string().as_bytes());
+        let digest = hasher.finalize();
+        let mut bytes = [0u8; 16];
+        bytes.copy_from_slice(&digest[..16]);
+        Self(Uuid::from_bytes(bytes))
     }
 }
 impl From<Uuid> for PeerId {

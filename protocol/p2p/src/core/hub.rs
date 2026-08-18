@@ -77,12 +77,17 @@ impl Hub {
     }
 
     async fn insert_new_router(&self, new_router: Arc<Router>) {
-        let prev = self.peers.write().insert(new_router.key(), new_router);
-        if let Some(previous_router) = prev {
-            // This is not supposed to ever happen but can on rare race-conditions
-            previous_router.close().await;
-            warn!("P2P, Hub event loop, removing peer with duplicate key: {}", previous_router.key());
+        // Check if a peer with this key already exists. If so, reject the NEW
+        // connection rather than evicting the existing one (prevents identity-spoofing
+        // eviction) (F-H-19). The read guard is dropped before the `.await` below so the
+        // future stays `Send`.
+        let is_duplicate = self.peers.read().contains_key(&new_router.key());
+        if is_duplicate {
+            warn!("P2P, Hub event loop, rejecting new peer with duplicate key: {}", new_router.key());
+            new_router.close().await;
+            return;
         }
+        self.peers.write().insert(new_router.key(), new_router);
     }
 
     /// Selects a random subset of peers, trying to select at least half for outbound when possible

@@ -29,4 +29,7 @@ pub enum ConversionError {
 
     #[error(transparent)]
     SubnetParsingError(#[from] SubnetworkConversionError),
+
+    #[error("Invalid timestamp {0}")]
+    InvalidTimestamp(i64),
 }
