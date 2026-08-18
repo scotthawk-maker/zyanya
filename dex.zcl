@@ -51,21 +51,51 @@ contract DEX {
     // Entry point 2: swap(tokenIn, amountIn)
     // tokenIn: 0 for Token A (ZYAN), 1 for Token B (GHOST)
     // Formula with 0.3% fee: amountOut = (reserveOut * amountIn * 997) / (reserveIn * 1000 + amountIn * 997)
+    // F-H-02: Use checked multiplication — return 0 (revert) on overflow to prevent
+    // silent wrapping that would produce incorrect financial results.
     fn swap(tokenIn, amountIn) {
         let resA = sload(0);
         let resB = sload(1);
         let amountOut = 0;
 
+        if (amountIn == 0) {
+            return 0;
+        }
+
         if (tokenIn == 0) {
-            let num = resB * amountIn * 997;
-            let den = resA * 1000 + amountIn * 997;
+            // F-H-02: Check resB * amountIn for overflow
+            if (resB > 18446744073709551615 / amountIn) { return 0; }
+            let prod = resB * amountIn;
+            // F-H-02: Check prod * 997 for overflow
+            if (prod > 18446744073709551615 / 997) { return 0; }
+            let num = prod * 997;
+            // F-H-02: Check resA * 1000 for overflow
+            if (resA > 18446744073709551615 / 1000) { return 0; }
+            let denA = resA * 1000;
+            // F-H-02: Check amountIn * 997 for overflow
+            if (amountIn > 18446744073709551615 / 997) { return 0; }
+            let denB = amountIn * 997;
+            let den = denA + denB;
+            if (den == 0) { return 0; }
             amountOut = num / den;
 
             sstore(0, resA + amountIn);
             sstore(1, resB - amountOut);
         } else {
-            let num = resA * amountIn * 997;
-            let den = resB * 1000 + amountIn * 997;
+            // F-H-02: Check resA * amountIn for overflow
+            if (resA > 18446744073709551615 / amountIn) { return 0; }
+            let prod = resA * amountIn;
+            // F-H-02: Check prod * 997 for overflow
+            if (prod > 18446744073709551615 / 997) { return 0; }
+            let num = prod * 997;
+            // F-H-02: Check resB * 1000 for overflow
+            if (resB > 18446744073709551615 / 1000) { return 0; }
+            let denA = resB * 1000;
+            // F-H-02: Check amountIn * 997 for overflow
+            if (amountIn > 18446744073709551615 / 997) { return 0; }
+            let denB = amountIn * 997;
+            let den = denA + denB;
+            if (den == 0) { return 0; }
             amountOut = num / den;
 
             sstore(1, resB + amountIn);

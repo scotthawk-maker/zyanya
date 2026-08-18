@@ -1005,7 +1005,16 @@ impl RpcClientManager {
 
         let S = total_supply;
         let k = amount;
-        let cost = slope.saturating_mul(2 * S * k + k * k) / 2;
+        // F-H-02: Use u128 intermediates to prevent silent overflow in off-chain quotes.
+        // `2 * S * k` and `k * k` are plain u64 arithmetic that silently wraps in release.
+        let cost = {
+            let slope128 = slope as u128;
+            let s128 = S as u128;
+            let k128 = k as u128;
+            let inner = 2u128 * s128 * k128 + k128 * k128;
+            let cost128 = slope128.saturating_mul(inner) / 2;
+            cost128.min(u64::MAX as u128) as u64
+        };
 
         let gas_fee = gas.saturating_mul(1);
         let required_zyan = cost.saturating_add(gas_fee);
@@ -1152,8 +1161,14 @@ impl RpcClientManager {
 
         let S = total_supply;
         let k = amount;
+        // F-H-02: Use u128 intermediates to prevent silent overflow in off-chain quotes.
         let refund = if S >= k {
-            slope.saturating_mul(2 * S * k - k * k) / 2
+            let slope128 = slope as u128;
+            let s128 = S as u128;
+            let k128 = k as u128;
+            let inner = 2u128 * s128 * k128 - k128 * k128;
+            let refund128 = slope128.saturating_mul(inner) / 2;
+            refund128.min(u64::MAX as u128) as u64
         } else {
             0
         };

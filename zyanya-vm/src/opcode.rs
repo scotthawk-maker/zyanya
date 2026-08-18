@@ -270,16 +270,29 @@ impl OpCode {
             }
         }
 
+        // F-H-03: Validate every jump target resolves to a known opcode boundary.
+        // A target that does not match any recorded opcode start position points
+        // into the middle of a multi-byte opcode and must be rejected.
         for op in &mut opcodes {
             match op {
                 OpCode::Jump(target) => {
-                    if let Some(&op_idx) = byte_to_opcode.get(target) {
-                        *target = op_idx;
+                    let byte_target = *target;
+                    match byte_to_opcode.get(&byte_target) {
+                        Some(&op_idx) => *target = op_idx,
+                        None => return Err(VMError::InvalidJumpTarget {
+                            pc: byte_target,
+                            code_len: opcodes.len(),
+                        }),
                     }
                 }
                 OpCode::JumpIf(target) => {
-                    if let Some(&op_idx) = byte_to_opcode.get(target) {
-                        *target = op_idx;
+                    let byte_target = *target;
+                    match byte_to_opcode.get(&byte_target) {
+                        Some(&op_idx) => *target = op_idx,
+                        None => return Err(VMError::InvalidJumpTarget {
+                            pc: byte_target,
+                            code_len: opcodes.len(),
+                        }),
                     }
                 }
                 _ => {}

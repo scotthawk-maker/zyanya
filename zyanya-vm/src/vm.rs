@@ -150,9 +150,15 @@ impl VM {
                 OpCode::Pow => {
                     let b = self.stack.pop()?;
                     let a = self.stack.pop()?;
-                    let extra_gas = 1 + (b as u64 / 32);
+                    // F-H-01: Validate exponent fits u32 — reject instead of silently truncating.
+                    if b > u32::MAX as u64 {
+                        return Err(VMError::ArithmeticOverflow);
+                    }
+                    let extra_gas = 1 + (b / 32);
                     self.gas_meter.consume(extra_gas)?;
-                    self.stack.push(a.wrapping_pow(b as u32))?;
+                    // F-H-01: Use checked_pow instead of wrapping_pow to prevent silent overflow.
+                    let res = a.checked_pow(b as u32).ok_or(VMError::ArithmeticOverflow)?;
+                    self.stack.push(res)?;
                     self.pc += 1;
                 }
                 OpCode::And => {

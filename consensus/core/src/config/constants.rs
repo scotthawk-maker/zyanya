@@ -11,8 +11,8 @@ pub mod contract {
     /// Maximum size of contract call data / parameters in bytes (64 KB).
     pub const MAX_CONTRACT_CALLDATA_SIZE: usize = 64 * 1024;
 
-    /// Maximum number of u64 parameters (64 KB / 8).
-    pub const MAX_CONTRACT_PARAMETERS: usize = MAX_CONTRACT_CALLDATA_SIZE / 8;
+    /// Maximum number of u64 parameters (1024 per F-H-07 consensus rule).
+    pub const MAX_CONTRACT_PARAMETERS: usize = 1024;
 
     /// Upper bound on the serialized contract payload before borsh deserialization.
     /// Covers the largest deploy (bytecode) plus invoke (parameters) plus fixed field overhead.
