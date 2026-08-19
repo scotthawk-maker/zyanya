@@ -203,6 +203,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/explorer", get(explorer_handler))
         .route("/dag", get(dag_page_handler))
         .route("/launch", get(launch_handler))
+        .route("/staking", get(staking_handler))
         .route("/token/:address", get(token_handler))
         .route("/token-icons/:filename", get(token_icon_handler))
         .route("/tools", get(tools_handler))

@@ -18,6 +18,11 @@ pub async fn launch_handler() -> Html<&'static str> {
     Html(LAUNCH_HTML)
 }
 
+pub async fn staking_handler() -> Html<&'static str> {
+    Html(STAKING_HTML)
+}
+
+
 pub async fn token_handler() -> Html<&'static str> {
     Html(TOKEN_HTML)
 }
