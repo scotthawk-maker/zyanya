@@ -497,16 +497,17 @@ pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
         <header>
             <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
             <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-            <nav>
+                        <nav>
                 <a href="/" class="active">Home</a>
                 <a href="/explorer">Explorer</a>
                 <a href="/dag">DAG Visualizer</a>
-                <a href="/testnet">Testnet</a>
+                <a href="/staking">Staking</a>
                 <a href="/launch">Launch</a>
+                <a href="/tools">Tools</a>
+                <a href="/testnet">Testnet</a>
                 <a href="/future">Roadmap</a>
                 <a href="/agents">Agents</a>
                 <a href="/docs">Docs</a>
-                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
 
@@ -1016,17 +1017,18 @@ pub const EXPLORER_HTML: &str = r###"<!DOCTYPE html>
     <header>
         <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
         <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-        <nav>
-            <a href="/">Home</a>
-            <a href="/explorer" class="active">Explorer</a>
-            <a href="/dag">DAG Visualizer</a>
-            <a href="/testnet">Testnet</a>
-            <a href="/launch">Launch</a>
-            <a href="/future">Roadmap</a>
-            <a href="/agents">Agents</a>
-            <a href="/docs">Docs</a>
-            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--accent-spectral);">GitHub</a>
-        </nav>
+                    <nav>
+                <a href="/">Home</a>
+                <a href="/explorer" class="active">Explorer</a>
+                <a href="/dag">DAG Visualizer</a>
+                <a href="/staking">Staking</a>
+                <a href="/launch">Launch</a>
+                <a href="/tools">Tools</a>
+                <a href="/testnet">Testnet</a>
+                <a href="/future">Roadmap</a>
+                <a href="/agents">Agents</a>
+                <a href="/docs">Docs</a>
+            </nav>
     </header>
 
     <main class="container">
@@ -2234,16 +2236,18 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
     <header>
         <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
         <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-        <nav>
-            <a href="/">Home</a>
-            <a href="/explorer">Explorer</a>
-            <a href="/testnet">Testnet</a>
-            <a href="/launch">Launch</a>
-            <a href="/future">Roadmap</a>
-            <a href="/agents">Agents</a>
-            <a href="/docs">Docs</a>
-            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--accent-spectral);">GitHub</a>
-        </nav>
+                    <nav>
+                <a href="/">Home</a>
+                <a href="/explorer">Explorer</a>
+                <a href="/dag">DAG Visualizer</a>
+                <a href="/staking">Staking</a>
+                <a href="/launch">Launch</a>
+                <a href="/tools" class="active">Tools</a>
+                <a href="/testnet">Testnet</a>
+                <a href="/future">Roadmap</a>
+                <a href="/agents">Agents</a>
+                <a href="/docs">Docs</a>
+            </nav>
     </header>
 
     <div class="top-logo" style="text-align: center; margin: 1.5rem 0;"><div id="tools-logo"></div></div>
@@ -2485,9 +2489,18 @@ code{font-size:.75rem}
 <div class="container"><header>
 <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
 <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-<nav>
-<a href="/">Home</a><a href="/explorer">Explorer</a><a href="/testnet" class="active">Testnet</a><a href="/launch">Launch</a><a href="/future">Roadmap</a><a href="/agents">Agents</a><a href="/docs">Docs</a><a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color:var(--spectral-blue)">GitHub</a>
-</nav></header>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/explorer">Explorer</a>
+                <a href="/dag">DAG Visualizer</a>
+                <a href="/staking">Staking</a>
+                <a href="/launch">Launch</a>
+                <a href="/tools">Tools</a>
+                <a href="/testnet" class="active">Testnet</a>
+                <a href="/future">Roadmap</a>
+                <a href="/agents">Agents</a>
+                <a href="/docs">Docs</a>
+            </nav></header>
 <div class="top-logo"><div id="logo-container"></div></div>
 <main>
 <section><h1>Join the Zyanya Testnet</h1><p style="text-align:center;max-width:640px;margin:0 auto 1.5rem">One flow — run a node, get a wallet, mine, and transact. Testnet coins have no value; break things and tell us what you find.</p></section>
@@ -2588,9 +2601,18 @@ h1{font-size:1.2rem}
 <div class="container"><header>
 <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
 <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-<nav>
-<a href="/">Home</a><a href="/explorer">Explorer</a><a href="/testnet">Testnet</a><a href="/launch">Launch</a><a href="/future" class="active">Roadmap</a><a href="/agents">Agents</a><a href="/docs">Docs</a><a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color:var(--spectral-blue)">GitHub</a>
-</nav></header>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/explorer">Explorer</a>
+                <a href="/dag">DAG Visualizer</a>
+                <a href="/staking">Staking</a>
+                <a href="/launch">Launch</a>
+                <a href="/tools">Tools</a>
+                <a href="/testnet">Testnet</a>
+                <a href="/future" class="active">Roadmap</a>
+                <a href="/agents">Agents</a>
+                <a href="/docs">Docs</a>
+            </nav></header>
 <div class="top-logo"><div id="logo-container"></div></div>
 <main>
 <section><h1>The Path Forward</h1><p style="text-align:center;max-width:640px;margin:0 auto 1.5rem">What's live on testnet today, and what's planned. The ghost is awake — more is coming.</p></section>
@@ -2788,15 +2810,17 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
         <header>
             <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
             <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-            <nav>
+                        <nav>
                 <a href="/">Home</a>
                 <a href="/explorer">Explorer</a>
-                <a href="/testnet">Testnet</a>
+                <a href="/dag">DAG Visualizer</a>
+                <a href="/staking">Staking</a>
                 <a href="/launch" class="active">Launch</a>
+                <a href="/tools">Tools</a>
+                <a href="/testnet">Testnet</a>
                 <a href="/future">Roadmap</a>
                 <a href="/agents">Agents</a>
                 <a href="/docs">Docs</a>
-                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
         <main>
@@ -3259,15 +3283,17 @@ pub const TOKEN_HTML: &str = r#"<!DOCTYPE html>
         <header>
             <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
             <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-            <nav>
+                        <nav>
                 <a href="/">Home</a>
                 <a href="/explorer">Explorer</a>
-                <a href="/testnet">Testnet</a>
+                <a href="/dag">DAG Visualizer</a>
+                <a href="/staking">Staking</a>
                 <a href="/launch" class="active">Launch</a>
+                <a href="/tools">Tools</a>
+                <a href="/testnet">Testnet</a>
                 <a href="/future">Roadmap</a>
                 <a href="/agents">Agents</a>
                 <a href="/docs">Docs</a>
-                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
 
@@ -3894,15 +3920,17 @@ pub const AI_AGENTS_HTML: &str = r###"<!DOCTYPE html>
         <header>
             <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
             <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-            <nav>
+                        <nav>
                 <a href="/">Home</a>
                 <a href="/explorer">Explorer</a>
-                <a href="/testnet">Testnet</a>
+                <a href="/dag">DAG Visualizer</a>
+                <a href="/staking">Staking</a>
                 <a href="/launch">Launch</a>
+                <a href="/tools">Tools</a>
+                <a href="/testnet">Testnet</a>
                 <a href="/future">Roadmap</a>
                 <a href="/agents" class="active">Agents</a>
                 <a href="/docs">Docs</a>
-                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
 
@@ -4374,15 +4402,17 @@ pub const DOCS_HTML: &str = r###"<!DOCTYPE html>
         <header>
             <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
             <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-            <nav>
+                        <nav>
                 <a href="/">Home</a>
                 <a href="/explorer">Explorer</a>
-                <a href="/testnet">Testnet</a>
+                <a href="/dag">DAG Visualizer</a>
+                <a href="/staking">Staking</a>
                 <a href="/launch">Launch</a>
+                <a href="/tools">Tools</a>
+                <a href="/testnet">Testnet</a>
                 <a href="/future">Roadmap</a>
                 <a href="/agents">Agents</a>
                 <a href="/docs" class="active">Docs</a>
-                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
             </nav>
         </header>
 
@@ -5276,17 +5306,18 @@ pub const DAG_HTML: &str = r###"<!DOCTYPE html>
     <header>
         <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
         <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-        <nav>
-            <a href="/">Home</a>
-            <a href="/explorer">Explorer</a>
-            <a href="/dag" class="active">DAG Visualizer</a>
-            <a href="/testnet">Testnet</a>
-            <a href="/launch">Launch</a>
-            <a href="/future">Roadmap</a>
-            <a href="/agents">Agents</a>
-            <a href="/docs">Docs</a>
-            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
-        </nav>
+                    <nav>
+                <a href="/">Home</a>
+                <a href="/explorer">Explorer</a>
+                <a href="/dag" class="active">DAG Visualizer</a>
+                <a href="/staking">Staking</a>
+                <a href="/launch">Launch</a>
+                <a href="/tools">Tools</a>
+                <a href="/testnet">Testnet</a>
+                <a href="/future">Roadmap</a>
+                <a href="/agents">Agents</a>
+                <a href="/docs">Docs</a>
+            </nav>
     </header>
 
     <div class="container">
@@ -6259,7 +6290,7 @@ pub const STAKING_HTML: &str = r###"<!DOCTYPE html>
             <a href="/" class="logo">ZYANYA // PROTOCOL</a>
             <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
             <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-            <nav>
+                        <nav>
                 <a href="/">Home</a>
                 <a href="/explorer">Explorer</a>
                 <a href="/dag">DAG Visualizer</a>
@@ -6268,6 +6299,7 @@ pub const STAKING_HTML: &str = r###"<!DOCTYPE html>
                 <a href="/tools">Tools</a>
                 <a href="/testnet">Testnet</a>
                 <a href="/future">Roadmap</a>
+                <a href="/agents">Agents</a>
                 <a href="/docs">Docs</a>
             </nav>
         </header>
