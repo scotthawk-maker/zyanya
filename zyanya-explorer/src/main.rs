@@ -52,11 +52,22 @@ async fn rate_limit(
     next.run(req).await
 }
 
-/// F-L-33: Security headers middleware.
+/// F-L-33: Enhanced Security headers middleware with CSP, Referrer, and Permissions policies.
 async fn security_headers(req: Request, next: Next) -> Response {
     let mut resp = next.run(req).await;
     resp.headers_mut().insert(header::X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
     resp.headers_mut().insert(header::X_FRAME_OPTIONS, HeaderValue::from_static("DENY"));
+    resp.headers_mut().insert(header::REFERRER_POLICY, HeaderValue::from_static("strict-origin-when-cross-origin"));
+    resp.headers_mut().insert(
+        header::HeaderName::from_static("permissions-policy"),
+        HeaderValue::from_static("camera=(), microphone=(), geolocation=()"),
+    );
+    resp.headers_mut().insert(
+        header::CONTENT_SECURITY_POLICY,
+        HeaderValue::from_static(
+            "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none';"
+        ),
+    );
     resp
 }
 
@@ -228,6 +239,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/swap-on-dex", post(api_swap_on_dex_handler))
         .route("/api/compile-contract", post(api_compile_contract_handler))
         .with_state(client_mgr)
+        .layer(axum::extract::DefaultBodyLimit::max(2 * 1024 * 1024))
         // F-M-31: enforce a same-origin CORS policy on all routes. Never emits
         // `Access-Control-Allow-Origin: *`.
         .layer(middleware::from_fn(security_headers))

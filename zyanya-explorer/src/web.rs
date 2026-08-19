@@ -2347,11 +2347,11 @@ pub const TOOLS_HTML: &str = r###"<!DOCTYPE html>
 
                 gridHtml += '<div class="tool-card">' +
                     '<div class="tool-header">' +
-                        '<span class="tool-name mono">' + t.name + '</span>' +
+                        '<span class="tool-name mono">' + escapeHtml(t.name) + '</span>' +
                         '<span class="' + tagClass + ' mono">' + tagText + '</span>' +
                     '</div>' +
-                    '<p class="tool-desc">' + t.description + '</p>' +
-                    '<div class="schema-box mono"><pre style="margin:0;">' + JSON.stringify(t.inputSchema, null, 2) + '</pre></div>' +
+                    '<p class="tool-desc">' + escapeHtml(t.description) + '</p>' +
+                    '<div class="schema-box mono"><pre style="margin:0;">' + escapeHtml(JSON.stringify(t.inputSchema, null, 2)) + '</pre></div>' +
                 '</div>';
             });
 
@@ -3059,12 +3059,12 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
 
                 const summary = unsignedData.summary;
                 const htmlSummary = `
-                    <p><strong>Token Name:</strong> ${summary.name} (${summary.symbol})</p>
-                    <p><strong>Supply:</strong> ${summary.supply.toLocaleString()}</p>
-                    <p><strong>Slope Multiplier:</strong> ${summary.slope}</p>
-                    <p><strong>Deployer Address:</strong> <code style="word-break: break-all; color: var(--accent-green);">${summary.user_address}</code></p>
-                    <p><strong>Estimated Gas/Fee:</strong> ${summary.fee_zyan} ZYAN</p>
-                    <p><strong>Sighashes to Sign:</strong> ${unsignedData.sighashes.length} input(s)</p>
+                    <p><strong>Token Name:</strong> ${escapeHtml(summary.name)} (${escapeHtml(summary.symbol)})</p>
+                    <p><strong>Supply:</strong> ${escapeHtml(summary.supply ? summary.supply.toLocaleString() : '0')}</p>
+                    <p><strong>Slope Multiplier:</strong> ${escapeHtml(summary.slope)}</p>
+                    <p><strong>Deployer Address:</strong> <code style="word-break: break-all; color: var(--accent-green);">${escapeHtml(summary.user_address)}</code></p>
+                    <p><strong>Estimated Gas/Fee:</strong> ${escapeHtml(summary.fee_zyan)} ZYAN</p>
+                    <p><strong>Sighashes to Sign:</strong> ${escapeHtml(unsignedData.sighashes ? unsignedData.sighashes.length : 0)} input(s)</p>
                 `;
 
                 const userConfirmed = await showConfirmModal(htmlSummary);
@@ -3099,9 +3099,9 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
                     statusEl.innerHTML = `
                         <div style="background: rgba(0, 255, 170, 0.1); border: 1px solid var(--accent-green); padding: 18px; border-radius: 8px; margin-top: 15px; text-align: left;">
                             <h3 style="color: var(--accent-green); margin-bottom: 8px;">🚀 Non-Custodial Token Successfully Launched!</h3>
-                            <p><strong>Contract Address:</strong> <code style="word-break: break-all; color: var(--spectral-blue);">${addr}</code></p>
-                            <p><strong>Transaction ID:</strong> <code style="word-break: break-all; color: rgba(224,224,224,0.8);">${txId}</code></p>
-                            <a href="/token/${addr}" class="btn-launch" style="display: inline-block; margin-top: 12px; padding: 10px 20px; text-decoration: none; text-align: center;">VIEW TOKEN PAGE →</a>
+                            <p><strong>Contract Address:</strong> <code style="word-break: break-all; color: var(--spectral-blue);">${escapeHtml(addr)}</code></p>
+                            <p><strong>Transaction ID:</strong> <code style="word-break: break-all; color: rgba(224,224,224,0.8);">${escapeHtml(txId)}</code></p>
+                            <a href="/token/${encodeURIComponent(addr)}" class="btn-launch" style="display: inline-block; margin-top: 12px; padding: 10px 20px; text-decoration: none; text-align: center;">VIEW TOKEN PAGE →</a>
                         </div>
                     `;
                 } else {
