@@ -55,7 +55,7 @@ impl ReceiveAddressesFlow {
         }
         let mut amgr_lock = self.ctx.address_manager.lock();
         for (ip, port) in address_list {
-            amgr_lock.add_address(NetAddress::new(ip, port))
+            amgr_lock.add_address(NetAddress::new(ip, port), false)
         }
 
         Ok(())

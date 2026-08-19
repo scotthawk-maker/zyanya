@@ -2,6 +2,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use ipnet::IpNet;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::{
     fmt::Display,
     net::{AddrParseError, IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
@@ -117,7 +118,8 @@ impl IpAddress {
         ];
 
         for curr_net in unroutable_nets {
-            if IpNet::from_str(curr_net).unwrap().contains(&self.0) {
+            // F-L-45: use expect with a clear message instead of silent unwrap.
+            if IpNet::from_str(curr_net).expect("unroutable_nets contains invalid CIDR").contains(&self.0) {
                 return false;
             }
         }
@@ -352,6 +354,19 @@ impl PeerId {
 
     pub fn from_slice(bytes: &[u8]) -> Result<Self, uuid::Error> {
         Ok(Uuid::from_slice(bytes)?.into())
+    }
+
+    /// Derive a deterministic peer identity from a socket address (IP:port).
+    ///
+    /// This binds the peer identity to the actual connection endpoint so that peers
+    /// cannot spoof arbitrary self-declared identities during the P2P handshake (F-H-19).
+    pub fn from_socket_addr(addr: &SocketAddr) -> Self {
+        let mut hasher = Sha256::new();
+        hasher.update(addr.to_string().as_bytes());
+        let digest = hasher.finalize();
+        let mut bytes = [0u8; 16];
+        bytes.copy_from_slice(&digest[..16]);
+        Self(Uuid::from_bytes(bytes))
     }
 }
 impl From<Uuid> for PeerId {

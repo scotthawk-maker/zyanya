@@ -54,9 +54,12 @@ impl SubnetworkId {
     /// Returns true if the subnetwork is a built-in subnetwork, which
     /// means all nodes, including partial nodes, must validate it, and its transactions
     /// always use 0 gas.
+    ///
+    /// F-L-05: includes the smart-contract subnetwork so that smart-contract
+    /// transactions are validated by all nodes.
     #[inline]
     pub fn is_builtin(&self) -> bool {
-        *self == SUBNETWORK_ID_COINBASE || *self == SUBNETWORK_ID_REGISTRY
+        *self == SUBNETWORK_ID_COINBASE || *self == SUBNETWORK_ID_REGISTRY || *self == SUBNETWORK_ID_SMART_CONTRACT
     }
 
     /// Returns true if the subnetwork is the native subnetwork

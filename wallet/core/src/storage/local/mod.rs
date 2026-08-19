@@ -29,38 +29,23 @@ use crate::result::Result;
 use wasm_bindgen::prelude::*;
 use workflow_store::fs::create_dir_all_sync;
 
-static mut DEFAULT_STORAGE_FOLDER: Option<String> = None;
-static mut DEFAULT_WALLET_FILE: Option<String> = None;
-static mut DEFAULT_SETTINGS_FILE: Option<String> = None;
+use std::sync::OnceLock;
+
+// F-L-12: replace `static mut` globals with `OnceLock` to eliminate unsafe access.
+static DEFAULT_STORAGE_FOLDER: OnceLock<String> = OnceLock::new();
+static DEFAULT_WALLET_FILE: OnceLock<String> = OnceLock::new();
+static DEFAULT_SETTINGS_FILE: OnceLock<String> = OnceLock::new();
 
 pub fn default_storage_folder() -> &'static str {
-    // SAFETY: This operation is initializing a static mut variable,
-    // however, the actual variable is accessible only through
-    // this function.
-    #[allow(static_mut_refs)]
-    unsafe {
-        DEFAULT_STORAGE_FOLDER.get_or_insert("~/.zyanya".to_string()).as_str()
-    }
+    DEFAULT_STORAGE_FOLDER.get_or_init(|| "~/.zyanya".to_string()).as_str()
 }
 
 pub fn default_wallet_file() -> &'static str {
-    // SAFETY: This operation is initializing a static mut variable,
-    // however, the actual variable is accessible only through
-    // this function.
-    #[allow(static_mut_refs)]
-    unsafe {
-        DEFAULT_WALLET_FILE.get_or_insert("zyanya".to_string()).as_str()
-    }
+    DEFAULT_WALLET_FILE.get_or_init(|| "zyanya".to_string()).as_str()
 }
 
 pub fn default_settings_file() -> &'static str {
-    // SAFETY: This operation is initializing a static mut variable,
-    // however, the actual variable is accessible only through
-    // this function.
-    #[allow(static_mut_refs)]
-    unsafe {
-        DEFAULT_SETTINGS_FILE.get_or_insert("zyanya".to_string()).as_str()
-    }
+    DEFAULT_SETTINGS_FILE.get_or_init(|| "zyanya".to_string()).as_str()
 }
 
 /// Set a custom storage folder for the wallet SDK
@@ -85,9 +70,10 @@ pub fn default_settings_file() -> &'static str {
 /// the default storage folder once the wallet has been
 /// initialized.
 ///
-pub unsafe fn set_default_storage_folder(folder: String) -> Result<()> {
+/// F-L-12: uses OnceLock::set instead of static mut assignment.
+pub fn set_default_storage_folder(folder: String) -> Result<()> {
     create_dir_all_sync(&folder).map_err(|err| Error::custom(format!("Failed to create storage folder: {err}")))?;
-    DEFAULT_STORAGE_FOLDER = Some(folder);
+    let _ = DEFAULT_STORAGE_FOLDER.set(folder);
     Ok(())
 }
 
@@ -129,8 +115,9 @@ pub fn js_set_default_storage_folder(folder: String) -> Result<()> {
 /// This function is unsafe because it is setting a static
 /// mut variable, meaning this function is not thread-safe.
 ///
-pub unsafe fn set_default_wallet_file(folder: String) -> Result<()> {
-    DEFAULT_WALLET_FILE = Some(folder);
+/// F-L-12: uses OnceLock::set instead of static mut assignment.
+pub fn set_default_wallet_file(folder: String) -> Result<()> {
+    let _ = DEFAULT_WALLET_FILE.set(folder);
     Ok(())
 }
 
@@ -150,8 +137,7 @@ pub unsafe fn set_default_wallet_file(folder: String) -> Result<()> {
 pub fn js_set_default_wallet_file(folder: String) -> Result<()> {
     // SAFETY: This is unsafe because we are setting a static mut variable
     // meaning this function is not thread-safe.
-    unsafe {
-        DEFAULT_WALLET_FILE = Some(folder);
-    }
+    // F-L-12: no longer unsafe — uses OnceLock.
+    let _ = set_default_wallet_file(folder);
     Ok(())
 }

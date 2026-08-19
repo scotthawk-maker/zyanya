@@ -142,6 +142,31 @@ pub enum RpcError {
     UtxoReturnAddressNotFound(UtxoInquirerError),
 }
 
+impl RpcError {
+    /// F-M-28: Returns a version of `self` that is safe to send to unauthenticated
+    /// RPC clients. Internal-detail variants (which may leak consensus state,
+    /// file paths, or stack traces via their `Display` impl) are collapsed to
+    /// generic messages. User-facing variants (parse errors, not-found, unauthorized,
+    /// etc.) pass through unchanged. The full (unsanitized) error must be logged
+    /// server-side **before** calling this so operators retain diagnostics.
+    pub fn sanitize(self) -> RpcError {
+        use RpcError::*;
+        match self {
+            // Preserve the transaction id (it is already user-supplied) but drop
+            // the internal rejection reason.
+            RejectedTransaction(id, _) => RejectedTransaction(id, "transaction rejected".to_string()),
+            // Collapse all internal-detail variants to a generic message.
+            ConsensusError(_) | MiningManagerError(_) | NotificationError(_) | ConsensusClient(_) | WasmError(_)
+            | SerdeWasmBindgen(_) | ScriptClassError(_) | AddressError(_) | NetworkTypeError(_) | NetworkIdError(_)
+            | NodeIdError(_) | SubnetParsingError(_) | UtxoReturnAddressNotFound(_) | RpcSubsystem(_) => {
+                General("internal error".to_string())
+            }
+            // User-facing variants pass through unchanged.
+            other => other,
+        }
+    }
+}
+
 impl From<String> for RpcError {
     fn from(value: String) -> Self {
         RpcError::General(value)

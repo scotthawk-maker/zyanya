@@ -2,7 +2,7 @@ use hmac::Mac;
 use std::fmt::{self, Debug};
 use std::str::FromStr;
 use subtle::{Choice, ConstantTimeEq};
-use zeroize::{Zeroize, Zeroizing};
+use zeroize::{Zeroize, Zeroizing, ZeroizeOnDrop};
 
 use crate::{
     result::Result, types::*, ChildNumber, DerivationPath, ExtendedKey, ExtendedKeyAttrs, ExtendedPublicKey, Prefix, PrivateKey,
@@ -15,7 +15,6 @@ const BIP39_DOMAIN_SEPARATOR: [u8; 12] = [0x42, 0x69, 0x74, 0x63, 0x6f, 0x69, 0x
 /// Extended private keys derived using BIP32.
 ///
 /// Generic around a [`PrivateKey`] type.
-#[derive(Clone)]
 pub struct ExtendedPrivateKey<K: PrivateKey> {
     /// Derived private key
     private_key: K,
@@ -134,6 +133,36 @@ where
         Zeroizing::new(self.to_extended_key(prefix).to_string())
     }
 }
+
+impl<K> Clone for ExtendedPrivateKey<K>
+where
+    K: PrivateKey + Clone,
+{
+    fn clone(&self) -> Self {
+        Self { private_key: self.private_key.clone(), attrs: self.attrs.clone() }
+    }
+}
+
+impl<K> Zeroize for ExtendedPrivateKey<K>
+where
+    K: PrivateKey,
+{
+    fn zeroize(&mut self) {
+        self.private_key.zeroize();
+        self.attrs.chain_code.zeroize();
+    }
+}
+
+impl<K> Drop for ExtendedPrivateKey<K>
+where
+    K: PrivateKey,
+{
+    fn drop(&mut self) {
+        self.zeroize();
+    }
+}
+
+impl<K> ZeroizeOnDrop for ExtendedPrivateKey<K> where K: PrivateKey {}
 
 impl<K> ConstantTimeEq for ExtendedPrivateKey<K>
 where

@@ -282,7 +282,7 @@ impl PendingTransaction {
 
     pub fn try_sign_with_keys(&self, privkeys: &[[u8; 32]], check_fully_signed: Option<bool>) -> Result<()> {
         let mutable_tx = self.inner.signable_tx.lock()?.clone();
-        let signed = sign_with_multiple_v2(mutable_tx, privkeys);
+        let signed = sign_with_multiple_v2(mutable_tx, privkeys)?;
 
         let signed_tx = match signed {
             Signed::Fully(tx) => tx,

@@ -121,7 +121,9 @@ impl CoinbaseManager {
         mergeset_rewards: &BlockHashMap<BlockRewardData>,
         mergeset_non_daa: &BlockHashSet,
     ) -> CoinbaseResult<CoinbaseTransactionTemplate> {
-        let mut outputs = Vec::with_capacity((ghostdag_data.mergeset_blues.len() + 1) * 13); // + 1 for possible red reward
+        // F-L-07: use checked/saturating arithmetic for the capacity hint to avoid overflow panics.
+        let cap = ghostdag_data.mergeset_blues.len().saturating_add(1).saturating_mul(13);
+        let mut outputs = Vec::with_capacity(cap); // + 1 for possible red reward
 
         // Add outputs for each mergeset blue block (∩ DAA window), paying to the script reported by the block.
         // Note that combinatorically it is nearly impossible for a blue block to be non-DAA
@@ -158,7 +160,8 @@ impl CoinbaseManager {
         let mut red_reward = 0u64;
         for red in ghostdag_data.mergeset_reds.iter().filter(|h| !mergeset_non_daa.contains(h)) {
             let reward_data = mergeset_rewards.get(red).unwrap();
-            red_reward += reward_data.subsidy + reward_data.total_fees;
+            // F-L-06: use saturating arithmetic to prevent unchecked overflow in red reward accumulation.
+            red_reward = red_reward.saturating_add(reward_data.subsidy).saturating_add(reward_data.total_fees);
         }
         if red_reward > 0 {
             let liquid_amount = red_reward / 2;

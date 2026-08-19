@@ -1,6 +1,7 @@
 use crate::{connection::*, router::*, server::*};
 use async_trait::async_trait;
 use zyanya_core::{
+    error,
     info,
     task::service::{AsyncService, AsyncServiceError, AsyncServiceFuture},
     trace, warn,
@@ -13,7 +14,7 @@ use tokio::sync::oneshot::{channel as oneshot_channel, Sender as OneshotSender};
 use workflow_rpc::server::prelude::*;
 pub use workflow_rpc::server::{Encoding as WrpcEncoding, WebSocketConfig, WebSocketCounters};
 
-static MAX_WRPC_MESSAGE_SIZE: usize = 64 * 1024 * 1024; // 64MB
+pub const MAX_WRPC_MESSAGE_SIZE: usize = 64 * 1024 * 1024; // 64MB
 
 /// Options for configuring the wRPC server
 pub struct Options {
@@ -87,7 +88,11 @@ impl RpcHandler for ZyanyaRpcHandler {
     /// before dropping it. This is the last chance to cleanup and resources owned by
     /// this connection. Delegate to Server.
     async fn disconnect(self: Arc<Self>, ctx: Self::Context, _result: WebSocketResult<()>) {
-        self.server.disconnect(ctx).await;
+        // F-M-26: disconnect now returns Result; log any error instead of
+        // ignoring a potential panic on a poisoned sockets mutex.
+        if let Err(err) = self.server.disconnect(ctx).await {
+            warn!("wRPC server disconnect error: {err}");
+        }
     }
 }
 
@@ -152,10 +157,12 @@ impl WrpcService {
                     let serve_result = self.server.listen(listener, Some(config)).await;
                     match serve_result {
                         Ok(_) => info!("WRPC Server stopped on: {}", listen_address),
-                        Err(err) => panic!("WRPC Server {listen_address} stopped with error: {err:?}"),
+                        // F-L-26: log instead of panicking on serve error.
+                        Err(err) => error!("WRPC Server {listen_address} stopped with error: {err:?}"),
                     }
                 }
-                Err(err) => panic!("WRPC Server bind error on {listen_address}: {err:?}"),
+                // F-L-26: log instead of panicking on bind error.
+                Err(err) => error!("WRPC Server bind error on {listen_address}: {err:?}"),
             }
         });
 

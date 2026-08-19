@@ -17,7 +17,7 @@ use zyanya_consensus_core::tx::{TransactionInput, UtxoEntry};
 use zyanya_txscript::extract_script_pub_key_address;
 use zyanya_txscript::opcodes::codes::OpData65;
 use zyanya_txscript::script_builder::ScriptBuilder;
-use zyanya_wallet_core::tx::{Generator, GeneratorSettings, PaymentDestination, PendingTransaction};
+use zyanya_wallet_core::tx::{Generator, GeneratorSettings, MassCalculator, PaymentDestination, PendingTransaction};
 pub use zyanya_wallet_psst::bundle::Bundle;
 use zyanya_wallet_psst::prelude::KeySource;
 use zyanya_wallet_psst::prelude::{Finalizer, Inner, SignInputOk, Signature, Signer};
@@ -29,6 +29,16 @@ struct PSSBSignerInner {
     account: Arc<dyn Account>,
     payment_secret: Option<Secret>,
     keys: Mutex<AHashMap<Address, [u8; 32]>>,
+}
+
+impl Drop for PSSBSignerInner {
+    fn drop(&mut self) {
+        if let Ok(mut keys) = self.keys.lock() {
+            for (_addr, key) in keys.iter_mut() {
+                key.zeroize();
+            }
+        }
+    }
 }
 
 pub struct PSSBSigner {
@@ -189,66 +199,102 @@ pub async fn pssb_signer_for_address(
     for psst_inner in bundle.iter().cloned() {
         let psst: PSST<Signer> = PSST::from(psst_inner);
 
-        let sign = |signer_psst: PSST<Signer>| {
-            signer_psst
-                .pass_signature_sync(|tx, sighash| -> Result<Vec<SignInputOk>, String> {
-                    tx.tx
-                        .inputs
-                        .iter()
-                        .enumerate()
-                        .map(|(idx, _input)| {
-                            let hash = calc_schnorr_signature_hash(&tx.as_verifiable(), idx, sighash[idx], &reused_values);
-                            let msg = secp256k1::Message::from_digest_slice(hash.as_bytes().as_slice()).unwrap();
+        // F-M-17: propagate errors instead of panicking on malformed input.
+        let signed_psst: PSST<Signer> = psst
+            .pass_signature_sync(|tx, sighash| -> Result<Vec<SignInputOk>, String> {
+                let mut results = Vec::new();
+                for (idx, _input) in tx.tx.inputs.iter().enumerate() {
+                    let hash = calc_schnorr_signature_hash(&tx.as_verifiable(), idx, sighash[idx], &reused_values);
+                    let msg = secp256k1::Message::from_digest_slice(hash.as_bytes().as_slice())
+                        .map_err(|e| format!("invalid digest: {e}"))?;
 
-                            // When address represents a locked UTXO, no private key is available.
-                            // Instead, use the account receive address' private key.
-                            let address: &Address = match sign_for_address {
-                                Some(address) => address,
-                                None => addresses.get(idx).expect("Input indexed address"),
-                            };
+                    // When address represents a locked UTXO, no private key is available.
+                    // Instead, use the account receive address' private key.
+                    let address: &Address = match sign_for_address {
+                        Some(address) => address,
+                        None => addresses.get(idx).ok_or_else(|| format!("missing input indexed address at {idx}"))?,
+                    };
 
-                            let public_key = signer.public_key(address).expect("Public key for input indexed address");
+                    let public_key = signer.public_key(address).map_err(|e| format!("public key for input indexed address: {e}"))?;
+                    let sig = signer.sign_schnorr(address, msg).map_err(|e| format!("sign_schnorr: {e}"))?;
 
-                            Ok(SignInputOk {
-                                signature: Signature::Schnorr(signer.sign_schnorr(address, msg).unwrap()),
-                                pub_key: public_key,
-                                key_source: Some(KeySource { key_fingerprint, derivation_path: derivation_path.clone() }),
-                            })
-                        })
-                        .collect()
-                })
-                .unwrap()
-        };
-        signed_bundle.add_psst(sign(psst.clone()));
+                    results.push(SignInputOk {
+                        signature: Signature::Schnorr(sig),
+                        pub_key: public_key,
+                        key_source: Some(KeySource { key_fingerprint, derivation_path: derivation_path.clone() }),
+                    });
+                }
+                Ok(results)
+            })
+            .map_err(Error::from)?;
+        signed_bundle.add_psst(signed_psst);
     }
     Ok(signed_bundle)
 }
 
+/// Parse a multisig redeem script and return the public keys in script order.
+///
+/// The redeem script format is `<required> <pk1> <pk2> ... <count> OP_CHECKMULTISIG`
+/// where each pubkey is pushed as `0x20` (32-byte x-only) or `0x21` (33-byte compressed).
+/// F-M-19: used to order partial signatures to match the redeem script pubkey order.
+fn extract_redeem_script_pubkey_order(redeem_script: &[u8]) -> Result<Vec<Vec<u8>>, String> {
+    let mut pubkeys = Vec::new();
+    let mut i = 0;
+    while i < redeem_script.len() {
+        let op = redeem_script[i];
+        i += 1;
+        if op == 0x20 && i + 32 <= redeem_script.len() {
+            pubkeys.push(redeem_script[i..i + 32].to_vec());
+            i += 32;
+        } else if op == 0x21 && i + 33 <= redeem_script.len() {
+            pubkeys.push(redeem_script[i..i + 33].to_vec());
+            i += 33;
+        }
+        // Other opcodes (OP_n, OP_CHECKMULTISIG) are skipped.
+    }
+    Ok(pubkeys)
+}
+
 pub fn finalize_psst_one_or_more_sig_and_redeem_script(psst: PSST<Finalizer>) -> Result<PSST<Finalizer>, Error> {
     let result = psst.finalize_sync(|inner: &Inner| -> Result<Vec<Vec<u8>>, String> {
-        Ok(inner
+        inner
             .inputs
             .iter()
-            .map(|input| -> Vec<u8> {
-                let signatures: Vec<_> = input
-                    .partial_sigs
-                    .clone()
+            .map(|input| -> Result<Vec<u8>, String> {
+                // F-M-19: when a redeem script is present, order the partial signatures to
+                // match the pubkey order in the redeem script. If a partial-sig pubkey is
+                // not found in the redeem script, return an error.
+                let mut sigs: Vec<(secp256k1::PublicKey, Signature)> = input.partial_sigs.clone().into_iter().collect();
+                if let Some(redeem_script) = &input.redeem_script {
+                    let pk_order = extract_redeem_script_pubkey_order(redeem_script.as_slice())?;
+                    sigs.sort_by_key(|(pk, _)| {
+                        let xonly = pk.x_only_public_key().0.serialize();
+                        let compressed = pk.serialize();
+                        pk_order.iter().position(|sp| sp.as_slice() == xonly.as_slice() || sp.as_slice() == compressed.as_slice()).unwrap_or(usize::MAX)
+                    });
+                    // Verify every partial-sig pubkey is present in the redeem script.
+                    for (pk, _) in &sigs {
+                        let xonly = pk.x_only_public_key().0.serialize();
+                        let compressed = pk.serialize();
+                        if !pk_order.iter().any(|sp| sp.as_slice() == xonly.as_slice() || sp.as_slice() == compressed.as_slice()) {
+                            return Err(format!("partial-sig pubkey not found in redeem script"));
+                        }
+                    }
+                }
+                let signatures: Vec<u8> = sigs
                     .into_iter()
                     .flat_map(|(_, signature)| iter::once(OpData65).chain(signature.into_bytes()).chain([input.sighash_type.to_u8()]))
                     .collect();
-
-                signatures
-                    .into_iter()
-                    .chain(
-                        input
-                            .redeem_script
-                            .as_ref()
-                            .map(|redeem_script| ScriptBuilder::new().add_data(redeem_script.as_slice()).unwrap().drain().to_vec())
-                            .unwrap_or_default(),
-                    )
-                    .collect()
+                // F-M-19/F-M-18: build the redeem script bytes with error propagation.
+                let redeem_script_bytes = match input.redeem_script.as_ref() {
+                    Some(redeem_script) => {
+                        ScriptBuilder::new().add_data(redeem_script.as_slice()).map_err(|e| e.to_string())?.drain().to_vec()
+                    }
+                    None => Vec::new(),
+                };
+                Ok(signatures.into_iter().chain(redeem_script_bytes).collect())
             })
-            .collect())
+            .collect()
     });
 
     match result {
@@ -291,25 +337,30 @@ pub fn psst_to_pending_transaction(
     network_id: NetworkId,
     change_address: Address,
 ) -> Result<PendingTransaction, Error> {
-    let mass = 10;
-    let (signed_tx, _) = match finalized_psst.clone().extractor() {
+    // F-M-18: extract the tx with a placeholder mass, then compute the real mass
+    // via MassCalculator instead of hardcoding `mass = 10`.
+    let (mut signed_tx, _) = match finalized_psst.clone().extractor() {
         Ok(extractor) => match extractor.extract_tx() {
-            Ok(once_mass) => once_mass(mass),
+            Ok(once_mass) => once_mass(0),
             Err(e) => return Err(Error::PendingTransactionFromPSSTError(e.to_string())),
         },
         Err(e) => return Err(Error::PendingTransactionFromPSSTError(e.to_string())),
     };
+    let mass_calc = MassCalculator::new(&network_id.into());
+    let mass = mass_calc.calc_compute_mass_for_signed_consensus_transaction(&signed_tx);
+    signed_tx.set_mass(mass);
 
     let inner_psst = finalized_psst.deref().clone();
 
-    let utxo_entries_ref: Vec<UtxoEntryReference> = inner_psst
-        .inputs
-        .iter()
-        .filter_map(|input| {
+    let utxo_entries_ref: Vec<UtxoEntryReference> = {
+        let mut refs = Vec::new();
+        for input in inner_psst.inputs.iter() {
             if let Some(ue) = input.clone().utxo_entry {
-                return Some(UtxoEntryReference {
+                // F-M-18: propagate the address extraction error instead of unwrapping.
+                let address = extract_script_pub_key_address(&ue.script_public_key, network_id.into())?;
+                refs.push(UtxoEntryReference {
                     utxo: Arc::new(ClientUTXO {
-                        address: Some(extract_script_pub_key_address(&ue.script_public_key, network_id.into()).unwrap()),
+                        address: Some(address),
                         amount: ue.amount,
                         outpoint: input.previous_outpoint.into(),
                         script_public_key: ue.script_public_key,
@@ -318,18 +369,24 @@ pub fn psst_to_pending_transaction(
                     }),
                 });
             }
-            None
-        })
-        .collect();
+        }
+        refs
+    };
 
+    // F-M-18: return an error on empty outputs instead of indexing output[0] and panicking.
     let output: Vec<zyanya_consensus_core::tx::TransactionOutput> = signed_tx.outputs.clone();
-    let recipient = extract_script_pub_key_address(&output[0].script_public_key, network_id.into())?;
-    let fee_u: u64 = 0;
+    let first_output = output.first().ok_or_else(|| Error::PendingTransactionFromPSSTError("no outputs in transaction".to_string()))?;
+    let recipient = extract_script_pub_key_address(&first_output.script_public_key, network_id.into())?;
+
+    // F-M-18: compute fee as inputs - outputs instead of hardcoding 0.
+    let total_input: u64 = utxo_entries_ref.iter().map(|e| e.utxo.amount).sum();
+    let total_output: u64 = output.iter().map(|o| o.value).sum();
+    let fee_u: u64 = total_input.saturating_sub(total_output);
 
     let utxo_iterator: Box<dyn Iterator<Item = UtxoEntryReference> + Send + Sync + 'static> =
         Box::new(utxo_entries_ref.clone().into_iter());
 
-    let final_transaction_destination = PaymentDestination::PaymentOutputs(PaymentOutputs::from((recipient.clone(), output[0].value)));
+    let final_transaction_destination = PaymentDestination::PaymentOutputs(PaymentOutputs::from((recipient.clone(), first_output.value)));
 
     let settings = GeneratorSettings {
         network_id,

@@ -99,7 +99,7 @@ impl Miner {
         if argv.is_empty() {
             return self.display_help(ctx, argv).await;
         }
-        let cpu_miner = ctx.daemons().cpu_miner();
+        let cpu_miner = ctx.daemons().cpu_miner().ok_or(Error::custom("No cpu_miner daemon configured, please use 'miner select' to select a binary."))?;
         match argv.remove(0).as_str() {
             "start" => {
                 let mute = self.mute.load(Ordering::SeqCst);

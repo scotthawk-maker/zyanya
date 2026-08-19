@@ -72,7 +72,10 @@ impl Subscriber {
             subscription_manager,
             listener_id,
             started: Arc::new(AtomicBool::default()),
-            incoming: Channel::unbounded(),
+            // F-M-32: use a bounded channel to prevent unbounded queue growth / OOM
+            // when a subscriber cannot keep up. Send paths use `try_send`, so a
+            // full channel returns an error instead of blocking.
+            incoming: Channel::bounded(1000),
             shutdown: Channel::oneshot(),
         }
     }

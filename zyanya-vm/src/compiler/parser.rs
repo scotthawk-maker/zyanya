@@ -9,16 +9,24 @@ pub enum ParserError {
 
     #[error("Unexpected EOF at line {0}, col {1}")]
     UnexpectedEof(usize, usize),
+
+    // F-H-04: guard against stack overflow via deeply-nested expressions
+    #[error("Maximum expression nesting depth ({0}) exceeded")]
+    MaxRecursionDepth(usize),
 }
+
+/// F-H-04: Maximum expression nesting depth to prevent stack overflow DoS.
+const MAX_PARSE_DEPTH: usize = 100;
 
 pub struct Parser {
     tokens: Vec<Token>,
     pos: usize,
+    depth: usize,
 }
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Self { tokens, pos: 0 }
+        Self { tokens, pos: 0, depth: 0 }
     }
 
     pub fn parse_program(&mut self) -> Result<Program, ParserError> {
@@ -198,7 +206,15 @@ impl Parser {
     }
 
     fn parse_expression(&mut self) -> Result<Expression, ParserError> {
-        self.parse_equality()
+        // F-H-04: enforce a recursion depth limit to prevent stack overflow DoS
+        self.depth += 1;
+        if self.depth > MAX_PARSE_DEPTH {
+            self.depth -= 1;
+            return Err(ParserError::MaxRecursionDepth(MAX_PARSE_DEPTH));
+        }
+        let result = self.parse_equality();
+        self.depth -= 1;
+        result
     }
 
     fn parse_equality(&mut self) -> Result<Expression, ParserError> {
@@ -489,5 +505,21 @@ mod tests {
         assert_eq!(program.functions[1].name, "increment");
         assert_eq!(program.functions[1].params, vec!["n".to_string()]);
         assert_eq!(program.functions[2].name, "get");
+    }
+
+    #[test]
+    fn test_parser_rejects_deeply_nested_expression() {
+        // F-H-04: deeply-nested parenthesised expressions must be rejected
+        // rather than overflowing the stack.
+        let deep = "fn f() { return ".to_string()
+            + &"(".repeat(200)
+            + "1"
+            + &")".repeat(200)
+            + "; }";
+        let mut lexer = Lexer::new(&deep);
+        let tokens = lexer.tokenize().expect("Lexing failed");
+        let mut parser = Parser::new(tokens);
+        let result = parser.parse_program();
+        assert!(matches!(result, Err(ParserError::MaxRecursionDepth(100))), "expected MaxRecursionDepth, got {result:?}");
     }
 }

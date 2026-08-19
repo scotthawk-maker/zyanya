@@ -65,36 +65,43 @@ impl Display for DbKey {
         let mut pos = 0;
 
         if self.prefix_len > 0 {
-            if let Ok(prefix) = DatabaseStorePrefixes::try_from(self.path[0]) {
-                prefix.fmt(f)?;
-                f.write_str("/")?;
-                pos += 1;
-                if self.prefix_len > 1 {
-                    match prefix {
-                        Ghostdag
-                        | GhostdagCompact
-                        | TempGhostdag
-                        | TempGhostdagCompact
-                        | RelationsParents
-                        | RelationsChildren
-                        | Reachability
-                        | ReachabilityTreeChildren
-                        | ReachabilityFutureCoveringSet => {
-                            if self.path[1] != SEPARATOR {
-                                // Expected to be a block level so we display as a number
-                                Display::fmt(&self.path[1], f)?;
-                                f.write_str("/")?;
+            // F-L-35: use bounds-checked indexing instead of direct indexing.
+            if let Some(&first) = self.path.get(0) {
+                if let Ok(prefix) = DatabaseStorePrefixes::try_from(first) {
+                    prefix.fmt(f)?;
+                    f.write_str("/")?;
+                    pos += 1;
+                    if self.prefix_len > 1 {
+                        match prefix {
+                            Ghostdag
+                            | GhostdagCompact
+                            | TempGhostdag
+                            | TempGhostdagCompact
+                            | RelationsParents
+                            | RelationsChildren
+                            | Reachability
+                            | ReachabilityTreeChildren
+                            | ReachabilityFutureCoveringSet => {
+                                if let Some(&second) = self.path.get(1) {
+                                    if second != SEPARATOR {
+                                        // Expected to be a block level so we display as a number
+                                        Display::fmt(&second, f)?;
+                                        f.write_str("/")?;
+                                    }
+                                    pos += 1;
+                                }
                             }
-                            pos += 1;
-                        }
-                        ReachabilityRelations => {
-                            if let Ok(next_prefix) = DatabaseStorePrefixes::try_from(self.path[1]) {
-                                next_prefix.fmt(f)?;
-                                f.write_str("/")?;
-                                pos += 1;
+                            ReachabilityRelations => {
+                                if let Some(&second) = self.path.get(1) {
+                                    if let Ok(next_prefix) = DatabaseStorePrefixes::try_from(second) {
+                                        next_prefix.fmt(f)?;
+                                        f.write_str("/")?;
+                                        pos += 1;
+                                    }
+                                }
                             }
+                            _ => {}
                         }
-                        _ => {}
                     }
                 }
             }

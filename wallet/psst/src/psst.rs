@@ -168,9 +168,16 @@ impl<R> PSST<R> {
         Ok(format!("PSST{}", hex::encode(serde_json::to_string(self)?)))
     }
 
+    /// F-M-16: maximum decoded size (10 MB) to prevent OOM DoS during deserialization.
+    pub const MAX_PSST_SIZE: usize = 10 * 1024 * 1024;
+
     pub fn from_hex(hex_data: &str) -> Result<Self, Error> {
         if let Some(hex_data) = hex_data.strip_prefix("PSST") {
-            Ok(serde_json::from_slice(hex::decode(hex_data)?.as_slice())?)
+            let decoded = hex::decode(hex_data)?;
+            if decoded.len() > Self::MAX_PSST_SIZE {
+                return Err(Error::PsstSizeLimitExceeded(decoded.len()));
+            }
+            Ok(serde_json::from_slice(decoded.as_slice())?)
         } else {
             Err(Error::PsstPrefixError)
         }

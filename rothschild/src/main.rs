@@ -174,12 +174,15 @@ async fn main() {
     } else {
         let (sk, pk) = &secp256k1::generate_keypair(&mut thread_rng());
         let zyanya_addr = Address::new(ADDRESS_PREFIX, ADDRESS_VERSION, &pk.x_only_public_key().0.serialize());
-        info!(
+        // F-L-46: print the private key to stdout only (not via the logging
+        // framework which may persist to log files). Keep the address in info!.
+        println!(
             "Generated private key {} and address {}. Send some funds to this address and rerun rothschild with `--private-key {}`",
             sk.display_secret(),
             String::from(&zyanya_addr),
             sk.display_secret()
         );
+        info!("Generated address {}. Send some funds to this address and rerun rothschild with `--private-key`", String::from(&zyanya_addr));
         return;
     };
 
@@ -196,7 +199,8 @@ async fn main() {
         "Using Rothschild with:\n\
         \tprivate key: {}\n\
         \tfrom address: {}",
-        schnorr_key.display_secret(),
+        // F-L-46: never log the private key; redact it.
+        "[REDACTED]",
         String::from(&zyanya_addr)
     );
     if args.addr.is_some() {

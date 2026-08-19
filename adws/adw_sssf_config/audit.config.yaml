@@ -32,6 +32,7 @@ agents:
       user: adws/adw_data/prompt_engineering/planner/user.md
     writes:
       - specs/
+      - audit_reports/
     tools:
       - read
       - grep

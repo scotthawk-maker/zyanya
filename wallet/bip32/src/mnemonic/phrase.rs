@@ -75,13 +75,15 @@ impl Mnemonic {
     }
 
     #[wasm_bindgen(setter, js_name = entropy)]
-    pub fn set_entropy(&mut self, entropy: String) {
-        let vec = Vec::<u8>::from_hex(&entropy).unwrap_or_else(|err| panic!("invalid entropy `{entropy}`: {err}"));
+    pub fn set_entropy(&mut self, entropy: String) -> std::result::Result<(), JsValue> {
+        // F-M-15: validate input and return an error instead of panicking.
+        let vec = Vec::<u8>::from_hex(&entropy).map_err(|err| JsValue::from_str(&format!("invalid entropy `{entropy}`: {err}")))?;
         let len = vec.len();
         if len != 16 && len != 32 {
-            panic!("Invalid entropy: `{entropy}`")
+            return Err(JsValue::from_str(&format!("Invalid entropy length: `{entropy}` (expected 16 or 32 bytes)")));
         }
         self.entropy = vec;
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = random)]
@@ -92,12 +94,18 @@ impl Mnemonic {
 
     #[wasm_bindgen(getter, js_name = phrase)]
     pub fn phrase_string(&self) -> String {
+        // NOTE: returns plaintext; `Zeroizing<String>` is not directly wasm-bindgen
+        // compatible. The `Mnemonic` struct zeroizes `phrase` on drop.
         self.phrase.clone()
     }
 
     #[wasm_bindgen(setter, js_name = phrase)]
-    pub fn set_phrase(&mut self, phrase: &str) {
+    pub fn set_phrase(&mut self, phrase: &str) -> std::result::Result<(), JsValue> {
+        // F-M-15: re-validate the phrase instead of storing unvalidated input.
+        let mnemonic = Mnemonic::new(phrase, self.language).map_err(|err| JsValue::from_str(&format!("invalid mnemonic phrase: {err}")))?;
+        self.entropy = mnemonic.entropy.clone();
         self.phrase = phrase.to_string();
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = toSeed)]

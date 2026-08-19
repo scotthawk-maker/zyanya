@@ -32,8 +32,14 @@ impl ChildNumber {
     }
 
     /// Parse a child number from the byte encoding.
-    pub fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Self {
-        u32::from_be_bytes(bytes).into()
+    //
+    /// F-L-10: validates that the non-hardened index is < [`Self::HARDENED_FLAG`].
+    pub fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self> {
+        let n = u32::from_be_bytes(bytes);
+        if n & !Self::HARDENED_FLAG >= Self::HARDENED_FLAG {
+            return Err(Error::ChildNumber);
+        }
+        Ok(ChildNumber(n))
     }
 
     /// Serialize this child number as bytes.

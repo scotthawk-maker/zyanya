@@ -2,14 +2,63 @@ mod api;
 mod client;
 mod web;
 
-use axum::{routing::{get, post}, Router};
+use axum::{
+    body::Body,
+    extract::{ConnectInfo, Request, State},
+    http::{header, HeaderValue, StatusCode},
+    middleware::{self, Next},
+    response::Response,
+    routing::{get, post},
+    Router,
+};
 use clap::Parser;
 use socket2::{Domain, Protocol, Socket, Type};
-use std::net::SocketAddr;
+use std::collections::HashMap;
+use std::net::{IpAddr, SocketAddr};
 use std::sync::Arc;
+use std::time::Instant;
 use tokio::net::TcpListener;
+use tokio::sync::Mutex;
 use crate::api::*;
 use crate::client::RpcClientManager;
+
+/// F-L-29: Per-IP rate limiter state (100 req/sec fixed window).
+type RateLimitState = Arc<Mutex<HashMap<IpAddr, (Instant, u32)>>>;
+
+/// F-L-29: Rate-limit middleware — 100 requests per second per IP.
+async fn rate_limit(
+    State(state): State<RateLimitState>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    req: Request,
+    next: Next,
+) -> Response {
+    let ip = addr.ip();
+    let mut map = state.lock().await;
+    let now = Instant::now();
+    let entry = map.entry(ip).or_insert((now, 0));
+    if now.duration_since(entry.0).as_secs() >= 1 {
+        *entry = (now, 0);
+    }
+    entry.1 += 1;
+    if entry.1 > 100 {
+        drop(map);
+        return Response::builder()
+            .status(StatusCode::TOO_MANY_REQUESTS)
+            .body(Body::from("rate limit exceeded
+"))
+            .unwrap();
+    }
+    drop(map);
+    next.run(req).await
+}
+
+/// F-L-33: Security headers middleware.
+async fn security_headers(req: Request, next: Next) -> Response {
+    let mut resp = next.run(req).await;
+    resp.headers_mut().insert(header::X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
+    resp.headers_mut().insert(header::X_FRAME_OPTIONS, HeaderValue::from_static("DENY"));
+    resp
+}
 
 #[derive(Parser, Debug)]
 #[command(
@@ -26,6 +75,65 @@ struct Cli {
     /// Zyanya node gRPC server address (e.g. 127.0.0.1:18610 or [::1]:18610)
     #[arg(short, long, default_value = "127.0.0.1:18610")]
     rpcserver: String,
+}
+
+/// F-M-31: Same-origin CORS policy for the explorer API.
+///
+/// Reflects the request `Origin` back as `Access-Control-Allow-Origin` only when
+/// the origin's host:port matches the request `Host` header (i.e. same-origin).
+/// Never emits `Access-Control-Allow-Origin: *`. Handles `OPTIONS` preflight with
+/// a 204 response carrying the allowed methods/headers.
+async fn cors_same_origin(req: Request, next: Next) -> Response {
+    // Determine the request's Host (authority).
+    let host = req.headers().get(header::HOST).cloned();
+
+    // Gather the Origin header if present.
+    let origin = req.headers().get(header::ORIGIN).cloned();
+
+    // Same-origin check: does the Origin's authority match the Host authority?
+    let same_origin = match (origin.as_ref(), host.as_ref()) {
+        (Some(origin_val), Some(host_val)) => {
+            // Origin is a full URL (e.g. http://[::]:8098); extract its authority.
+            origin_val
+                .to_str()
+                .ok()
+                .and_then(|o| o.split("//").nth(1))
+                .map(|authority| authority == host_val.to_str().unwrap_or(""))
+                .unwrap_or(false)
+        }
+        _ => false,
+    };
+
+    // Handle CORS preflight.
+    if req.method() == axum::http::Method::OPTIONS {
+        let mut resp = Response::new(Body::empty());
+        *resp.status_mut() = StatusCode::NO_CONTENT;
+        if same_origin {
+            if let Some(origin) = origin {
+                resp.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+            }
+            resp.headers_mut().insert(
+                header::ACCESS_CONTROL_ALLOW_METHODS,
+                HeaderValue::from_static("GET, POST, OPTIONS"),
+            );
+            resp.headers_mut().insert(
+                header::ACCESS_CONTROL_ALLOW_HEADERS,
+                HeaderValue::from_static("Content-Type"),
+            );
+            resp.headers_mut().insert(header::VARY, HeaderValue::from_static("Origin"));
+        }
+        return resp;
+    }
+
+    // Forward the request and annotate the response for same-origin callers.
+    let mut resp = next.run(req).await;
+    if same_origin {
+        if let Some(origin) = origin {
+            resp.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+            resp.headers_mut().insert(header::VARY, HeaderValue::from_static("Origin"));
+        }
+    }
+    resp
 }
 
 fn create_ipv6_only_listener(addr_str: &str) -> Result<TcpListener, Box<dyn std::error::Error>> {
@@ -76,6 +184,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(e) => eprintln!(" [!] Warning: Node RPC connection pending ({})", e),
     }
 
+    // F-L-29: per-IP rate limiter state (100 req/sec).
+    let rate_limit_state: RateLimitState = Arc::new(Mutex::new(HashMap::new()));
+
     let app = Router::new()
         .route("/", get(landing_handler))
         .route("/explorer", get(explorer_handler))
@@ -116,12 +227,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/token-transfer", post(api_token_transfer_handler))
         .route("/api/swap-on-dex", post(api_swap_on_dex_handler))
         .route("/api/compile-contract", post(api_compile_contract_handler))
-        .with_state(client_mgr);
+        .with_state(client_mgr)
+        // F-M-31: enforce a same-origin CORS policy on all routes. Never emits
+        // `Access-Control-Allow-Origin: *`.
+        .layer(middleware::from_fn(security_headers))
+        .layer(middleware::from_fn_with_state(rate_limit_state.clone(), rate_limit))
+        .layer(middleware::from_fn(cors_same_origin));
 
     println!(" [*] Server running at http://{}/", cli.listen);
     println!("===============================================================");
 
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
 
     Ok(())
 }

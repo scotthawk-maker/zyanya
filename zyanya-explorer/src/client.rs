@@ -12,6 +12,67 @@ use zyanya_consensus_core::tx::{ContractPayload, DeployContractPayload, InvokeCo
 use crate::api::{UnsignedBuyReq, UnsignedSellReq};
 use serde::{Deserialize, Serialize};
 
+/// F-M-35: write a file with 0600 permissions (owner-only read/write) so that
+/// token metadata/icons written to the /tmp fallback are not world-readable.
+/// On non-Unix targets the mode call is a no-op.
+/// F-L-30: Atomically write a file via temp file + rename to prevent
+/// torn writes from corrupting metadata files.
+fn write_atomic(path: &std::path::Path, data: &[u8]) -> std::io::Result<()> {
+    let tmp = path.with_extension("json.tmp");
+    std::fs::write(&tmp, data)?;
+    std::fs::rename(&tmp, path)
+}
+
+fn write_private(path: &std::path::Path, data: &[u8]) -> std::io::Result<()> {
+    use std::io::Write;
+    let mut opts = std::fs::OpenOptions::new();
+    opts.write(true).create(true).truncate(true);
+    opts.mode_private();
+    let mut f = opts.open(path)?;
+    f.write_all(data)
+}
+
+/// F-M-35: create a directory with 0700 permissions (owner-only access) for the
+/// /tmp token-icon fallback. On non-Unix targets the mode call is a no-op.
+fn create_private_dir(path: &std::path::Path) -> std::io::Result<()> {
+    let mut builder = std::fs::DirBuilder::new();
+    builder.recursive(true);
+    builder.mode_private();
+    builder.create(path)
+}
+
+#[cfg(unix)]
+trait FileModePrivate {
+    fn mode_private(&mut self);
+}
+#[cfg(unix)]
+impl FileModePrivate for std::fs::OpenOptions {
+    fn mode_private(&mut self) {
+        use std::os::unix::fs::OpenOptionsExt;
+        self.mode(0o600);
+    }
+}
+#[cfg(unix)]
+impl FileModePrivate for std::fs::DirBuilder {
+    fn mode_private(&mut self) {
+        use std::os::unix::fs::DirBuilderExt;
+        self.mode(0o700);
+    }
+}
+#[cfg(not(unix))]
+trait FileModePrivate {
+    fn mode_private(&mut self);
+}
+#[cfg(not(unix))]
+impl FileModePrivate for std::fs::OpenOptions {
+    fn mode_private(&mut self) {}
+}
+#[cfg(not(unix))]
+impl FileModePrivate for std::fs::DirBuilder {
+    fn mode_private(&mut self) {}
+}
+
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnsignedDeployTokenReq {
     pub address: String,
@@ -350,23 +411,42 @@ impl RpcClientManager {
         let json = serde_json::to_string_pretty(&*store)
             .map_err(|e| format!("Failed to serialize metadata: {}", e))?;
 
-        if let Err(e) = std::fs::write(&self.metadata_path, &json) {
-            let _ = std::fs::write("/tmp/zyanya-token-metadata.json", &json);
-            log::warn!("Failed to write metadata to {}: {}, saved to /tmp", self.metadata_path, e);
+        if let Err(e) = write_atomic(std::path::Path::new(&self.metadata_path), json.as_bytes()) {
+            // F-M-35: write the fallback metadata file with 0600 perms so it is
+            // not world-readable.
+            let fallback = std::path::Path::new("/tmp/zyanya-token-metadata.json");
+            if let Err(werr) = write_private(fallback, json.as_bytes()) {
+                log::warn!("Failed to write metadata to {} ({}), and /tmp fallback failed: {}", self.metadata_path, e, werr);
+            } else {
+                log::warn!("Failed to write metadata to {}: {}, saved to /tmp", self.metadata_path, e);
+            }
         }
         Ok(())
     }
 
     pub fn save_token_icon(&self, address: &str, base64_data: &str) -> Result<String, String> {
         let decoded = decode_base64(base64_data)?;
+        // F-M-33: validate uploaded icon content — restrict to PNG images and a
+        // 1 MB size limit to prevent polyglot/disk-exhaustion abuse.
+        const MAX_ICON_SIZE: usize = 1024 * 1024; // 1 MB
+        const PNG_MAGIC: [u8; 8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+        if decoded.len() > MAX_ICON_SIZE {
+            return Err("token icon exceeds 1 MB limit".to_string());
+        }
+        if !decoded.starts_with(&PNG_MAGIC) {
+            return Err("token icon must be a PNG image".to_string());
+        }
+
         let filename = format!("{}.png", address);
         let mut path = std::path::Path::new(&self.icons_dir).join(&filename);
 
-        if let Err(_) = std::fs::write(&path, &decoded) {
+        if let Err(_) = write_atomic(&path, &decoded) {
+            // F-M-35: create the fallback directory with 0700 perms and write the
+            // icon file with 0600 perms so token icons are not world-readable.
             let tmp_dir = std::path::Path::new("/tmp/zyanya-token-icons");
-            let _ = std::fs::create_dir_all(tmp_dir);
+            let _ = create_private_dir(tmp_dir);
             path = tmp_dir.join(&filename);
-            std::fs::write(&path, &decoded).map_err(|e| format!("Failed to write icon to /tmp: {}", e))?;
+            write_private(&path, &decoded).map_err(|e| format!("Failed to write icon to /tmp: {}", e))?;
         }
 
         Ok(format!("/token-icons/{}", filename))
@@ -1005,7 +1085,16 @@ impl RpcClientManager {
 
         let S = total_supply;
         let k = amount;
-        let cost = slope.saturating_mul(2 * S * k + k * k) / 2;
+        // F-H-02: Use u128 intermediates to prevent silent overflow in off-chain quotes.
+        // `2 * S * k` and `k * k` are plain u64 arithmetic that silently wraps in release.
+        let cost = {
+            let slope128 = slope as u128;
+            let s128 = S as u128;
+            let k128 = k as u128;
+            let inner = 2u128 * s128 * k128 + k128 * k128;
+            let cost128 = slope128.saturating_mul(inner) / 2;
+            cost128.min(u64::MAX as u128) as u64
+        };
 
         let gas_fee = gas.saturating_mul(1);
         let required_zyan = cost.saturating_add(gas_fee);
@@ -1068,7 +1157,7 @@ impl RpcClientManager {
             });
         }
 
-        let buyer_u64 = parse_u64_key(&user_address.to_string()).unwrap_or(1);
+        let buyer_u64 = parse_u64_key(&user_address.to_string())?;
         let payload = ContractPayload::Invoke(InvokeContractPayload {
             contract_address,
             entry_point: 4,
@@ -1152,8 +1241,14 @@ impl RpcClientManager {
 
         let S = total_supply;
         let k = amount;
+        // F-H-02: Use u128 intermediates to prevent silent overflow in off-chain quotes.
         let refund = if S >= k {
-            slope.saturating_mul(2 * S * k - k * k) / 2
+            let slope128 = slope as u128;
+            let s128 = S as u128;
+            let k128 = k as u128;
+            let inner = 2u128 * s128 * k128 - k128 * k128;
+            let refund128 = slope128.saturating_mul(inner) / 2;
+            refund128.min(u64::MAX as u128) as u64
         } else {
             0
         };
@@ -1218,7 +1313,7 @@ impl RpcClientManager {
             });
         }
 
-        let seller_u64 = parse_u64_key(&user_address.to_string()).unwrap_or(1);
+        let seller_u64 = parse_u64_key(&user_address.to_string())?;
         let payload = ContractPayload::Invoke(InvokeContractPayload {
             contract_address,
             entry_point: 5,
@@ -1454,7 +1549,10 @@ impl RpcClientManager {
         let token_in_val: u64 = match token_in.to_lowercase().as_str() {
             "a" | "0" | "zyan" => 0,
             "b" | "1" | "ghost" => 1,
-            _ => token_in.parse::<u64>().unwrap_or(0),
+            _ => match token_in.parse::<u64>() {
+                Ok(v) => v,
+                Err(_) => return Err(format!("unknown token_in: {token_in}")),
+            },
         };
         let parameters = vec![token_in_val, amount_in];
         let res = client.invoke_contract(contract_address, 2, parameters, gas, 1, 0).await.map_err(|e| e.to_string())?;

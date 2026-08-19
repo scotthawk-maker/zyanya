@@ -170,6 +170,36 @@ macro_rules! construct_uint {
                 if carry { Self::MAX } else { sum }
             }
 
+            #[inline]
+            pub fn checked_add(self, other: Self) -> Option<Self> {
+                let (sum, carry) = self.overflowing_add(other);
+                if carry { None } else { Some(sum) }
+            }
+
+            #[inline]
+            pub fn checked_add_u64(self, other: u64) -> Option<Self> {
+                let (sum, carry) = self.overflowing_add_u64(other);
+                if carry { None } else { Some(sum) }
+            }
+
+            #[inline]
+            pub fn checked_sub(self, other: Self) -> Option<Self> {
+                let (sum, carry) = self.overflowing_sub(other);
+                if carry { None } else { Some(sum) }
+            }
+
+            #[inline]
+            pub fn checked_mul(self, other: Self) -> Option<Self> {
+                let (product, carry) = self.overflowing_mul(other);
+                if carry { None } else { Some(product) }
+            }
+
+            #[inline]
+            pub fn checked_mul_u64(self, other: u64) -> Option<Self> {
+                let (product, carry) = self.overflowing_mul_u64(other);
+                if carry { None } else { Some(product) }
+            }
+
             /// Multiplication by u64
             #[inline]
             pub fn overflowing_mul_u64(self, other: u64) -> (Self, bool) {
@@ -530,9 +560,7 @@ macro_rules! construct_uint {
             #[inline]
             #[track_caller]
             fn add(self, other: $name) -> $name {
-                let (sum, carry) = self.overflowing_add(other);
-                debug_assert!(!carry, "attempt to add with overflow"); // Check in debug that it didn't overflow
-                sum
+                self.checked_add(other).expect("attempt to add with overflow")
             }
         }
 
@@ -542,9 +570,7 @@ macro_rules! construct_uint {
             #[inline]
             #[track_caller]
             fn add(self, other: u64) -> $name {
-                let (sum, carry) = self.overflowing_add_u64(other);
-                debug_assert!(!carry, "attempt to add with overflow"); // Check in debug that it didn't overflow
-                sum
+                self.checked_add_u64(other).expect("attempt to add with overflow")
             }
         }
 
@@ -554,9 +580,7 @@ macro_rules! construct_uint {
             #[inline]
             #[track_caller]
             fn sub(self, other: $name) -> $name {
-                let (sum, carry) = self.overflowing_sub(other);
-                debug_assert!(!carry, "attempt to subtract with overflow"); // Check in debug that it didn't overflow
-                sum
+                self.checked_sub(other).expect("attempt to subtract with overflow")
             }
         }
 
@@ -566,9 +590,7 @@ macro_rules! construct_uint {
             #[inline]
             #[track_caller]
             fn mul(self, other: $name) -> $name {
-                let (product, carry) = self.overflowing_mul(other);
-                debug_assert!(!carry, "attempt to multiply with overflow"); // Check in debug that it didn't overflow
-                product
+                self.checked_mul(other).expect("attempt to multiply with overflow")
             }
         }
 
@@ -578,9 +600,7 @@ macro_rules! construct_uint {
             #[inline]
             #[track_caller]
             fn mul(self, other: u64) -> $name {
-                let (product, carry) = self.overflowing_mul_u64(other);
-                debug_assert!(!carry, "attempt to multiply with overflow"); // Check in debug that it didn't overflow
-                product
+                self.checked_mul_u64(other).expect("attempt to multiply with overflow")
             }
         }
 
@@ -754,7 +774,7 @@ macro_rules! construct_uint {
                 $crate::uint::faster_hex::hex_encode(&bytes, &mut hex).expect("The output is exactly twice the size of the input");
                 let first_non_zero = hex.iter().position(|&x| x != b'0').unwrap_or(hex.len() - 1);
                 // The string is hex encoded so must be valid UTF8.
-                let str = unsafe { core::str::from_utf8_unchecked(&hex[first_non_zero..]) };
+                let str = core::str::from_utf8(&hex[first_non_zero..]).expect("hex output is valid UTF-8");
                 f.pad_integral(true, "0x", str)
             }
         }
@@ -784,6 +804,9 @@ macro_rules! construct_uint {
                     let d2 = (rem % 100) << 1;
                     curr -= 4;
 
+                    // F-L-43: bounds-check LUT indices to catch div_rem_u64 regressions.
+                    debug_assert!(d1 < 200 && d2 < 200);
+
                     buf[curr] = DEC_DIGITS_LUT[d1];
                     buf[curr + 1] = DEC_DIGITS_LUT[d1 + 1];
                     buf[curr + 2] = DEC_DIGITS_LUT[d2];
@@ -797,6 +820,8 @@ macro_rules! construct_uint {
                     let d1 = (n % 100) << 1;
                     n /= 100;
                     curr -= 2;
+                    // F-L-43: bounds-check LUT index.
+                    debug_assert!((d1 as usize) < 200);
                     buf[curr] = DEC_DIGITS_LUT[d1 as usize];
                     buf[curr + 1] = DEC_DIGITS_LUT[d1 + 1 as usize];
                 }
@@ -808,12 +833,14 @@ macro_rules! construct_uint {
                 } else {
                     let d1 = n << 1;
                     curr -= 2;
+                    // F-L-43: bounds-check LUT index.
+                    debug_assert!(d1 < 200);
                     buf[curr] = DEC_DIGITS_LUT[d1];
                     buf[curr + 1] = DEC_DIGITS_LUT[d1 + 1];
                 }
 
                 // SAFETY: everything up to `curr` is valid UTF8 because `DEC_DIGITS_LUT` is.
-                let buf_str = unsafe { std::str::from_utf8_unchecked(&buf[curr..]) };
+                let buf_str = std::str::from_utf8(&buf[curr..]).expect("decimal output is valid UTF-8");
                 f.pad_integral(true, "", buf_str)
             }
         }
@@ -831,7 +858,7 @@ macro_rules! construct_uint {
                     }
                 }
                 // We only wrote '0' and '1' so this is always valid UTF-8
-                let buf_str = unsafe { std::str::from_utf8_unchecked(&buf[first_one..]) };
+                let buf_str = std::str::from_utf8(&buf[first_one..]).expect("binary output is valid UTF-8");
                 f.pad_integral(true, "0b", buf_str)
             }
         }
@@ -845,7 +872,7 @@ macro_rules! construct_uint {
                     let mut hex = [0u8; Self::BYTES * 2];
                     let bytes = self.to_be_bytes();
                     $crate::uint::faster_hex::hex_encode(&bytes, &mut hex).expect("The output is exactly twice the size of the input");
-                    let hex_str = unsafe { std::str::from_utf8_unchecked(&hex) };
+                    let hex_str = std::str::from_utf8(&hex).expect("hex output is valid UTF-8");
                     serializer.serialize_str(hex_str)
                 } else {
                     use $crate::uint::serde::ser::SerializeTuple;

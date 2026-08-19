@@ -51,7 +51,7 @@ use std::{
     time::Duration,
 };
 use tokio::sync::{
-    mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
+    mpsc::{channel, unbounded_channel, Receiver, Sender, UnboundedReceiver, UnboundedSender},
     RwLock as AsyncRwLock,
 };
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
@@ -576,7 +576,8 @@ impl FlowContext {
             tokio::spawn(async move {
                 mining_manager.clone().expire_low_priority_transactions(&consensus_clone).await;
                 if context.should_rebroadcast().await {
-                    let (tx, mut rx) = unbounded_channel();
+                    // F-L-31: use a bounded channel to prevent unbounded queue growth.
+                    let (tx, mut rx) = channel(1024);
                     tokio::spawn(async move {
                         mining_manager.revalidate_high_priority_transactions(&consensus_clone, tx).await;
                     });
@@ -710,18 +711,23 @@ impl ConnectionInitializer for FlowContext {
 
         // Perform the handshake
         let peer_version_message = handshake.handshake(self_version_message.into()).await?;
-        // Get time_offset as accurate as possible by computing right after the handshake
-        let time_offset = unix_now() as i64 - peer_version_message.timestamp;
+        // Get time_offset as accurate as possible by computing right after the handshake.
+        // Use saturating arithmetic to prevent i64 overflow/underflow from
+        // extreme/malicious peer timestamps (F-H-17).
+        let time_offset = (unix_now() as i64).saturating_sub(peer_version_message.timestamp);
 
         let peer_version: Version = peer_version_message.try_into()?;
-        router.set_identity(peer_version.id);
+        // Loopback detection: compare the self-declared id against our own node id.
+        // The self-declared id is NOT trusted for keying/identity purposes (F-H-19).
+        if self.node_id == peer_version.id {
+            return Err(ProtocolError::LoopbackConnection(router.key()));
+        }
+        // Derive the peer identity from the connection endpoint (IP:port) instead of
+        // trusting the self-declared PeerId, preventing identity spoofing (F-H-19).
+        router.set_identity(PeerId::from_socket_addr(&router.net_address()));
         // Avoid duplicate connections
         if self.hub.has_peer(router.key()) {
             return Err(ProtocolError::PeerAlreadyExists(router.key()));
-        }
-        // And loopback connections...
-        if self.node_id == router.identity() {
-            return Err(ProtocolError::LoopbackConnection(router.key()));
         }
 
         if peer_version.network != network_name {
@@ -762,11 +768,11 @@ impl ConnectionInitializer for FlowContext {
             let mut address_manager = self.address_manager.lock();
 
             if router.is_outbound() {
-                address_manager.add_address(router.net_address().into());
+                address_manager.add_address(router.net_address().into(), true);
             }
 
             if let Some(peer_ip_address) = peer_version.address {
-                address_manager.add_address(peer_ip_address);
+                address_manager.add_address(peer_ip_address, true);
             }
         }
 

@@ -85,7 +85,18 @@ impl From<DatabaseStorePrefixes> for u8 {
 
 impl AsRef<[u8]> for DatabaseStorePrefixes {
     fn as_ref(&self) -> &[u8] {
-        // SAFETY: enum has repr(u8)
+        // F-M-34: DatabaseStorePrefixes is `#[repr(u8)]`, so the enum's in-memory
+        // representation is a single `u8` discriminant occupying the first byte of
+        // `self`. Reinterpreting `&self` as `&u8` therefore reads exactly that one
+        // byte and yields a `&[u8]` borrowing from `self` (no temporary).
+        //
+        // SAFETY:
+        // - `DatabaseStorePrefixes` is `#[repr(u8)]` and `Copy`, so its layout is
+        //   exactly one byte and `*const Self as *const u8` is a valid, aligned
+        //   pointer to that byte.
+        // - The resulting `&u8` borrows from `self` (not a temporary), so the
+        //   returned `&[u8]` has the same lifetime as `self`.
+        // - Only the discriminant byte is read; no padding is exposed.
         std::slice::from_ref(unsafe { &*(self as *const Self as *const u8) })
     }
 }

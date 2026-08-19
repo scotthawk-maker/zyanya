@@ -14,8 +14,12 @@ macro_rules! payload_type_enum {
 
             impl $name {
                 pub fn to_error_response(&self, error: RpcError) -> ResponsePayload {
+                    // F-M-28: log the full (unsanitized) error server-side before
+                    // sanitizing it for the client response so operators retain
+                    // diagnostics.
+                    ::log::error!("RPC error response for {self:?}: {error:?}");
                     match self {
-                        $($name::$variant_name => [<$variant_name ResponseMessage>]::from(error).into()),*
+                        $($name::$variant_name => [<$variant_name ResponseMessage>]::from(error.sanitize()).into()),*
                     }
                 }
             }

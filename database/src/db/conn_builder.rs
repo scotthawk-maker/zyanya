@@ -2,6 +2,18 @@ use crate::db::DB;
 use rocksdb::{DBWithThreadMode, MultiThreaded};
 use std::{path::PathBuf, sync::Arc};
 
+/// F-M-38: error type returned by [`ConnBuilder::build`] instead of panicking
+/// on a RocksDB open failure or a non-UTF-8 database path.
+#[derive(Debug, thiserror::Error)]
+pub enum ConnBuilderError {
+    #[error("fd budget error: {0}")]
+    FdBudget(#[from] zyanya_utils::fd_budget::Error),
+    #[error("rocksdb open error: {0}")]
+    RocksDb(#[from] rocksdb::Error),
+    #[error("database path is not valid UTF-8")]
+    NonUtf8Path,
+}
+
 #[derive(Debug)]
 pub struct Unspecified;
 
@@ -104,37 +116,51 @@ macro_rules! default_opts {
         }
 
         opts.optimize_level_style_compaction($self.mem_budget);
-        let guard = zyanya_utils::fd_budget::acquire_guard($self.files_limit)?;
+        // F-M-38: explicitly map the fd-budget error to ConnBuilderError so the
+        // `?` operator does not need to infer between multiple From impls.
+        let guard = zyanya_utils::fd_budget::acquire_guard($self.files_limit).map_err(ConnBuilderError::FdBudget)?;
         opts.set_max_open_files($self.files_limit);
         opts.create_if_missing($self.create_if_missing);
-        Ok((opts, guard))
+        Ok::<_, ConnBuilderError>((opts, guard))
     }};
 }
 
 impl ConnBuilder<PathBuf, false, Unspecified, i32> {
-    pub fn build(self) -> Result<Arc<DB>, zyanya_utils::fd_budget::Error> {
+    pub fn build(self) -> Result<Arc<DB>, ConnBuilderError> {
         let (opts, guard) = default_opts!(self)?;
-        let db = Arc::new(DB::new(<DBWithThreadMode<MultiThreaded>>::open(&opts, self.db_path.to_str().unwrap()).unwrap(), guard));
+        let path = self.db_path.to_str().ok_or(ConnBuilderError::NonUtf8Path)?;
+        let db = Arc::new(DB::new(
+            <DBWithThreadMode<MultiThreaded>>::open(&opts, path).map_err(ConnBuilderError::RocksDb)?,
+            guard,
+        ));
         Ok(db)
     }
 }
 
 impl ConnBuilder<PathBuf, true, Unspecified, i32> {
-    pub fn build(self) -> Result<Arc<DB>, zyanya_utils::fd_budget::Error> {
+    pub fn build(self) -> Result<Arc<DB>, ConnBuilderError> {
         let (mut opts, guard) = default_opts!(self)?;
         opts.enable_statistics();
-        let db = Arc::new(DB::new(<DBWithThreadMode<MultiThreaded>>::open(&opts, self.db_path.to_str().unwrap()).unwrap(), guard));
+        let path = self.db_path.to_str().ok_or(ConnBuilderError::NonUtf8Path)?;
+        let db = Arc::new(DB::new(
+            <DBWithThreadMode<MultiThreaded>>::open(&opts, path).map_err(ConnBuilderError::RocksDb)?,
+            guard,
+        ));
         Ok(db)
     }
 }
 
 impl ConnBuilder<PathBuf, true, u32, i32> {
-    pub fn build(self) -> Result<Arc<DB>, zyanya_utils::fd_budget::Error> {
+    pub fn build(self) -> Result<Arc<DB>, ConnBuilderError> {
         let (mut opts, guard) = default_opts!(self)?;
         opts.enable_statistics();
         opts.set_report_bg_io_stats(true);
         opts.set_stats_dump_period_sec(self.stats_period);
-        let db = Arc::new(DB::new(<DBWithThreadMode<MultiThreaded>>::open(&opts, self.db_path.to_str().unwrap()).unwrap(), guard));
+        let path = self.db_path.to_str().ok_or(ConnBuilderError::NonUtf8Path)?;
+        let db = Arc::new(DB::new(
+            <DBWithThreadMode<MultiThreaded>>::open(&opts, path).map_err(ConnBuilderError::RocksDb)?,
+            guard,
+        ));
         Ok(db)
     }
 }

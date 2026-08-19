@@ -49,6 +49,7 @@ contract BondingCurveToken {
 
     // Entry point 4: Buy(caller, tokens_to_mint)
     // F-C-04: Verify caller == caller_param to prevent unauthorized buys.
+    // F-H-02: Use checked multiplication — return 0 on overflow.
     fn buy(caller_param, tokens_to_mint) {
         let sender = caller();
         if (caller_param != sender) {
@@ -57,7 +58,21 @@ contract BondingCurveToken {
         let slope = sload(1);
         let supply = sload(0);
         let k = tokens_to_mint;
-        let cost = (slope * (2 * supply * k + k * k)) / 2;
+        // F-H-02: Check 2 * supply for overflow
+        if (supply > 9223372036854775807) { return 0; }
+        let twoSupply = 2 * supply;
+        // F-H-02: Check twoSupply * k for overflow
+        if (k > 0 && twoSupply > 18446744073709551615 / k) { return 0; }
+        let term1 = twoSupply * k;
+        // F-H-02: Check k * k for overflow
+        if (k > 4294967295) { return 0; }
+        let term2 = k * k;
+        // F-H-02: Check term1 + term2 for overflow
+        if (term1 > 18446744073709551615 - term2) { return 0; }
+        let inner = term1 + term2;
+        // F-H-02: Check slope * inner for overflow
+        if (inner > 0 && slope > 18446744073709551615 / inner) { return 0; }
+        let cost = (slope * inner) / 2;
         sstore(0, supply + k);
         let reserve = sload(2);
         sstore(2, reserve + cost);
@@ -68,6 +83,7 @@ contract BondingCurveToken {
 
     // Entry point 5: Sell(caller, tokens_in)
     // F-C-04: Verify caller == caller_param to prevent unauthorized sells.
+    // F-H-02: Use checked multiplication — return 0 on overflow.
     fn sell(caller_param, tokens_in) {
         let sender = caller();
         if (caller_param != sender) {
@@ -80,7 +96,21 @@ contract BondingCurveToken {
         let slope = sload(1);
         let supply = sload(0);
         let k = tokens_in;
-        let refund = (slope * (2 * supply * k - k * k)) / 2;
+        // F-H-02: Check 2 * supply for overflow
+        if (supply > 9223372036854775807) { return 0; }
+        let twoSupply = 2 * supply;
+        // F-H-02: Check twoSupply * k for overflow
+        if (k > 0 && twoSupply > 18446744073709551615 / k) { return 0; }
+        let term1 = twoSupply * k;
+        // F-H-02: Check k * k for overflow
+        if (k > 4294967295) { return 0; }
+        let term2 = k * k;
+        // term1 >= term2 is guaranteed by S >= k (checked below), but guard anyway
+        if (term1 < term2) { return 0; }
+        let inner = term1 - term2;
+        // F-H-02: Check slope * inner for overflow
+        if (inner > 0 && slope > 18446744073709551615 / inner) { return 0; }
+        let refund = (slope * inner) / 2;
         let reserve = sload(2);
         if (reserve < refund) {
             return 0;

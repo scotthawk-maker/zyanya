@@ -1,6 +1,5 @@
 use smallvec::{smallvec, SmallVec};
 use zyanya_consensus_core::BlueWorkType;
-use std::str;
 
 // TODO combine this with zyanya-utils::hex
 
@@ -23,8 +22,11 @@ impl ToRpcHex for &[u8] {
 
         let mut hex = vec![0u8; self.len() * 2];
         faster_hex::hex_encode(self, hex.as_mut_slice()).expect("The output is exactly twice the size of the input");
-        let result = unsafe { str::from_utf8_unchecked(&hex) };
-        result.to_string()
+        // F-M-23: `faster_hex::hex_encode` only ever produces ASCII bytes, so this
+        // conversion is infallible in practice. Use the safe `String::from_utf8`
+        // instead of `unsafe { str::from_utf8_unchecked }` to avoid UB if the
+        // upstream contract is ever violated.
+        String::from_utf8(hex).expect("hex output is always ASCII")
     }
 }
 

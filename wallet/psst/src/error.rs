@@ -42,6 +42,8 @@ pub enum Error {
     PssbPrefixError,
     #[error("PSST serialization requires 'PSST' prefix")]
     PsstPrefixError,
+    #[error("PSST exceeds maximum size ({0} bytes)")]
+    PsstSizeLimitExceeded(usize),
 }
 #[derive(thiserror::Error, Debug)]
 pub enum ConstructorError {

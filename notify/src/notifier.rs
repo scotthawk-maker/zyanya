@@ -290,7 +290,10 @@ where
         _sync: Option<Sender<()>>,
     ) -> Self {
         assert!(broadcasters > 0, "a notifier requires a minimum of one broadcaster");
-        let notification_channel = Channel::unbounded();
+        // F-M-32: use a bounded channel to prevent unbounded queue growth / OOM
+        // when a broadcaster cannot keep up. Send paths use `try_send`, so a
+        // full channel returns an error instead of blocking.
+        let notification_channel = Channel::bounded(1000);
         let broadcasters = (0..broadcasters)
             .map(|idx| {
                 Arc::new(Broadcaster::new(

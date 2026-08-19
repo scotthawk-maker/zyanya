@@ -2,7 +2,7 @@ use super::{
     error::ConversionError,
     model::{
         trusted::{TrustedDataEntry, TrustedDataPackage},
-        version::Version,
+        version::{Version, MAX_USER_AGENT_LEN},
     },
     option::TryIntoOptionEx,
 };
@@ -12,10 +12,31 @@ use zyanya_consensus_core::{
     pruning::{PruningPointProof, PruningPointsList},
     tx::{TransactionId, TransactionOutpoint, UtxoEntry},
 };
+use zyanya_core::time::unix_now;
 use zyanya_hashes::Hash;
 use zyanya_utils::networking::{IpAddress, PeerId};
 
 use std::sync::Arc;
+
+/// Maximum allowed drift (ms) between a peer's reported timestamp and local time.
+const MAX_TIMESTAMP_DRIFT_MS: u64 = 24 * 60 * 60 * 1000;
+
+/// Truncate a user-agent string to `MAX_USER_AGENT_LEN` bytes on a UTF-8 char boundary.
+///
+/// Plain `String::truncate` panics if the cut lands mid-codepoint, so we walk
+/// backwards to the nearest valid boundary.
+fn truncate_user_agent(user_agent: String) -> String {
+    if user_agent.len() <= MAX_USER_AGENT_LEN {
+        return user_agent;
+    }
+    let mut end = MAX_USER_AGENT_LEN;
+    while !user_agent.is_char_boundary(end) {
+        end -= 1;
+    }
+    let mut truncated = user_agent;
+    truncated.truncate(end);
+    truncated
+}
 
 // ----------------------------------------------------------------------------
 // consensus_core to protowire
@@ -44,13 +65,26 @@ impl From<Version> for protowire::VersionMessage {
 impl TryFrom<protowire::VersionMessage> for Version {
     type Error = ConversionError;
     fn try_from(msg: protowire::VersionMessage) -> Result<Self, Self::Error> {
+        // Validate timestamp before casting i64 -> u64 to prevent integer
+        // wraparound from negative values (F-H-17).
+        if msg.timestamp < 0 {
+            return Err(ConversionError::InvalidTimestamp(msg.timestamp));
+        }
+        // Defense-in-depth: reject timestamps that drift too far from local time.
+        let now = unix_now() as i64;
+        if msg.timestamp.abs_diff(now) > MAX_TIMESTAMP_DRIFT_MS {
+            return Err(ConversionError::InvalidTimestamp(msg.timestamp));
+        }
+
         Ok(Self {
             protocol_version: msg.protocol_version,
             services: msg.services,
             timestamp: msg.timestamp as u64,
             address: if msg.address.is_none() { None } else { Some(msg.address.unwrap().try_into()?) },
             id: PeerId::from_slice(&msg.id)?,
-            user_agent: msg.user_agent.clone(),
+            // Bound the user_agent on receive to prevent memory DoS and log
+            // flooding from oversized strings (F-H-16).
+            user_agent: truncate_user_agent(msg.user_agent),
             disable_relay_tx: msg.disable_relay_tx,
             subnetwork_id: if msg.subnetwork_id.is_none() { None } else { Some(msg.subnetwork_id.unwrap().try_into()?) },
             network: msg.network.clone(),

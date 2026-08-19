@@ -166,7 +166,17 @@ impl ConnectionT for Connection {
 
     fn into_message(notification: &Self::Notification, encoding: &Self::Encoding) -> Self::Message {
         let op: RpcApiOps = notification.event_type().into();
-        Self::create_serialized_notification_message(encoding.clone().into(), op, Serializable(notification.clone())).unwrap()
+        // F-M-27: the ConnectionT trait returns `Self::Message` (not `Result`),
+        // so we cannot propagate serialization errors. Log the failure and fall
+        // back to a benign close frame instead of `.unwrap()`-panicking the
+        // notifier broadcaster task.
+        match Self::create_serialized_notification_message(encoding.clone().into(), op, Serializable(notification.clone())) {
+            Ok(msg) => msg,
+            Err(err) => {
+                workflow_log::log_error!("Failed to serialize wRPC notification: {err}");
+                Message::Close(None)
+            }
+        }
     }
 
     async fn send(&self, message: Self::Message) -> core::result::Result<(), Self::Error> {

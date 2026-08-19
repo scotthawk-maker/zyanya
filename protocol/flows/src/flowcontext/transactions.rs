@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 const SCANNING_TASK_INTERVAL: u64 = 10;
 const REBROADCAST_FREQUENCY: u64 = 3;
 const BROADCAST_INTERVAL: Duration = Duration::from_millis(500);
-pub(crate) const MAX_INV_PER_TX_INV_MSG: usize = 131_072;
+pub(crate) const MAX_INV_PER_TX_INV_MSG: usize = 10_000;
 
 pub struct TransactionsSpread {
     hub: Hub,

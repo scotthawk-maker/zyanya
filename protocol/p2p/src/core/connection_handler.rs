@@ -5,16 +5,18 @@ use crate::pb::{
 };
 use crate::{ConnectionInitializer, Router};
 use futures::FutureExt;
-use zyanya_core::{debug, info};
-use zyanya_utils::networking::NetAddress;
+use zyanya_core::{debug, error, info, warn};
+use zyanya_utils::networking::{IpAddress, NetAddress};
 use zyanya_utils_tower::{
     counters::TowerConnectionCounters,
     middleware::{BodyExt, CountBytesBody, MapRequestBodyLayer, MapResponseBodyLayer, ServiceBuilder},
 };
+use std::collections::{HashMap, VecDeque};
 use std::net::ToSocketAddrs;
 use std::pin::Pin;
-use std::sync::Arc;
-use std::time::Duration;
+use std::sync::{Arc, Mutex};
+use std::task::{Context, Poll};
+use std::time::{Duration, Instant};
 use thiserror::Error;
 use tokio::sync::mpsc::{channel as mpsc_channel, Sender as MpscSender};
 use tokio::sync::oneshot::{channel as oneshot_channel, Sender as OneshotSender};
@@ -22,6 +24,13 @@ use tokio_stream::wrappers::ReceiverStream;
 use tokio_stream::StreamExt;
 use tonic::transport::{Error as TonicError, Server as TonicServer};
 use tonic::{Request, Response, Status as TonicStatus, Streaming};
+
+/// Maximum number of concurrent inbound P2P connections (F-H-18).
+const MAX_CONNECTIONS: usize = 128;
+/// Maximum number of new inbound connections allowed per IP per minute (F-H-18).
+const MAX_CONNECTIONS_PER_IP_PER_MINUTE: usize = 10;
+/// Sliding window for the per-IP connection rate limit (F-H-18).
+const CONNECTION_RATE_LIMIT_WINDOW: Duration = Duration::from_secs(60);
 
 #[derive(Error, Debug)]
 pub enum ConnectionError {
@@ -51,6 +60,10 @@ pub struct ConnectionHandler {
     hub_sender: MpscSender<HubEvent>,
     initializer: Arc<dyn ConnectionInitializer>,
     counters: Arc<TowerConnectionCounters>,
+    /// Global inbound connection slots (released when a connection closes) (F-H-18).
+    connection_slots: Arc<tokio::sync::Semaphore>,
+    /// Per-IP timestamps of recent inbound connections (sliding window) (F-H-18).
+    per_ip_connections: Arc<Mutex<HashMap<IpAddress, VecDeque<Instant>>>>,
 }
 
 impl ConnectionHandler {
@@ -59,7 +72,13 @@ impl ConnectionHandler {
         initializer: Arc<dyn ConnectionInitializer>,
         counters: Arc<TowerConnectionCounters>,
     ) -> Self {
-        Self { hub_sender, initializer, counters }
+        Self {
+            hub_sender,
+            initializer,
+            counters,
+            connection_slots: Arc::new(tokio::sync::Semaphore::new(MAX_CONNECTIONS)),
+            per_ip_connections: Arc::new(Mutex::new(HashMap::new())),
+        }
     }
 
     /// Launches a P2P server listener loop
@@ -88,7 +107,8 @@ impl ConnectionHandler {
 
             match serve_result {
                 Ok(_) => info!("P2P Server stopped: {}", serve_address),
-                Err(err) => panic!("P2P, Server {serve_address} stopped with error: {err:?}"),
+                // F-L-26: log instead of panicking on serve error.
+                Err(err) => error!("P2P, Server {serve_address} stopped with error: {err:?}"),
             }
         });
         Ok(termination_sender)
@@ -128,7 +148,10 @@ impl ConnectionHandler {
         match self.initializer.initialize_connection(router.clone()).await {
             Ok(()) => {
                 // Notify the central Hub about the new peer
-                self.hub_sender.send(HubEvent::NewPeer(router.clone())).await.expect("hub receiver should never drop before senders");
+                // F-L-25: log and continue instead of panicking if the hub receiver dropped.
+                if self.hub_sender.send(HubEvent::NewPeer(router.clone())).await.is_err() {
+                    warn!("hub receiver dropped; peer notification skipped");
+                }
             }
 
             Err(err) => {
@@ -196,6 +219,20 @@ impl ConnectionHandler {
     }
 }
 
+/// Wraps the outgoing stream and holds a connection-slot permit so the slot is
+/// released when the connection (and thus the stream) is dropped (F-H-18).
+struct ConnectionGuardStream<S> {
+    inner: S,
+    _permit: tokio::sync::OwnedSemaphorePermit,
+}
+
+impl<S: futures::Stream + Unpin> futures::Stream for ConnectionGuardStream<S> {
+    type Item = S::Item;
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        Pin::new(&mut self.get_mut().inner).poll_next(cx)
+    }
+}
+
 #[tonic::async_trait]
 impl ProtoP2p for ConnectionHandler {
     type MessageStreamStream = Pin<Box<dyn futures::Stream<Item = Result<ZyanyadMessage, TonicStatus>> + Send + 'static>>;
@@ -209,6 +246,28 @@ impl ProtoP2p for ConnectionHandler {
             return Err(TonicStatus::new(tonic::Code::InvalidArgument, "Incoming connection opening request has no remote address"));
         };
 
+        let ip: IpAddress = remote_address.ip().into();
+
+        // Per-IP rate limit (sliding window) (F-H-18).
+        {
+            let mut map = self.per_ip_connections.lock().unwrap();
+            let now = Instant::now();
+            let entry = map.entry(ip).or_default();
+            while entry.front().map_or(false, |t| now.duration_since(*t) > CONNECTION_RATE_LIMIT_WINDOW) {
+                entry.pop_front();
+            }
+            if entry.len() >= MAX_CONNECTIONS_PER_IP_PER_MINUTE {
+                return Err(TonicStatus::resource_exhausted("per-IP connection rate limit exceeded"));
+            }
+            entry.push_back(now);
+        }
+
+        // Global inbound connection limit (F-H-18).
+        let permit = match self.connection_slots.clone().try_acquire_owned() {
+            Ok(permit) => permit,
+            Err(_) => return Err(TonicStatus::resource_exhausted("max connections reached")),
+        };
+
         // Build the in/out pipes
         let (outgoing_route, outgoing_receiver) = mpsc_channel(Self::outgoing_network_channel_size());
         let incoming_stream = request.into_inner();
@@ -217,9 +276,16 @@ impl ProtoP2p for ConnectionHandler {
         let router = Router::new(remote_address, false, self.hub_sender.clone(), incoming_stream, outgoing_route).await;
 
         // Notify the central Hub about the new peer
-        self.hub_sender.send(HubEvent::NewPeer(router)).await.expect("hub receiver should never drop before senders");
+        // F-L-25: log and continue instead of panicking if the hub receiver dropped.
+        if self.hub_sender.send(HubEvent::NewPeer(router)).await.is_err() {
+            warn!("hub receiver dropped; peer notification skipped");
+        }
 
-        // Give tonic a receiver stream (messages sent to it will be forwarded to the network peer)
-        Ok(Response::new(Box::pin(ReceiverStream::new(outgoing_receiver).map(Ok)) as Self::MessageStreamStream))
+        // Give tonic a receiver stream (messages sent to it will be forwarded to the network peer).
+        // Wrap the stream with a ConnectionGuardStream so the connection slot is released when the
+        // connection (and thus the stream) is dropped (F-H-18).
+        let stream = ReceiverStream::new(outgoing_receiver).map(Ok);
+        let guarded = ConnectionGuardStream { inner: stream, _permit: permit };
+        Ok(Response::new(Box::pin(guarded) as Self::MessageStreamStream))
     }
 }

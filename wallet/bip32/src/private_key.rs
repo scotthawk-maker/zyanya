@@ -22,6 +22,9 @@ pub trait PrivateKey: Sized {
 
     /// Get the [`Self::PublicKey`] that corresponds to this private key.
     fn public_key(&self) -> Self::PublicKey;
+
+    /// Zeroize the private key material in place.
+    fn zeroize(&mut self);
 }
 
 impl PrivateKey for SecretKey {
@@ -42,5 +45,9 @@ impl PrivateKey for SecretKey {
     fn public_key(&self) -> Self::PublicKey {
         let engine = Secp256k1::<SignOnly>::signing_only();
         secp256k1::PublicKey::from_secret_key(&engine, self)
+    }
+
+    fn zeroize(&mut self) {
+        self.non_secure_erase();
     }
 }

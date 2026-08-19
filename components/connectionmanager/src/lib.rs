@@ -98,6 +98,11 @@ impl ConnectionManager {
         let peers = self.p2p_adaptor.active_peers();
         let peer_by_address: HashMap<SocketAddr, Peer> = peers.into_iter().map(|peer| (peer.net_address(), peer)).collect();
 
+        // Sync the connected-peer set so eviction (keep_limit) never displaces a
+        // currently-connected peer.
+        let connected: HashSet<NetAddress> = peer_by_address.keys().map(|addr| NetAddress::new(addr.ip().into(), addr.port())).collect();
+        self.address_manager.lock().set_connected(connected);
+
         self.handle_connection_requests(&peer_by_address).await;
         self.handle_outbound_connections(&peer_by_address).await;
         self.handle_inbound_connections(&peer_by_address).await;
@@ -167,7 +172,16 @@ impl ConnectionManager {
         }
 
         let mut missing_connections = self.outbound_target - active_outbound.len();
-        let mut addr_iter = self.address_manager.lock().iterate_prioritized_random_addresses(active_outbound);
+        // F-M-25: `iterate_prioritized_random_addresses` now returns a `Result`; if
+        // the weighted-index construction fails we log and degrade to an empty
+        // iterator instead of panicking the whole outbound-connection task.
+        let mut addr_iter = match self.address_manager.lock().iterate_prioritized_random_addresses(active_outbound) {
+            Ok(iter) => iter,
+            Err(e) => {
+                zyanya_core::warn!("Connection manager: failed to build prioritized address iterator: {e}; skipping this round");
+                return;
+            }
+        };
 
         let mut progressing = true;
         let mut connecting = true;
@@ -302,7 +316,7 @@ impl ConnectionManager {
         info!("Retrieved {} addresses from DNS seeder {}", addrs_len, seeder);
         let mut amgr_lock = self.address_manager.lock();
         for addr in addrs {
-            amgr_lock.add_address(NetAddress::new(addr.ip().into(), addr.port()));
+            amgr_lock.add_address(NetAddress::new(addr.ip().into(), addr.port()), true);
         }
 
         addrs_len

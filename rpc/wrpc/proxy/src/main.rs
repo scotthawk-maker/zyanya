@@ -9,7 +9,7 @@ use zyanya_wrpc_server::{
     connection::Connection,
     router::Router,
     server::Server,
-    service::{Options, ZyanyaRpcHandler},
+    service::{Options, ZyanyaRpcHandler, MAX_WRPC_MESSAGE_SIZE},
 };
 use std::sync::Arc;
 use workflow_log::*;
@@ -97,7 +97,7 @@ async fn main() -> Result<()> {
     log_info!("Zyanya wRPC server is listening on {}", options.listen_address);
     log_info!("Using `{encoding}` protocol encoding");
 
-    let config = WebSocketConfig { max_message_size: Some(64 * 1024 * 1024), ..Default::default() };
+    let config = WebSocketConfig { max_message_size: Some(MAX_WRPC_MESSAGE_SIZE), ..Default::default() };
     let listener = server.bind(&options.listen_address).await?;
     server.listen(listener, Some(config)).await?;
 

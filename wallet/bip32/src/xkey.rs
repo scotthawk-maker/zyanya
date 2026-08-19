@@ -77,13 +77,18 @@ impl FromStr for ExtendedKey {
             Prefix::validate_str(chars)?;
             let b: [u8; 4] = bytes[..4].try_into()?;
             let version = Version::from_be_bytes(b);
-            Ok(Prefix::from_parts_unchecked(chars, version))
-            //Err(Error::DecodeIssue)
+            // F-L-11: cross-validate the prefix characters against the decoded
+            // version bytes by deriving the expected prefix and comparing.
+            let expected = Prefix::from_version(version)?;
+            if expected.as_str() != chars {
+                return Err(Error::DecodeIssue);
+            }
+            Ok(expected)
         })?;
 
         let depth = bytes[4];
         let parent_fingerprint = bytes[5..9].try_into()?;
-        let child_number = ChildNumber::from_bytes(bytes[9..13].try_into()?);
+        let child_number = ChildNumber::from_bytes(bytes[9..13].try_into()?)?;
         let chain_code = bytes[13..45].try_into()?;
         let key_bytes = bytes[45..78].try_into()?;
         bytes.zeroize();

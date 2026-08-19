@@ -66,8 +66,22 @@ impl WalletStorage {
             } else {
                 // make this platform-specific to avoid creating
                 // a buffer containing serialization
-                let mut file = std::fs::File::create(store.filename(), )?;
-                BorshSerialize::serialize(self, &mut file)?;
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::OpenOptionsExt;
+                    let mut file = std::fs::OpenOptions::new()
+                        .write(true)
+                        .create(true)
+                        .truncate(true)
+                        .mode(0o600)
+                        .open(store.filename())?;
+                    BorshSerialize::serialize(self, &mut file)?;
+                }
+                #[cfg(not(unix))]
+                {
+                    let mut file = std::fs::File::create(store.filename())?;
+                    BorshSerialize::serialize(self, &mut file)?;
+                }
             }
         }
         Ok(())

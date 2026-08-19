@@ -379,7 +379,9 @@ impl UtxoContext {
 
             // sanity check
             if self.context().outgoing.get(&txid).is_some() {
-                unreachable!("Error: promotion of the outgoing transaction!");
+                // F-L-13: log and skip instead of panicking on an invariant violation.
+                log_error!("Error: promotion of the outgoing transaction!");
+                continue;
             }
 
             let record = TransactionRecord::new_incoming(self, txid, &utxos);
@@ -399,8 +401,9 @@ impl UtxoContext {
                 if context.stasis.remove(utxo_entry.id_as_ref()).is_some() {
                     context.pending.insert(utxo_entry.id(), utxo_entry.clone());
                 } else {
+                    // F-L-13: log and skip instead of panicking on a non-stasis revival.
                     log_error!("Error: non-stasis utxo revival!");
-                    panic!("Error: non-stasis utxo revival!");
+                    continue;
                 }
             }
 
@@ -477,8 +480,9 @@ impl UtxoContext {
 
     pub async fn calculate_balance(&self) -> Balance {
         let context = self.context();
-        let mature: u64 = context.mature.iter().map(|e| e.as_ref().amount).sum();
-        let pending: u64 = context.pending.values().map(|e| e.as_ref().amount).sum();
+        // F-L-15: use saturating fold instead of plain `sum()` to prevent overflow panics.
+        let mature: u64 = context.mature.iter().fold(0u64, |acc, e| acc.saturating_add(e.as_ref().amount));
+        let pending: u64 = context.pending.values().fold(0u64, |acc, e| acc.saturating_add(e.as_ref().amount));
 
         // this will aggregate only transactions containing
         // the final payments (not compound transactions)

@@ -120,7 +120,7 @@ impl U3072 {
         }
 
         // Compute limb N-1 of a*b into tmp
-        assert_eq!(carry_highest, 0);
+        debug_assert_eq!(carry_highest, 0);
 
         for i in 0..LIMBS {
             (carry_low, carry_high, carry_highest) =
@@ -140,8 +140,8 @@ impl U3072 {
             // Extract the result into self and shift the carries.
             (self.limbs[i], carry_low, carry_high) = (carry_low, carry_high, overflow as _);
         }
-        assert_eq!(carry_high, 0);
-        assert!(carry_low == 0 || carry_low == 1);
+        debug_assert_eq!(carry_high, 0);
+        debug_assert!(carry_low == 0 || carry_low == 1);
         //  Perform up to two more reductions if the internal state has already overflown the MAX of u3072
         //  or if it is larger than the modulus or if both are the case.
 

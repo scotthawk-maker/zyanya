@@ -82,7 +82,9 @@ impl TryFrom<&str> for Fees {
         if fee.is_empty() {
             Ok(Fees::None)
         } else {
-            let fee = crate::utils::try_zyanya_str_to_sompi_i64(fee)?.unwrap_or(0);
+            // F-L-08: propagate a parse failure as an error instead of silently mapping to 0.
+            let fee = crate::utils::try_zyanya_str_to_sompi_i64(fee)?
+                .ok_or_else(|| crate::error::Error::Custom(format!("invalid fee string: {fee}")))?;
             Ok(Fees::from(fee))
         }
     }

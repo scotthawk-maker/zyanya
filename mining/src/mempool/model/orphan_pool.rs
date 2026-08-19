@@ -257,7 +257,10 @@ impl OrphanPool {
     }
 
     fn get_random_low_priority_orphan(&self) -> Option<&MempoolTransaction> {
-        self.all_orphans.values().find(|x| x.priority == Priority::Low)
+        // F-L-40: use a proper RNG to select a random low-priority orphan instead
+        // of always picking the first one, which makes eviction deterministic.
+        use rand::seq::IteratorRandom;
+        self.all_orphans.values().filter(|x| x.priority == Priority::Low).choose(&mut rand::thread_rng())
     }
 
     fn chained_mut(&mut self) -> &mut TransactionsEdges {

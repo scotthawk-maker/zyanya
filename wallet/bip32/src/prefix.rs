@@ -95,7 +95,14 @@ impl Prefix {
     ///
     /// - 0x0488B21E => `xpub`
     /// - 0x0488ADE4 => `xprv`
-    fn from_version(version: Version) -> Result<Self> {
+    /// Parse a [`Prefix`] from a 32-bit integer "version", e.g.:
+    ///
+    /// - 0x0488B21E => `xpub`
+    /// - 0x0488ADE4 => `xprv`
+    //
+    /// F-L-11: exposed as `pub(crate)` so `ExtendedKey::from_str` can
+    /// cross-validate the decoded version bytes against the prefix characters.
+    pub(crate) fn from_version(version: Version) -> Result<Self> {
         let mut bytes = [0u8; ExtendedKey::BYTE_SIZE];
         bytes[..4].copy_from_slice(&version.to_be_bytes());
 
@@ -240,9 +247,11 @@ impl From<NetworkId> for Prefix {
         let network_type = value.network_type();
         match network_type {
             NetworkType::Mainnet => Prefix::KPUB,
+            // F-L-19: map Testnet to the distinct testnet prefix TPUB so it is
+            // distinguishable from Devnet/Simnet.
+            NetworkType::Testnet => Prefix::TPUB,
             NetworkType::Devnet => Prefix::KTUB,
             NetworkType::Simnet => Prefix::KTUB,
-            NetworkType::Testnet => Prefix::KTUB,
         }
     }
 }

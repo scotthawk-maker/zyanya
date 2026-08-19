@@ -2879,6 +2879,17 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
     <script>
         let currentWallet = null; // { privKeyHex, pubKeyHex, address }
 
+        // F-H-26: HTML-escape user-controlled error strings before rendering via innerHTML
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function bytesToHex(bytes) {
             return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
         }
@@ -3042,7 +3053,7 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
                 const unsignedData = await unsignedRes.json();
 
                 if (!unsignedRes.ok || !unsignedData.unsigned_tx) {
-                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Unsigned tx build error: ${unsignedData.error || 'Failed'}</span>`;
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Unsigned tx build error: ${escapeHtml(unsignedData.error || 'Failed')}</span>`;
                     return;
                 }
 
@@ -3094,11 +3105,11 @@ pub const LAUNCH_HTML: &str = r#"<!DOCTYPE html>
                         </div>
                     `;
                 } else {
-                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Submission Error: ${submitData.error || 'Submit failed'}</span>`;
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Submission Error: ${escapeHtml(submitData.error || 'Submit failed')}</span>`;
                 }
 
             } catch (err) {
-                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network/Crypto error: ${err.message}</span>`;
+                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network/Crypto error: ${escapeHtml(err.message)}</span>`;
             }
         }
 
@@ -3448,10 +3459,10 @@ pub const TOKEN_HTML: &str = r#"<!DOCTYPE html>
                     statusEl.innerHTML = `<span style="color: var(--accent-green)">Bought ${data.returnValue || amount} tokens!</span>`;
                     loadTokenData();
                 } else {
-                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Buy failed: ${data.error || 'Unknown error'}</span>`;
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Buy failed: ${escapeHtml(data.error || 'Unknown error')}</span>`;
                 }
             } catch (err) {
-                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network error: ${err.message}</span>`;
+                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network error: ${escapeHtml(err.message)}</span>`;
             }
         }
 
@@ -3476,10 +3487,10 @@ pub const TOKEN_HTML: &str = r#"<!DOCTYPE html>
                     statusEl.innerHTML = `<span style="color: var(--accent-green)">Sold ${amount} tokens for ${data.returnValue || 0} ZYAN refund!</span>`;
                     loadTokenData();
                 } else {
-                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Sell failed: ${data.error || 'Unknown error'}</span>`;
+                    statusEl.innerHTML = `<span style="color: var(--burn-red)">Sell failed: ${escapeHtml(data.error || 'Unknown error')}</span>`;
                 }
             } catch (err) {
-                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network error: ${err.message}</span>`;
+                statusEl.innerHTML = `<span style="color: var(--burn-red)">Network error: ${escapeHtml(err.message)}</span>`;
             }
         }
 
@@ -5362,6 +5373,17 @@ pub const DAG_HTML: &str = r###"<!DOCTYPE html>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // F-H-26: HTML-escape user-controlled error strings before rendering via innerHTML
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         const fetchAndInject = (id, url) => {
             const container = document.getElementById(id);
             if (!container) return;
@@ -5733,13 +5755,13 @@ pub const DAG_HTML: &str = r###"<!DOCTYPE html>
             const blockType = node.is_chain_block ? 'Chain Block (Blue)' : 'Side Block (Red)';
 
             tooltip.innerHTML = `
-                <h4>Block ${node.short_hash}</h4>
+                <h4>Block ${escapeHtml(node.short_hash)}</h4>
                 <div class="tt-row"><span class="tt-label">Type:</span> <span class="${badgeClass}">${blockType}</span></div>
                 ${isSink ? '<div class="tt-row"><span class="tt-label">Status:</span> <span style="color:#7EC8D3;font-weight:bold;">★ SINK (Latest Tip)</span></div>' : ''}
                 <div class="tt-row"><span class="tt-label">Blue Score:</span> <span class="tt-val">${node.blue_score.toLocaleString()}</span></div>
                 <div class="tt-row"><span class="tt-label">DAA Score:</span> <span class="tt-val">${node.daa_score.toLocaleString()}</span></div>
-                <div class="tt-row"><span class="tt-label">Parents (${parentCount}):</span> <span class="tt-val">${node.parents ? node.parents.map(p => p.substring(0, 6)).join(', ') : 'None'}</span></div>
-                <div class="tt-row"><span class="tt-label">Selected Parent:</span> <span class="tt-val">${node.selected_parent ? node.selected_parent.substring(0, 8) + '...' : 'None'}</span></div>
+                <div class="tt-row"><span class="tt-label">Parents (${parentCount}):</span> <span class="tt-val">${node.parents ? node.parents.map(p => escapeHtml(p.substring(0, 6))).join(', ') : 'None'}</span></div>
+                <div class="tt-row"><span class="tt-label">Selected Parent:</span> <span class="tt-val">${node.selected_parent ? escapeHtml(node.selected_parent.substring(0, 8)) + '...' : 'None'}</span></div>
                 <div style="margin-top:0.4rem; font-size:0.75rem; color:#7EC8D3; text-align:center;">👉 Click to view detailed info</div>
             `;
             tooltip.style.left = `${left}px`;
@@ -5762,18 +5784,18 @@ pub const DAG_HTML: &str = r###"<!DOCTYPE html>
                 const block = await res.json();
                 
                 body.innerHTML = `
-                    <div class="tt-row" style="margin-bottom:0.75rem;"><span class="tt-label">Block Hash:</span> <span class="tt-val" style="word-break:break-all; font-size:0.85rem;">${block.hash || hash}</span></div>
+                    <div class="tt-row" style="margin-bottom:0.75rem;"><span class="tt-label">Block Hash:</span> <span class="tt-val" style="word-break:break-all; font-size:0.85rem;">${escapeHtml(block.hash || hash)}</span></div>
                     <div class="tt-row"><span class="tt-label">Blue Score:</span> <span class="tt-val">${block.blue_score ? block.blue_score.toLocaleString() : 'N/A'}</span></div>
                     <div class="tt-row"><span class="tt-label">DAA Score:</span> <span class="tt-val">${block.daa_score ? block.daa_score.toLocaleString() : 'N/A'}</span></div>
                     <div class="tt-row"><span class="tt-label">Is Chain Block:</span> <span class="tt-val">${block.is_chain_block ? 'YES (Blue)' : 'NO (Red)'}</span></div>
-                    <div class="tt-row"><span class="tt-label">Parents:</span> <span class="tt-val" style="word-break:break-all;">${block.parents ? block.parents.join('<br>') : 'None'}</span></div>
-                    <div class="tt-row"><span class="tt-label">Selected Parent:</span> <span class="tt-val" style="word-break:break-all;">${block.selected_parent || 'None'}</span></div>
+                    <div class="tt-row"><span class="tt-label">Parents:</span> <span class="tt-val" style="word-break:break-all;">${block.parents ? block.parents.map(p => escapeHtml(p)).join('<br>') : 'None'}</span></div>
+                    <div class="tt-row"><span class="tt-label">Selected Parent:</span> <span class="tt-val" style="word-break:break-all;">${escapeHtml(block.selected_parent || 'None')}</span></div>
                     <div style="margin-top: 1.25rem; text-align: right;">
                         <a href="/explorer?block=${hash}" target="_blank" style="color: var(--spectral-blue); font-weight: bold; text-decoration: underline;">Open in Explorer Tab ↗</a>
                     </div>
                 `;
             } catch (err) {
-                body.innerHTML = `<div style="color: var(--side-red); padding: 1rem;">Failed to load block details: ${err.message}</div>`;
+                body.innerHTML = `<div style="color: var(--side-red); padding: 1rem;">Failed to load block details: ${escapeHtml(err.message)}</div>`;
             }
         }
 

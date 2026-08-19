@@ -120,9 +120,11 @@ impl PubkeyDerivationManagerV0 {
     // }
 
     pub fn derive_pubkey_range(&self, indexes: std::ops::Range<u32>) -> Result<Vec<secp256k1::PublicKey>> {
+        // F-M-12: lock order invariant — always acquire `inner` BEFORE `cache` to avoid
+        // lock-order inversion with `derive_pubkey` (which locks inner then cache).
         let use_cache = self.use_cache();
-        let mut cache = self.cache.lock()?;
         let locked = self.opt_inner();
+        let mut cache = self.cache.lock()?;
         let list: Vec<Result<secp256k1::PublicKey, crate::error::Error>> = if let Some(inner) = locked.as_ref() {
             indexes
                 .map(|index| {

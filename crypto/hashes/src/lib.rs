@@ -114,7 +114,7 @@ impl Display for Hash {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut hex = [0u8; HASH_SIZE * 2];
         faster_hex::hex_encode(&self.0, &mut hex).expect("The output is exactly twice the size of the input");
-        f.write_str(unsafe { str::from_utf8_unchecked(&hex) })
+        f.write_str(std::str::from_utf8(&hex).expect("hex output is valid UTF-8"))
     }
 }
 

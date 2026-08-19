@@ -57,7 +57,7 @@ impl TransactionValidator {
 
     fn check_transaction_outputs_count(&self, tx: &Transaction) -> TxResult<()> {
         if tx.outputs.len() > self.max_tx_outputs {
-            return Err(TxRuleError::TooManyOutputs(tx.inputs.len(), self.max_tx_inputs));
+            return Err(TxRuleError::TooManyOutputs(tx.outputs.len(), self.max_tx_outputs));
         }
 
         Ok(())
