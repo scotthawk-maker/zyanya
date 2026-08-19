@@ -7,16 +7,24 @@ contract Router {
         return 0;
     }
 
-    // Entry point 1: swap2Hop(pool1, pool2, token1, token2, amountIn, minAmountOut)
-    // Swaps amountIn on pool1 (using token1), takes out1 and swaps on pool2 (using token2).
-    // Reverts (returns 0) if output is less than minAmountOut.
-    fn swap2Hop(pool1, pool2, token1, token2, amountIn, minAmountOut) {
-        let out1 = call(pool1, 100000, amountIn, token1, 2);
+    // Entry point 1: swap2Hop(caller_param, pool1, pool2, amountIn, minAmountOut)
+    // Swaps amountIn on pool1, takes out1 and swaps on pool2.
+    // F-C-04: Enforces caller verification and minAmountOut slippage protection.
+    fn swap2Hop(caller_param, pool1, pool2, amountIn, minAmountOut) {
+        let sender = caller();
+        if (caller_param != sender) {
+            return 0;
+        }
+        if (amountIn == 0) {
+            return 0;
+        }
+
+        let out1 = call(pool1, 100000, amountIn);
         if (out1 == 0) {
             return 0;
         }
 
-        let out2 = call(pool2, 100000, out1, token2, 2);
+        let out2 = call(pool2, 100000, out1);
         if (out2 < minAmountOut) {
             return 0;
         }
@@ -24,21 +32,29 @@ contract Router {
         return out2;
     }
 
-    // Entry point 2: swap3Hop(pool1, pool2, pool3, token1, token2, token3, amountIn, minAmountOut)
+    // Entry point 2: swap3Hop(caller_param, pool1, pool2, pool3, amountIn, minAmountOut)
     // Swaps amountIn sequentially through pool1 -> pool2 -> pool3.
-    // Reverts (returns 0) if final output is less than minAmountOut.
-    fn swap3Hop(pool1, pool2, pool3, token1, token2, token3, amountIn, minAmountOut) {
-        let out1 = call(pool1, 100000, amountIn, token1, 2);
+    // F-C-04: Enforces caller verification and minAmountOut slippage protection.
+    fn swap3Hop(caller_param, pool1, pool2, pool3, amountIn, minAmountOut) {
+        let sender = caller();
+        if (caller_param != sender) {
+            return 0;
+        }
+        if (amountIn == 0) {
+            return 0;
+        }
+
+        let out1 = call(pool1, 100000, amountIn);
         if (out1 == 0) {
             return 0;
         }
 
-        let out2 = call(pool2, 100000, out1, token2, 2);
+        let out2 = call(pool2, 100000, out1);
         if (out2 == 0) {
             return 0;
         }
 
-        let out3 = call(pool3, 100000, out2, token3, 2);
+        let out3 = call(pool3, 100000, out2);
         if (out3 < minAmountOut) {
             return 0;
         }
