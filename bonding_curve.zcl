@@ -1,130 +1,159 @@
-// Bonding Curve Token Contract in Zyanya Contract Language (ZCL)
+// Zyanya Hardened Bonding Curve Token Contract (ZCL)
+// Continuous AMM Linear Pricing: P(S) = slope * S
+//
 // Storage Layout:
-// Key 0: Total Supply
-// Key 1: Slope
-// Key 2: Reserve
-// Key <address>: Holder Balance
+// Key 0: is_initialized (1 if deployed, prevents re-init)
+// Key 1: owner_address (deployer address)
+// Key 2: total_supply (tokens in circulation)
+// Key 3: slope (pricing slope)
+// Key 4: reserve (collateral locked)
+// Key (address + 1000): holder_balance
 
 contract BondingCurveToken {
     // Entry point 0: Init(slope)
-    // F-C-04: Gate init to owner only — prevents arbitrary re-init that resets slope/supply/reserve.
     fn init(slope) {
-        let sender = caller();
-        // Only owner (holder key 1) can init. In production this would be the deployer's address.
-        if (sender != 1) {
+        let initialized = sload(0);
+        if (initialized != 0) {
+            return 0; // Prevent re-initialization
+        }
+        if (slope == 0) {
             return 0;
         }
-        sstore(1, slope);
-        sstore(0, 0);
-        sstore(2, 0);
+
+        let sender = caller();
+        sstore(0, 1);      // Set initialized flag
+        sstore(1, sender); // Record dynamic deployer as owner
+        sstore(2, 0);      // Total Supply = 0
+        sstore(3, slope);  // Pricing Slope
+        sstore(4, 0);      // Reserve = 0
         return 1;
     }
 
     // Entry point 1: Transfer(from, to, amount)
-    // F-C-04: Verify caller == from to prevent unauthorized transfers.
     fn transfer(from, to, amount) {
         let sender = caller();
         if (from != sender) {
+            return 0; // F-C-04: Enforce caller verification
+        }
+        if (amount == 0) {
             return 0;
         }
-        let from_bal = sload(from);
+
+        let fromKey = from + 1000;
+        let from_bal = sload(fromKey);
         if (from_bal < amount) {
             return 0;
         }
-        sstore(from, from_bal - amount);
-        let to_bal = sload(to);
-        sstore(to, to_bal + amount);
+
+        let toKey = to + 1000;
+        let to_bal = sload(toKey);
+
+        sstore(fromKey, from_bal - amount);
+        sstore(toKey, to_bal + amount);
         return 1;
     }
 
     // Entry point 2: BalanceOf(holder)
     fn balance_of(holder) {
-        return sload(holder);
+        let key = holder + 1000;
+        return sload(key);
     }
 
     // Entry point 3: TotalSupply()
     fn total_supply() {
-        return sload(0);
+        return sload(2);
     }
 
-    // Entry point 4: Buy(caller, tokens_to_mint)
-    // F-C-04: Verify caller == caller_param to prevent unauthorized buys.
-    // F-H-02: Use checked multiplication — return 0 on overflow.
+    // Entry point 4: Buy(caller_param, tokens_to_mint)
+    // Cost integral: (slope * (2 * S * k + k^2)) / 2
     fn buy(caller_param, tokens_to_mint) {
         let sender = caller();
         if (caller_param != sender) {
+            return 0; // F-C-04: Enforce caller verification
+        }
+        if (tokens_to_mint == 0) {
             return 0;
         }
-        let slope = sload(1);
-        let supply = sload(0);
+
+        let slope = sload(3);
+        let supply = sload(2);
         let k = tokens_to_mint;
-        // F-H-02: Check 2 * supply for overflow
+
+        // F-H-02: Multiplicative overflow guards against u64::MAX
         if (supply > 9223372036854775807) { return 0; }
         let twoSupply = 2 * supply;
-        // F-H-02: Check twoSupply * k for overflow
         if (k > 0 && twoSupply > 18446744073709551615 / k) { return 0; }
         let term1 = twoSupply * k;
-        // F-H-02: Check k * k for overflow
         if (k > 4294967295) { return 0; }
         let term2 = k * k;
-        // F-H-02: Check term1 + term2 for overflow
         if (term1 > 18446744073709551615 - term2) { return 0; }
         let inner = term1 + term2;
-        // F-H-02: Check slope * inner for overflow
         if (inner > 0 && slope > 18446744073709551615 / inner) { return 0; }
+
         let cost = (slope * inner) / 2;
-        sstore(0, supply + k);
-        let reserve = sload(2);
-        sstore(2, reserve + cost);
-        let user_bal = sload(caller_param);
-        sstore(caller_param, user_bal + k);
+
+        let userKey = caller_param + 1000;
+        let user_bal = sload(userKey);
+        let reserve = sload(4);
+
+        sstore(2, supply + k);
+        sstore(4, reserve + cost);
+        sstore(userKey, user_bal + k);
+
         return cost;
     }
 
-    // Entry point 5: Sell(caller, tokens_in)
-    // F-C-04: Verify caller == caller_param to prevent unauthorized sells.
-    // F-H-02: Use checked multiplication — return 0 on overflow.
+    // Entry point 5: Sell(caller_param, tokens_in)
+    // Refund integral: (slope * (2 * S * k - k^2)) / 2
     fn sell(caller_param, tokens_in) {
         let sender = caller();
         if (caller_param != sender) {
+            return 0; // F-C-04: Enforce caller verification
+        }
+        if (tokens_in == 0) {
             return 0;
         }
-        let user_bal = sload(caller_param);
+
+        let userKey = caller_param + 1000;
+        let user_bal = sload(userKey);
         if (user_bal < tokens_in) {
-            return 0;
+            return 0; // Insufficient token balance
         }
-        let slope = sload(1);
-        let supply = sload(0);
+
+        let slope = sload(3);
+        let supply = sload(2);
         let k = tokens_in;
-        // F-H-02: Check 2 * supply for overflow
-        if (supply > 9223372036854775807) { return 0; }
+
+        if (supply < k) { return 0; }
         let twoSupply = 2 * supply;
-        // F-H-02: Check twoSupply * k for overflow
-        if (k > 0 && twoSupply > 18446744073709551615 / k) { return 0; }
         let term1 = twoSupply * k;
-        // F-H-02: Check k * k for overflow
-        if (k > 4294967295) { return 0; }
         let term2 = k * k;
-        // term1 >= term2 is guaranteed by S >= k (checked below), but guard anyway
         if (term1 < term2) { return 0; }
         let inner = term1 - term2;
-        // F-H-02: Check slope * inner for overflow
         if (inner > 0 && slope > 18446744073709551615 / inner) { return 0; }
+
         let refund = (slope * inner) / 2;
-        let reserve = sload(2);
+        let reserve = sload(4);
         if (reserve < refund) {
-            return 0;
+            return 0; // Insolvent reserve protection
         }
-        sstore(caller_param, user_bal - k);
-        sstore(0, supply - k);
-        sstore(2, reserve - refund);
+
+        sstore(userKey, user_bal - k);
+        sstore(2, supply - k);
+        sstore(4, reserve - refund);
+
         return refund;
     }
 
-    // Entry point 6: Price()
+    // Entry point 6: Price() -> returns current marginal price (slope * supply)
     fn price() {
-        let slope = sload(1);
-        let supply = sload(0);
+        let slope = sload(3);
+        let supply = sload(2);
         return slope * supply;
+    }
+
+    // Entry point 7: GetReserve() -> returns current locked collateral
+    fn get_reserve() {
+        return sload(4);
     }
 }

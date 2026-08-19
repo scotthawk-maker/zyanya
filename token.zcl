@@ -1,0 +1,84 @@
+// Zyanya Hardened Reference Token Contract (ZCL)
+//
+// Storage Layout:
+// Key 0: is_initialized
+// Key 1: owner_address
+// Key 2: total_supply
+// Key (address + 1000): holder_balance
+
+contract StandardToken {
+    // Entry point 0: Init(initial_supply)
+    fn init(initial_supply) {
+        let initialized = sload(0);
+        if (initialized != 0) {
+            return 0;
+        }
+        let sender = caller();
+        sstore(0, 1);              // Mark initialized
+        sstore(1, sender);         // Record deployer as owner
+        sstore(2, initial_supply); // Total Supply
+        
+        let ownerKey = sender + 1000;
+        sstore(ownerKey, initial_supply); // Credit initial supply to deployer
+        return initial_supply;
+    }
+
+    // Entry point 1: Transfer(from, to, amount)
+    fn transfer(from, to, amount) {
+        let sender = caller();
+        if (from != sender) {
+            return 0; // F-C-04: Strict caller verification
+        }
+        if (amount == 0) {
+            return 0;
+        }
+
+        let fromKey = from + 1000;
+        let from_bal = sload(fromKey);
+        if (from_bal < amount) {
+            return 0;
+        }
+
+        let toKey = to + 1000;
+        let to_bal = sload(toKey);
+
+        sstore(fromKey, from_bal - amount);
+        sstore(toKey, to_bal + amount);
+        return 1;
+    }
+
+    // Entry point 2: BalanceOf(holder)
+    fn balance_of(holder) {
+        let key = holder + 1000;
+        return sload(key);
+    }
+
+    // Entry point 3: TotalSupply()
+    fn total_supply() {
+        return sload(2);
+    }
+
+    // Entry point 4: Mint(to, amount)
+    fn mint(to, amount) {
+        let sender = caller();
+        let owner = sload(1);
+        if (sender != owner) {
+            return 0; // Only owner can mint
+        }
+        if (amount == 0) {
+            return 0;
+        }
+
+        let supply = sload(2);
+        if (supply > 18446744073709551615 - amount) {
+            return 0; // Overflow guard
+        }
+
+        let toKey = to + 1000;
+        let to_bal = sload(toKey);
+
+        sstore(2, supply + amount);
+        sstore(toKey, to_bal + amount);
+        return 1;
+    }
+}

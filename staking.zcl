@@ -1,129 +1,215 @@
 // Zyanya Staking Contract in Zyanya Contract Language (ZCL)
-// Non-custodial ZYAN Token Staking & Protocol Fee Reward Sharing
+// Hardened Non-custodial ZYAN Token Staking & Real-Time Pro-Rata Fee Sharing
+// Uses Accumulator Reward Per Share Model (MasterChef / Synthetix pattern)
 //
 // Storage Layout:
 // Key 0: totalStaked (Total ZYAN tokens staked in pool)
-// Key 1: totalRewardsDistributed (Accumulated protocol fee rewards)
-// Key (caller * 1000 + 10): Staked amount for caller
-// Key (caller * 1000 + 20): Claimed reward amount for caller
+// Key 1: accRewardPerShare (Accumulated rewards per share * 1,000,000,000)
+// Key 2: totalRewardsDeposited (Lifetime protocol rewards deposited)
+// Key (caller + 10): userStaked balance for caller
+// Key (caller + 20): userRewardDebt for caller
+// Key (caller + 30): userTotalClaimed for caller
 
 contract Staking {
     // Entry point 0: Init / Constructor
     fn init() {
         sstore(0, 0);
         sstore(1, 0);
+        sstore(2, 0);
         return 0;
     }
 
-    // Entry point 1: stake(caller, amount)
-    fn stake(caller, amount) {
+    // Entry point 1: stake(caller_param, amount)
+    // F-C-04: Enforce caller verification
+    fn stake(caller_param, amount) {
+        let sender = caller();
+        if (caller_param != sender) {
+            return 0;
+        }
         if (amount == 0) {
             return 0;
         }
 
         let total = sload(0);
-        let stakeKey = caller * 1000 + 10;
+        let accReward = sload(1);
+        let stakeKey = caller_param + 10;
+        let debtKey = caller_param + 20;
+        let claimedKey = caller_param + 30;
+
         let currentStaked = sload(stakeKey);
+        let currentDebt = sload(debtKey);
+
+        // Auto-harvest pending rewards if already staking
+        if (currentStaked > 0) {
+            let accumulated = (currentStaked * accReward) / 1000000000;
+            if (accumulated > currentDebt) {
+                let pending = accumulated - currentDebt;
+                let claimedSoFar = sload(claimedKey);
+                sstore(claimedKey, claimedSoFar + pending);
+            }
+        }
+
+        let newStaked = currentStaked + amount;
+        let newDebt = (newStaked * accReward) / 1000000000;
 
         sstore(0, total + amount);
-        sstore(stakeKey, currentStaked + amount);
+        sstore(stakeKey, newStaked);
+        sstore(debtKey, newDebt);
 
-        return currentStaked + amount;
+        return newStaked;
     }
 
-    // Entry point 2: unstake(caller, amount)
-    fn unstake(caller, amount) {
-        let stakeKey = caller * 1000 + 10;
+    // Entry point 2: unstake(caller_param, amount)
+    // F-C-04: Enforce caller verification
+    fn unstake(caller_param, amount) {
+        let sender = caller();
+        if (caller_param != sender) {
+            return 0;
+        }
+        if (amount == 0) {
+            return 0;
+        }
+
+        let stakeKey = caller_param + 10;
         let currentStaked = sload(stakeKey);
 
         if (currentStaked < amount) {
             return 0;
         }
 
-        let total = sload(0);
-        sstore(0, total - amount);
-        sstore(stakeKey, currentStaked - amount);
+        let accReward = sload(1);
+        let debtKey = caller_param + 20;
+        let claimedKey = caller_param + 30;
+        let currentDebt = sload(debtKey);
 
-        return currentStaked - amount;
+        // Harvest pending rewards before reducing stake
+        let accumulated = (currentStaked * accReward) / 1000000000;
+        if (accumulated > currentDebt) {
+            let pending = accumulated - currentDebt;
+            let claimedSoFar = sload(claimedKey);
+            sstore(claimedKey, claimedSoFar + pending);
+        }
+
+        let total = sload(0);
+        let newStaked = currentStaked - amount;
+        let newDebt = (newStaked * accReward) / 1000000000;
+
+        sstore(0, total - amount);
+        sstore(stakeKey, newStaked);
+        sstore(debtKey, newDebt);
+
+        return newStaked;
     }
 
     // Entry point 3: depositRewards(amount)
+    // Increases accRewardPerShare pro-rata across currently staked tokens
     fn depositRewards(amount) {
         if (amount == 0) {
             return 0;
         }
-        let totalRewards = sload(1);
-        sstore(1, totalRewards + amount);
-        return totalRewards + amount;
-    }
 
-    // Entry point 4: claimRewards(caller)
-    fn claimRewards(caller) {
         let totalStaked = sload(0);
         if (totalStaked == 0) {
+            // Cannot distribute rewards with zero stakers
             return 0;
         }
 
-        let stakeKey = caller * 1000 + 10;
+        // F-H-02: Check amount * 1,000,000,000 for overflow
+        if (amount > 18446744073709551615 / 1000000000) {
+            return 0;
+        }
+
+        let rewardRewardScaled = amount * 1000000000;
+        let deltaRewardPerShare = rewardRewardScaled / totalStaked;
+
+        let currentAcc = sload(1);
+        let newAcc = currentAcc + deltaRewardPerShare;
+        sstore(1, newAcc);
+
+        let totalRewards = sload(2);
+        sstore(2, totalRewards + amount);
+
+        return newAcc;
+    }
+
+    // Entry point 4: claimRewards(caller_param)
+    // F-C-04: Enforce caller verification
+    fn claimRewards(caller_param) {
+        let sender = caller();
+        if (caller_param != sender) {
+            return 0;
+        }
+
+        let stakeKey = caller_param + 10;
         let userStaked = sload(stakeKey);
         if (userStaked == 0) {
             return 0;
         }
 
-        let totalRewards = sload(1);
-        let rewardKey = caller * 1000 + 20;
-        let claimed = sload(rewardKey);
+        let accReward = sload(1);
+        let debtKey = caller_param + 20;
+        let currentDebt = sload(debtKey);
 
-        // User share = (userStaked * totalRewards) / totalStaked
-        let entitlement = (userStaked * totalRewards) / totalStaked;
-        if (entitlement <= claimed) {
+        let accumulated = (userStaked * accReward) / 1000000000;
+        if (accumulated <= currentDebt) {
             return 0;
         }
 
-        let pending = entitlement - claimed;
-        sstore(rewardKey, claimed + pending);
+        let pending = accumulated - currentDebt;
+        let newDebt = (userStaked * accReward) / 1000000000;
+        sstore(debtKey, newDebt);
+
+        let claimedKey = caller_param + 30;
+        let claimedSoFar = sload(claimedKey);
+        sstore(claimedKey, claimedSoFar + pending);
 
         return pending;
     }
 
-    // Entry point 5: getStaked(caller)
-    fn getStaked(caller) {
-        let stakeKey = caller * 1000 + 10;
-        return sload(stakeKey);
-    }
-
-    // Entry point 6: getTotalStaked()
-    fn getTotalStaked() {
-        return sload(0);
-    }
-
-    // Entry point 7: getTotalRewards()
-    fn getTotalRewards() {
-        return sload(1);
-    }
-
-    // Entry point 8: getPendingRewards(caller)
+    // Entry point 5: getPendingRewards(caller)
     fn getPendingRewards(caller) {
-        let totalStaked = sload(0);
-        if (totalStaked == 0) {
-            return 0;
-        }
-
-        let stakeKey = caller * 1000 + 10;
+        let stakeKey = caller + 10;
         let userStaked = sload(stakeKey);
         if (userStaked == 0) {
             return 0;
         }
 
-        let totalRewards = sload(1);
-        let rewardKey = caller * 1000 + 20;
-        let claimed = sload(rewardKey);
+        let accReward = sload(1);
+        let debtKey = caller + 20;
+        let currentDebt = sload(debtKey);
 
-        let entitlement = (userStaked * totalRewards) / totalStaked;
-        if (entitlement <= claimed) {
+        let accumulated = (userStaked * accReward) / 1000000000;
+        if (accumulated <= currentDebt) {
             return 0;
         }
 
-        return entitlement - claimed;
+        return accumulated - currentDebt;
+    }
+
+    // Entry point 6: getStaked(caller)
+    fn getStaked(caller) {
+        let stakeKey = caller + 10;
+        return sload(stakeKey);
+    }
+
+    // Entry point 7: getTotalStaked()
+    fn getTotalStaked() {
+        return sload(0);
+    }
+
+    // Entry point 8: getTotalRewards()
+    fn getTotalRewards() {
+        return sload(2);
+    }
+
+    // Entry point 9: getAccRewardPerShare()
+    fn getAccRewardPerShare() {
+        return sload(1);
+    }
+
+    // Entry point 10: getClaimedRewards(caller)
+    fn getClaimedRewards(caller) {
+        let claimedKey = caller + 30;
+        return sload(claimedKey);
     }
 }
