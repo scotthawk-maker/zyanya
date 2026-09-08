@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
 
-wasm-pack build --weak-refs --target nodejs --out-name zyanya --out-dir nodejs/zyanya --features wasm32-sdk
+export CFLAGS_wasm32_unknown_unknown="-I/usr/include/wasm32-wasi -D__wasi__ -DNDEBUG"
 
+wasm-pack build --weak-refs --target nodejs --out-name zyanya --out-dir nodejs/zyanya --features wasm32-sdk

@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+export CFLAGS_wasm32_unknown_unknown="-I/usr/include/wasm32-wasi -D__wasi__ -DNDEBUG"
+
 if [ "$1" == "--keygen" ]; then
     echo "building wasm32-keygen"
     wasm-pack build --weak-refs --target web --out-name zyanya --out-dir web/zyanya-keygen --features wasm32-keygen
@@ -13,9 +15,7 @@ elif [ "$1" == "--core" ]; then
 elif [ "$1" == "--sdk" ]; then
     echo "building wasm32-sdk"
     wasm-pack build --weak-refs --target web --out-name zyanya --out-dir web/zyanya --features wasm32-sdk
-
 else
-
     echo "building wasm32-keygen"
     wasm-pack build --weak-refs --target web --out-name zyanya --out-dir web/zyanya-keygen --features wasm32-keygen
     echo "building wasm32-rpc"
@@ -24,6 +24,4 @@ else
     wasm-pack build --weak-refs --target web --out-name zyanya --out-dir web/zyanya-core --features wasm32-core
     echo "building wasm32-sdk"
     wasm-pack build --weak-refs --target web --out-name zyanya --out-dir web/zyanya --features wasm32-sdk
-
 fi
-

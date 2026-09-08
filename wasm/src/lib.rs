@@ -219,3 +219,56 @@ cfg_if::cfg_if! {
 
     }
 }
+
+#[cfg(target_arch = "wasm32")]
+mod c_alloc_shims {
+    use core::alloc::Layout;
+
+    #[no_mangle]
+    pub unsafe extern "C" fn __assert_fail(
+        _assertion: *const core::ffi::c_char,
+        _file: *const core::ffi::c_char,
+        _line: u32,
+        _function: *const core::ffi::c_char,
+    ) -> ! {
+        core::arch::wasm32::unreachable()
+    }
+
+    #[no_mangle]
+    pub unsafe extern "C" fn malloc(size: usize) -> *mut u8 {
+        let layout = match Layout::from_size_align(size + 16, 16) {
+            Ok(l) => l,
+            Err(_) => return core::ptr::null_mut(),
+        };
+        let ptr = std::alloc::alloc(layout);
+        if ptr.is_null() {
+            return core::ptr::null_mut();
+        }
+        *(ptr as *mut usize) = size;
+        ptr.add(16)
+    }
+
+    #[no_mangle]
+    pub unsafe extern "C" fn free(ptr: *mut u8) {
+        if !ptr.is_null() {
+            let orig_ptr = ptr.sub(16);
+            let size = *(orig_ptr as *mut usize);
+            if let Ok(layout) = Layout::from_size_align(size + 16, 16) {
+                std::alloc::dealloc(orig_ptr, layout);
+            }
+        }
+    }
+
+    #[no_mangle]
+    pub unsafe extern "C" fn calloc(nmemb: usize, size: usize) -> *mut u8 {
+        let total = match nmemb.checked_mul(size) {
+            Some(t) => t,
+            None => return core::ptr::null_mut(),
+        };
+        let ptr = malloc(total);
+        if !ptr.is_null() {
+            core::ptr::write_bytes(ptr, 0, total);
+        }
+        ptr
+    }
+}
