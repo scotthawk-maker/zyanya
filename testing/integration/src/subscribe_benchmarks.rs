@@ -185,7 +185,7 @@ async fn utxos_changed_subscriptions_client(address_cycle_seconds: u64, address_
         .utxoindex(true)
         .apply_args(Daemon::fill_args_with_random_ports)
         .build();
-    let network = args.network();
+    let network = args.network().expect("network args should be valid");
     let params: Params = network.into();
 
     let utxoset = args.generate_prealloc_utxos(args.num_prealloc_utxos.unwrap());

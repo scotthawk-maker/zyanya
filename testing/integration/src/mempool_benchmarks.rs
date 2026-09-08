@@ -91,7 +91,7 @@ async fn bench_bbt_latency() {
         block_template_cache_lifetime: Some(0),
         ..Default::default()
     };
-    let network = args.network();
+    let network = args.network().expect("network args should be valid");
     let params: Params = network.into();
 
     let utxoset = args.generate_prealloc_utxos(args.num_prealloc_utxos.unwrap());
@@ -334,7 +334,7 @@ async fn bench_bbt_latency_2() {
         .apply_args(Daemon::fill_args_with_random_ports)
         .build();
 
-    let network = args.network();
+    let network = args.network().expect("network args should be valid");
     let params: Params = network.into();
 
     let utxoset = args.generate_prealloc_utxos(args.num_prealloc_utxos.unwrap());

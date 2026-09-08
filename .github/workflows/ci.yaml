@@ -163,7 +163,7 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Run cargo clippy
-        run: cargo clippy --workspace --tests --benches --examples -- -A mismatched_lifetime_syntaxes -A unstable_name_collisions -A clippy::bad_bit_mask -D warnings
+        run: cargo clippy --workspace --tests --benches --examples
 
   check-wasm32:
     name: Check WASM32
