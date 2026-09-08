@@ -33,6 +33,7 @@ pub struct TransactionValidator {
     kip10_activation: ForkActivation,
     payload_activation: ForkActivation,
     runtime_sig_op_counting: ForkActivation,
+    pub(crate) smart_contracts_enabled: bool,
 }
 
 impl TransactionValidator {
@@ -52,6 +53,7 @@ impl TransactionValidator {
         kip10_activation: ForkActivation,
         payload_activation: ForkActivation,
         runtime_sig_op_counting: ForkActivation,
+        smart_contracts_enabled: bool,
     ) -> Self {
         Self {
             max_tx_inputs,
@@ -68,6 +70,7 @@ impl TransactionValidator {
             kip10_activation,
             payload_activation,
             runtime_sig_op_counting,
+            smart_contracts_enabled,
         }
     }
 
@@ -97,6 +100,7 @@ impl TransactionValidator {
             kip10_activation: ForkActivation::never(),
             payload_activation: ForkActivation::never(),
             runtime_sig_op_counting: ForkActivation::never(),
+            smart_contracts_enabled: true,
         }
     }
 }

@@ -20,9 +20,9 @@ impl TransactionValidator {
 
         check_transaction_output_value_ranges(tx)?;
         check_duplicate_transaction_inputs(tx)?;
-        check_gas(tx)?;
-        check_transaction_subnetwork(tx)?;
-        check_contract_payload_in_isolation(tx)?;
+        self.check_gas(tx)?;
+        self.check_transaction_subnetwork(tx)?;
+        self.check_contract_payload_in_isolation(tx)?;
         check_transaction_version(tx)
     }
 
@@ -104,15 +104,16 @@ fn check_duplicate_transaction_inputs(tx: &Transaction) -> TxResult<()> {
     Ok(())
 }
 
-fn check_gas(tx: &Transaction) -> TxResult<()> {
-    if tx.subnetwork_id.is_smart_contract() {
-        return Ok(());
+impl TransactionValidator {
+    fn check_gas(&self, tx: &Transaction) -> TxResult<()> {
+        if tx.subnetwork_id.is_smart_contract() && self.smart_contracts_enabled {
+            return Ok(());
+        }
+        if tx.gas > 0 {
+            return Err(TxRuleError::TxHasGas);
+        }
+        Ok(())
     }
-    if tx.gas > 0 {
-        return Err(TxRuleError::TxHasGas);
-    }
-    Ok(())
-}
 
 fn check_transaction_version(tx: &Transaction) -> TxResult<()> {
     if tx.version != TX_VERSION {
@@ -146,15 +147,23 @@ fn check_transaction_output_value_ranges(tx: &Transaction) -> TxResult<()> {
     Ok(())
 }
 
-fn check_transaction_subnetwork(tx: &Transaction) -> TxResult<()> {
-    if tx.is_coinbase() || tx.subnetwork_id.is_native() || tx.subnetwork_id.is_smart_contract() {
-        Ok(())
-    } else {
-        Err(TxRuleError::SubnetworksDisabled(tx.subnetwork_id.clone()))
+    fn check_transaction_subnetwork(&self, tx: &Transaction) -> TxResult<()> {
+        if tx.is_coinbase() || tx.subnetwork_id.is_native() {
+            Ok(())
+        } else if tx.subnetwork_id.is_smart_contract() && self.smart_contracts_enabled {
+            Ok(())
+        } else {
+            Err(TxRuleError::SubnetworksDisabled(tx.subnetwork_id.clone()))
+        }
     }
-}
 
-fn check_contract_payload_in_isolation(tx: &Transaction) -> TxResult<()> {
+    fn check_contract_payload_in_isolation(&self, tx: &Transaction) -> TxResult<()> {
+        if !tx.subnetwork_id.is_smart_contract() {
+            return Ok(());
+        }
+        if !self.smart_contracts_enabled {
+            return Err(TxRuleError::SubnetworksDisabled(tx.subnetwork_id.clone()));
+        }
     if !tx.subnetwork_id.is_smart_contract() {
         return Ok(());
     }
@@ -221,6 +230,7 @@ fn check_contract_payload_in_isolation(tx: &Transaction) -> TxResult<()> {
     Ok(())
 }
 
+}
 #[cfg(test)]
 mod tests {
     use zyanya_consensus_core::{
@@ -393,4 +403,49 @@ mod tests {
         tx.version = TX_VERSION + 1;
         assert_match!(tv.validate_tx_in_isolation(&tx), Err(TxRuleError::UnknownTxVersion(_)));
     }
+
+    #[test]
+    fn test_smart_contract_gated_on_mainnet() {
+        let mut tv = TransactionValidator::new_for_tests(
+            10, 10, 1000, 1000, 18, 180, 150, 100, Default::default(),
+        );
+        tv.smart_contracts_enabled = false;
+
+        let sc_tx = Transaction::new(
+            0,
+            vec![TransactionInput {
+                previous_outpoint: TransactionOutpoint {
+                    transaction_id: TransactionId::from_slice(&[0x01; 32]),
+                    index: 0,
+                },
+                signature_script: vec![0x49; 73],
+                sequence: u64::MAX,
+                sig_op_count: 0,
+            }],
+            vec![TransactionOutput {
+                value: 1000,
+                script_public_key: ScriptPublicKey::new(0, scriptvec![0x76, 0xa9]),
+            }],
+            0,
+            zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
+            5000,
+            zyanya_consensus_core::tx::ContractPayload::Deploy(
+                zyanya_consensus_core::tx::DeployContractPayload {
+                    bytecode: vec![0x01],
+                    max_gas: 5000,
+                    gas_price: 1,
+                    deposit_amount: 0,
+                    metadata_hash: [0u8; 32],
+                },
+            ).to_bytes().unwrap(),
+        );
+
+        // When smart contracts are disabled (Mainnet), transaction must be rejected
+        assert_match!(tv.validate_tx_in_isolation(&sc_tx), Err(TxRuleError::SubnetworksDisabled(_)));
+
+        // When enabled (Testnet), transaction succeeds
+        tv.smart_contracts_enabled = true;
+        tv.validate_tx_in_isolation(&sc_tx).unwrap();
+    }
+
 }

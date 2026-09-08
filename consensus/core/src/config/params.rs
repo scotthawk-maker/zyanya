@@ -134,6 +134,7 @@ pub struct Params {
     /// Activation rules for when to enable using the payload field in transactions
     pub payload_activation: ForkActivation,
     pub runtime_sig_op_counting: ForkActivation,
+    pub enable_smart_contracts: bool,
 
     /// Unique 4-byte network magic to isolate network p2p communication
     pub net_magic: [u8; 4],
@@ -394,6 +395,7 @@ pub const MAINNET_PARAMS: Params = Params {
     payload_activation: ForkActivation::never(),
     runtime_sig_op_counting: ForkActivation::never(),
     net_magic: [0x5A, 0x59, 0x41, 0x4E], // ASCII: "ZYAN"
+    enable_smart_contracts: false,
 };
 
 pub const TESTNET_PARAMS: Params = Params {
@@ -458,6 +460,7 @@ pub const TESTNET_PARAMS: Params = Params {
     payload_activation: ForkActivation::new(0),  // Activate immediately for testnet
     runtime_sig_op_counting: ForkActivation::never(),
     net_magic: [0x5A, 0x59, 0x4E, 0x54], // ASCII: "ZYNT"
+    enable_smart_contracts: true,
 };
 
 pub const TESTNET11_PARAMS: Params = Params {
@@ -520,6 +523,7 @@ pub const TESTNET11_PARAMS: Params = Params {
 
     runtime_sig_op_counting: ForkActivation::never(),
     net_magic: [0x54, 0x31, 0x31, 0x4E], // ASCII: "T11N"
+    enable_smart_contracts: true,
 };
 
 pub const SIMNET_PARAMS: Params = Params {
@@ -578,6 +582,7 @@ pub const SIMNET_PARAMS: Params = Params {
     payload_activation: ForkActivation::new(0),  // Activate immediately for simnet
     runtime_sig_op_counting: ForkActivation::never(),
     net_magic: [0x53, 0x49, 0x4D, 0x4E], // ASCII: "SIMN"
+    enable_smart_contracts: true,
 };
 
 pub const DEVNET_PARAMS: Params = Params {
@@ -637,6 +642,7 @@ pub const DEVNET_PARAMS: Params = Params {
     payload_activation: ForkActivation::new(0),  // Activate immediately for devnet
     runtime_sig_op_counting: ForkActivation::never(),
     net_magic: [0x44, 0x45, 0x56, 0x4E], // ASCII: "DEVN"
+    enable_smart_contracts: true,
 };
 
 #[cfg(test)]

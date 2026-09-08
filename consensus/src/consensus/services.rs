@@ -150,6 +150,7 @@ impl ConsensusServices {
             params.kip10_activation,
             params.payload_activation,
             params.runtime_sig_op_counting,
+            params.enable_smart_contracts,
         );
 
         let pruning_point_manager = PruningPointManager::new(
