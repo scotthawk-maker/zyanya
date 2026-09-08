@@ -375,7 +375,7 @@ impl ContractProcessor {
                         if invoke.entry_point == 4 {
                             // F-C-03 fix: Reject buy when deposit_amount < cost (including deposit_amount == 0).
                             let cost = ret_val;
-                            if invoke.deposit_amount < cost {
+                            if invoke.deposit_amount < cost || cost == 0 {
                                 // Buyer deposited insufficient ZYAN to cover cost (also covers deposit_amount == 0).
                                 return Some(ContractExecutionOutcome {
                                     tx_id: tx.id(),
@@ -389,18 +389,31 @@ impl ContractProcessor {
                                     payout: None,
                                 });
                             }
-                            // F-C-03 fix: Deduct cost from the contract balance on buy.
-                            // After crediting deposit_amount, the contract balance is the escrowed ZYAN.
-                            // Deducting cost locks it into the reserve (the contract code already does sstore(2, reserve + cost)).
-                            let contract_bal = temp_cache.get_balance(&addr_bytes);
-                            temp_cache.balances.insert(addr_bytes, contract_bal.saturating_sub(cost));
+                            // Retain the deposited ZYAN in contract balance to back future sell refunds.
                         } else if invoke.entry_point == 5 {
-                            // F-C-03 FOLLOW-UP: Sell now creates a UTXO payout output paying the
+                            // F-C-03 FOLLOW-UP: Sell creates a UTXO payout output paying the
                             // seller the refund amount. The refund is the VM return value (ret_val).
-                            // Deduct the refund from the contract balance (ZYAN custody decreases).
                             let refund = ret_val;
                             let contract_bal = temp_cache.get_balance(&addr_bytes);
-                            temp_cache.balances.insert(addr_bytes, contract_bal.saturating_sub(refund));
+
+                            // Strict Solvency Check: The contract must hold sufficient ZYAN custody balance!
+                            // If contract balance is less than requested refund or refund is zero, fail closed.
+                            if contract_bal < refund || refund == 0 {
+                                return Some(ContractExecutionOutcome {
+                                    tx_id: tx.id(),
+                                    contract_address,
+                                    gas_used: invoke.max_gas,
+                                    gas_fee: total_fee,
+                                    burned_fee: burned,
+                                    miner_fee: miner,
+                                    return_value: None,
+                                    success: false,
+                                    payout: None,
+                                });
+                            }
+
+                            // Deduct exact refund from contract balance (ZYAN custody decreases).
+                            temp_cache.balances.insert(addr_bytes, contract_bal - refund);
 
                             // Build the payout output paying the seller address. Fail closed if
                             // the caller's script public key is missing or cannot be resolved to an
@@ -717,5 +730,72 @@ mod tests {
         assert_eq!(store.get_storage(addr_bytes, 0).unwrap(), 1_000_000, "Total supply in RocksDB");
         assert_eq!(store.get_storage(addr_bytes, 1).unwrap(), 999_900, "Owner balance in RocksDB");
         assert_eq!(store.get_storage(addr_bytes, 2).unwrap(), 100, "Recipient balance in RocksDB");
+    }
+
+    #[test]
+    fn test_contract_solvency_and_refund_enforcement() {
+        let (_temp_dir, db) = create_temp_db!(zyanya_database::prelude::ConnBuilder::default().with_files_limit(10));
+        let store = DbContractStore::new(db.clone(), CachePolicy::Count(100));
+        let mut cache = ContractStateCache::new();
+        let processor = ContractProcessor::new();
+
+        // Contract that returns 500 when entry_point is 5 (mock sell)
+        // [Push(500), Return]
+        let contract_opcodes = vec![
+            OpCode::Push(500),
+            OpCode::Return,
+        ];
+        let bytecode = OpCode::serialize_slice(&contract_opcodes);
+
+        // 1. Deploy contract with 0 initial deposit
+        let deploy_payload = ContractPayload::Deploy(DeployContractPayload {
+            bytecode: bytecode.clone(),
+            max_gas: 10_000,
+            gas_price: 1,
+            deposit_amount: 0,
+            metadata_hash: [0u8; 32],
+        });
+        let deploy_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000, deploy_payload.to_bytes().unwrap());
+        let deploy_outcome = processor.process_contract_tx(&deploy_tx, &mut cache, 1, None).unwrap();
+        assert!(deploy_outcome.success);
+        let contract_addr = deploy_outcome.contract_address;
+        let addr_bytes: [u8; 32] = contract_addr.as_bytes().try_into().unwrap();
+        assert_eq!(cache.get_balance(&addr_bytes), 0);
+
+        // 2. Invoke entry_point 5 (wants 500 refund) while contract has 0 balance -> MUST FAIL CLOSED
+        let sell_payload = ContractPayload::Invoke(InvokeContractPayload {
+            contract_address: contract_addr,
+            entry_point: 5,
+            parameters: vec![],
+            max_gas: 10_000,
+            gas_price: 1,
+            deposit_amount: 0,
+        });
+        let sell_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000, sell_payload.to_bytes().unwrap());
+        let outcome = processor.process_contract_tx(&sell_tx, &mut cache, 1, None).unwrap();
+        assert!(!outcome.success, "Insolvent contract payout must fail closed");
+        assert!(outcome.payout.is_none(), "Insolvent contract must never produce payout UTXO");
+
+        // 3. Deposit 1000 into the contract (mock buy or deposit)
+        let deposit_payload = ContractPayload::Invoke(InvokeContractPayload {
+            contract_address: contract_addr,
+            entry_point: 1, // entry point 1 does not trigger special buy/sell
+            parameters: vec![],
+            max_gas: 10_000,
+            gas_price: 1,
+            deposit_amount: 1000,
+        });
+        let deposit_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000, deposit_payload.to_bytes().unwrap());
+        let dep_outcome = processor.process_contract_tx(&deposit_tx, &mut cache, 1, None).unwrap();
+        assert!(dep_outcome.success);
+        assert_eq!(cache.get_balance(&addr_bytes), 1000, "Contract balance credited");
+
+        // 4. Now invoke entry_point 5 (refund = 500) with caller script provided -> MUST SUCCEED
+        let caller_script = zyanya_consensus_core::tx::ScriptPublicKey::new(0, smallvec::smallvec![0x20; 34]);
+        let outcome2 = processor.process_contract_tx(&sell_tx, &mut cache, 1, Some(&caller_script)).unwrap();
+        assert!(outcome2.success, "Solvent contract payout must succeed");
+        assert!(outcome2.payout.is_some(), "Payout UTXO generated");
+        assert_eq!(outcome2.payout.unwrap().value, 500);
+        assert_eq!(cache.get_balance(&addr_bytes), 500, "Contract balance deducted exact refund (1000 - 500 = 500)");
     }
 }
