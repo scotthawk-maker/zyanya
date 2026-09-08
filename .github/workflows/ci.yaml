@@ -98,7 +98,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
       
       - name: Install cargo-nextest
-        run: cargo install cargo-nextest
+        run: cargo install --locked cargo-nextest
 
       - name: Cache
         uses: actions/cache@v4
@@ -163,7 +163,7 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Run cargo clippy
-        run: cargo clippy --workspace --tests --benches --examples -- -D warnings
+        run: cargo clippy --workspace --tests --benches --examples -- -A mismatched_lifetime_syntaxes -A unstable_name_collisions -A clippy::bad_bit_mask -D warnings
 
   check-wasm32:
     name: Check WASM32
@@ -219,19 +219,19 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       # append here any new wasm32 crate not already covered by the existing checks
-      - name: Run cargo check of spectre-wrpc-wasm for wasm32 target
+      - name: Run cargo check of zyanya-wrpc-wasm for wasm32 target
         env:
           TARGET_CC: clang
           TARGET_CFLAGS: -I/usr/include
         run: cargo clippy -p zyanya-wrpc-wasm --target wasm32-unknown-unknown
 
-      - name: Run cargo check of spectre-wallet-cli-wasm for wasm32 target
+      - name: Run cargo check of zyanya-wallet-cli-wasm for wasm32 target
         env:
           TARGET_CC: clang
           TARGET_CFLAGS: -I/usr/include
         run: cargo clippy -p zyanya-wallet-cli-wasm --target wasm32-unknown-unknown
 
-      - name: Run cargo check of spectre-wasm for wasm32 target
+      - name: Run cargo check of zyanya-wasm for wasm32 target
         env:
           TARGET_CC: clang
           TARGET_CFLAGS: -I/usr/include

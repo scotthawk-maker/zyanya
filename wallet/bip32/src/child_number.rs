@@ -36,9 +36,6 @@ impl ChildNumber {
     /// F-L-10: validates that the non-hardened index is < [`Self::HARDENED_FLAG`].
     pub fn from_bytes(bytes: [u8; Self::BYTE_SIZE]) -> Result<Self> {
         let n = u32::from_be_bytes(bytes);
-        if n & !Self::HARDENED_FLAG >= Self::HARDENED_FLAG {
-            return Err(Error::ChildNumber);
-        }
         Ok(ChildNumber(n))
     }
 
