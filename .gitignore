@@ -1,20 +1,45 @@
-target
-web-root
+# Rust build artifacts
+target/
+analyzer-target/
+Cargo.lock
+
+# Web and WASM
+web-root/
+release/
+**/node_modules/
+package-lock.json
+bun.lock
+bun.lockb
+dist/
+
+# Python & Tooling
+__pycache__/
+*.py[cod]
+*.class
+.venv/
+env/
+
+# IDE & OS
+.DS_Store
+Thumbs.db
 **/.idea/
-/rust-toolchain
 /.vscode/
-**/db-*
+*.code-workspace
+/rust-toolchain
+/setup
+
+# Testing & Performance Logs
+testing/integration/perflogs*
 /testing/integration/testdata/dags_for_json_tests/goref-mainnet
 /testing/integration/testdata/dags_for_json_tests/goref-1.6M-tx-10K-blocks
-analyzer-target
-.DS_Store
-*.code-workspace
-/setup
-testing/integration/perflogs*
+
+# Local DBs & Configurations
+**/db-*
 Servers.toml
-release
-Cargo.lock
-adws/adw_data/sessions/
-adws/adw_data/sssf.db*
-adws/adw_data/sssf.db
-*.jsonl
+
+# Sensitive Data & Wallets
+*.env*
+*.key
+*.priv
+*.wallet
+*.pem
