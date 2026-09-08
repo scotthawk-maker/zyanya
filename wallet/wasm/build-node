@@ -1,1 +1,2 @@
-wasm-pack build --target nodejs --out-name spectre-wallet --out-dir nodejs/spectre-wallet $@
+wasm-pack build --target nodejs --out-name zyanya-wallet --out-dir nodejs/zyanya-wallet $@
+

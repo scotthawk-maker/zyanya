@@ -1,1 +1,2 @@
-wasm-pack build --target web --out-name spectre-wallet --out-dir web/spectre-wallet $@
+wasm-pack build --target web --out-name zyanya-wallet --out-dir web/zyanya-wallet $@
+

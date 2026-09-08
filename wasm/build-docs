@@ -5,24 +5,25 @@ set -e
 
 if [ "$1" == "--keygen" ]; then
     echo "building keygen"
-    typedoc --name "Spectre WASM32 SDK - Key Generation" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/spectre-keygen ./build/docs/spectre-keygen.ts
+    typedoc --name "Zyanya WASM32 SDK - Key Generation" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/zyanya-keygen ./build/docs/zyanya-keygen.ts
 elif [ "$1" == "--rpc" ]; then
     echo "building rpc"
-    typedoc --name "Spectre WASM32 SDK - RPC" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/spectre-rpc ./build/docs/spectre-rpc.ts
+    typedoc --name "Zyanya WASM32 SDK - RPC" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/zyanya-rpc ./build/docs/zyanya-rpc.ts
 elif [ "$1" == "--core" ]; then
     echo "building core"
-    typedoc --name "Spectre WASM32 SDK - Core" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/spectre-core ./build/docs/spectre-core.ts
+    typedoc --name "Zyanya WASM32 SDK - Core" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/zyanya-core ./build/docs/zyanya-core.ts
 elif [ "$1" == "--sdk" ]; then
     echo "building full"
-    typedoc --name "Spectre WASM32 SDK" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/spectre ./build/docs/spectre.ts
+    typedoc --name "Zyanya WASM32 SDK" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/zyanya ./build/docs/zyanya.ts
 else
     echo "building keygen"
-    typedoc --name "Spectre WASM32 SDK - Key Generation" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/spectre-keygen ./build/docs/spectre-keygen.ts
+    typedoc --name "Zyanya WASM32 SDK - Key Generation" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/zyanya-keygen ./build/docs/zyanya-keygen.ts
     echo "building rpc"
-    typedoc --name "Spectre WASM32 SDK - RPC" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/spectre-rpc ./build/docs/spectre-rpc.ts
+    typedoc --name "Zyanya WASM32 SDK - RPC" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/zyanya-rpc ./build/docs/zyanya-rpc.ts
     echo "building core"
-    typedoc --name "Spectre WASM32 SDK - Core" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/spectre-core ./build/docs/spectre-core.ts
+    typedoc --name "Zyanya WASM32 SDK - Core" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/zyanya-core ./build/docs/zyanya-core.ts
     echo "building full"
-    typedoc --name "Spectre WASM32 SDK" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/spectre ./build/docs/spectre.ts
+    typedoc --name "Zyanya WASM32 SDK" --sourceLinkExternal --readme ./README.md --options ./build/docs/ --out ./docs/zyanya ./build/docs/zyanya.ts
 
 fi
+

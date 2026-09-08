@@ -1,4 +1,5 @@
 #!/bin/bash
 set -e
 
-wasm-pack build --weak-refs --target nodejs --out-name spectre --out-dir nodejs/spectre --features wasm32-sdk
+wasm-pack build --weak-refs --target nodejs --out-name zyanya --out-dir nodejs/zyanya --features wasm32-sdk
+

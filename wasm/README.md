@@ -202,3 +202,4 @@ npm install -g typedoc
 ```
 
 The resulting documentation will be located in `docs/typedoc/`
+

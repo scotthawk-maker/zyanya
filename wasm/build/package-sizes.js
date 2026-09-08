@@ -54,3 +54,4 @@ const folderPath = path.join(__dirname,'../web/');
 const outputFileName = path.join(__dirname,'../package-sizes.js');
 
 generateFolderSizesJSON(folderPath, outputFileName);
+

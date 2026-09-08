@@ -6,7 +6,8 @@ NC='\033[0m' # No Color
 
 echo -e "${RED}WARNING: do not use resulting WASM binaries in production!${NC}"
 
-wasm-pack build --weak-refs -dev --target web --out-name spectre --out-dir web/spectre-dev-keygen --features wasm32-keygen $@
-wasm-pack build --weak-refs -dev --target web --out-name spectre --out-dir web/spectre-dev-rpc --features wasm32-rpc $@
-wasm-pack build --weak-refs -dev --target web --out-name spectre --out-dir web/spectre-dev-core --features wasm32-core $@
-wasm-pack build --weak-refs -dev --target web --out-name spectre --out-dir web/spectre-dev --features wasm32-sdk $@
+wasm-pack build --weak-refs -dev --target web --out-name zyanya --out-dir web/zyanya-dev-keygen --features wasm32-keygen $@
+wasm-pack build --weak-refs -dev --target web --out-name zyanya --out-dir web/zyanya-dev-rpc --features wasm32-rpc $@
+wasm-pack build --weak-refs -dev --target web --out-name zyanya --out-dir web/zyanya-dev-core --features wasm32-core $@
+wasm-pack build --weak-refs -dev --target web --out-name zyanya --out-dir web/zyanya-dev --features wasm32-sdk $@
+

@@ -1,3 +1,4 @@
 #!/bin/bash
 
-wasm-pack build --target nodejs --out-name spectre-rpc --out-dir nodejs/spectre-rpc --features wasm32-sdk
+wasm-pack build --target nodejs --out-name zyanya-rpc --out-dir nodejs/zyanya-rpc --features wasm32-sdk
+
