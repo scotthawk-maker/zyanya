@@ -10,10 +10,10 @@ use crate::protowire::{
     VirtualChainChangedNotificationMessage, VirtualDaaScoreChangedNotificationMessage,
 };
 use crate::{from, try_from};
-use zyanya_notify::subscription::Command;
-use zyanya_rpc_core::{Notification, RpcError, RpcHash};
 use std::str::FromStr;
 use std::sync::Arc;
+use zyanya_notify::subscription::Command;
+use zyanya_rpc_core::{Notification, RpcError, RpcHash};
 
 // ----------------------------------------------------------------------------
 // rpc_core to protowire

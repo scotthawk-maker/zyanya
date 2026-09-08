@@ -269,10 +269,10 @@ mod tests {
     use parking_lot::RwLock;
     use rand::seq::IteratorRandom;
     use rocksdb::WriteBatch;
+    use std::{iter::once, ops::Deref};
     use zyanya_consensus_core::blockhash::ORIGIN;
     use zyanya_database::prelude::ConnBuilder;
     use zyanya_database::{create_temp_db, prelude::CachePolicy};
-    use std::{iter::once, ops::Deref};
 
     #[test]
     fn test_add_tree_blocks() {

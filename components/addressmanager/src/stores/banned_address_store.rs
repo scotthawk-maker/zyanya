@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
+use std::net::{IpAddr, Ipv6Addr};
+use std::{error::Error, fmt::Display, sync::Arc};
 use zyanya_database::{
     prelude::{CachePolicy, StoreError, StoreResult},
     prelude::{CachedDbAccess, DirectDbWriter, DB},
     registry::DatabaseStorePrefixes,
 };
 use zyanya_utils::mem_size::MemSizeEstimator;
-use std::net::{IpAddr, Ipv6Addr};
-use std::{error::Error, fmt::Display, sync::Arc};
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct ConnectionBanTimestamp(pub u64);

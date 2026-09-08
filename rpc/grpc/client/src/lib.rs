@@ -8,6 +8,16 @@ pub use client_pool::ClientPool;
 use connection_event::ConnectionEvent;
 use futures::{future::FutureExt, pin_mut, select};
 use regex::Regex;
+use std::{
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    time::Duration,
+};
+use tokio::sync::Mutex;
+use tonic::codec::CompressionEncoding;
+use tonic::Streaming;
 use zyanya_core::{debug, error, trace};
 use zyanya_grpc_core::{
     channel::NotificationChannel,
@@ -41,16 +51,6 @@ use zyanya_utils_tower::{
     counters::TowerConnectionCounters,
     middleware::{BodyExt, CountBytesBody, MapRequestBodyLayer, MapResponseBodyLayer, ServiceBuilder},
 };
-use std::{
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
-    time::Duration,
-};
-use tokio::sync::Mutex;
-use tonic::codec::CompressionEncoding;
-use tonic::Streaming;
 
 mod connection_event;
 pub mod error;

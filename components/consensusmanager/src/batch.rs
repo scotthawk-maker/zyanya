@@ -1,5 +1,5 @@
-use zyanya_consensus_core::{api::BlockValidationFuture, block::Block};
 use std::fmt::Debug;
+use zyanya_consensus_core::{api::BlockValidationFuture, block::Block};
 
 pub struct BlockProcessingBatch {
     pub blocks: Vec<Block>,

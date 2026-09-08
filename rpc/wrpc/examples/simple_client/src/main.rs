@@ -1,15 +1,15 @@
 // Example of simple client to connect with Zyanya node using wRPC connection and collect some node and network basic data
 
+use std::process::ExitCode;
+use std::time::Duration;
 use zyanya_rpc_core::{api::rpc::RpcApi, GetBlockDagInfoResponse, GetServerInfoResponse};
 use zyanya_wrpc_client::{
     client::{ConnectOptions, ConnectStrategy},
     prelude::NetworkId,
     prelude::NetworkType,
     result::Result,
-    Resolver, ZyanyaRpcClient, WrpcEncoding,
+    Resolver, WrpcEncoding, ZyanyaRpcClient,
 };
-use std::process::ExitCode;
-use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> ExitCode {

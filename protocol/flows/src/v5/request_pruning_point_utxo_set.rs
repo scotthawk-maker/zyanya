@@ -1,5 +1,6 @@
 use crate::{flow_context::FlowContext, flow_trait::Flow, v5::ibd::IBD_BATCH_SIZE};
 use itertools::Itertools;
+use std::sync::Arc;
 use zyanya_consensus_core::errors::consensus::ConsensusError;
 use zyanya_core::debug;
 use zyanya_hashes::Hash;
@@ -7,12 +8,10 @@ use zyanya_p2p_lib::{
     common::ProtocolError,
     dequeue, make_message,
     pb::{
-        zyanyad_message::Payload, DonePruningPointUtxoSetChunksMessage, PruningPointUtxoSetChunkMessage,
-        UnexpectedPruningPointMessage,
+        zyanyad_message::Payload, DonePruningPointUtxoSetChunksMessage, PruningPointUtxoSetChunkMessage, UnexpectedPruningPointMessage,
     },
     IncomingRoute, Router,
 };
-use std::sync::Arc;
 
 pub struct RequestPruningPointUtxoSetFlow {
     ctx: FlowContext,

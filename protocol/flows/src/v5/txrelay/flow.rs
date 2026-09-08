@@ -3,6 +3,8 @@ use crate::{
     flow_trait::Flow,
     flowcontext::transactions::MAX_INV_PER_TX_INV_MSG,
 };
+use std::sync::Arc;
+use tokio::time::timeout;
 use zyanya_consensus_core::tx::{Transaction, TransactionId};
 use zyanya_consensusmanager::ConsensusProxy;
 use zyanya_core::{time::unix_now, warn};
@@ -21,8 +23,6 @@ use zyanya_p2p_lib::{
     pb::{zyanyad_message::Payload, RequestTransactionsMessage, TransactionNotFoundMessage},
     IncomingRoute, Router,
 };
-use std::sync::Arc;
-use tokio::time::timeout;
 
 pub(crate) const MAX_TPS_THRESHOLD: u64 = 3000;
 
@@ -172,7 +172,8 @@ impl RelayTransactionsFlow {
         // To reduce the P2P TPS to below the threshold, we need to request up to a max of
         // whatever the balances overage. If MAX_TPS_THRESHOLD is 3000 and the current TPS is 4000,
         // then we can only request up to 2000 (MAX - (4000 - 3000)) to average out into the threshold.
-        let curr_p2p_tps = 1000u64.saturating_mul(snapshot_delta.low_priority_tx_counts) / (snapshot_delta.elapsed_time.as_millis().max(1) as u64);
+        let curr_p2p_tps =
+            1000u64.saturating_mul(snapshot_delta.low_priority_tx_counts) / (snapshot_delta.elapsed_time.as_millis().max(1) as u64);
         let overage = if should_throttle && curr_p2p_tps > MAX_TPS_THRESHOLD { curr_p2p_tps - MAX_TPS_THRESHOLD } else { 0 };
 
         let limit = MAX_TPS_THRESHOLD.saturating_sub(overage);
@@ -256,10 +257,9 @@ impl RelayTransactionsFlow {
         }
         self.tx_relay_count += transactions.len() as u64;
         if self.tx_relay_count > MAX_TX_RELAY_PER_SECOND {
-            return Err(self.ban_peer(&format!(
-                "peer {} exceeded tx relay rate limit ({} tx/sec)",
-                self.router, MAX_TX_RELAY_PER_SECOND
-            )));
+            return Err(
+                self.ban_peer(&format!("peer {} exceeded tx relay rate limit ({} tx/sec)", self.router, MAX_TX_RELAY_PER_SECOND))
+            );
         }
 
         let insert_results = self
@@ -286,10 +286,7 @@ impl RelayTransactionsFlow {
                     }
                     self.spam_counter += 1;
                     if self.spam_counter > MAX_SPAM_TXS_PER_WINDOW {
-                        return Err(self.ban_peer(&format!(
-                            "peer {} sent {} spam/non-standard txs",
-                            self.router, self.spam_counter
-                        )));
+                        return Err(self.ban_peer(&format!("peer {} sent {} spam/non-standard txs", self.router, self.spam_counter)));
                     }
                     if self.spam_counter % 100 == 0 {
                         zyanya_core::warn!("Peer {} has shared {} spam/non-standard txs ({:?})", self.router, self.spam_counter, res);
@@ -381,7 +378,8 @@ fn check_tx_throttling(throttling_state: &mut ThrottlingState, next_snapshot: P2
     throttling_state.curr_snapshot = next_snapshot;
 
     if snapshot_delta.low_priority_tx_counts > 0 {
-        let tps = 1000u64.saturating_mul(snapshot_delta.low_priority_tx_counts) / snapshot_delta.elapsed_time.as_millis().max(1) as u64;
+        let tps =
+            1000u64.saturating_mul(snapshot_delta.low_priority_tx_counts) / snapshot_delta.elapsed_time.as_millis().max(1) as u64;
         if !throttling_state.should_throttle && tps > MAX_TPS_THRESHOLD {
             warn!("P2P tx relay threshold exceeded. Throttling relay. Current: {}, Max: {}", tps, MAX_TPS_THRESHOLD);
             throttling_state.should_throttle = true;

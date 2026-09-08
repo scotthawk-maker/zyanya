@@ -10,10 +10,7 @@ pub struct GasMeter {
 impl GasMeter {
     /// Create a new gas meter with the given gas limit.
     pub fn new(gas_limit: u64) -> Self {
-        Self {
-            gas_limit,
-            used_gas: 0,
-        }
+        Self { gas_limit, used_gas: 0 }
     }
 
     /// Deduct gas for an operation.
@@ -21,15 +18,9 @@ impl GasMeter {
     /// F-M-02: use `checked_add` instead of `saturating_add` so that an overflow is
     /// surfaced as an `OutOfGas` error rather than silently masked.
     pub fn consume(&mut self, amount: u64) -> Result<(), VMError> {
-        let new_used = self.used_gas.checked_add(amount).ok_or(VMError::OutOfGas {
-            limit: self.gas_limit,
-            requested: u64::MAX,
-        })?;
+        let new_used = self.used_gas.checked_add(amount).ok_or(VMError::OutOfGas { limit: self.gas_limit, requested: u64::MAX })?;
         if new_used > self.gas_limit {
-            return Err(VMError::OutOfGas {
-                limit: self.gas_limit,
-                requested: new_used,
-            });
+            return Err(VMError::OutOfGas { limit: self.gas_limit, requested: new_used });
         }
         self.used_gas = new_used;
         Ok(())
@@ -55,10 +46,7 @@ impl GasMeter {
     /// F-M-02: use `checked_sub` instead of `saturating_sub` and return an error on
     /// underflow so that a negative gas refund is not silently masked.
     pub fn refund(&mut self, amount: u64) -> Result<(), VMError> {
-        self.used_gas = self.used_gas.checked_sub(amount).ok_or(VMError::OutOfGas {
-            limit: self.gas_limit,
-            requested: 0,
-        })?;
+        self.used_gas = self.used_gas.checked_sub(amount).ok_or(VMError::OutOfGas { limit: self.gas_limit, requested: 0 })?;
         Ok(())
     }
 }

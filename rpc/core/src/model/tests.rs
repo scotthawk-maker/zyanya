@@ -3,6 +3,10 @@ mod mockery {
 
     use crate::{model::*, RpcScriptClass};
     use rand::Rng;
+    use std::net::{IpAddr, Ipv4Addr};
+    use std::sync::Arc;
+    use uuid::Uuid;
+    use workflow_serializer::prelude::*;
     use zyanya_addresses::{Prefix, Version};
     use zyanya_consensus_core::api::BlockCount;
     use zyanya_consensus_core::network::NetworkType;
@@ -13,10 +17,6 @@ mod mockery {
     use zyanya_notify::subscription::Command;
     use zyanya_rpc_macros::test_wrpc_serializer as test;
     use zyanya_utils::networking::{ContextualNetAddress, IpAddress, NetAddress};
-    use std::net::{IpAddr, Ipv4Addr};
-    use std::sync::Arc;
-    use uuid::Uuid;
-    use workflow_serializer::prelude::*;
 
     // this trait is used to generate random
     // values for testing on various data types

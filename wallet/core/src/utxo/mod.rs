@@ -25,9 +25,9 @@ pub use processor::UtxoProcessor;
 pub use reference::{Maturity, TryIntoUtxoEntryReferences, UtxoEntryReference, UtxoEntryReferenceExtension};
 pub use scan::{Scan, ScanExtent};
 pub use settings::*;
-pub use zyanya_consensus_client::UtxoEntryId;
 pub use stream::UtxoStream;
 pub use sync::SyncMonitor;
+pub use zyanya_consensus_client::UtxoEntryId;
 
 #[cfg(test)]
 pub mod test;

@@ -10,9 +10,9 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use rand_core::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use zyanya_utils::hex::*;
 use wasm_bindgen::prelude::*;
 use zeroize::{Zeroize, Zeroizing};
+use zyanya_utils::hex::*;
 use {super::seed::Seed, hmac::Hmac, sha2::Sha512};
 
 /// Number of PBKDF2 rounds to perform when deriving the seed
@@ -102,7 +102,8 @@ impl Mnemonic {
     #[wasm_bindgen(setter, js_name = phrase)]
     pub fn set_phrase(&mut self, phrase: &str) -> std::result::Result<(), JsValue> {
         // F-M-15: re-validate the phrase instead of storing unvalidated input.
-        let mnemonic = Mnemonic::new(phrase, self.language).map_err(|err| JsValue::from_str(&format!("invalid mnemonic phrase: {err}")))?;
+        let mnemonic =
+            Mnemonic::new(phrase, self.language).map_err(|err| JsValue::from_str(&format!("invalid mnemonic phrase: {err}")))?;
         self.entropy = mnemonic.entropy.clone();
         self.phrase = phrase.to_string();
         Ok(())

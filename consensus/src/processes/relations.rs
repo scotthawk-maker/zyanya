@@ -152,10 +152,10 @@ impl<S: RelationsStore + ChildrenStore + ?Sized> RelationsStoreExtensions for S 
 mod tests {
     use super::*;
     use crate::model::stores::relations::{DbRelationsStore, RelationsStoreReader, StagingRelationsStore};
+    use std::sync::Arc;
     use zyanya_core::assert_match;
     use zyanya_database::prelude::{CachePolicy, ConnBuilder};
     use zyanya_database::{create_temp_db, prelude::MemoryWriter};
-    use std::sync::Arc;
 
     #[test]
     fn test_delete_level_relations_zero_cache() {

@@ -5,8 +5,8 @@ mod reindex;
 pub mod tests;
 mod tree;
 
-use zyanya_database::prelude::StoreError;
 use thiserror::Error;
+use zyanya_database::prelude::StoreError;
 
 #[derive(Error, Debug)]
 pub enum ReachabilityError {

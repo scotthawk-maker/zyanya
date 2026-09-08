@@ -25,14 +25,14 @@ use crate::storage::interface::{OpenArgs, StorageDescriptor};
 use crate::storage::local::interface::LocalStore;
 use crate::storage::local::Storage;
 use crate::wallet::maps::ActiveAccountMap;
+use workflow_core::task::spawn;
 use zyanya_bip32::{ExtendedKey, Language, Mnemonic, Prefix as KeyPrefix, WordCount};
 use zyanya_notify::{
     listener::ListenerId,
     scope::{Scope, VirtualDaaScoreChangedScope},
 };
 use zyanya_wallet_keys::xpub::NetworkTaggedXpub;
-use zyanya_wrpc_client::{Resolver, ZyanyaRpcClient, WrpcEncoding};
-use workflow_core::task::spawn;
+use zyanya_wrpc_client::{Resolver, WrpcEncoding, ZyanyaRpcClient};
 
 pub type WalletGuard<'l> = AsyncMutexGuard<'l, ()>;
 
@@ -141,13 +141,8 @@ impl Wallet {
     }
 
     pub fn try_with_wrpc(store: Arc<dyn Interface>, resolver: Option<Resolver>, network_id: Option<NetworkId>) -> Result<Wallet> {
-        let rpc_client = Arc::new(ZyanyaRpcClient::new_with_args(
-            WrpcEncoding::Borsh,
-            Some("wrpc://127.0.0.1:19110"),
-            resolver,
-            network_id,
-            None,
-        )?);
+        let rpc_client =
+            Arc::new(ZyanyaRpcClient::new_with_args(WrpcEncoding::Borsh, Some("wrpc://127.0.0.1:19110"), resolver, network_id, None)?);
 
         let rpc_ctl = rpc_client.ctl().clone();
         let rpc_api: Arc<DynRpcApi> = rpc_client;

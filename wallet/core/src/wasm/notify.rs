@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use cfg_if::cfg_if;
-use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
 use wasm_bindgen::prelude::*;
+use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
 
 cfg_if! {
     if #[cfg(any(feature = "wasm32-core", feature = "wasm32-sdk"))] {

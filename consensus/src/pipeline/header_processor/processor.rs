@@ -32,6 +32,7 @@ use itertools::Itertools;
 use parking_lot::RwLock;
 use rayon::ThreadPool;
 use rocksdb::WriteBatch;
+use std::sync::{atomic::Ordering, Arc};
 use zyanya_consensus_core::{
     blockhash::{BlockHashes, ORIGIN},
     blockstatus::BlockStatus::{self, StatusHeaderOnly, StatusInvalid},
@@ -43,7 +44,6 @@ use zyanya_consensusmanager::SessionLock;
 use zyanya_database::prelude::{StoreResultEmptyTuple, StoreResultExtensions};
 use zyanya_hashes::Hash;
 use zyanya_utils::vec::VecExtensions;
-use std::sync::{atomic::Ordering, Arc};
 
 use super::super::ProcessingCounters;
 

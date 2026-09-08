@@ -60,12 +60,7 @@ impl Parser {
                     functions.push(self.parse_function()?);
                 } else {
                     let tok = self.peek();
-                    return Err(ParserError::UnexpectedToken(
-                        tok.kind.to_string(),
-                        tok.line,
-                        tok.col,
-                        "fn declaration".into(),
-                    ));
+                    return Err(ParserError::UnexpectedToken(tok.kind.to_string(), tok.line, tok.col, "fn declaration".into()));
                 }
             }
 
@@ -76,10 +71,7 @@ impl Parser {
             }
         }
 
-        Ok(Program {
-            contract_name,
-            functions,
-        })
+        Ok(Program { contract_name, functions })
     }
 
     fn parse_function(&mut self) -> Result<FunctionDef, ParserError> {
@@ -172,11 +164,7 @@ impl Parser {
                 None
             };
 
-            Ok(Statement::If {
-                condition,
-                then_branch,
-                else_branch,
-            })
+            Ok(Statement::If { condition, then_branch, else_branch })
         } else if self.check_kind(&TokenKind::Return) {
             self.advance();
             let expr = if self.check_kind(&TokenKind::Semi) || self.check_kind(&TokenKind::RBrace) {
@@ -228,11 +216,7 @@ impl Parser {
             };
             self.advance();
             let right = self.parse_relational()?;
-            expr = Expression::Binary {
-                op,
-                left: Box::new(expr),
-                right: Box::new(right),
-            };
+            expr = Expression::Binary { op, left: Box::new(expr), right: Box::new(right) };
         }
 
         Ok(expr)
@@ -255,11 +239,7 @@ impl Parser {
             };
             self.advance();
             let right = self.parse_additive()?;
-            expr = Expression::Binary {
-                op,
-                left: Box::new(expr),
-                right: Box::new(right),
-            };
+            expr = Expression::Binary { op, left: Box::new(expr), right: Box::new(right) };
         }
 
         Ok(expr)
@@ -276,11 +256,7 @@ impl Parser {
             };
             self.advance();
             let right = self.parse_multiplicative()?;
-            expr = Expression::Binary {
-                op,
-                left: Box::new(expr),
-                right: Box::new(right),
-            };
+            expr = Expression::Binary { op, left: Box::new(expr), right: Box::new(right) };
         }
 
         Ok(expr)
@@ -289,10 +265,7 @@ impl Parser {
     fn parse_multiplicative(&mut self) -> Result<Expression, ParserError> {
         let mut expr = self.parse_primary()?;
 
-        while self.check_kind(&TokenKind::Star)
-            || self.check_kind(&TokenKind::Slash)
-            || self.check_kind(&TokenKind::Percent)
-        {
+        while self.check_kind(&TokenKind::Star) || self.check_kind(&TokenKind::Slash) || self.check_kind(&TokenKind::Percent) {
             let op = match self.peek().kind {
                 TokenKind::Star => BinaryOp::Mul,
                 TokenKind::Slash => BinaryOp::Div,
@@ -301,11 +274,7 @@ impl Parser {
             };
             self.advance();
             let right = self.parse_primary()?;
-            expr = Expression::Binary {
-                op,
-                left: Box::new(expr),
-                right: Box::new(right),
-            };
+            expr = Expression::Binary { op, left: Box::new(expr), right: Box::new(right) };
         }
 
         Ok(expr)
@@ -349,26 +318,17 @@ impl Parser {
             TokenKind::Sstore => {
                 self.advance();
                 let args = self.parse_args()?;
-                Ok(Expression::Call {
-                    name: "sstore".into(),
-                    args,
-                })
+                Ok(Expression::Call { name: "sstore".into(), args })
             }
             TokenKind::Sload => {
                 self.advance();
                 let args = self.parse_args()?;
-                Ok(Expression::Call {
-                    name: "sload".into(),
-                    args,
-                })
+                Ok(Expression::Call { name: "sload".into(), args })
             }
             TokenKind::Call => {
                 self.advance();
                 let args = self.parse_args()?;
-                Ok(Expression::Call {
-                    name: "call".into(),
-                    args,
-                })
+                Ok(Expression::Call { name: "call".into(), args })
             }
             TokenKind::LParen => {
                 self.advance();
@@ -376,12 +336,7 @@ impl Parser {
                 self.expect_kind(&TokenKind::RParen, ") after nested expression")?;
                 Ok(expr)
             }
-            other => Err(ParserError::UnexpectedToken(
-                other.to_string(),
-                tok.line,
-                tok.col,
-                "expression".into(),
-            )),
+            other => Err(ParserError::UnexpectedToken(other.to_string(), tok.line, tok.col, "expression".into())),
         }
     }
 
@@ -416,12 +371,7 @@ impl Parser {
             Ok(())
         } else {
             let tok = self.peek();
-            Err(ParserError::UnexpectedToken(
-                tok.kind.to_string(),
-                tok.line,
-                tok.col,
-                desc.into(),
-            ))
+            Err(ParserError::UnexpectedToken(tok.kind.to_string(), tok.line, tok.col, desc.into()))
         }
     }
 
@@ -432,12 +382,7 @@ impl Parser {
             self.advance();
             Ok(name)
         } else {
-            Err(ParserError::UnexpectedToken(
-                tok.kind.to_string(),
-                tok.line,
-                tok.col,
-                desc.into(),
-            ))
+            Err(ParserError::UnexpectedToken(tok.kind.to_string(), tok.line, tok.col, desc.into()))
         }
     }
 
@@ -452,9 +397,7 @@ impl Parser {
     }
 
     fn peek_next(&self) -> &Token {
-        self.tokens
-            .get(self.pos + 1)
-            .unwrap_or_else(|| self.tokens.last().unwrap())
+        self.tokens.get(self.pos + 1).unwrap_or_else(|| self.tokens.last().unwrap())
     }
 
     fn advance(&mut self) -> &Token {
@@ -511,11 +454,7 @@ mod tests {
     fn test_parser_rejects_deeply_nested_expression() {
         // F-H-04: deeply-nested parenthesised expressions must be rejected
         // rather than overflowing the stack.
-        let deep = "fn f() { return ".to_string()
-            + &"(".repeat(200)
-            + "1"
-            + &")".repeat(200)
-            + "; }";
+        let deep = "fn f() { return ".to_string() + &"(".repeat(200) + "1" + &")".repeat(200) + "; }";
         let mut lexer = Lexer::new(&deep);
         let tokens = lexer.tokenize().expect("Lexing failed");
         let mut parser = Parser::new(tokens);

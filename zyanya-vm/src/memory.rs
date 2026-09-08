@@ -12,9 +12,7 @@ pub struct Memory {
 impl Memory {
     /// Create a new memory storage instance.
     pub fn new() -> Self {
-        Self {
-            registers: vec![0; MAX_MEMORY_REGISTERS],
-        }
+        Self { registers: vec![0; MAX_MEMORY_REGISTERS] }
     }
 
     /// Read value from a register index.

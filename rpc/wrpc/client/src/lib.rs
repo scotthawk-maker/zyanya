@@ -18,7 +18,7 @@ pub mod client;
 pub mod error;
 mod imports;
 pub mod result;
-pub use imports::{Resolver, ZyanyaRpcClient, WrpcEncoding};
+pub use imports::{Resolver, WrpcEncoding, ZyanyaRpcClient};
 pub mod node;
 pub mod parse;
 pub mod prelude;

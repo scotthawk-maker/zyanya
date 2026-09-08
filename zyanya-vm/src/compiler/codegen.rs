@@ -22,10 +22,7 @@ pub struct CodeGenerator {
 
 impl CodeGenerator {
     pub fn new() -> Self {
-        Self {
-            lines: Vec::new(),
-            next_label_id: 0,
-        }
+        Self { lines: Vec::new(), next_label_id: 0 }
     }
 
     pub fn generate_assembly(&mut self, program: &Program) -> Result<String, CodegenError> {
@@ -109,17 +106,11 @@ impl CodeGenerator {
             }
             Statement::Assign { name, value } => {
                 self.generate_expression(value, symbols, current_fn, fn_idx)?;
-                let &reg = symbols
-                    .get(name)
-                    .ok_or_else(|| CodegenError::UndefinedVariable(name.clone()))?;
+                let &reg = symbols.get(name).ok_or_else(|| CodegenError::UndefinedVariable(name.clone()))?;
                 self.lines.push(format!("STORE {}", reg));
                 Ok(false)
             }
-            Statement::If {
-                condition,
-                then_branch,
-                else_branch,
-            } => {
+            Statement::If { condition, then_branch, else_branch } => {
                 let label_id = self.next_label_id;
                 self.next_label_id += 1;
 
@@ -179,9 +170,7 @@ impl CodeGenerator {
                 self.lines.push(format!("PUSH {}", n));
             }
             Expression::Variable(name) => {
-                let &reg = symbols
-                    .get(name)
-                    .ok_or_else(|| CodegenError::UndefinedVariable(name.clone()))?;
+                let &reg = symbols.get(name).ok_or_else(|| CodegenError::UndefinedVariable(name.clone()))?;
                 self.lines.push(format!("LOAD {}", reg));
             }
             Expression::Binary { op, left, right } => {
@@ -223,9 +212,7 @@ impl CodeGenerator {
                 }
                 "call" => {
                     if args.len() < 3 {
-                        return Err(CodegenError::InvalidBuiltinArgs(
-                            "call requires 3 arguments (addr, gas, calldata)".into(),
-                        ));
+                        return Err(CodegenError::InvalidBuiltinArgs("call requires 3 arguments (addr, gas, calldata)".into()));
                     }
                     // Format: call(addr, gas, calldata)
                     // Stack for CALL opcode: forward_gas first, calldata second, CALL <addr>

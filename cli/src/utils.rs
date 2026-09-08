@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::result::Result;
-use zyanya_consensus_core::constants::SOMPI_PER_ZYANYA;
 use std::fmt::Display;
+use zyanya_consensus_core::constants::SOMPI_PER_ZYANYA;
 
 pub fn try_parse_required_nonzero_zyanya_as_sompi_u64<S: ToString + Display>(zyanya_amount: Option<S>) -> Result<u64> {
     if let Some(zyanya_amount) = zyanya_amount {

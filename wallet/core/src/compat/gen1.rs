@@ -15,8 +15,11 @@ pub fn decrypt_mnemonic<T: AsRef<[u8]>>(
     let num_threads = num_threads.clamp(1, 64);
     let params = argon2::ParamsBuilder::new().t_cost(1).m_cost(64 * 1024).p_cost(num_threads).output_len(32).build()?;
     let mut key = [0u8; 32];
-    argon2::Argon2::new(argon2::Algorithm::Argon2id, Default::default(), params)
-        .hash_password_into(pass, salt.as_ref(), &mut key[..])?;
+    argon2::Argon2::new(argon2::Algorithm::Argon2id, Default::default(), params).hash_password_into(
+        pass,
+        salt.as_ref(),
+        &mut key[..],
+    )?;
     let mut aead = chacha20poly1305::XChaCha20Poly1305::new(Key::from_slice(&key));
     let (nonce, ciphertext) = cipher.as_ref().split_at(24);
 

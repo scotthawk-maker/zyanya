@@ -22,7 +22,6 @@ use core::fmt::Debug;
 use futures::future::join_all;
 use itertools::Itertools;
 use parking_lot::Mutex;
-use zyanya_core::{debug, trace};
 use std::{
     collections::{hash_map::Entry, HashMap},
     sync::{
@@ -31,6 +30,7 @@ use std::{
     },
 };
 use workflow_core::channel::Channel;
+use zyanya_core::{debug, trace};
 
 pub trait Notify<N>: Send + Sync + Debug
 where

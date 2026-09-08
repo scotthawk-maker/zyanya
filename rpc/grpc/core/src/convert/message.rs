@@ -19,6 +19,7 @@
 //! The SubmitBlockResponse is a notable exception to this general rule.
 
 use crate::protowire::{self, submit_block_response_message::RejectReason};
+use std::str::FromStr;
 use zyanya_addresses::Address;
 use zyanya_consensus_core::{network::NetworkId, Hash};
 use zyanya_core::debug;
@@ -28,7 +29,6 @@ use zyanya_rpc_core::{
     RpcTransactionId, SubmitBlockRejectReason, SubmitBlockReport,
 };
 use zyanya_utils::hex::*;
-use std::str::FromStr;
 
 macro_rules! from {
     // Response capture

@@ -1,6 +1,6 @@
 use crate::{CountersSnapshot, Monitor};
-use zyanya_core::task::tick::TickService;
 use std::time::Duration;
+use zyanya_core::task::tick::TickService;
 
 pub struct Unspecified {}
 

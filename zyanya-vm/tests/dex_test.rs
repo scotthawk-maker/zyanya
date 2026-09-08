@@ -28,7 +28,7 @@ fn test_dex_contract_full_lifecycle() {
     vm.stack.push(1000).unwrap(); // amountB
     vm.stack.push(1000).unwrap(); // amountA
     vm.stack.push(caller).unwrap(); // caller
-    vm.stack.push(1).unwrap();    // entry point 1
+    vm.stack.push(1).unwrap(); // entry point 1
     let res = vm.execute_stateful(&opcodes, &dex_addr, &mut state).expect("addLiquidity failed");
     assert_eq!(res.return_value, Some(2000), "Initial LP minted should be 1000+1000 = 2000");
 
@@ -58,8 +58,8 @@ fn test_dex_contract_full_lifecycle() {
     // tokenIn = 0
     let mut vm = VM::new(100_000);
     vm.stack.push(100).unwrap(); // amountIn = 100
-    vm.stack.push(0).unwrap();   // tokenIn = 0 (Token A)
-    vm.stack.push(2).unwrap();   // entry point 2
+    vm.stack.push(0).unwrap(); // tokenIn = 0 (Token A)
+    vm.stack.push(2).unwrap(); // entry point 2
     let res = vm.execute_stateful(&opcodes, &dex_addr, &mut state).expect("swap failed");
     assert_eq!(res.return_value, Some(90), "Amount out should be 90 GHOST");
 
@@ -69,9 +69,9 @@ fn test_dex_contract_full_lifecycle() {
     // 5. Remove Liquidity: burn 500 LP tokens
     // Entry Point 3: removeLiquidity(caller, lpAmount)
     let mut vm = VM::new(100_000);
-    vm.stack.push(500).unwrap();   // lpAmount = 500
+    vm.stack.push(500).unwrap(); // lpAmount = 500
     vm.stack.push(caller).unwrap(); // caller
-    vm.stack.push(3).unwrap();      // entry point 3
+    vm.stack.push(3).unwrap(); // entry point 3
     let res = vm.execute_stateful(&opcodes, &dex_addr, &mut state).expect("removeLiquidity failed");
     assert_eq!(res.return_value, Some(275), "Withdrawn amountA should be 500 * 1100 / 2000 = 275");
 

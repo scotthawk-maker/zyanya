@@ -16,6 +16,7 @@ default = []
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
 async-trait.workspace = true
 js-sys.workspace = true
 zyanya-cli.workspace = true

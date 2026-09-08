@@ -4,10 +4,10 @@
 
 use crate::result::Result;
 use separator::{separated_float, separated_int, separated_uint_with_output, Separatable};
+use workflow_log::style;
 use zyanya_addresses::Address;
 use zyanya_consensus_core::constants::*;
 use zyanya_consensus_core::network::NetworkType;
-use workflow_log::style;
 
 pub fn try_zyanya_str_to_sompi<S: Into<String>>(s: S) -> Result<Option<u64>> {
     let s: String = s.into();

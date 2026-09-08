@@ -17,9 +17,9 @@ use zyanya_database::{
 use parking_lot::RwLock;
 use rocksdb::WriteBatch;
 use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, error::Error, fs, path::PathBuf, sync::Arc};
 use zyanya_txscript::caches::TxScriptCacheCounters;
 use zyanya_utils::mem_size::MemSizeEstimator;
-use std::{collections::HashMap, error::Error, fs, path::PathBuf, sync::Arc};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ConsensusEntry {

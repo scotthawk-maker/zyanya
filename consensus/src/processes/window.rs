@@ -8,6 +8,12 @@ use crate::{
     processes::ghostdag::ordering::SortableBlock,
 };
 use once_cell::unsync::Lazy;
+use std::{
+    cmp::Reverse,
+    iter::once,
+    ops::{Deref, DerefMut},
+    sync::Arc,
+};
 use zyanya_consensus_core::{
     blockhash::BlockHashExtensions,
     config::{genesis::GenesisBlock, params::ForkActivation},
@@ -17,12 +23,6 @@ use zyanya_consensus_core::{
 use zyanya_hashes::Hash;
 use zyanya_math::Uint256;
 use zyanya_utils::refs::Refs;
-use std::{
-    cmp::Reverse,
-    iter::once,
-    ops::{Deref, DerefMut},
-    sync::Arc,
-};
 
 use super::{
     difficulty::{FullDifficultyManager, SampledDifficultyManager},

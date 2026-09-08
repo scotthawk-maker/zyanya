@@ -1,8 +1,8 @@
 use crate::result::Result;
 use js_sys::BigInt;
-use zyanya_consensus_core::network::{NetworkType, NetworkTypeT};
 use wasm_bindgen::prelude::*;
 use workflow_wasm::prelude::*;
+use zyanya_consensus_core::network::{NetworkType, NetworkTypeT};
 
 #[wasm_bindgen]
 extern "C" {

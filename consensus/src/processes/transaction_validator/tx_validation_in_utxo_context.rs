@@ -1,6 +1,7 @@
 use crate::constants::{MAX_SOMPI, SEQUENCE_LOCK_TIME_DISABLED, SEQUENCE_LOCK_TIME_MASK};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rayon::ThreadPool;
+use std::marker::Sync;
 use zyanya_consensus_core::{
     hashing::sighash::{SigHashReusedValuesSync, SigHashReusedValuesUnsync},
     tx::{TransactionInput, VerifiableTransaction},
@@ -8,7 +9,6 @@ use zyanya_consensus_core::{
 use zyanya_core::warn;
 use zyanya_txscript::{caches::Cache, get_sig_op_count_upper_bound, SigCacheKey, TxScriptEngine};
 use zyanya_txscript_errors::TxScriptError;
-use std::marker::Sync;
 
 use super::{
     errors::{TxResult, TxRuleError},
@@ -252,12 +252,12 @@ mod tests {
     use itertools::Itertools;
     use secp256k1::Secp256k1;
     use smallvec::SmallVec;
+    use std::iter::once;
     use zyanya_consensus_core::sign::sign;
     use zyanya_consensus_core::subnets::SubnetworkId;
     use zyanya_consensus_core::tx::{MutableTransaction, PopulatedTransaction, ScriptVec, TransactionId, UtxoEntry};
     use zyanya_consensus_core::tx::{ScriptPublicKey, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput};
     use zyanya_txscript_errors::TxScriptError;
-    use std::iter::once;
 
     use crate::{params::MAINNET_PARAMS, processes::transaction_validator::TransactionValidator};
 

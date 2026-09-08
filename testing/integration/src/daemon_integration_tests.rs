@@ -5,6 +5,7 @@ use crate::common::{
     utils::{fetch_spendable_utxos, generate_tx, mine_block, wait_for},
 };
 use rand::thread_rng;
+use std::{sync::Arc, time::Duration};
 use zyanya_addresses::Address;
 use zyanya_alloc::init_allocator_with_default_settings;
 use zyanya_consensus::params::SIMNET_PARAMS;
@@ -16,7 +17,6 @@ use zyanya_notify::scope::{BlockAddedScope, UtxosChangedScope, VirtualDaaScoreCh
 use zyanya_rpc_core::{api::rpc::RpcApi, Notification, RpcTransactionId};
 use zyanya_txscript::pay_to_address_script;
 use zyanyad_lib::args::Args;
-use std::{sync::Arc, time::Duration};
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
 async fn daemon_sanity_test() {

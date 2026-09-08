@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use rocksdb::WriteBatch;
 use serde::{Deserialize, Serialize};
-use zyanya_consensus_core::tx::{ContractPayload, Transaction, TransactionId, TransactionOutput, ScriptPublicKey};
+use zyanya_consensus_core::tx::{ContractPayload, ScriptPublicKey, Transaction, TransactionId, TransactionOutput};
 use zyanya_database::prelude::{BatchDbWriter, CachePolicy, CachedDbAccess, StoreResult, DB};
 use zyanya_database::registry::DatabaseStorePrefixes;
 use zyanya_hashes::{Hash, HasherBase, TransactionSigningHash};
@@ -49,12 +49,7 @@ impl AsRef<[u8]> for ContractStorageKey {
         // at offset 0 and `key` at offset 32. Therefore the raw byte slice is exactly
         // `contract_address || key.to_le_bytes()` and contains no uninitialized padding
         // bytes, making this cast sound.
-        unsafe {
-            std::slice::from_raw_parts(
-                self as *const Self as *const u8,
-                std::mem::size_of::<Self>(),
-            )
-        }
+        unsafe { std::slice::from_raw_parts(self as *const Self as *const u8, std::mem::size_of::<Self>()) }
     }
 }
 
@@ -124,10 +119,7 @@ impl StateBackend for ContractStateCache {
     }
 
     fn get_code(&self, contract_address: &[u8; 32]) -> Result<Vec<u8>, VMError> {
-        self.code
-            .get(contract_address)
-            .cloned()
-            .ok_or_else(|| VMError::StorageError("Contract code not found".to_string()))
+        self.code.get(contract_address).cloned().ok_or_else(|| VMError::StorageError("Contract code not found".to_string()))
     }
 }
 
@@ -570,20 +562,12 @@ mod tests {
             metadata_hash: [0u8; 32],
         });
 
-        let deploy_tx = Transaction::new(
-            1,
-            vec![],
-            vec![],
-            0,
-            SUBNETWORK_ID_SMART_CONTRACT,
-            10000,
-            deploy_payload.to_bytes().unwrap(),
-        );
+        let deploy_tx =
+            Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10000, deploy_payload.to_bytes().unwrap());
 
         // 3. Process deploy transaction
-        let deploy_outcome = processor
-            .process_contract_tx(&deploy_tx, &mut cache, 1, None)
-            .expect("Deploy transaction processing failed");
+        let deploy_outcome =
+            processor.process_contract_tx(&deploy_tx, &mut cache, 1, None).expect("Deploy transaction processing failed");
 
         assert!(deploy_outcome.success, "Deploy contract execution failed");
         let contract_addr = deploy_outcome.contract_address;
@@ -604,20 +588,12 @@ mod tests {
             deposit_amount: 1000,
         });
 
-        let invoke_tx = Transaction::new(
-            1,
-            vec![],
-            vec![],
-            0,
-            SUBNETWORK_ID_SMART_CONTRACT,
-            10000,
-            invoke_payload.to_bytes().unwrap(),
-        );
+        let invoke_tx =
+            Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10000, invoke_payload.to_bytes().unwrap());
 
         // 5. Process invoke transaction
-        let invoke_outcome = processor
-            .process_contract_tx(&invoke_tx, &mut cache, 1, None)
-            .expect("Invoke transaction processing failed");
+        let invoke_outcome =
+            processor.process_contract_tx(&invoke_tx, &mut cache, 1, None).expect("Invoke transaction processing failed");
 
         assert!(invoke_outcome.success, "Invoke contract execution failed");
         assert_eq!(invoke_outcome.return_value, Some(300));
@@ -658,7 +634,8 @@ mod tests {
             deposit_amount: 0,
             metadata_hash: [0u8; 32],
         });
-        let deploy_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, deploy_payload.to_bytes().unwrap());
+        let deploy_tx =
+            Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, deploy_payload.to_bytes().unwrap());
         let deploy_outcome = processor.process_contract_tx(&deploy_tx, &mut cache, 1, None).unwrap();
         assert!(deploy_outcome.success, "Token deployment failed");
         let token_addr = deploy_outcome.contract_address;
@@ -672,7 +649,8 @@ mod tests {
             gas_price: 1,
             deposit_amount: 0,
         });
-        let supply_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, supply_payload.to_bytes().unwrap());
+        let supply_tx =
+            Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, supply_payload.to_bytes().unwrap());
         let supply_outcome = processor.process_contract_tx(&supply_tx, &mut cache, 1, None).unwrap();
         assert_eq!(supply_outcome.return_value, Some(1_000_000));
 
@@ -685,7 +663,8 @@ mod tests {
             gas_price: 1,
             deposit_amount: 0,
         });
-        let owner_bal_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, owner_bal_payload.to_bytes().unwrap());
+        let owner_bal_tx =
+            Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, owner_bal_payload.to_bytes().unwrap());
         let owner_bal_outcome = processor.process_contract_tx(&owner_bal_tx, &mut cache, 1, None).unwrap();
         assert_eq!(owner_bal_outcome.return_value, Some(1_000_000));
 
@@ -698,7 +677,8 @@ mod tests {
             gas_price: 1,
             deposit_amount: 0,
         });
-        let transfer_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, transfer_payload.to_bytes().unwrap());
+        let transfer_tx =
+            Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, transfer_payload.to_bytes().unwrap());
         let transfer_outcome = processor.process_contract_tx(&transfer_tx, &mut cache, 1, None).unwrap();
         assert!(transfer_outcome.success);
         assert_eq!(transfer_outcome.return_value, Some(1));
@@ -715,7 +695,8 @@ mod tests {
             gas_price: 1,
             deposit_amount: 0,
         });
-        let recip_bal_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, recip_bal_payload.to_bytes().unwrap());
+        let recip_bal_tx =
+            Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 100_000, recip_bal_payload.to_bytes().unwrap());
         let recip_bal_outcome = processor.process_contract_tx(&recip_bal_tx, &mut cache, 1, None).unwrap();
         assert_eq!(recip_bal_outcome.return_value, Some(100));
 
@@ -739,10 +720,7 @@ mod tests {
 
         // Contract that returns 500 when entry_point is 5 (mock sell)
         // [Push(500), Return]
-        let contract_opcodes = vec![
-            OpCode::Push(500),
-            OpCode::Return,
-        ];
+        let contract_opcodes = vec![OpCode::Push(500), OpCode::Return];
         let bytecode = OpCode::serialize_slice(&contract_opcodes);
 
         // 1. Deploy contract with 0 initial deposit
@@ -753,7 +731,8 @@ mod tests {
             deposit_amount: 0,
             metadata_hash: [0u8; 32],
         });
-        let deploy_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000, deploy_payload.to_bytes().unwrap());
+        let deploy_tx =
+            Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000, deploy_payload.to_bytes().unwrap());
         let deploy_outcome = processor.process_contract_tx(&deploy_tx, &mut cache, 1, None).unwrap();
         assert!(deploy_outcome.success);
         let contract_addr = deploy_outcome.contract_address;
@@ -783,13 +762,15 @@ mod tests {
             gas_price: 1,
             deposit_amount: 1000,
         });
-        let deposit_tx = Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000, deposit_payload.to_bytes().unwrap());
+        let deposit_tx =
+            Transaction::new(1, vec![], vec![], 0, SUBNETWORK_ID_SMART_CONTRACT, 10_000, deposit_payload.to_bytes().unwrap());
         let dep_outcome = processor.process_contract_tx(&deposit_tx, &mut cache, 1, None).unwrap();
         assert!(dep_outcome.success);
         assert_eq!(cache.get_balance(&addr_bytes), 1000, "Contract balance credited");
 
         // 4. Now invoke entry_point 5 (refund = 500) with caller script provided -> MUST SUCCEED
-        let seller_addr = zyanya_addresses::Address::new(zyanya_addresses::Prefix::Mainnet, zyanya_addresses::Version::PubKey, &[0x02; 32]);
+        let seller_addr =
+            zyanya_addresses::Address::new(zyanya_addresses::Prefix::Mainnet, zyanya_addresses::Version::PubKey, &[0x02; 32]);
         let caller_script = zyanya_txscript::pay_to_address_script(&seller_addr);
         let outcome2 = processor.process_contract_tx(&sell_tx, &mut cache, 1, Some(&caller_script)).unwrap();
         assert!(outcome2.success, "Solvent contract payout must succeed");

@@ -1,7 +1,7 @@
+use std::{str::FromStr, sync::Arc, time::Duration};
 use zyanya_core::debug;
 use zyanya_p2p_lib::echo::EchoFlowInitializer;
 use zyanya_utils::networking::NetAddress;
-use std::{str::FromStr, sync::Arc, time::Duration};
 
 #[tokio::main]
 async fn main() {

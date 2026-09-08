@@ -4,11 +4,6 @@ use async_trait::async_trait;
 use parking_lot::Mutex;
 use rand::thread_rng;
 use rand_distr::{Distribution, Exp};
-use zyanya_addresses::Address;
-use zyanya_core::warn;
-use zyanya_grpc_client::GrpcClient;
-use zyanya_rpc_core::{api::rpc::RpcApi, GetBlockTemplateResponse, RpcRawBlock};
-use zyanya_utils::triggers::SingleTrigger;
 use std::{
     cmp::max,
     sync::{
@@ -18,6 +13,11 @@ use std::{
     time::Duration,
 };
 use tokio::{task::JoinHandle, time::sleep};
+use zyanya_addresses::Address;
+use zyanya_core::warn;
+use zyanya_grpc_client::GrpcClient;
+use zyanya_rpc_core::{api::rpc::RpcApi, GetBlockTemplateResponse, RpcRawBlock};
+use zyanya_utils::triggers::SingleTrigger;
 
 pub const COMMUNICATION_DELAY: u64 = 1_000;
 

@@ -23,12 +23,7 @@ pub struct Lexer {
 impl Lexer {
     pub fn new(input: &str) -> Self {
         let chars = input.char_indices().collect();
-        Self {
-            chars,
-            pos: 0,
-            line: 1,
-            col: 1,
-        }
+        Self { chars, pos: 0, line: 1, col: 1 }
     }
 
     pub fn tokenize(&mut self) -> Result<Vec<Token>, LexerError> {

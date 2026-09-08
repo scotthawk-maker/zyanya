@@ -125,7 +125,13 @@ fn save_key_guarded(keypair: &WalletKeypair, path: &std::path::Path, force: bool
 #[tokio::main]
 async fn main() -> ExitCode {
     let cli = Cli::parse();
-    let prefix = if cli.testnet { zyanya_addresses::Prefix::Testnet } else if cli.devnet { zyanya_addresses::Prefix::Devnet } else { zyanya_addresses::Prefix::Mainnet };
+    let prefix = if cli.testnet {
+        zyanya_addresses::Prefix::Testnet
+    } else if cli.devnet {
+        zyanya_addresses::Prefix::Devnet
+    } else {
+        zyanya_addresses::Prefix::Mainnet
+    };
 
     // 1. Generate key CLI command (raw hex)
     if cli.generate_key {
@@ -211,7 +217,13 @@ async fn main() -> ExitCode {
         }
     };
 
-    let default_port = if cli.devnet { 18610 } else if cli.testnet { 18210 } else { 18110 };
+    let default_port = if cli.devnet {
+        18610
+    } else if cli.testnet {
+        18210
+    } else {
+        18110
+    };
     let rpc_server = cli.rpcserver.unwrap_or_else(|| format!("127.0.0.1:{}", default_port));
     let mut ops = WalletOps::new(keypair, rpc_server);
 
@@ -395,16 +407,8 @@ async fn run_live_demo(ops: &mut WalletOps, prefix: zyanya_addresses::Prefix, sh
         println!("    Restored SecretKey: {}", restored_wallet.secret_hex());
     }
 
-    assert_eq!(
-        demo_wallet.address.to_string(),
-        restored_wallet.address.to_string(),
-        "Restored address must match generated address!"
-    );
-    assert_eq!(
-        demo_wallet.secret_hex(),
-        restored_wallet.secret_hex(),
-        "Restored secret key must match generated secret key!"
-    );
+    assert_eq!(demo_wallet.address.to_string(), restored_wallet.address.to_string(), "Restored address must match generated address!");
+    assert_eq!(demo_wallet.secret_hex(), restored_wallet.secret_hex(), "Restored secret key must match generated secret key!");
     println!("  [SUCCESS] BIP-39 Mnemonic Restoration Verified: Addresses match 100%!\n");
 
     ops.keypair = demo_wallet.clone();

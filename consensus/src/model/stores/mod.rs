@@ -2,6 +2,7 @@ pub mod acceptance_data;
 pub mod block_transactions;
 pub mod block_window_cache;
 pub mod children;
+pub mod contract;
 pub mod daa;
 pub mod depth;
 pub mod ghostdag;
@@ -19,11 +20,10 @@ pub mod utxo_diffs;
 pub mod utxo_multisets;
 pub mod utxo_set;
 pub mod virtual_state;
-pub mod contract;
 
+use std::fmt::Display;
 pub use zyanya_database;
 pub use zyanya_database::prelude::DB;
-use std::fmt::Display;
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash)]
 pub(crate) struct U64Key([u8; size_of::<u64>()]);

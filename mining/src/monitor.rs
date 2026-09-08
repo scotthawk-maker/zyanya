@@ -1,5 +1,6 @@
 use super::MiningCounters;
 use crate::manager::MiningManagerProxy;
+use std::{sync::Arc, time::Duration};
 use zyanya_core::{
     debug, info,
     task::{
@@ -9,7 +10,6 @@ use zyanya_core::{
     trace,
 };
 use zyanya_txscript::caches::TxScriptCacheCounters;
-use std::{sync::Arc, time::Duration};
 
 const MONITOR: &str = "mempool-monitor";
 

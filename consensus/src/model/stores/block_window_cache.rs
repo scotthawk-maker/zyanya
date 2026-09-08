@@ -1,14 +1,14 @@
 use crate::processes::ghostdag::ordering::SortableBlock;
-use zyanya_consensus_core::BlockHasher;
-use zyanya_database::prelude::{Cache, CachePolicy};
-use zyanya_hashes::Hash;
-use zyanya_utils::mem_size::MemSizeEstimator;
 use std::{
     cmp::Reverse,
     collections::BinaryHeap,
     ops::{Deref, DerefMut},
     sync::Arc,
 };
+use zyanya_consensus_core::BlockHasher;
+use zyanya_database::prelude::{Cache, CachePolicy};
+use zyanya_hashes::Hash;
+use zyanya_utils::mem_size::MemSizeEstimator;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WindowOrigin {

@@ -1,6 +1,6 @@
 use super::tx::MempoolTransaction;
-use zyanya_consensus_core::tx::{TransactionId, TransactionOutpoint};
 use std::collections::HashMap;
+use zyanya_consensus_core::tx::{TransactionId, TransactionOutpoint};
 
 /// MempoolTransactionCollection maps a transaction id to a mempool transaction
 pub(crate) type MempoolTransactionCollection = HashMap<TransactionId, MempoolTransaction>;

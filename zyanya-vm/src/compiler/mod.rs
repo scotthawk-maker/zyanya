@@ -92,7 +92,7 @@ mod tests {
         // 2. Execute fn increment(15) (entry point 1)
         let mut vm = VM::new(100_000);
         vm.stack.push(15).unwrap(); // n = 15
-        vm.stack.push(1).unwrap();  // entry_point = 1
+        vm.stack.push(1).unwrap(); // entry_point = 1
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("increment failed");
         assert_eq!(res.return_value, Some(15));
         assert_eq!(state.get(&addr, 0), 15);
@@ -100,7 +100,7 @@ mod tests {
         // 3. Execute fn increment(27) (entry point 1)
         let mut vm = VM::new(100_000);
         vm.stack.push(27).unwrap(); // n = 27
-        vm.stack.push(1).unwrap();  // entry_point = 1
+        vm.stack.push(1).unwrap(); // entry_point = 1
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("second increment failed");
         assert_eq!(res.return_value, Some(42));
         assert_eq!(state.get(&addr, 0), 42);

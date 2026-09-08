@@ -8,6 +8,7 @@ use secp256k1::{
     rand::{thread_rng, Rng},
     Keypair,
 };
+use tokio::time::{interval, Instant, MissedTickBehavior};
 use zyanya_addresses::{Address, Prefix, Version};
 use zyanya_consensus_core::{
     config::params::{TESTNET11_PARAMS, TESTNET_PARAMS},
@@ -16,12 +17,11 @@ use zyanya_consensus_core::{
     subnets::SUBNETWORK_ID_NATIVE,
     tx::{MutableTransaction, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput, UtxoEntry},
 };
-use zyanya_core::{info, zyanyad_env::version, time::unix_now, warn};
+use zyanya_core::{info, time::unix_now, warn, zyanyad_env::version};
 use zyanya_grpc_client::{ClientPool, GrpcClient};
 use zyanya_notify::subscription::context::SubscriptionContext;
 use zyanya_rpc_core::{api::rpc::RpcApi, notify::mode::NotificationMode, RpcUtxoEntry};
 use zyanya_txscript::pay_to_address_script;
-use tokio::time::{interval, Instant, MissedTickBehavior};
 
 const DEFAULT_SEND_AMOUNT: u64 = 10 * SOMPI_PER_ZYANYA;
 const FEE_RATE: u64 = 10;
@@ -182,7 +182,10 @@ async fn main() {
             String::from(&zyanya_addr),
             sk.display_secret()
         );
-        info!("Generated address {}. Send some funds to this address and rerun rothschild with `--private-key`", String::from(&zyanya_addr));
+        info!(
+            "Generated address {}. Send some funds to this address and rerun rothschild with `--private-key`",
+            String::from(&zyanya_addr)
+        );
         return;
     };
 

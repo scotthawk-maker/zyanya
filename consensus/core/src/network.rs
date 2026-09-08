@@ -13,13 +13,13 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
-use zyanya_addresses::Prefix;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::Deref;
 use std::str::FromStr;
 use wasm_bindgen::convert::TryFromJsValue;
 use wasm_bindgen::prelude::*;
 use workflow_wasm::prelude::*;
+use zyanya_addresses::Prefix;
 
 #[derive(thiserror::Error, PartialEq, Eq, Debug, Clone)]
 pub enum NetworkTypeError {

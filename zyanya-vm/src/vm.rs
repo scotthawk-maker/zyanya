@@ -221,10 +221,7 @@ impl VM {
                 }
                 OpCode::Jump(target) => {
                     if *target >= code.len() {
-                        return Err(VMError::InvalidJumpTarget {
-                            pc: *target,
-                            code_len: code.len(),
-                        });
+                        return Err(VMError::InvalidJumpTarget { pc: *target, code_len: code.len() });
                     }
                     self.pc = *target;
                 }
@@ -232,10 +229,7 @@ impl VM {
                     let cond = self.stack.pop()?;
                     if cond != 0 {
                         if *target >= code.len() {
-                            return Err(VMError::InvalidJumpTarget {
-                                pc: *target,
-                                code_len: code.len(),
-                            });
+                            return Err(VMError::InvalidJumpTarget { pc: *target, code_len: code.len() });
                         }
                         self.pc = *target;
                     } else {
@@ -349,10 +343,6 @@ impl VM {
             }
         }
 
-        Ok(VMResult {
-            return_value: return_val,
-            gas_used: self.gas_meter.used_gas(),
-            stack_dump: self.stack.as_slice().to_vec(),
-        })
+        Ok(VMResult { return_value: return_val, gas_used: self.gas_meter.used_gas(), stack_dump: self.stack.as_slice().to_vec() })
     }
 }

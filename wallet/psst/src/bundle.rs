@@ -10,8 +10,8 @@ use zyanya_consensus_core::tx::{ScriptPublicKey, TransactionOutpoint, UtxoEntry}
 
 use hex;
 use serde::{Deserialize, Serialize};
-use zyanya_txscript::{extract_script_pub_key_address, pay_to_address_script, pay_to_script_hash_script};
 use std::ops::Deref;
+use zyanya_txscript::{extract_script_pub_key_address, pay_to_address_script, pay_to_script_hash_script};
 
 ///
 /// Bundle is a [`PSST`] bundle - a sequence of PSST transactions
@@ -244,10 +244,10 @@ mod tests {
     use crate::role::*;
     use secp256k1::Secp256k1;
     use secp256k1::{rand::thread_rng, Keypair};
-    use zyanya_consensus_core::tx::{TransactionId, TransactionOutpoint, UtxoEntry};
-    use zyanya_txscript::{multisig_redeem_script, pay_to_script_hash_script};
     use std::str::FromStr;
     use std::sync::LazyLock;
+    use zyanya_consensus_core::tx::{TransactionId, TransactionOutpoint, UtxoEntry};
+    use zyanya_txscript::{multisig_redeem_script, pay_to_script_hash_script};
 
     static CONTEXT: LazyLock<Box<([Keypair; 2], Vec<u8>)>> = LazyLock::new(|| {
         let kps = [Keypair::new(&Secp256k1::new(), &mut thread_rng()), Keypair::new(&Secp256k1::new(), &mut thread_rng())];

@@ -1,9 +1,9 @@
 use itertools::Itertools;
-use zyanya_consensus_core::tx::Transaction;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     iter::{FusedIterator, Map},
 };
+use zyanya_consensus_core::tx::Transaction;
 
 type IndexSet = HashSet<usize>;
 

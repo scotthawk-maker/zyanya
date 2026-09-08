@@ -10,11 +10,11 @@ use crate::{
 };
 use async_trait::async_trait;
 use itertools::{chain, Itertools};
+use std::sync::Arc;
+use tokio::task::JoinHandle;
 use zyanya_addresses::Address;
 use zyanya_notify::scope::Scope;
 use zyanya_utils::triggers::SingleTrigger;
-use std::sync::Arc;
-use tokio::task::JoinHandle;
 
 pub struct SubscriberGroupTask {
     submitter: Arc<SubscriptionSubmitterTask>,

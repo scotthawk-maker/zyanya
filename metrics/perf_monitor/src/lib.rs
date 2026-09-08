@@ -1,3 +1,9 @@
+use workflow_perf_monitor::{
+    cpu::{processor_numbers, ProcessStat},
+    fd::fd_count_cur,
+    io::{get_process_io_stats, IOStats},
+    mem::{get_process_memory_info, ProcessMemoryInfo},
+};
 use zyanya_core::{
     error,
     task::{
@@ -5,12 +11,6 @@ use zyanya_core::{
         tick::{TickReason, TickService},
     },
     trace, warn,
-};
-use workflow_perf_monitor::{
-    cpu::{processor_numbers, ProcessStat},
-    fd::fd_count_cur,
-    io::{get_process_io_stats, IOStats},
-    mem::{get_process_memory_info, ProcessMemoryInfo},
 };
 
 use std::{sync::Arc, time::Duration, time::Instant};

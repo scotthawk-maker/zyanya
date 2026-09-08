@@ -8,8 +8,8 @@ use crate::imports::*;
 use crate::result::Result;
 use crate::tx::{Fees, PaymentDestination};
 use crate::utxo::{UtxoContext, UtxoEntryReference, UtxoIterator};
-use zyanya_addresses::Address;
 use workflow_core::channel::Multiplexer;
+use zyanya_addresses::Address;
 
 pub struct GeneratorSettings {
     // Network type

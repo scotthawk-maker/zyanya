@@ -4,6 +4,7 @@ use crate::{
         acceptance_data::DbAcceptanceDataStore,
         block_transactions::DbBlockTransactionsStore,
         block_window_cache::BlockWindowCacheStore,
+        contract::DbContractStore,
         daa::DbDaaStore,
         depth::DbDepthStore,
         ghostdag::{CompactGhostdagData, DbGhostdagStore},
@@ -20,7 +21,6 @@ use crate::{
         utxo_diffs::DbUtxoDiffsStore,
         utxo_multisets::DbUtxoMultisetsStore,
         virtual_state::{LkgVirtualState, VirtualStores},
-        contract::DbContractStore,
         DB,
     },
     processes::{ghostdag::ordering::SortableBlock, reachability::inquirer as reachability, relations},
@@ -29,10 +29,10 @@ use crate::{
 use super::cache_policy_builder::CachePolicyBuilder as PolicyBuilder;
 use itertools::Itertools;
 use parking_lot::RwLock;
+use std::{ops::DerefMut, sync::Arc};
 use zyanya_consensus_core::{blockstatus::BlockStatus, BlockHashSet};
 use zyanya_database::registry::DatabaseStorePrefixes;
 use zyanya_hashes::Hash;
-use std::{ops::DerefMut, sync::Arc};
 
 pub struct ConsensusStorage {
     // DB

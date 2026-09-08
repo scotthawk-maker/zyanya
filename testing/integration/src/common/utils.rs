@@ -2,6 +2,13 @@ use super::client::ListeningClient;
 use itertools::Itertools;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use secp256k1::Keypair;
+use std::{
+    collections::{hash_map::Entry::Occupied, HashMap, HashSet},
+    future::Future,
+    sync::Arc,
+    time::Duration,
+};
+use tokio::time::timeout;
 use zyanya_addresses::Address;
 use zyanya_consensus_core::{
     constants::TX_VERSION,
@@ -21,13 +28,6 @@ use zyanya_core::info;
 use zyanya_grpc_client::GrpcClient;
 use zyanya_rpc_core::{api::rpc::RpcApi, BlockAddedNotification, Notification, RpcUtxoEntry, VirtualDaaScoreChangedNotification};
 use zyanya_txscript::pay_to_address_script;
-use std::{
-    collections::{hash_map::Entry::Occupied, HashMap, HashSet},
-    future::Future,
-    sync::Arc,
-    time::Duration,
-};
-use tokio::time::timeout;
 
 pub(crate) const EXPAND_FACTOR: u64 = 1;
 pub(crate) const CONTRACT_FACTOR: u64 = 1;

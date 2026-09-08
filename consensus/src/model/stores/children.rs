@@ -1,4 +1,5 @@
 use rocksdb::WriteBatch;
+use std::sync::Arc;
 use zyanya_consensus_core::BlockHashSet;
 use zyanya_consensus_core::BlockHasher;
 use zyanya_consensus_core::BlockLevel;
@@ -12,7 +13,6 @@ use zyanya_database::prelude::StoreResult;
 use zyanya_database::prelude::DB;
 use zyanya_database::registry::DatabaseStorePrefixes;
 use zyanya_hashes::Hash;
-use std::sync::Arc;
 
 pub trait ChildrenStoreReader {
     fn get(&self, hash: Hash) -> StoreResult<ReadLock<BlockHashSet>>;

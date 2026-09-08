@@ -1,5 +1,6 @@
 use super::process_queue::ProcessQueue;
 use itertools::Itertools;
+use std::time::{Duration, Instant};
 use zyanya_consensus_core::tx::TransactionId;
 use zyanya_core::debug;
 use zyanya_p2p_lib::{
@@ -7,7 +8,6 @@ use zyanya_p2p_lib::{
     pb::{zyanyad_message::Payload, InvTransactionsMessage, ZyanyadMessage},
     Hub,
 };
-use std::time::{Duration, Instant};
 
 /// Interval between mempool scanning tasks (in seconds)
 const SCANNING_TASK_INTERVAL: u64 = 10;

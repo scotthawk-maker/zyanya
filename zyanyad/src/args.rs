@@ -1,6 +1,8 @@
 use clap::{arg, Arg, ArgAction, Command};
 use serde::Deserialize;
 use serde_with::{serde_as, DisplayFromStr};
+use std::{ffi::OsString, fs};
+use toml::from_str;
 use zyanya_consensus_core::{
     config::Config,
     network::{NetworkId, NetworkType},
@@ -9,17 +11,15 @@ use zyanya_core::zyanyad_env::version;
 use zyanya_notify::address::tracker::Tracker;
 use zyanya_utils::networking::ContextualNetAddress;
 use zyanya_wrpc_server::address::WrpcNetAddress;
-use std::{ffi::OsString, fs};
-use toml::from_str;
 
+#[cfg(feature = "devnet-prealloc")]
+use std::sync::Arc;
 #[cfg(feature = "devnet-prealloc")]
 use zyanya_addresses::Address;
 #[cfg(feature = "devnet-prealloc")]
 use zyanya_consensus_core::tx::{TransactionOutpoint, UtxoEntry};
 #[cfg(feature = "devnet-prealloc")]
 use zyanya_txscript::pay_to_address_script;
-#[cfg(feature = "devnet-prealloc")]
-use std::sync::Arc;
 
 #[serde_as]
 #[derive(Debug, Clone, Deserialize)]
@@ -436,33 +436,33 @@ impl Args {
         let mainnet = arg_match_unwrap_or::<bool>(&m, "mainnet", defaults.mainnet);
         let testnet_suffix = arg_match_unwrap_or::<u32>(&m, "netsuffix", defaults.testnet_suffix);
 
-            let args = Args {
-                appdir: m.get_one::<String>("appdir").cloned().or(defaults.appdir),
-                logdir: m.get_one::<String>("logdir").cloned().or(defaults.logdir),
-                no_log_files: arg_match_unwrap_or::<bool>(&m, "nologfiles", defaults.no_log_files),
-                rpclisten: m.get_one::<ContextualNetAddress>("rpclisten").cloned().or(defaults.rpclisten),
-                rpclisten_borsh: m.get_one::<WrpcNetAddress>("rpclisten-borsh").cloned().or(defaults.rpclisten_borsh),
-                rpclisten_json: m.get_one::<WrpcNetAddress>("rpclisten-json").cloned().or(defaults.rpclisten_json),
-                unsafe_rpc: arg_match_unwrap_or::<bool>(&m, "unsaferpc", defaults.unsafe_rpc),
-                wrpc_verbose: false,
-                log_level: arg_match_unwrap_or::<String>(&m, "log_level", defaults.log_level),
-                async_threads: arg_match_unwrap_or::<usize>(&m, "async_threads", defaults.async_threads),
-                connect_peers: arg_match_many_unwrap_or::<ContextualNetAddress>(&m, "connect-peers", defaults.connect_peers),
-                add_peers: arg_match_many_unwrap_or::<ContextualNetAddress>(&m, "add-peers", defaults.add_peers),
-                listen: m.get_one::<ContextualNetAddress>("listen").cloned().or(defaults.listen),
-                outbound_target: arg_match_unwrap_or::<usize>(&m, "outpeers", defaults.outbound_target),
-                inbound_limit: arg_match_unwrap_or::<usize>(&m, "maxinpeers", defaults.inbound_limit),
-                rpc_max_clients: arg_match_unwrap_or::<usize>(&m, "rpcmaxclients", defaults.rpc_max_clients),
-                max_tracked_addresses: arg_match_unwrap_or::<usize>(&m, "max-tracked-addresses", defaults.max_tracked_addresses),
-                reset_db: arg_match_unwrap_or::<bool>(&m, "reset-db", defaults.reset_db),
-                enable_unsynced_mining: arg_match_unwrap_or::<bool>(&m, "enable-unsynced-mining", defaults.enable_unsynced_mining),
-                enable_mainnet_mining: arg_match_unwrap_or::<bool>(&m, "enable-mainnet-mining", defaults.enable_mainnet_mining),
-                utxoindex: arg_match_unwrap_or::<bool>(&m, "utxoindex", defaults.utxoindex),
-                mainnet,
-                testnet,
-                testnet_suffix,
-                devnet,
-                simnet,
+        let args = Args {
+            appdir: m.get_one::<String>("appdir").cloned().or(defaults.appdir),
+            logdir: m.get_one::<String>("logdir").cloned().or(defaults.logdir),
+            no_log_files: arg_match_unwrap_or::<bool>(&m, "nologfiles", defaults.no_log_files),
+            rpclisten: m.get_one::<ContextualNetAddress>("rpclisten").cloned().or(defaults.rpclisten),
+            rpclisten_borsh: m.get_one::<WrpcNetAddress>("rpclisten-borsh").cloned().or(defaults.rpclisten_borsh),
+            rpclisten_json: m.get_one::<WrpcNetAddress>("rpclisten-json").cloned().or(defaults.rpclisten_json),
+            unsafe_rpc: arg_match_unwrap_or::<bool>(&m, "unsaferpc", defaults.unsafe_rpc),
+            wrpc_verbose: false,
+            log_level: arg_match_unwrap_or::<String>(&m, "log_level", defaults.log_level),
+            async_threads: arg_match_unwrap_or::<usize>(&m, "async_threads", defaults.async_threads),
+            connect_peers: arg_match_many_unwrap_or::<ContextualNetAddress>(&m, "connect-peers", defaults.connect_peers),
+            add_peers: arg_match_many_unwrap_or::<ContextualNetAddress>(&m, "add-peers", defaults.add_peers),
+            listen: m.get_one::<ContextualNetAddress>("listen").cloned().or(defaults.listen),
+            outbound_target: arg_match_unwrap_or::<usize>(&m, "outpeers", defaults.outbound_target),
+            inbound_limit: arg_match_unwrap_or::<usize>(&m, "maxinpeers", defaults.inbound_limit),
+            rpc_max_clients: arg_match_unwrap_or::<usize>(&m, "rpcmaxclients", defaults.rpc_max_clients),
+            max_tracked_addresses: arg_match_unwrap_or::<usize>(&m, "max-tracked-addresses", defaults.max_tracked_addresses),
+            reset_db: arg_match_unwrap_or::<bool>(&m, "reset-db", defaults.reset_db),
+            enable_unsynced_mining: arg_match_unwrap_or::<bool>(&m, "enable-unsynced-mining", defaults.enable_unsynced_mining),
+            enable_mainnet_mining: arg_match_unwrap_or::<bool>(&m, "enable-mainnet-mining", defaults.enable_mainnet_mining),
+            utxoindex: arg_match_unwrap_or::<bool>(&m, "utxoindex", defaults.utxoindex),
+            mainnet,
+            testnet,
+            testnet_suffix,
+            devnet,
+            simnet,
             archival: arg_match_unwrap_or::<bool>(&m, "archival", defaults.archival),
             sanity: arg_match_unwrap_or::<bool>(&m, "sanity", defaults.sanity),
             yes: arg_match_unwrap_or::<bool>(&m, "yes", defaults.yes),

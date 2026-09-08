@@ -279,20 +279,14 @@ impl OpCode {
                     let byte_target = *target;
                     match byte_to_opcode.get(&byte_target) {
                         Some(&op_idx) => *target = op_idx,
-                        None => return Err(VMError::InvalidJumpTarget {
-                            pc: byte_target,
-                            code_len: opcodes.len(),
-                        }),
+                        None => return Err(VMError::InvalidJumpTarget { pc: byte_target, code_len: opcodes.len() }),
                     }
                 }
                 OpCode::JumpIf(target) => {
                     let byte_target = *target;
                     match byte_to_opcode.get(&byte_target) {
                         Some(&op_idx) => *target = op_idx,
-                        None => return Err(VMError::InvalidJumpTarget {
-                            pc: byte_target,
-                            code_len: opcodes.len(),
-                        }),
+                        None => return Err(VMError::InvalidJumpTarget { pc: byte_target, code_len: opcodes.len() }),
                     }
                 }
                 _ => {}

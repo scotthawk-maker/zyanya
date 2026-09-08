@@ -9,8 +9,8 @@ use crate::tx::PendingTransactionInner;
 use workflow_core::time::{unixtime_as_millis_u64, unixtime_to_locale_string};
 use workflow_wasm::utils::try_get_js_value_prop;
 
-pub use zyanya_consensus_core::tx::TransactionId;
 use zeroize::Zeroize;
+pub use zyanya_consensus_core::tx::TransactionId;
 
 #[wasm_bindgen(typescript_custom_section)]
 const ITransactionRecord: &'static str = r#"

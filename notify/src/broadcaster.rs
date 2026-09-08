@@ -12,7 +12,6 @@ use core::fmt::Debug;
 use derive_more::Deref;
 use futures::{future::FutureExt, select_biased};
 use indexmap::IndexMap;
-use zyanya_core::{debug, trace};
 use std::{
     collections::HashMap,
     fmt::Display,
@@ -22,6 +21,7 @@ use std::{
     },
 };
 use workflow_core::channel::Channel;
+use zyanya_core::{debug, trace};
 
 type ConnectionSet<T> = HashMap<ListenerId, T>;
 

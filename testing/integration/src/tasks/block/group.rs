@@ -8,12 +8,12 @@ use crate::{
 use async_trait::async_trait;
 use itertools::chain;
 use rand::thread_rng;
+use std::sync::Arc;
+use tokio::task::JoinHandle;
 use zyanya_addresses::Address;
 use zyanya_consensus_core::network::NetworkId;
 use zyanya_core::debug;
 use zyanya_utils::triggers::SingleTrigger;
-use std::sync::Arc;
-use tokio::task::JoinHandle;
 
 pub struct MinerGroupTask {
     submitter: Arc<BlockSubmitterTask>,

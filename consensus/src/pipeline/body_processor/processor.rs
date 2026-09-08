@@ -26,6 +26,7 @@ use crossbeam_channel::{Receiver, Sender};
 use parking_lot::RwLock;
 use rayon::ThreadPool;
 use rocksdb::WriteBatch;
+use std::sync::{atomic::Ordering, Arc};
 use zyanya_consensus_core::{
     block::Block,
     blockstatus::BlockStatus::{self, StatusHeaderOnly, StatusInvalid},
@@ -43,7 +44,6 @@ use zyanya_consensus_notify::{
 use zyanya_consensusmanager::SessionLock;
 use zyanya_hashes::Hash;
 use zyanya_notify::notifier::Notify;
-use std::sync::{atomic::Ordering, Arc};
 
 pub struct BlockBodyProcessor {
     // Channels

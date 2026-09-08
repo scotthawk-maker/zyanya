@@ -19,7 +19,7 @@ pub use opcode::OpCode;
 pub use stack::Stack;
 pub use state::{MockStateBackend, NoopStateBackend, StateBackend};
 pub use token::*;
-pub use vm::{VMResult, VM, MAX_CALL_DEPTH};
+pub use vm::{VMResult, MAX_CALL_DEPTH, VM};
 
 #[cfg(test)]
 mod tests {
@@ -28,12 +28,7 @@ mod tests {
     #[test]
     fn test_basic_arithmetic() {
         let mut vm = VM::new(1000);
-        let program = vec![
-            OpCode::Push(15),
-            OpCode::Push(27),
-            OpCode::Add,
-            OpCode::Return,
-        ];
+        let program = vec![OpCode::Push(15), OpCode::Push(27), OpCode::Add, OpCode::Return];
 
         let result = vm.execute(&program).expect("execution failed");
         assert_eq!(result.return_value, Some(42));
@@ -120,9 +115,7 @@ mod tests {
             OpCode::Return,
         ];
 
-        let result = vm
-            .execute_stateful(&program, &addr, &mut state)
-            .expect("execution failed");
+        let result = vm.execute_stateful(&program, &addr, &mut state).expect("execution failed");
         assert_eq!(result.return_value, Some(9999));
         assert_eq!(state.get(&addr, 1234), 9999);
     }
@@ -185,9 +178,7 @@ mod tests {
             OpCode::Return,
         ];
 
-        let result = vm
-            .execute_stateful(&code_a, &addr_a, &mut state)
-            .expect("Contract A execution failed");
+        let result = vm.execute_stateful(&code_a, &addr_a, &mut state).expect("Contract A execution failed");
 
         assert_eq!(result.return_value, Some(142));
         assert_eq!(state.get(&addr_b, 1), 142, "Contract B storage isolated and updated");

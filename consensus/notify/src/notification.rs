@@ -1,4 +1,5 @@
 use derive_more::Display;
+use std::sync::Arc;
 use zyanya_consensus_core::{acceptance_data::AcceptanceData, block::Block, utxo::utxo_diff::UtxoDiff};
 use zyanya_hashes::Hash;
 use zyanya_notify::{
@@ -11,7 +12,6 @@ use zyanya_notify::{
         Subscription,
     },
 };
-use std::sync::Arc;
 
 full_featured! {
 #[derive(Clone, Debug, Display)]

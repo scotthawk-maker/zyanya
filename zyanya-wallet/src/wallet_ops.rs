@@ -1,7 +1,7 @@
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use zyanya_addresses::Address;
 use zyanya_consensus_core::{
@@ -10,12 +10,7 @@ use zyanya_consensus_core::{
     tx::{ScriptPublicKey, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput, UtxoEntry},
 };
 use zyanya_grpc_client::GrpcClient;
-use zyanya_rpc_core::{
-    api::rpc::RpcApi,
-    model::address::RpcAddress,
-    RpcHash,
-    RpcTransaction,
-};
+use zyanya_rpc_core::{api::rpc::RpcApi, model::address::RpcAddress, RpcHash, RpcTransaction};
 use zyanya_txscript::pay_to_address_script;
 
 use crate::key_management::WalletKeypair;
@@ -70,11 +65,7 @@ pub struct WalletOps {
 impl WalletOps {
     pub fn new(keypair: WalletKeypair, rpc_url: String) -> Self {
         let history = Self::load_history(&keypair.address.to_string()).unwrap_or_default();
-        Self {
-            keypair,
-            rpc_url,
-            history,
-        }
+        Self { keypair, rpc_url, history }
     }
 
     /// Path to history JSON file
@@ -111,16 +102,8 @@ impl WalletOps {
 
     /// Add a record to history and save
     pub fn record_tx(&mut self, tx_id: String, kind: TxKind, status: String) {
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-        let record = TransactionRecord {
-            tx_id,
-            kind,
-            timestamp: now,
-            status,
-        };
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs();
+        let record = TransactionRecord { tx_id, kind, timestamp: now, status };
         self.history.insert(0, record);
         let _ = self.save_history();
     }
@@ -131,18 +114,13 @@ impl WalletOps {
         if !url.starts_with("grpc://") && !url.starts_with("http://") {
             url = format!("grpc://{}", url);
         }
-        GrpcClient::connect(url.clone())
-            .await
-            .map_err(|e| WalletOpsError::Rpc(format!("Failed to connect to {}: {}", url, e)))
+        GrpcClient::connect(url.clone()).await.map_err(|e| WalletOpsError::Rpc(format!("Failed to connect to {}: {}", url, e)))
     }
 
     /// Get ZYAN balance and UTXOs for current address
-    pub async fn get_zyan_balance(
-        &self,
-        client: &GrpcClient,
-    ) -> Result<(u64, Vec<(TransactionOutpoint, UtxoEntry)>), WalletOpsError> {
-        let rpc_addr = RpcAddress::try_from(self.keypair.address.clone())
-            .map_err(|e| WalletOpsError::InvalidAddress(e.to_string()))?;
+    pub async fn get_zyan_balance(&self, client: &GrpcClient) -> Result<(u64, Vec<(TransactionOutpoint, UtxoEntry)>), WalletOpsError> {
+        let rpc_addr =
+            RpcAddress::try_from(self.keypair.address.clone()).map_err(|e| WalletOpsError::InvalidAddress(e.to_string()))?;
 
         match client.get_utxos_by_addresses(vec![rpc_addr.clone()]).await {
             Ok(entries) => {
@@ -157,42 +135,28 @@ impl WalletOps {
                         entry.utxo_entry.block_daa_score,
                         entry.utxo_entry.is_coinbase,
                     );
-                    total_balance = total_balance
-                        .checked_add(entry.utxo_entry.amount)
-                        .ok_or(WalletOpsError::BalanceOverflow)?;
+                    total_balance = total_balance.checked_add(entry.utxo_entry.amount).ok_or(WalletOpsError::BalanceOverflow)?;
                     utxos.push((outpoint, core_utxo));
                 }
                 Ok((total_balance, utxos))
             }
             Err(_) => {
                 // Fallback to balance query
-                let bal = client
-                    .get_balance_by_address(rpc_addr)
-                    .await
-                    .map_err(|e| WalletOpsError::Rpc(e.to_string()))?;
+                let bal = client.get_balance_by_address(rpc_addr).await.map_err(|e| WalletOpsError::Rpc(e.to_string()))?;
                 Ok((bal, Vec::new()))
             }
         }
     }
 
     /// Send ZYAN to recipient address (creates, signs with user private key, and submits tx)
-    pub async fn send_zyan(
-        &mut self,
-        client: &GrpcClient,
-        recipient_str: &str,
-        amount_sompi: u64,
-    ) -> Result<String, WalletOpsError> {
-        let recipient_addr = Address::try_from(recipient_str)
-            .map_err(|e| WalletOpsError::InvalidAddress(e.to_string()))?;
+    pub async fn send_zyan(&mut self, client: &GrpcClient, recipient_str: &str, amount_sompi: u64) -> Result<String, WalletOpsError> {
+        let recipient_addr = Address::try_from(recipient_str).map_err(|e| WalletOpsError::InvalidAddress(e.to_string()))?;
 
         let (total_balance, utxos) = self.get_zyan_balance(client).await?;
         let required = amount_sompi + DEFAULT_FEE_SOMPI;
 
         if total_balance < required {
-            return Err(WalletOpsError::InsufficientBalance {
-                required,
-                available: total_balance,
-            });
+            return Err(WalletOpsError::InsufficientBalance { required, available: total_balance });
         }
 
         // Select UTXOs (skip immature coinbase UTXOs — the coinbase maturity is 100 blocks)
@@ -205,9 +169,7 @@ impl WalletOps {
             if entry.is_coinbase && current_daa.saturating_sub(entry.block_daa_score) < 100 {
                 continue;
             }
-            selected_amount = selected_amount
-                .checked_add(entry.amount)
-                .ok_or(WalletOpsError::BalanceOverflow)?;
+            selected_amount = selected_amount.checked_add(entry.amount).ok_or(WalletOpsError::BalanceOverflow)?;
             selected_utxos.push((op, entry));
             if selected_amount >= required {
                 break;
@@ -215,10 +177,7 @@ impl WalletOps {
         }
 
         if selected_amount < required {
-            return Err(WalletOpsError::InsufficientBalance {
-                required,
-                available: selected_amount,
-            });
+            return Err(WalletOpsError::InsufficientBalance { required, available: selected_amount });
         }
 
         let change_amount = selected_amount - required;
@@ -226,36 +185,17 @@ impl WalletOps {
         // Build inputs
         let inputs: Vec<TransactionInput> = selected_utxos
             .iter()
-            .map(|(op, _)| TransactionInput {
-                previous_outpoint: *op,
-                signature_script: vec![],
-                sequence: 0,
-                sig_op_count: 1,
-            })
+            .map(|(op, _)| TransactionInput { previous_outpoint: *op, signature_script: vec![], sequence: 0, sig_op_count: 1 })
             .collect();
 
         // Build outputs
-        let mut outputs = vec![TransactionOutput {
-            value: amount_sompi,
-            script_public_key: pay_to_address_script(&recipient_addr),
-        }];
+        let mut outputs = vec![TransactionOutput { value: amount_sompi, script_public_key: pay_to_address_script(&recipient_addr) }];
 
         if change_amount > 0 {
-            outputs.push(TransactionOutput {
-                value: change_amount,
-                script_public_key: pay_to_address_script(&self.keypair.address),
-            });
+            outputs.push(TransactionOutput { value: change_amount, script_public_key: pay_to_address_script(&self.keypair.address) });
         }
 
-        let unsigned_tx = Transaction::new_non_finalized(
-            TX_VERSION,
-            inputs,
-            outputs,
-            0,
-            SUBNETWORK_ID_NATIVE,
-            0,
-            vec![],
-        );
+        let unsigned_tx = Transaction::new_non_finalized(TX_VERSION, inputs, outputs, 0, SUBNETWORK_ID_NATIVE, 0, vec![]);
 
         let utxo_entries: Vec<UtxoEntry> = selected_utxos.into_iter().map(|(_, e)| e).collect();
 
@@ -263,18 +203,13 @@ impl WalletOps {
         let signed_tx = self.keypair.sign_transaction(unsigned_tx, utxo_entries)?;
         let rpc_tx = RpcTransaction::from(&signed_tx);
 
-        let tx_id = client
-            .submit_transaction(rpc_tx, false)
-            .await
-            .map_err(|e| WalletOpsError::Rpc(format!("Submission failed: {}", e)))?;
+        let tx_id =
+            client.submit_transaction(rpc_tx, false).await.map_err(|e| WalletOpsError::Rpc(format!("Submission failed: {}", e)))?;
 
         let tx_id_str = tx_id.to_string();
         self.record_tx(
             tx_id_str.clone(),
-            TxKind::SendZyan {
-                recipient: recipient_str.to_string(),
-                amount_sompi,
-            },
+            TxKind::SendZyan { recipient: recipient_str.to_string(), amount_sompi },
             "Confirmed".to_string(),
         );
 
@@ -303,13 +238,10 @@ impl WalletOps {
         token_contract_str: &str,
         holder_u64: u64,
     ) -> Result<u64, WalletOpsError> {
-        let contract_address = RpcHash::from_str(token_contract_str)
-            .map_err(|e| WalletOpsError::General(format!("Invalid contract address: {}", e)))?;
+        let contract_address =
+            RpcHash::from_str(token_contract_str).map_err(|e| WalletOpsError::General(format!("Invalid contract address: {}", e)))?;
 
-        let res = client
-            .get_contract_state(contract_address, holder_u64)
-            .await
-            .map_err(|e| WalletOpsError::Rpc(e.to_string()))?;
+        let res = client.get_contract_state(contract_address, holder_u64).await.map_err(|e| WalletOpsError::Rpc(e.to_string()))?;
 
         Ok(res.value)
     }
@@ -323,8 +255,8 @@ impl WalletOps {
         to_u64: u64,
         amount: u64,
     ) -> Result<String, WalletOpsError> {
-        let contract_address = RpcHash::from_str(token_contract_str)
-            .map_err(|e| WalletOpsError::General(format!("Invalid contract address: {}", e)))?;
+        let contract_address =
+            RpcHash::from_str(token_contract_str).map_err(|e| WalletOpsError::General(format!("Invalid contract address: {}", e)))?;
 
         let parameters = vec![from_u64, to_u64, amount];
 
@@ -343,11 +275,7 @@ impl WalletOps {
         let tx_id_str = res.transaction_id.to_string();
         self.record_tx(
             tx_id_str.clone(),
-            TxKind::SendToken {
-                token_contract: token_contract_str.to_string(),
-                to: to_u64.to_string(),
-                amount,
-            },
+            TxKind::SendToken { token_contract: token_contract_str.to_string(), to: to_u64.to_string(), amount },
             if res.success { "Success" } else { "Reverted" }.to_string(),
         );
 
@@ -362,8 +290,8 @@ impl WalletOps {
         token_in_val: u64,
         amount_in: u64,
     ) -> Result<(String, u64), WalletOpsError> {
-        let contract_address = RpcHash::from_str(dex_contract_str)
-            .map_err(|e| WalletOpsError::General(format!("Invalid DEX address: {}", e)))?;
+        let contract_address =
+            RpcHash::from_str(dex_contract_str).map_err(|e| WalletOpsError::General(format!("Invalid DEX address: {}", e)))?;
 
         let parameters = vec![token_in_val, amount_in];
 
@@ -394,13 +322,9 @@ impl WalletOps {
     }
 
     /// Query DEX reserves (returns reserveA, reserveB)
-    pub async fn get_dex_reserves(
-        &self,
-        client: &GrpcClient,
-        dex_contract_str: &str,
-    ) -> Result<(u64, u64), WalletOpsError> {
-        let contract_address = RpcHash::from_str(dex_contract_str)
-            .map_err(|e| WalletOpsError::General(format!("Invalid DEX address: {}", e)))?;
+    pub async fn get_dex_reserves(&self, client: &GrpcClient, dex_contract_str: &str) -> Result<(u64, u64), WalletOpsError> {
+        let contract_address =
+            RpcHash::from_str(dex_contract_str).map_err(|e| WalletOpsError::General(format!("Invalid DEX address: {}", e)))?;
 
         let res_a = client.get_contract_state(contract_address, 0).await.map_err(|e| WalletOpsError::Rpc(e.to_string()))?;
         let res_b = client.get_contract_state(contract_address, 1).await.map_err(|e| WalletOpsError::Rpc(e.to_string()))?;
@@ -409,14 +333,8 @@ impl WalletOps {
     }
 
     /// Deploy GHOST Token helper
-    pub async fn deploy_token(
-        &mut self,
-        client: &GrpcClient,
-        supply: u64,
-        owner_u64: u64,
-    ) -> Result<String, WalletOpsError> {
-        let bytecode = zyanya_vm::token_contract_bytecode(supply, owner_u64)
-            .map_err(|e| WalletOpsError::General(e.to_string()))?;
+    pub async fn deploy_token(&mut self, client: &GrpcClient, supply: u64, owner_u64: u64) -> Result<String, WalletOpsError> {
+        let bytecode = zyanya_vm::token_contract_bytecode(supply, owner_u64).map_err(|e| WalletOpsError::General(e.to_string()))?;
 
         let res = client
             .deploy_contract(bytecode, DEFAULT_GAS_LIMIT, DEFAULT_GAS_PRICE, 0)
@@ -426,10 +344,7 @@ impl WalletOps {
         let contract_addr = res.contract_address.to_string();
         self.record_tx(
             res.transaction_id.to_string(),
-            TxKind::DeployToken {
-                token_contract: contract_addr.clone(),
-                supply,
-            },
+            TxKind::DeployToken { token_contract: contract_addr.clone(), supply },
             "Success".to_string(),
         );
 
@@ -437,14 +352,9 @@ impl WalletOps {
     }
 
     /// Deploy DEX helper
-    pub async fn deploy_dex(
-        &mut self,
-        client: &GrpcClient,
-        dex_source: Option<&str>,
-    ) -> Result<String, WalletOpsError> {
+    pub async fn deploy_dex(&mut self, client: &GrpcClient, dex_source: Option<&str>) -> Result<String, WalletOpsError> {
         let zcl_code = dex_source.unwrap_or(include_str!("../../dex.zcl"));
-        let bytecode = zyanya_vm::Compiler::compile(zcl_code)
-            .map_err(|e| WalletOpsError::General(e.to_string()))?;
+        let bytecode = zyanya_vm::Compiler::compile(zcl_code).map_err(|e| WalletOpsError::General(e.to_string()))?;
 
         let res = client
             .deploy_contract(bytecode, DEFAULT_GAS_LIMIT, DEFAULT_GAS_PRICE, 0)
@@ -454,9 +364,7 @@ impl WalletOps {
         let contract_addr = res.contract_address.to_string();
         self.record_tx(
             res.transaction_id.to_string(),
-            TxKind::DeployDex {
-                dex_contract: contract_addr.clone(),
-            },
+            TxKind::DeployDex { dex_contract: contract_addr.clone() },
             "Success".to_string(),
         );
 
@@ -513,10 +421,7 @@ mod tests {
     fn test_transaction_record_serde() {
         let record = TransactionRecord {
             tx_id: "1234567890abcdef".to_string(),
-            kind: TxKind::SendZyan {
-                recipient: "zyanyadev:test".to_string(),
-                amount_sompi: 50_000_000,
-            },
+            kind: TxKind::SendZyan { recipient: "zyanyadev:test".to_string(), amount_sompi: 50_000_000 },
             timestamp: 1700000000,
             status: "Confirmed".to_string(),
         };

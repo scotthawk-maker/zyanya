@@ -2,11 +2,6 @@ mod hashers;
 mod pow_hashers;
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use zyanya_utils::{
-    hex::{FromHex, ToHex},
-    mem_size::MemSizeEstimator,
-    serde_impl_deser_fixed_bytes_ref, serde_impl_ser_fixed_bytes_ref,
-};
 use std::{
     array::TryFromSliceError,
     fmt::{Debug, Display, Formatter},
@@ -15,6 +10,11 @@ use std::{
 };
 use wasm_bindgen::prelude::*;
 use workflow_wasm::prelude::*;
+use zyanya_utils::{
+    hex::{FromHex, ToHex},
+    mem_size::MemSizeEstimator,
+    serde_impl_deser_fixed_bytes_ref, serde_impl_ser_fixed_bytes_ref,
+};
 
 pub const HASH_SIZE: usize = 32;
 

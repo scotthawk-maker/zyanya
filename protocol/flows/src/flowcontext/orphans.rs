@@ -1,5 +1,9 @@
 use indexmap::{map::Entry::Occupied, IndexMap};
 use rand::Rng;
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    iter::once,
+};
 use zyanya_consensus_core::{
     api::{BlockValidationFuture, BlockValidationFutures},
     block::Block,
@@ -7,10 +11,6 @@ use zyanya_consensus_core::{
 use zyanya_consensusmanager::{BlockProcessingBatch, ConsensusProxy};
 use zyanya_core::debug;
 use zyanya_hashes::Hash;
-use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    iter::once,
-};
 
 use super::process_queue::ProcessQueue;
 
@@ -283,6 +283,7 @@ mod tests {
     use super::*;
     use futures::future::try_join_all;
     use parking_lot::RwLock;
+    use std::sync::Arc;
     use zyanya_consensus_core::{
         api::{BlockValidationFutures, ConsensusApi},
         blockstatus::BlockStatus,
@@ -290,7 +291,6 @@ mod tests {
     };
     use zyanya_consensusmanager::{ConsensusInstance, SessionLock};
     use zyanya_core::assert_match;
-    use std::sync::Arc;
 
     #[derive(Default)]
     struct MockProcessor {

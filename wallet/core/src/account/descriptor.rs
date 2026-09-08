@@ -7,9 +7,9 @@ use crate::imports::*;
 use borsh::{BorshDeserialize, BorshSerialize};
 use convert_case::{Case, Casing};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use zyanya_addresses::Address;
 use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
-use std::collections::BTreeMap;
 
 ///
 /// Structure that represents a wallet account. This structure contains

@@ -1,6 +1,6 @@
 use crate::imports::*;
-use zyanya_metrics_core::{Metrics as MetricsProcessor, MetricsSinkFn};
 use workflow_core::runtime::is_nw;
+use zyanya_metrics_core::{Metrics as MetricsProcessor, MetricsSinkFn};
 
 #[derive(Describe, Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd)]
 #[serde(rename_all = "lowercase")]

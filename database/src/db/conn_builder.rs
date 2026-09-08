@@ -129,10 +129,7 @@ impl ConnBuilder<PathBuf, false, Unspecified, i32> {
     pub fn build(self) -> Result<Arc<DB>, ConnBuilderError> {
         let (opts, guard) = default_opts!(self)?;
         let path = self.db_path.to_str().ok_or(ConnBuilderError::NonUtf8Path)?;
-        let db = Arc::new(DB::new(
-            <DBWithThreadMode<MultiThreaded>>::open(&opts, path).map_err(ConnBuilderError::RocksDb)?,
-            guard,
-        ));
+        let db = Arc::new(DB::new(<DBWithThreadMode<MultiThreaded>>::open(&opts, path).map_err(ConnBuilderError::RocksDb)?, guard));
         Ok(db)
     }
 }
@@ -142,10 +139,7 @@ impl ConnBuilder<PathBuf, true, Unspecified, i32> {
         let (mut opts, guard) = default_opts!(self)?;
         opts.enable_statistics();
         let path = self.db_path.to_str().ok_or(ConnBuilderError::NonUtf8Path)?;
-        let db = Arc::new(DB::new(
-            <DBWithThreadMode<MultiThreaded>>::open(&opts, path).map_err(ConnBuilderError::RocksDb)?,
-            guard,
-        ));
+        let db = Arc::new(DB::new(<DBWithThreadMode<MultiThreaded>>::open(&opts, path).map_err(ConnBuilderError::RocksDb)?, guard));
         Ok(db)
     }
 }
@@ -157,10 +151,7 @@ impl ConnBuilder<PathBuf, true, u32, i32> {
         opts.set_report_bg_io_stats(true);
         opts.set_stats_dump_period_sec(self.stats_period);
         let path = self.db_path.to_str().ok_or(ConnBuilderError::NonUtf8Path)?;
-        let db = Arc::new(DB::new(
-            <DBWithThreadMode<MultiThreaded>>::open(&opts, path).map_err(ConnBuilderError::RocksDb)?,
-            guard,
-        ));
+        let db = Arc::new(DB::new(<DBWithThreadMode<MultiThreaded>>::open(&opts, path).map_err(ConnBuilderError::RocksDb)?, guard));
         Ok(db)
     }
 }

@@ -381,7 +381,6 @@ enum Commands {
 
 const DEFAULT_DEX_ZCL: &str = include_str!("../../dex.zcl");
 
-
 #[tokio::main]
 async fn main() -> ExitCode {
     let cli = Cli::parse();
@@ -427,7 +426,13 @@ async fn main() -> ExitCode {
         }
     }
 
-    let default_port = if cli.devnet { 18610 } else if cli.testnet { 18210 } else { 18110 };
+    let default_port = if cli.devnet {
+        18610
+    } else if cli.testnet {
+        18210
+    } else {
+        18110
+    };
     let mut rpc_url = cli.rpcserver.unwrap_or_else(|| format!("127.0.0.1:{}", default_port));
     if !rpc_url.starts_with("grpc://") && !rpc_url.starts_with("http://") {
         rpc_url = format!("grpc://{}", rpc_url);

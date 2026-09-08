@@ -4,11 +4,11 @@ use crate::psst::{KeySource, Version};
 use crate::utils::combine_if_no_conflicts;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-use zyanya_consensus_core::tx::TransactionId;
 use std::{
     collections::{btree_map, BTreeMap},
     ops::Add,
 };
+use zyanya_consensus_core::tx::TransactionId;
 
 type Xpub = zyanya_bip32::ExtendedPublicKey<secp256k1::PublicKey>;
 

@@ -1,16 +1,19 @@
+use crate::api::{UnsignedBuyReq, UnsignedSellReq};
+use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use zyanya_grpc_client::GrpcClient;
-use zyanya_rpc_core::api::rpc::RpcApi;
-use zyanya_rpc_core::RpcHash;
-use zyanya_rpc_core::model::tx::RpcTransaction;
 use zyanya_consensus_core::hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync};
 use zyanya_consensus_core::hashing::sighash_type::SIG_HASH_ALL;
 use zyanya_consensus_core::sign::verify;
-use zyanya_consensus_core::tx::{ContractPayload, DeployContractPayload, InvokeContractPayload, SignableTransaction, Transaction, TransactionInput, TransactionOutput, UtxoEntry};
-use crate::api::{UnsignedBuyReq, UnsignedSellReq};
-use serde::{Deserialize, Serialize};
+use zyanya_consensus_core::tx::{
+    ContractPayload, DeployContractPayload, InvokeContractPayload, SignableTransaction, Transaction, TransactionInput,
+    TransactionOutput, UtxoEntry,
+};
+use zyanya_grpc_client::GrpcClient;
+use zyanya_rpc_core::api::rpc::RpcApi;
+use zyanya_rpc_core::model::tx::RpcTransaction;
+use zyanya_rpc_core::RpcHash;
 
 /// F-M-35: write a file with 0600 permissions (owner-only read/write) so that
 /// token metadata/icons written to the /tmp fallback are not world-readable.
@@ -72,7 +75,6 @@ impl FileModePrivate for std::fs::DirBuilder {
     fn mode_private(&mut self) {}
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnsignedDeployTokenReq {
     pub address: String,
@@ -129,9 +131,7 @@ pub struct TokenMetadata {
 pub fn sanitize_metadata(metadata: &mut TokenMetadata) {
     /// Remove `<`, `>`, `"`, `'` and backtick characters from a string.
     fn strip_dangerous(s: &str) -> String {
-        s.chars()
-            .filter(|&c| c != '<' && c != '>' && c != '"' && c != '\'' && c != '`')
-            .collect()
+        s.chars().filter(|&c| c != '<' && c != '>' && c != '"' && c != '\'' && c != '`').collect()
     }
 
     if let Some(ref mut v) = metadata.name {
@@ -346,10 +346,8 @@ pub struct DagGraphData {
 
 impl RpcClientManager {
     pub fn new(rpc_url: String) -> Self {
-        let metadata_path = std::env::var("ZYANYA_TOKEN_METADATA_PATH")
-            .unwrap_or_else(|_| "token-metadata.json".to_string());
-        let icons_dir = std::env::var("ZYANYA_TOKEN_ICONS_DIR")
-            .unwrap_or_else(|_| "token-icons".to_string());
+        let metadata_path = std::env::var("ZYANYA_TOKEN_METADATA_PATH").unwrap_or_else(|_| "token-metadata.json".to_string());
+        let icons_dir = std::env::var("ZYANYA_TOKEN_ICONS_DIR").unwrap_or_else(|_| "token-icons".to_string());
 
         if let Err(_) = std::fs::create_dir_all(&icons_dir) {
             let _ = std::fs::create_dir_all("/tmp/zyanya-token-icons");
@@ -408,8 +406,7 @@ impl RpcClientManager {
         store.insert(address.to_string(), metadata.clone());
         store.insert(address.to_lowercase(), metadata);
 
-        let json = serde_json::to_string_pretty(&*store)
-            .map_err(|e| format!("Failed to serialize metadata: {}", e))?;
+        let json = serde_json::to_string_pretty(&*store).map_err(|e| format!("Failed to serialize metadata: {}", e))?;
 
         if let Err(e) = write_atomic(std::path::Path::new(&self.metadata_path), json.as_bytes()) {
             // F-M-35: write the fallback metadata file with 0600 perms so it is
@@ -525,15 +522,11 @@ impl RpcClientManager {
 
             match client.get_block(current_hash, false).await {
                 Ok(block) => {
-                    let selected_parent = block.verbose_data.as_ref()
-                        .map(|v| v.selected_parent_hash.to_string())
-                        .unwrap_or_default();
+                    let selected_parent = block.verbose_data.as_ref().map(|v| v.selected_parent_hash.to_string()).unwrap_or_default();
                     let blue_score = block.header.blue_score;
                     let daa_score = block.header.daa_score;
                     let timestamp = block.header.timestamp;
-                    let tx_count = block.verbose_data.as_ref()
-                        .map(|v| v.transaction_ids.len())
-                        .unwrap_or(0);
+                    let tx_count = block.verbose_data.as_ref().map(|v| v.transaction_ids.len()).unwrap_or(0);
 
                     summaries.push(BlockSummary {
                         hash: current_hash.to_string(),
@@ -544,7 +537,9 @@ impl RpcClientManager {
                         selected_parent: selected_parent.clone(),
                     });
 
-                    if selected_parent.is_empty() || selected_parent == "0000000000000000000000000000000000000000000000000000000000000000" {
+                    if selected_parent.is_empty()
+                        || selected_parent == "0000000000000000000000000000000000000000000000000000000000000000"
+                    {
                         break;
                     }
 
@@ -583,15 +578,13 @@ impl RpcClientManager {
                     let script_hex = zyanya_utils::hex::ToHex::to_hex(&out.script_public_key.script());
                     let is_liquid = out_idx == 0;
                     let lock_months = if is_liquid { None } else { Some(out_idx) };
-                    let addr = out.verbose_data.as_ref()
-                        .map(|v| v.script_public_key_address.to_string())
-                        .unwrap_or_else(|| {
-                            if is_liquid {
-                                "Liquid Output".to_string()
-                            } else {
-                                format!("Vested CSV Output #{}", out_idx)
-                            }
-                        });
+                    let addr = out.verbose_data.as_ref().map(|v| v.script_public_key_address.to_string()).unwrap_or_else(|| {
+                        if is_liquid {
+                            "Liquid Output".to_string()
+                        } else {
+                            format!("Vested CSV Output #{}", out_idx)
+                        }
+                    });
 
                     coinbase_vesting_outputs.push(CoinbaseVestingOutput {
                         index: out_idx,
@@ -605,9 +598,7 @@ impl RpcClientManager {
                 }
             }
 
-            let tx_id = tx.verbose_data.as_ref()
-                .map(|v| v.transaction_id.to_string())
-                .unwrap_or_else(|| format!("tx-{}", idx));
+            let tx_id = tx.verbose_data.as_ref().map(|v| v.transaction_id.to_string()).unwrap_or_else(|| format!("tx-{}", idx));
 
             let tx_type = if is_coinbase {
                 "Coinbase".to_string()
@@ -634,9 +625,7 @@ impl RpcClientManager {
             });
         }
 
-        let parents = block.header.parents_by_level.get(0)
-            .map(|p| p.iter().map(|h| h.to_string()).collect())
-            .unwrap_or_default();
+        let parents = block.header.parents_by_level.get(0).map(|p| p.iter().map(|h| h.to_string()).collect()).unwrap_or_default();
 
         Ok(BlockDetailView {
             hash: verbose.hash.to_string(),
@@ -700,23 +689,15 @@ impl RpcClientManager {
 
             match client.get_block(current_hash, false).await {
                 Ok(block) => {
-                    let selected_parent = block.verbose_data.as_ref()
-                        .map(|v| v.selected_parent_hash.to_string())
-                        .unwrap_or_default();
-                    let is_chain = block.verbose_data.as_ref()
-                        .map(|v| v.is_chain_block)
-                        .unwrap_or(true);
+                    let selected_parent = block.verbose_data.as_ref().map(|v| v.selected_parent_hash.to_string()).unwrap_or_default();
+                    let is_chain = block.verbose_data.as_ref().map(|v| v.is_chain_block).unwrap_or(true);
 
                     let hash_s = current_hash.to_string();
-                    let short_hash = if hash_s.len() > 12 {
-                        format!("{}..{}", &hash_s[..6], &hash_s[hash_s.len()-4..])
-                    } else {
-                        hash_s.clone()
-                    };
+                    let short_hash =
+                        if hash_s.len() > 12 { format!("{}..{}", &hash_s[..6], &hash_s[hash_s.len() - 4..]) } else { hash_s.clone() };
 
-                    let parents = block.header.parents_by_level.get(0)
-                        .map(|p| p.iter().map(|h| h.to_string()).collect())
-                        .unwrap_or_default();
+                    let parents =
+                        block.header.parents_by_level.get(0).map(|p| p.iter().map(|h| h.to_string()).collect()).unwrap_or_default();
 
                     nodes.push(DagNode {
                         hash: hash_s,
@@ -728,7 +709,9 @@ impl RpcClientManager {
                         is_chain_block: is_chain,
                     });
 
-                    if selected_parent.is_empty() || selected_parent == "0000000000000000000000000000000000000000000000000000000000000000" {
+                    if selected_parent.is_empty()
+                        || selected_parent == "0000000000000000000000000000000000000000000000000000000000000000"
+                    {
                         break;
                     }
 
@@ -742,17 +725,13 @@ impl RpcClientManager {
             }
         }
 
-        Ok(DagGraphData {
-            nodes,
-            sink: dag_info.sink.to_string(),
-        })
+        Ok(DagGraphData { nodes, sink: dag_info.sink.to_string() })
     }
 
     pub async fn deploy_contract(&self, bytecode_hex: &str, gas: u64) -> Result<serde_json::Value, String> {
         use zyanya_utils::hex::FromHex;
         let client = self.ensure_connected().await?;
-        let bytes = <Vec<u8>>::from_hex(bytecode_hex.trim_start_matches("0x"))
-            .map_err(|e| format!("Invalid bytecode hex: {}", e))?;
+        let bytes = <Vec<u8>>::from_hex(bytecode_hex.trim_start_matches("0x")).map_err(|e| format!("Invalid bytecode hex: {}", e))?;
         let res = client.deploy_contract(bytes, gas, 1, 0).await.map_err(|e| e.to_string())?;
         Ok(serde_json::json!({
             "contractAddress": res.contract_address,
@@ -762,14 +741,21 @@ impl RpcClientManager {
         }))
     }
 
-    pub async fn invoke_contract(&self, address: &str, entry_point: u16, calldata: &str, gas: u64) -> Result<serde_json::Value, String> {
+    pub async fn invoke_contract(
+        &self,
+        address: &str,
+        entry_point: u16,
+        calldata: &str,
+        gas: u64,
+    ) -> Result<serde_json::Value, String> {
         use zyanya_utils::hex::FromHex;
         let client = self.ensure_connected().await?;
         let contract_address = RpcHash::from_str(address).map_err(|e| format!("Invalid contract address: {}", e))?;
         let parameters = if calldata.is_empty() {
             vec![]
         } else if calldata.contains(',') || calldata.contains(' ') {
-            calldata.split(&[',', ' '][..])
+            calldata
+                .split(&[',', ' '][..])
                 .map(|s| s.trim())
                 .filter(|s| !s.is_empty())
                 .map(|s| parse_u64_key(s))
@@ -777,8 +763,7 @@ impl RpcClientManager {
         } else if let Ok(val) = parse_u64_key(calldata) {
             vec![val]
         } else {
-            let bytes = <Vec<u8>>::from_hex(calldata.trim_start_matches("0x"))
-                .map_err(|e| format!("Invalid calldata hex: {}", e))?;
+            let bytes = <Vec<u8>>::from_hex(calldata.trim_start_matches("0x")).map_err(|e| format!("Invalid calldata hex: {}", e))?;
             bytes.iter().map(|&b| b as u64).collect()
         };
         let res = client.invoke_contract(contract_address, entry_point, parameters, gas, 1, 0).await.map_err(|e| e.to_string())?;
@@ -812,7 +797,8 @@ impl RpcClientManager {
         let contract_address = res.contract_address.to_string();
 
         let contract_hash = RpcHash::from_str(&contract_address).map_err(|e| e.to_string())?;
-        let _init_res = client.invoke_contract(contract_hash, 0, vec![slope], gas, 1, 0).await.map_err(|e| format!("Init curve failed: {}", e))?;
+        let _init_res =
+            client.invoke_contract(contract_hash, 0, vec![slope], gas, 1, 0).await.map_err(|e| format!("Init curve failed: {}", e))?;
 
         let icon_uri = if let Some(ref base64_str) = icon_base64 {
             if !base64_str.trim().is_empty() {
@@ -883,10 +869,7 @@ impl RpcClientManager {
      =========================================================================================
     */
 
-    pub async fn build_unsigned_deploy_token_tx(
-        &self,
-        req: UnsignedDeployTokenReq,
-    ) -> Result<serde_json::Value, String> {
+    pub async fn build_unsigned_deploy_token_tx(&self, req: UnsignedDeployTokenReq) -> Result<serde_json::Value, String> {
         let client = self.ensure_connected().await?;
         let name = if req.name.trim().is_empty() { "Token".to_string() } else { req.name };
         let symbol = if req.symbol.trim().is_empty() { "TKN".to_string() } else { req.symbol };
@@ -897,12 +880,9 @@ impl RpcClientManager {
         let user_address = parse_user_address(&req.address)?;
 
         // Fetch spendable UTXOs for user address
-        let utxo_resp = client.get_utxos_by_addresses(vec![user_address.clone()]).await
-            .unwrap_or_default();
+        let utxo_resp = client.get_utxos_by_addresses(vec![user_address.clone()]).await.unwrap_or_default();
 
-        let virtual_daa_score = client.get_server_info().await
-            .map(|s| s.virtual_daa_score)
-            .unwrap_or(0);
+        let virtual_daa_score = client.get_server_info().await.map(|s| s.virtual_daa_score).unwrap_or(0);
 
         let mut selected_utxos = Vec::new();
         let mut total_in = 0u64;
@@ -925,12 +905,7 @@ impl RpcClientManager {
 
         if !selected_utxos.is_empty() {
             for (outpoint, entry) in selected_utxos {
-                inputs.push(TransactionInput {
-                    previous_outpoint: outpoint,
-                    signature_script: vec![],
-                    sequence: 0,
-                    sig_op_count: 1,
-                });
+                inputs.push(TransactionInput { previous_outpoint: outpoint, signature_script: vec![], sequence: 0, sig_op_count: 1 });
                 entries.push(entry);
             }
         } else {
@@ -954,10 +929,7 @@ impl RpcClientManager {
         let mut outputs = Vec::new();
         if change > 0 {
             let script_pub_key = zyanya_txscript::pay_to_address_script(&user_address);
-            outputs.push(TransactionOutput {
-                value: change,
-                script_public_key: script_pub_key,
-            });
+            outputs.push(TransactionOutput { value: change, script_public_key: script_pub_key });
         }
 
         let bytecode = zyanya_vm::bonding_curve_token::bonding_curve_bytecode();
@@ -998,13 +970,8 @@ impl RpcClientManager {
         sanitize_metadata(&mut metadata);
         let metadata_hash = compute_metadata_hash(&metadata);
 
-        let payload = ContractPayload::Deploy(DeployContractPayload {
-            bytecode,
-            max_gas: gas,
-            gas_price: 1,
-            deposit_amount: 0,
-            metadata_hash,
-        });
+        let payload =
+            ContractPayload::Deploy(DeployContractPayload { bytecode, max_gas: gas, gas_price: 1, deposit_amount: 0, metadata_hash });
         let payload_bytes = payload.to_bytes().map_err(|e| e.to_string())?;
 
         // lock_time = 0 means no lock time (always finalized — the tx can be mined immediately)
@@ -1064,17 +1031,13 @@ impl RpcClientManager {
         }))
     }
 
-    pub async fn build_unsigned_buy_tx(
-        &self,
-        req: UnsignedBuyReq,
-    ) -> Result<serde_json::Value, String> {
+    pub async fn build_unsigned_buy_tx(&self, req: UnsignedBuyReq) -> Result<serde_json::Value, String> {
         let client = self.ensure_connected().await?;
         let token_addr_str = req.token_address.or(req.tokenAddress).or(req.token).unwrap_or_default();
         if token_addr_str.is_empty() {
             return Err("Missing token address".to_string());
         }
-        let contract_address = RpcHash::from_str(&token_addr_str)
-            .map_err(|e| format!("Invalid token address: {}", e))?;
+        let contract_address = RpcHash::from_str(&token_addr_str).map_err(|e| format!("Invalid token address: {}", e))?;
 
         let gas = req.gas.unwrap_or(100_000);
         let user_address = parse_user_address(&req.address)?;
@@ -1122,12 +1085,7 @@ impl RpcClientManager {
 
         if !selected_utxos.is_empty() {
             for (outpoint, entry) in selected_utxos {
-                inputs.push(TransactionInput {
-                    previous_outpoint: outpoint,
-                    signature_script: vec![],
-                    sequence: 0,
-                    sig_op_count: 1,
-                });
+                inputs.push(TransactionInput { previous_outpoint: outpoint, signature_script: vec![], sequence: 0, sig_op_count: 1 });
                 entries.push(entry);
             }
         } else {
@@ -1151,10 +1109,7 @@ impl RpcClientManager {
         let change = total_in.saturating_sub(required_zyan);
         if change > 0 {
             let script_pub_key = zyanya_txscript::pay_to_address_script(&user_address);
-            outputs.push(TransactionOutput {
-                value: change,
-                script_public_key: script_pub_key,
-            });
+            outputs.push(TransactionOutput { value: change, script_public_key: script_pub_key });
         }
 
         let buyer_u64 = parse_u64_key(&user_address.to_string())?;
@@ -1168,15 +1123,8 @@ impl RpcClientManager {
         });
         let payload_bytes = payload.to_bytes().map_err(|e| e.to_string())?;
 
-        let unsigned_tx = Transaction::new(
-            0,
-            inputs,
-            outputs,
-            0,
-            zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
-            gas,
-            payload_bytes,
-        );
+        let unsigned_tx =
+            Transaction::new(0, inputs, outputs, 0, zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT, gas, payload_bytes);
 
         let signable_tx = SignableTransaction::with_entries(unsigned_tx.clone(), entries.clone());
         let reused_values = SigHashReusedValuesUnsync::new();
@@ -1220,17 +1168,13 @@ impl RpcClientManager {
         }))
     }
 
-    pub async fn build_unsigned_sell_tx(
-        &self,
-        req: UnsignedSellReq,
-    ) -> Result<serde_json::Value, String> {
+    pub async fn build_unsigned_sell_tx(&self, req: UnsignedSellReq) -> Result<serde_json::Value, String> {
         let client = self.ensure_connected().await?;
         let token_addr_str = req.token_address.or(req.tokenAddress).or(req.token).unwrap_or_default();
         if token_addr_str.is_empty() {
             return Err("Missing token address".to_string());
         }
-        let contract_address = RpcHash::from_str(&token_addr_str)
-            .map_err(|e| format!("Invalid token address: {}", e))?;
+        let contract_address = RpcHash::from_str(&token_addr_str).map_err(|e| format!("Invalid token address: {}", e))?;
 
         let gas = req.gas.unwrap_or(100_000);
         let user_address = parse_user_address(&req.address)?;
@@ -1278,12 +1222,7 @@ impl RpcClientManager {
 
         if !selected_utxos.is_empty() {
             for (outpoint, entry) in selected_utxos {
-                inputs.push(TransactionInput {
-                    previous_outpoint: outpoint,
-                    signature_script: vec![],
-                    sequence: 0,
-                    sig_op_count: 1,
-                });
+                inputs.push(TransactionInput { previous_outpoint: outpoint, signature_script: vec![], sequence: 0, sig_op_count: 1 });
                 entries.push(entry);
             }
         } else {
@@ -1307,10 +1246,7 @@ impl RpcClientManager {
         let change = total_in.saturating_sub(gas_fee);
         if change > 0 {
             let script_pub_key = zyanya_txscript::pay_to_address_script(&user_address);
-            outputs.push(TransactionOutput {
-                value: change,
-                script_public_key: script_pub_key,
-            });
+            outputs.push(TransactionOutput { value: change, script_public_key: script_pub_key });
         }
 
         let seller_u64 = parse_u64_key(&user_address.to_string())?;
@@ -1324,15 +1260,8 @@ impl RpcClientManager {
         });
         let payload_bytes = payload.to_bytes().map_err(|e| e.to_string())?;
 
-        let unsigned_tx = Transaction::new(
-            0,
-            inputs,
-            outputs,
-            0,
-            zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
-            gas,
-            payload_bytes,
-        );
+        let unsigned_tx =
+            Transaction::new(0, inputs, outputs, 0, zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT, gas, payload_bytes);
 
         let signable_tx = SignableTransaction::with_entries(unsigned_tx.clone(), entries.clone());
         let reused_values = SigHashReusedValuesUnsync::new();
@@ -1376,26 +1305,19 @@ impl RpcClientManager {
         }))
     }
 
-    pub async fn submit_signed_tx(
-        &self,
-        req: SubmitSignedTxReq,
-    ) -> Result<serde_json::Value, String> {
+    pub async fn submit_signed_tx(&self, req: SubmitSignedTxReq) -> Result<serde_json::Value, String> {
         use zyanya_utils::hex::FromHex;
         let client = self.ensure_connected().await?;
 
-        let json_bytes = <Vec<u8>>::from_hex(req.unsigned_tx.trim_start_matches("0x"))
-            .map_err(|e| format!("Invalid unsigned_tx hex: {}", e))?;
-        let data: SignableTxData = serde_json::from_slice(&json_bytes)
-            .map_err(|e| format!("Failed to parse unsigned transaction payload: {}", e))?;
+        let json_bytes =
+            <Vec<u8>>::from_hex(req.unsigned_tx.trim_start_matches("0x")).map_err(|e| format!("Invalid unsigned_tx hex: {}", e))?;
+        let data: SignableTxData =
+            serde_json::from_slice(&json_bytes).map_err(|e| format!("Failed to parse unsigned transaction payload: {}", e))?;
 
         let mut signable_tx = SignableTransaction::with_entries(data.tx.clone(), data.entries);
 
         if req.signatures.len() != signable_tx.tx.inputs.len() {
-            return Err(format!(
-                "Signature count mismatch: expected {}, got {}",
-                signable_tx.tx.inputs.len(),
-                req.signatures.len()
-            ));
+            return Err(format!("Signature count mismatch: expected {}, got {}", signable_tx.tx.inputs.len(), req.signatures.len()));
         }
 
         for (i, sig_hex) in req.signatures.iter().enumerate() {
@@ -1404,10 +1326,7 @@ impl RpcClientManager {
             if sig_bytes.len() != 64 {
                 return Err(format!("Signature for input {} must be 64 bytes, got {}", i, sig_bytes.len()));
             }
-            signable_tx.tx.inputs[i].signature_script = std::iter::once(65u8)
-                .chain(sig_bytes)
-                .chain([SIG_HASH_ALL.to_u8()])
-                .collect();
+            signable_tx.tx.inputs[i].signature_script = std::iter::once(65u8).chain(sig_bytes).chain([SIG_HASH_ALL.to_u8()]).collect();
         }
 
         if let Err(e) = verify(&signable_tx.as_verifiable()) {
@@ -1441,8 +1360,7 @@ impl RpcClientManager {
         }
 
         let rpc_tx = RpcTransaction::from(&signable_tx.tx);
-        let tx_id = client.submit_transaction(rpc_tx, false).await
-            .map_err(|e| format!("SubmitTransaction RPC failed: {}", e))?;
+        let tx_id = client.submit_transaction(rpc_tx, false).await.map_err(|e| format!("SubmitTransaction RPC failed: {}", e))?;
 
         let contract_hash = RpcHash::from_str(&data.contract_address).map_err(|e| e.to_string())?;
         // Only init the contract for Deploy txs. For Invoke txs (buy/sell), the block
@@ -1484,8 +1402,7 @@ impl RpcClientManager {
         } else if let Ok(val) = calldata.parse::<u64>() {
             val.to_le_bytes().to_vec()
         } else {
-            <Vec<u8>>::from_hex(calldata.trim_start_matches("0x"))
-                .map_err(|e| format!("Invalid calldata hex: {}", e))?
+            <Vec<u8>>::from_hex(calldata.trim_start_matches("0x")).map_err(|e| format!("Invalid calldata hex: {}", e))?
         };
         bytes.extend_from_slice(&(entry_point as u64).to_le_bytes());
         let res = client.call_contract(contract_address, bytes, gas).await.map_err(|e| e.to_string())?;
@@ -1623,9 +1540,7 @@ impl RpcClientManager {
                     let subnetwork_id = tx.subnetwork_id.to_string();
                     let is_contract_subnetwork = subnetwork_id.ends_with("03") || subnetwork_id.contains("030000");
                     if is_contract_subnetwork && !tx.payload.is_empty() {
-                        let tx_id_str = tx.verbose_data.as_ref()
-                            .map(|v| v.transaction_id.to_string())
-                            .unwrap_or_default();
+                        let tx_id_str = tx.verbose_data.as_ref().map(|v| v.transaction_id.to_string()).unwrap_or_default();
                         if let Ok(tx_hash) = RpcHash::from_str(&tx_id_str) {
                             let derived_addr = derive_contract_address(&tx_hash, 0);
                             known_addresses.insert(derived_addr.to_string());
@@ -1633,10 +1548,9 @@ impl RpcClientManager {
                     }
                 }
 
-                let selected_parent = block.verbose_data.as_ref()
-                    .map(|v| v.selected_parent_hash.to_string())
-                    .unwrap_or_default();
-                if selected_parent.is_empty() || selected_parent == "0000000000000000000000000000000000000000000000000000000000000000" {
+                let selected_parent = block.verbose_data.as_ref().map(|v| v.selected_parent_hash.to_string()).unwrap_or_default();
+                if selected_parent.is_empty() || selected_parent == "0000000000000000000000000000000000000000000000000000000000000000"
+                {
                     break;
                 }
                 if let Ok(next_hash) = RpcHash::from_str(&selected_parent) {
@@ -1730,13 +1644,7 @@ impl RpcClientManager {
                 let k2 = self.get_contract_state_key(&c.address, 2).await.unwrap_or(0);
 
                 let price = if k0 > 0 { k1 as f64 / k0 as f64 } else { 0.0 };
-                dexes.push(DexSummary {
-                    address: c.address.clone(),
-                    reserveA: k0,
-                    reserveB: k1,
-                    totalLPSupply: k2,
-                    price,
-                });
+                dexes.push(DexSummary { address: c.address.clone(), reserveA: k0, reserveB: k1, totalLPSupply: k2, price });
             }
         }
 
@@ -1754,11 +1662,7 @@ fn parse_u64_key(s: &str) -> Result<u64, String> {
 }
 
 pub fn decode_base64(s: &str) -> Result<Vec<u8>, String> {
-    let clean = if let Some(pos) = s.find(',') {
-        &s[pos + 1..]
-    } else {
-        s
-    }.trim();
+    let clean = if let Some(pos) = s.find(',') { &s[pos + 1..] } else { s }.trim();
 
     let mut table = [255u8; 256];
     for (i, &b) in b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".iter().enumerate() {
@@ -1769,7 +1673,9 @@ pub fn decode_base64(s: &str) -> Result<Vec<u8>, String> {
     let mut buf = 0u32;
     let mut bits = 0;
     for &b in bytes {
-        if b == b'=' || b.is_ascii_whitespace() { continue; }
+        if b == b'=' || b.is_ascii_whitespace() {
+            continue;
+        }
         let val = table[b as usize];
         if val == 255 {
             continue;
@@ -1803,4 +1709,3 @@ fn parse_user_address(address_str: &str) -> Result<zyanya_addresses::Address, St
     }
     Err(format!("Invalid Zyanya address or public key format: {}", address_str))
 }
-

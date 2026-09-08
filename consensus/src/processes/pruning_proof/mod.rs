@@ -15,6 +15,7 @@ use parking_lot::{Mutex, RwLock};
 use rayon::prelude::*;
 use rocksdb::WriteBatch;
 
+use thiserror::Error;
 use zyanya_consensus_core::{
     blockhash::{self, BlockHashExtensions},
     errors::consensus::{ConsensusError, ConsensusResult},
@@ -27,7 +28,6 @@ use zyanya_core::info;
 use zyanya_database::{prelude::StoreResultExtensions, utils::DbLifetime};
 use zyanya_hashes::Hash;
 use zyanya_pow::calc_block_level;
-use thiserror::Error;
 
 use crate::{
     consensus::{

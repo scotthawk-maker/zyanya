@@ -1,6 +1,6 @@
 use crate::prelude::DbKey;
-use zyanya_hashes::Hash;
 use thiserror::Error;
+use zyanya_hashes::Hash;
 
 #[derive(Error, Debug)]
 pub enum StoreError {

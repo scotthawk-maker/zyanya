@@ -1,11 +1,11 @@
 use super::{daemon::Daemon, listener::Listener};
-use zyanya_grpc_client::GrpcClient;
-use zyanya_notify::{events::EventType, scope::Scope, subscription::Command};
-use zyanya_rpc_core::RpcResult;
 use std::{
     collections::{hash_map::Entry, HashMap},
     ops::Deref,
 };
+use zyanya_grpc_client::GrpcClient;
+use zyanya_notify::{events::EventType, scope::Scope, subscription::Command};
+use zyanya_rpc_core::RpcResult;
 
 /// A multi-listener gRPC client with event type dedicated listeners
 pub struct ListeningClient {

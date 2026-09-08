@@ -3,6 +3,10 @@ mod result;
 
 use clap::Parser;
 use result::Result;
+use std::sync::Arc;
+use workflow_log::*;
+use workflow_rpc::server::prelude::*;
+use workflow_rpc::server::WebSocketCounters;
 use zyanya_consensus_core::network::NetworkType;
 use zyanya_rpc_core::api::ops::RpcApiOps;
 use zyanya_wrpc_server::{
@@ -11,10 +15,6 @@ use zyanya_wrpc_server::{
     server::Server,
     service::{Options, ZyanyaRpcHandler, MAX_WRPC_MESSAGE_SIZE},
 };
-use std::sync::Arc;
-use workflow_log::*;
-use workflow_rpc::server::prelude::*;
-use workflow_rpc::server::WebSocketCounters;
 
 #[derive(Debug, Parser)]
 #[clap(name = "proxy")]

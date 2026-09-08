@@ -3,8 +3,8 @@
 //!
 
 use crate::model::*;
-use zyanya_consensus_client::*;
 use std::sync::Arc;
+use zyanya_consensus_client::*;
 
 impl From<RpcUtxosByAddressesEntry> for UtxoEntry {
     fn from(entry: RpcUtxosByAddressesEntry) -> UtxoEntry {

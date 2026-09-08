@@ -22,6 +22,7 @@ use crate::{
 };
 use itertools::Itertools;
 use parking_lot::RwLock;
+use std::sync::Arc;
 use zyanya_consensus_core::{
     api::{
         args::{TransactionValidationArgs, TransactionValidationBatchArgs},
@@ -35,7 +36,6 @@ use zyanya_consensus_core::{
 use zyanya_consensusmanager::{spawn_blocking, ConsensusProxy};
 use zyanya_core::{debug, error, info, time::Stopwatch, warn};
 use zyanya_mining_errors::{manager::MiningManagerError, mempool::RuleError};
-use std::sync::Arc;
 // F-L-31: use a bounded channel sender to prevent unbounded queue growth.
 use tokio::sync::mpsc::Sender;
 

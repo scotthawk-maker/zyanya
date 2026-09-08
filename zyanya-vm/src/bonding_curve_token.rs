@@ -428,7 +428,7 @@ mod tests {
         let mut vm = VM::new(100_000);
         vm.caller = 1; // F-C-04: init gated to caller=1
         vm.stack.push(10).unwrap(); // slope
-        vm.stack.push(0).unwrap();  // entry_point 0
+        vm.stack.push(0).unwrap(); // entry_point 0
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
         assert_eq!(res.return_value, Some(1));
 
@@ -447,9 +447,9 @@ mod tests {
         // Step 5: Buy 50 tokens for Alice (entry point 4)
         let mut vm = VM::new(100_000);
         vm.caller = alice; // F-C-04: caller must match caller_param
-        vm.stack.push(50).unwrap();    // tokens_to_mint
+        vm.stack.push(50).unwrap(); // tokens_to_mint
         vm.stack.push(alice).unwrap(); // caller
-        vm.stack.push(4).unwrap();     // entry_point 4
+        vm.stack.push(4).unwrap(); // entry_point 4
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
         assert_eq!(res.return_value, Some(12500));
 
@@ -461,10 +461,10 @@ mod tests {
         // Step 6: Transfer 15 tokens from Alice to Bob (entry point 1)
         let mut vm = VM::new(100_000);
         vm.caller = alice; // F-C-04: caller must match `from` parameter
-        vm.stack.push(15).unwrap();   // amount
-        vm.stack.push(bob).unwrap();  // to
-        vm.stack.push(alice).unwrap();// from
-        vm.stack.push(1).unwrap();    // entry_point 1
+        vm.stack.push(15).unwrap(); // amount
+        vm.stack.push(bob).unwrap(); // to
+        vm.stack.push(alice).unwrap(); // from
+        vm.stack.push(1).unwrap(); // entry_point 1
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
         assert_eq!(res.return_value, Some(1));
         assert_eq!(state.get(&addr, alice), 35);
@@ -473,9 +473,9 @@ mod tests {
         // Step 7: Sell 15 tokens for Bob (entry point 5)
         let mut vm = VM::new(100_000);
         vm.caller = bob; // F-C-04: caller must match caller_param
-        vm.stack.push(15).unwrap();  // tokens_in
+        vm.stack.push(15).unwrap(); // tokens_in
         vm.stack.push(bob).unwrap(); // caller
-        vm.stack.push(5).unwrap();   // entry_point 5
+        vm.stack.push(5).unwrap(); // entry_point 5
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
         assert_eq!(res.return_value, Some(6375));
         assert_eq!(state.get(&addr, bob), 0);
@@ -495,7 +495,7 @@ mod tests {
         let mut vm = VM::new(100_000);
         vm.caller = 1; // F-C-04: init gated to caller=1
         vm.stack.push(11).unwrap(); // slope = 11
-        vm.stack.push(0).unwrap();  // entry_point = 0
+        vm.stack.push(0).unwrap(); // entry_point = 0
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Init failed");
         assert_eq!(res.return_value, Some(1));
         assert_eq!(state.get(&addr, 1), 11, "Slope must be read as 11 from stack parameter");
@@ -504,9 +504,9 @@ mod tests {
         // Cost formula: slope * (2 * supply * k + k^2) / 2 = 11 * (0 + 100) / 2 = 550
         let mut vm = VM::new(100_000);
         vm.caller = user; // F-C-04: caller must match caller_param
-        vm.stack.push(10).unwrap();   // k = 10
+        vm.stack.push(10).unwrap(); // k = 10
         vm.stack.push(user).unwrap(); // caller
-        vm.stack.push(4).unwrap();    // entry_point 4
+        vm.stack.push(4).unwrap(); // entry_point 4
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Buy failed");
         assert_eq!(res.return_value, Some(550), "Buy cost should be 550 for slope 11");
         assert_eq!(state.get(&addr, 2), 550, "Reserve should be 550");
@@ -515,9 +515,9 @@ mod tests {
         // Refund formula: slope * (2 * 10 * 10 - 100) / 2 = 11 * 100 / 2 = 550
         let mut vm = VM::new(100_000);
         vm.caller = user; // F-C-04: caller must match caller_param
-        vm.stack.push(10).unwrap();   // k = 10
+        vm.stack.push(10).unwrap(); // k = 10
         vm.stack.push(user).unwrap(); // caller
-        vm.stack.push(5).unwrap();    // entry_point 5
+        vm.stack.push(5).unwrap(); // entry_point 5
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Sell failed");
         assert_eq!(res.return_value, Some(550), "Sell refund should be 550");
         assert_eq!(state.get(&addr, 2), 0, "Reserve should be 0 after full sell");
@@ -533,4 +533,3 @@ mod tests {
         assert_eq!(state.get(&addr, 1), 5, "Slope updated to 5");
     }
 }
-

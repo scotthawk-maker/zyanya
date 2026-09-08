@@ -32,10 +32,10 @@ use crate::{
     pipeline::{body_processor::BlockBodyProcessor, virtual_processor::VirtualStateProcessor, ProcessingCounters},
     test_helpers::header_from_precomputed_hash,
 };
-use zyanya_database::create_temp_db;
-use zyanya_database::prelude::ConnBuilder;
 use std::future::Future;
 use std::{sync::Arc, thread::JoinHandle};
+use zyanya_database::create_temp_db;
+use zyanya_database::prelude::ConnBuilder;
 
 pub struct TestConsensus {
     params: Params,

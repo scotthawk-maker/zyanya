@@ -1,4 +1,5 @@
 use parking_lot::RwLock;
+use std::{collections::HashSet, fmt::Debug, sync::Arc};
 use zyanya_consensus_core::{
     tx::{ScriptPublicKeys, TransactionOutpoint},
     utxo::utxo_diff::UtxoDiff,
@@ -8,7 +9,6 @@ use zyanya_consensusmanager::spawn_blocking;
 use zyanya_database::prelude::StoreResult;
 use zyanya_hashes::Hash;
 use zyanya_index_core::indexed_utxos::BalanceByScriptPublicKey;
-use std::{collections::HashSet, fmt::Debug, sync::Arc};
 
 use crate::{
     errors::UtxoIndexResult,

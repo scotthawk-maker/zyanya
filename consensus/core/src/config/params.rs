@@ -8,12 +8,12 @@ use crate::{
     network::{NetworkId, NetworkType},
     BlockLevel, KType,
 };
-use zyanya_addresses::Prefix;
-use zyanya_math::Uint256;
 use std::{
     cmp::min,
     time::{SystemTime, UNIX_EPOCH},
 };
+use zyanya_addresses::Prefix;
+use zyanya_math::Uint256;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct ForkActivation(u64);
@@ -457,7 +457,7 @@ pub const TESTNET_PARAMS: Params = Params {
     max_block_level: 225,
     pruning_proof_m: 1000,
 
-    payload_activation: ForkActivation::new(0),  // Activate immediately for testnet
+    payload_activation: ForkActivation::new(0), // Activate immediately for testnet
     runtime_sig_op_counting: ForkActivation::never(),
     net_magic: [0x5A, 0x59, 0x4E, 0x54], // ASCII: "ZYNT"
     enable_smart_contracts: true,
@@ -516,7 +516,7 @@ pub const TESTNET11_PARAMS: Params = Params {
 
     // TODO: date for activation to be decided
     kip10_activation: ForkActivation::never(),
-    payload_activation: ForkActivation::new(0),  // Activate immediately for testnet11
+    payload_activation: ForkActivation::new(0), // Activate immediately for testnet11
 
     skip_proof_of_work: false,
     max_block_level: 250,
@@ -579,7 +579,7 @@ pub const SIMNET_PARAMS: Params = Params {
     skip_proof_of_work: true, // For simnet only, PoW can be simulated by default
     max_block_level: 250,
 
-    payload_activation: ForkActivation::new(0),  // Activate immediately for simnet
+    payload_activation: ForkActivation::new(0), // Activate immediately for simnet
     runtime_sig_op_counting: ForkActivation::never(),
     net_magic: [0x53, 0x49, 0x4D, 0x4E], // ASCII: "SIMN"
     enable_smart_contracts: true,
@@ -639,7 +639,7 @@ pub const DEVNET_PARAMS: Params = Params {
     max_block_level: 250,
     pruning_proof_m: 1000,
 
-    payload_activation: ForkActivation::new(0),  // Activate immediately for devnet
+    payload_activation: ForkActivation::new(0), // Activate immediately for devnet
     runtime_sig_op_counting: ForkActivation::never(),
     net_magic: [0x44, 0x45, 0x56, 0x4E], // ASCII: "DEVN"
     enable_smart_contracts: true,

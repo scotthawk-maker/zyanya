@@ -12,6 +12,12 @@ use crate::Resolver;
 use crate::{RpcEventCallback, RpcEventType, RpcEventTypeOrCallback};
 use js_sys::{Function, Object};
 pub use serde_wasm_bindgen::from_value;
+use workflow_rpc::client::Ctl;
+pub use workflow_rpc::client::IConnectOptions;
+pub use workflow_rpc::encoding::Encoding as WrpcEncoding;
+use workflow_wasm::callback;
+use workflow_wasm::extensions::ObjectExtension;
+pub use workflow_wasm::serde::to_value;
 use zyanya_addresses::{Address, AddressOrStringArrayT};
 use zyanya_consensus_client::UtxoEntryReference;
 use zyanya_consensus_core::network::{NetworkType, NetworkTypeT};
@@ -25,12 +31,6 @@ pub use zyanya_rpc_macros::{
     build_wrpc_wasm_bindgen_interface, build_wrpc_wasm_bindgen_subscriptions, declare_typescript_wasm_interface as declare,
 };
 use zyanya_wasm_core::events::{get_event_targets, Sink};
-use workflow_rpc::client::Ctl;
-pub use workflow_rpc::client::IConnectOptions;
-pub use workflow_rpc::encoding::Encoding as WrpcEncoding;
-use workflow_wasm::callback;
-use workflow_wasm::extensions::ObjectExtension;
-pub use workflow_wasm::serde::to_value;
 
 declare! {
     IRpcConfig,

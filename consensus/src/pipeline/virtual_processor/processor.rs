@@ -51,7 +51,6 @@ use crate::{
 use once_cell::unsync::Lazy;
 use zyanya_consensus_core::{
     acceptance_data::AcceptanceData,
-    tx::ContractPayload,
     api::args::{TransactionValidationArgs, TransactionValidationBatchArgs},
     block::{BlockTemplate, MutableBlock, TemplateBuildMode, TemplateTransactionSelector},
     blockstatus::BlockStatus::{StatusDisqualifiedFromChain, StatusUTXOValid},
@@ -61,6 +60,7 @@ use zyanya_consensus_core::{
     merkle::calc_hash_merkle_root,
     muhash::MuHashExtensions,
     pruning::PruningPointsList,
+    tx::ContractPayload,
     tx::{MutableTransaction, Transaction},
     utxo::{
         utxo_diff::UtxoDiff,
@@ -92,14 +92,14 @@ use rayon::{
     ThreadPool,
 };
 use rocksdb::WriteBatch;
-use zyanya_consensus_core::tx::ValidatedTransaction;
-use zyanya_utils::binary_heap::BinaryHeapExtensions;
 use std::{
     cmp::min,
     collections::{BinaryHeap, HashMap, VecDeque},
     ops::Deref,
     sync::{atomic::Ordering, Arc},
 };
+use zyanya_consensus_core::tx::ValidatedTransaction;
+use zyanya_utils::binary_heap::BinaryHeapExtensions;
 
 pub struct VirtualStateProcessor {
     // Channels
@@ -486,8 +486,10 @@ impl VirtualStateProcessor {
         // build a payout UTXO output paying the seller address.
         let mut tx_callers: std::collections::HashMap<zyanya_consensus_core::tx::TransactionId, u64> =
             std::collections::HashMap::new();
-        let mut tx_caller_scripts: std::collections::HashMap<zyanya_consensus_core::tx::TransactionId, zyanya_consensus_core::tx::ScriptPublicKey> =
-            std::collections::HashMap::new();
+        let mut tx_caller_scripts: std::collections::HashMap<
+            zyanya_consensus_core::tx::TransactionId,
+            zyanya_consensus_core::tx::ScriptPublicKey,
+        > = std::collections::HashMap::new();
         for block_acceptance in acceptance_data.iter() {
             if let Ok(block_txs) = self.block_transactions_store.get(block_acceptance.block_hash) {
                 for accepted_tx in &block_acceptance.accepted_transactions {
@@ -509,9 +511,7 @@ impl VirtualStateProcessor {
         // Process any smart contract transactions in accepted blocks
         let mut contract_cache = ContractStateCache::new();
         let contract_store_clone = self.contract_store.clone();
-        contract_cache.fallback_storage = Some(Arc::new(move |addr, key| {
-            contract_store_clone.get_storage(addr, key).unwrap_or(0)
-        }));
+        contract_cache.fallback_storage = Some(Arc::new(move |addr, key| contract_store_clone.get_storage(addr, key).unwrap_or(0)));
 
         let processor = ContractProcessor::new();
         let mut has_contract_changes = false;
@@ -548,10 +548,8 @@ impl VirtualStateProcessor {
                                     has_contract_changes = true;
                                     // F-C-03 FOLLOW-UP: collect the payout output for UTXO creation.
                                     if let Some(payout) = outcome.payout {
-                                        let outpoint = zyanya_consensus_core::tx::TransactionOutpoint::new(
-                                            tx.id(),
-                                            tx.outputs.len() as u32,
-                                        );
+                                        let outpoint =
+                                            zyanya_consensus_core::tx::TransactionOutpoint::new(tx.id(), tx.outputs.len() as u32);
                                         payouts.push((outpoint, payout));
                                     }
                                 }
@@ -576,12 +574,8 @@ impl VirtualStateProcessor {
         // virtual multiset) DOES commit to them. Do not re-verify the current header.
         let block_daa_score = self.headers_store.get_daa_score(current).unwrap_or(0);
         for (outpoint, output) in &payouts {
-            let entry = zyanya_consensus_core::tx::UtxoEntry::new(
-                output.value,
-                output.script_public_key.clone(),
-                block_daa_score,
-                false,
-            );
+            let entry =
+                zyanya_consensus_core::tx::UtxoEntry::new(output.value, output.script_public_key.clone(), block_daa_score, false);
             mergeset_diff.add.insert(*outpoint, entry.clone());
             multiset.add_utxo(outpoint, &entry);
         }

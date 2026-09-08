@@ -4,11 +4,11 @@ use crate::imports::*;
 use crate::result::Result;
 use crate::utxo as native;
 use crate::wasm::notify::{UtxoProcessorEventTarget, UtxoProcessorNotificationCallback, UtxoProcessorNotificationTypeOrCallback};
+use workflow_log::log_error;
 use zyanya_consensus_core::network::NetworkIdT;
 use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
 use zyanya_wasm_core::events::{get_event_targets, Sink};
 use zyanya_wrpc_wasm::RpcClient;
-use workflow_log::log_error;
 
 declare! {
     IUtxoProcessorArgs,

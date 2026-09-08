@@ -4,8 +4,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use zyanya_notify::events::EventType;
 use workflow_core::enums::Describe;
+use zyanya_notify::events::EventType;
 
 /// API version. Change in this value should result
 /// in the client refusing to connect.

@@ -2,8 +2,8 @@
 //! Extended public key ([`XPub`]).
 //!
 
-use zyanya_bip32::{ChainCode, KeyFingerprint, Prefix};
 use std::{fmt, str::FromStr};
+use zyanya_bip32::{ChainCode, KeyFingerprint, Prefix};
 
 use crate::imports::*;
 

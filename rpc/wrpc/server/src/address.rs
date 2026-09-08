@@ -1,8 +1,8 @@
 use crate::service::WrpcEncoding;
 use serde::Deserialize;
+use std::{net::AddrParseError, str::FromStr};
 use zyanya_consensus_core::network::NetworkType;
 use zyanya_utils::networking::ContextualNetAddress;
-use std::{net::AddrParseError, str::FromStr};
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename = "lowercase")]

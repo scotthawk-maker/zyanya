@@ -1,8 +1,8 @@
 use indexmap::IndexMap;
 use parking_lot::RwLock;
 use rand::Rng;
-use zyanya_utils::mem_size::{MemMode, MemSizeEstimator};
 use std::{collections::hash_map::RandomState, hash::BuildHasher, sync::Arc};
+use zyanya_utils::mem_size::{MemMode, MemSizeEstimator};
 
 #[derive(Debug, Clone, Copy)]
 pub enum CachePolicy {

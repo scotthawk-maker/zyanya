@@ -20,10 +20,7 @@ pub struct MockStateBackend {
 
 impl MockStateBackend {
     pub fn new() -> Self {
-        Self {
-            storage: HashMap::new(),
-            code: HashMap::new(),
-        }
+        Self { storage: HashMap::new(), code: HashMap::new() }
     }
 
     pub fn set_code(&mut self, contract_address: [u8; 32], code: Vec<u8>) {
@@ -50,10 +47,7 @@ impl StateBackend for MockStateBackend {
     }
 
     fn get_code(&self, contract_address: &[u8; 32]) -> Result<Vec<u8>, VMError> {
-        self.code
-            .get(contract_address)
-            .cloned()
-            .ok_or_else(|| VMError::StorageError("Contract code not found".to_string()))
+        self.code.get(contract_address).cloned().ok_or_else(|| VMError::StorageError("Contract code not found".to_string()))
     }
 }
 

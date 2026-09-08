@@ -5,10 +5,10 @@ use crate::{
     pb::{self, VersionMessage},
     IncomingRoute, Router, ZyanyadMessagePayloadType,
 };
-use zyanya_core::{debug, time::unix_now, trace, warn};
 use std::sync::Arc;
 use tonic::async_trait;
 use uuid::Uuid;
+use zyanya_core::{debug, time::unix_now, trace, warn};
 
 /// An example flow, echoing all messages back to the network
 pub struct EchoFlow {

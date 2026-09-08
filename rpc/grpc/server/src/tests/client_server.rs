@@ -1,11 +1,11 @@
 use super::rpc_core_mock::RpcCoreMock;
 use crate::{adaptor::Adaptor, manager::Manager};
+use std::sync::Arc;
 use zyanya_core::info;
 use zyanya_grpc_client::GrpcClient;
 use zyanya_notify::scope::{NewBlockTemplateScope, Scope};
 use zyanya_rpc_core::api::rpc::RpcApi;
 use zyanya_utils::networking::{ContextualNetAddress, NetAddress};
-use std::sync::Arc;
 
 #[tokio::test]
 async fn test_client_server_sanity_check() {

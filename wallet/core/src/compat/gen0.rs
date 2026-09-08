@@ -12,7 +12,6 @@ use md5::Md5;
 use pbkdf2::{hmac::Hmac, pbkdf2};
 use serde::{Deserialize, Serialize};
 use sha1::Sha1;
-use zyanya_bip32::{ExtendedPrivateKey, Language, Mnemonic, Prefix, SecretKey};
 use std::path::PathBuf;
 #[allow(unused_imports)]
 use workflow_core::env;
@@ -22,6 +21,7 @@ use workflow_store::fs::exists_with_options;
 use workflow_store::fs::read_json_with_options;
 use workflow_store::fs::Options;
 use zeroize::Zeroize;
+use zyanya_bip32::{ExtendedPrivateKey, Language, Mnemonic, Prefix, SecretKey};
 
 type Aes256CfbDec = cfb_mode::Decryptor<aes::Aes256>;
 

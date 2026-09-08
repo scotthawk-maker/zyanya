@@ -2,17 +2,17 @@ use crate::{
     error::{Error, Result},
     resolver::{matcher::Matcher, Resolver, ZyanyadResponseReceiver, ZyanyadResponseSender},
 };
-use zyanya_core::trace;
-use zyanya_grpc_core::{
-    ops::ZyanyadPayloadOps,
-    protowire::{ZyanyadRequest, ZyanyadResponse},
-};
 use std::{
     collections::VecDeque,
     sync::{Arc, Mutex},
     time::Instant,
 };
 use tokio::sync::oneshot;
+use zyanya_core::trace;
+use zyanya_grpc_core::{
+    ops::ZyanyadPayloadOps,
+    protowire::{ZyanyadRequest, ZyanyadResponse},
+};
 
 #[derive(Debug)]
 struct Pending {

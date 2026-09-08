@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use zyanya_consensus_core::{
     coinbase::*,
     errors::coinbase::{CoinbaseError, CoinbaseResult},
@@ -5,7 +6,6 @@ use zyanya_consensus_core::{
     tx::{ScriptPublicKey, ScriptVec, Transaction, TransactionOutput},
     BlockHashMap, BlockHashSet,
 };
-use std::convert::TryInto;
 use zyanya_txscript::{opcodes::codes::OpCheckSequenceVerify, script_builder::ScriptBuilder};
 
 use crate::{constants, model::stores::ghostdag::GhostdagData};
@@ -544,7 +544,10 @@ mod tests {
         let total_supply_sompi = pre_deflationary_total + deflationary_monthly_sum;
         let total_supply_zyan = total_supply_sompi / SOMPI_PER_ZYANYA;
         println!("Mainnet Total Supply (727 months table sum): {} ZYAN", total_supply_zyan);
-        assert!(total_supply_zyan >= 27_500_000_000 && total_supply_zyan <= 28_700_000_000, "Mainnet total supply must approach ~28.7B ZYAN");
+        assert!(
+            total_supply_zyan >= 27_500_000_000 && total_supply_zyan <= 28_700_000_000,
+            "Mainnet total supply must approach ~28.7B ZYAN"
+        );
     }
 
     #[test]
@@ -628,36 +631,22 @@ mod tests {
         let cbm = create_manager(&MAINNET_PARAMS);
         let script_data = [33u8, 255];
         let miner_script = ScriptPublicKey::new(0, ScriptVec::from_slice(&script_data));
-        let miner_data = MinerData {
-            script_public_key: miner_script.clone(),
-            extra_data: vec![],
-        };
+        let miner_data = MinerData { script_public_key: miner_script.clone(), extra_data: vec![] };
 
         let blue_hash = zyanya_hashes::Hash::from_u64_word(1);
         let mut mergeset_blues = Vec::new();
         mergeset_blues.push(blue_hash);
 
-        let ghostdag_data = GhostdagData::new(
-            0,
-            0.into(),
-            blue_hash,
-            mergeset_blues.into(),
-            Vec::new().into(),
-            BlockHashMap::default().into(),
-        );
+        let ghostdag_data =
+            GhostdagData::new(0, 0.into(), blue_hash, mergeset_blues.into(), Vec::new().into(), BlockHashMap::default().into());
 
         let total_subsidy = 5_000_000_000u64; // 50 ZYAN
         let mut mergeset_rewards = BlockHashMap::default();
-        mergeset_rewards.insert(
-            blue_hash,
-            BlockRewardData::new(total_subsidy, 0, miner_script.clone()),
-        );
+        mergeset_rewards.insert(blue_hash, BlockRewardData::new(total_subsidy, 0, miner_script.clone()));
 
         let mergeset_non_daa = BlockHashSet::default();
 
-        let template = cbm
-            .expected_coinbase_transaction(1, miner_data, &ghostdag_data, &mergeset_rewards, &mergeset_non_daa)
-            .unwrap();
+        let template = cbm.expected_coinbase_transaction(1, miner_data, &ghostdag_data, &mergeset_rewards, &mergeset_non_daa).unwrap();
 
         // Should have 13 outputs: 1 liquid + 12 monthly vested outputs
         assert_eq!(template.tx.outputs.len(), 13);
@@ -712,16 +701,8 @@ mod tests {
         let reused_values = SigHashReusedValuesUnsync::new();
 
         // Valid sequence (sequence == lock_blocks) should succeed
-        let mut vm = TxScriptEngine::from_transaction_input(
-            &populated_tx,
-            &input,
-            0,
-            &utxo_entry,
-            &reused_values,
-            &sig_cache,
-            false,
-            false,
-        );
+        let mut vm =
+            TxScriptEngine::from_transaction_input(&populated_tx, &input, 0, &utxo_entry, &reused_values, &sig_cache, false, false);
         assert!(vm.execute().is_ok());
 
         // Invalid sequence (sequence < lock_blocks) should fail

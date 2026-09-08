@@ -6,10 +6,10 @@ use crate::client::{RpcClient, RpcConfig};
 use crate::imports::*;
 use js_sys::Array;
 use serde::ser;
+use workflow_wasm::extensions::ObjectExtension;
 pub use zyanya_rpc_macros::declare_typescript_wasm_interface as declare;
 use zyanya_wrpc_client::node::NodeDescriptor;
 use zyanya_wrpc_client::Resolver as NativeResolver;
-use workflow_wasm::extensions::ObjectExtension;
 
 declare! {
     IResolverConfig,

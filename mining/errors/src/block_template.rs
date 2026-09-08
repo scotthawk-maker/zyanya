@@ -1,5 +1,5 @@
-use zyanya_consensus_core::errors::{block::RuleError, coinbase::CoinbaseError};
 use thiserror::Error;
+use zyanya_consensus_core::errors::{block::RuleError, coinbase::CoinbaseError};
 
 #[derive(Error, Debug, Clone)]
 pub enum BuilderError {

@@ -8,13 +8,13 @@ use crate::mempool::{
     },
     tx::Priority,
 };
+use std::sync::Arc;
 use zyanya_consensus_core::{
     tx::MutableTransaction,
     tx::{TransactionId, TransactionOutpoint},
 };
 use zyanya_core::{debug, warn};
 use zyanya_utils::iter::IterExtensions;
-use std::sync::Arc;
 
 /// Pool of orphan transactions depending on some missing utxo entries
 ///

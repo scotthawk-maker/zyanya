@@ -1,5 +1,6 @@
 use rocksdb::WriteBatch;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use zyanya_consensus_core::tx::{TransactionInput, TransactionOutput};
 use zyanya_consensus_core::{tx::Transaction, BlockHasher};
 use zyanya_database::prelude::CachePolicy;
@@ -9,7 +10,6 @@ use zyanya_database::prelude::{BatchDbWriter, CachedDbAccess, DirectDbWriter};
 use zyanya_database::registry::DatabaseStorePrefixes;
 use zyanya_hashes::Hash;
 use zyanya_utils::mem_size::MemSizeEstimator;
-use std::sync::Arc;
 
 pub trait BlockTransactionsStoreReader {
     fn get(&self, hash: Hash) -> Result<Arc<Vec<Transaction>>, StoreError>;

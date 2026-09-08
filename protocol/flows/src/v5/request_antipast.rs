@@ -1,4 +1,5 @@
 use crate::{flow_context::FlowContext, flow_trait::Flow};
+use std::sync::Arc;
 use zyanya_consensus_core::errors::consensus::ConsensusError;
 use zyanya_core::debug;
 use zyanya_hashes::Hash;
@@ -8,7 +9,6 @@ use zyanya_p2p_lib::{
     pb::{zyanyad_message::Payload, BlockHeadersMessage, DoneHeadersMessage},
     IncomingRoute, Router,
 };
-use std::sync::Arc;
 
 pub struct HandleAntipastRequests {
     ctx: FlowContext,

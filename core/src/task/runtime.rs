@@ -1,14 +1,14 @@
 use crate::{signals::Shutdown, task::service::AsyncServiceResult};
 use futures_util::future::{select_all, try_join_all};
-use zyanya_core::core::Core;
-use zyanya_core::service::Service;
-use zyanya_core::task::service::AsyncService;
-use zyanya_core::trace;
 use std::{
     sync::{Arc, Mutex},
     thread::{self, JoinHandle as ThreadJoinHandle},
 };
 use tokio::task::JoinHandle as TaskJoinHandle;
+use zyanya_core::core::Core;
+use zyanya_core::service::Service;
+use zyanya_core::task::service::AsyncService;
+use zyanya_core::trace;
 
 /// AsyncRuntime registers async services and provides
 /// a tokio Runtime to run them.

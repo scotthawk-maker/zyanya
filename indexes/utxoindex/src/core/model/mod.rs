@@ -1,3 +1,3 @@
 mod supply;
 
-pub use {zyanya_index_core::indexed_utxos::*, supply::*};
+pub use {supply::*, zyanya_index_core::indexed_utxos::*};

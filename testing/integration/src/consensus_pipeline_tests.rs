@@ -1,5 +1,7 @@
 use futures_util::future::try_join_all;
 use rand_distr::{Distribution, Poisson};
+use std::cmp::min;
+use tokio::join;
 use zyanya_alloc::init_allocator_with_default_settings;
 use zyanya_consensus::{
     config::ConfigBuilder, consensus::test_consensus::TestConsensus, params::MAINNET_PARAMS,
@@ -8,8 +10,6 @@ use zyanya_consensus::{
 use zyanya_consensus_core::{api::ConsensusApi, blockhash};
 use zyanya_database::prelude::CachePolicy;
 use zyanya_hashes::Hash;
-use std::cmp::min;
-use tokio::join;
 
 #[tokio::test]
 async fn test_concurrent_pipeline() {

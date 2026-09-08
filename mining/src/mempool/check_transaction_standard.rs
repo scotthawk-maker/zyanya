@@ -238,6 +238,7 @@ mod tests {
         MiningCounters,
     };
     use smallvec::smallvec;
+    use std::sync::Arc;
     use zyanya_addresses::{Address, Prefix, Version};
     use zyanya_consensus_core::{
         config::params::Params,
@@ -250,7 +251,6 @@ mod tests {
         opcodes::codes::{OpReturn, OpTrue},
         script_builder::ScriptBuilder,
     };
-    use std::sync::Arc;
 
     #[test]
     fn test_calc_min_required_tx_relay_fee() {

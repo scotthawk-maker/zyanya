@@ -1,8 +1,8 @@
-use zyanya_notify::error::Error as NotifyError;
-use zyanya_rpc_core::RpcError;
 use std::sync::PoisonError;
 use thiserror::Error;
 use workflow_rpc::server::{error::Error as RpcServerError, WebSocketError};
+use zyanya_notify::error::Error as NotifyError;
+use zyanya_rpc_core::RpcError;
 
 #[derive(Debug, Error)]
 pub enum Error {

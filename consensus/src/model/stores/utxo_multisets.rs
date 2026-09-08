@@ -1,4 +1,5 @@
 use rocksdb::WriteBatch;
+use std::sync::Arc;
 use zyanya_consensus_core::BlockHasher;
 use zyanya_database::prelude::CachePolicy;
 use zyanya_database::prelude::StoreError;
@@ -8,7 +9,6 @@ use zyanya_database::registry::DatabaseStorePrefixes;
 use zyanya_hashes::Hash;
 use zyanya_math::Uint3072;
 use zyanya_muhash::MuHash;
-use std::sync::Arc;
 
 pub trait UtxoMultisetsStoreReader {
     fn get(&self, hash: Hash) -> Result<MuHash, StoreError>;

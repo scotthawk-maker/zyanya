@@ -1,9 +1,9 @@
 use crate::model::stores::statuses::StatusesStoreReader;
 use parking_lot::RwLock;
+use std::sync::Arc;
 use zyanya_consensus_core::blockstatus::BlockStatus;
 use zyanya_database::prelude::StoreError;
 use zyanya_hashes::Hash;
-use std::sync::Arc;
 
 /// Multi-threaded block-statuses service imp
 #[derive(Clone)]

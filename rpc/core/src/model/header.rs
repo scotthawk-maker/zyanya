@@ -1,8 +1,8 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
+use workflow_serializer::prelude::*;
 use zyanya_consensus_core::{header::Header, BlueWorkType};
 use zyanya_hashes::Hash;
-use workflow_serializer::prelude::*;
 
 /// Raw Rpc header type - without a cached header hash.
 /// Used for mining APIs (get_block_template & submit_block)

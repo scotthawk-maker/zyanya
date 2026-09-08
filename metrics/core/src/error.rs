@@ -1,5 +1,5 @@
-use zyanya_rpc_core::RpcError;
 use thiserror::Error;
+use zyanya_rpc_core::RpcError;
 
 #[derive(Error, Debug)]
 pub enum Error {

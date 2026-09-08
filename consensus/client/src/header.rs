@@ -8,13 +8,13 @@ use crate::error::Error;
 use js_sys::{Array, Object};
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::*;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::prelude::{JsError, JsValue};
+use workflow_wasm::prelude::*;
 use zyanya_consensus_core::hashing;
 use zyanya_consensus_core::header as native;
 use zyanya_hashes::Hash;
 use zyanya_utils::hex::ToHex;
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::prelude::{JsError, JsValue};
-use workflow_wasm::prelude::*;
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_HEADER: &'static str = r#"

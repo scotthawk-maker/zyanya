@@ -1,7 +1,7 @@
 use crate::imports::*;
 use crate::tx::fees::Fees;
-use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
 use workflow_wasm::convert::CastFromJs;
+use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
 
 ///
 /// @see {@link IFees}, {@link IGeneratorSettingsObject}, {@link Generator}, {@link estimateTransactions}, {@link createTransactions}

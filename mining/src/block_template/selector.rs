@@ -1,6 +1,6 @@
 use rand::Rng;
-use zyanya_core::{time::Stopwatch, trace};
 use std::collections::HashMap;
+use zyanya_core::{time::Stopwatch, trace};
 
 use crate::model::candidate_tx::CandidateTransaction;
 
@@ -260,6 +260,7 @@ impl TemplateTransactionSelector for RebalancingWeightedTransactionSelector {
 mod tests {
     use super::*;
     use itertools::Itertools;
+    use std::{collections::HashSet, sync::Arc};
     use zyanya_consensus_core::{
         constants::{MAX_TX_IN_SEQUENCE_NUM, SOMPI_PER_ZYANYA, TX_VERSION},
         mass::transaction_estimated_serialized_size,
@@ -267,7 +268,6 @@ mod tests {
         tx::{Transaction, TransactionId, TransactionInput, TransactionOutpoint, TransactionOutput},
     };
     use zyanya_txscript::{pay_to_script_hash_signature_script, test_helpers::op_true_script};
-    use std::{collections::HashSet, sync::Arc};
 
     use crate::{
         mempool::{

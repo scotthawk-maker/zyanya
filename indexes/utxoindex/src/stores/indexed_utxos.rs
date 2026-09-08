@@ -1,6 +1,9 @@
 use crate::core::model::{CompactUtxoCollection, CompactUtxoEntry, UtxoSetByScriptPublicKey};
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+use std::fmt::Display;
+use std::sync::Arc;
 use zyanya_consensus_core::tx::{
     ScriptPublicKey, ScriptPublicKeyVersion, ScriptPublicKeys, ScriptVec, TransactionIndexType, TransactionOutpoint,
 };
@@ -9,9 +12,6 @@ use zyanya_database::prelude::{CachePolicy, CachedDbAccess, DirectDbWriter, Stor
 use zyanya_database::registry::DatabaseStorePrefixes;
 use zyanya_hashes::Hash;
 use zyanya_index_core::indexed_utxos::BalanceByScriptPublicKey;
-use std::collections::HashSet;
-use std::fmt::Display;
-use std::sync::Arc;
 
 pub const VERSION_TYPE_SIZE: usize = size_of::<ScriptPublicKeyVersion>(); // Const since we need to re-use this a few times.
 

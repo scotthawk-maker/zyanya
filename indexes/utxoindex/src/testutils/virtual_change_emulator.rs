@@ -2,6 +2,7 @@ use crate::model::{CirculatingSupply, CirculatingSupplyDiff};
 #[cfg(test)]
 use rand::Rng;
 use rand::{rngs::SmallRng, SeedableRng};
+use std::sync::Arc;
 use zyanya_consensus::test_helpers::*;
 use zyanya_consensus_core::{
     tx::ScriptPublicKey,
@@ -9,7 +10,6 @@ use zyanya_consensus_core::{
     BlockHashSet, HashMapCustomHasher,
 };
 use zyanya_hashes::Hash;
-use std::sync::Arc;
 
 pub struct VirtualChangeEmulator {
     pub utxo_collection: UtxoCollection,

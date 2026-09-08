@@ -1,7 +1,7 @@
 //! Re-exports of the most commonly used types and traits.
 
 pub use crate::client::{ConnectOptions, ConnectStrategy};
-pub use crate::{Resolver, ZyanyaRpcClient, WrpcEncoding};
+pub use crate::{Resolver, WrpcEncoding, ZyanyaRpcClient};
 pub use zyanya_consensus_core::network::{NetworkId, NetworkType};
 pub use zyanya_notify::{connection::ChannelType, listener::ListenerId, scope::*};
 pub use zyanya_rpc_core::notify::{connection::ChannelConnection, mode::NotificationMode};

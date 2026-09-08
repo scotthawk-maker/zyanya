@@ -1,5 +1,5 @@
-use zyanya_core::error;
 use std::{panic, process, thread};
+use zyanya_core::error;
 
 /// Configures the panic hook to exit the program on every panic
 pub fn configure_panic() {

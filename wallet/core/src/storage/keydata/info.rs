@@ -3,8 +3,8 @@
 //!
 
 use crate::imports::*;
-use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
 use std::fmt::{Display, Formatter};
+use zyanya_wallet_macros::declare_typescript_wasm_interface as declare;
 
 declare! {
     IPrvKeyDataInfo,

@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use std::net::Ipv6Addr;
+use std::{error::Error, fmt::Display, sync::Arc};
 use zyanya_database::{
     prelude::DB,
     prelude::{CachePolicy, StoreError, StoreResult},
@@ -6,8 +8,6 @@ use zyanya_database::{
     registry::DatabaseStorePrefixes,
 };
 use zyanya_utils::mem_size::MemSizeEstimator;
-use std::net::Ipv6Addr;
-use std::{error::Error, fmt::Display, sync::Arc};
 
 use super::AddressKey;
 use crate::NetAddress;

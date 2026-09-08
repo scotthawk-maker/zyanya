@@ -5,9 +5,9 @@
 use crate::derivation::create_xpub_from_xprv;
 use crate::imports::*;
 use secp256k1::SecretKey;
+use xxhash_rust::xxh3::xxh3_64;
 use zyanya_bip32::{ExtendedPrivateKey, ExtendedPublicKey, Language, Mnemonic};
 use zyanya_utils::hex::ToHex;
-use xxhash_rust::xxh3::xxh3_64;
 
 #[derive(Clone, Debug, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub enum PrvKeyDataVariantKind {
@@ -251,11 +251,7 @@ impl PrvKeyData {
 
 impl std::fmt::Debug for PrvKeyData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("PrvKeyData")
-            .field("id", &self.id)
-            .field("name", &self.name)
-            .field("payload", &"[REDACTED]")
-            .finish()
+        f.debug_struct("PrvKeyData").field("id", &self.id).field("name", &self.name).field("payload", &"[REDACTED]").finish()
     }
 }
 

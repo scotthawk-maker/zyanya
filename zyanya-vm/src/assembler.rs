@@ -193,9 +193,8 @@ fn opcode_line_byte_size(line: &str, line_num: usize) -> Result<usize, Assembler
     }
     let op_str = tokens[0].to_uppercase();
     match op_str.as_str() {
-        "NOP" | "HALT" | "POP" | "DUP" | "SWAP" | "ADD" | "SUB" | "MUL" | "DIV" | "MOD" | "POW"
-        | "AND" | "OR" | "XOR" | "NOT" | "EQ" | "LT" | "GT" | "LTE" | "GTE" | "SLOAD" | "SSTORE"
-        | "CALLER" | "RETURN" => Ok(1),
+        "NOP" | "HALT" | "POP" | "DUP" | "SWAP" | "ADD" | "SUB" | "MUL" | "DIV" | "MOD" | "POW" | "AND" | "OR" | "XOR" | "NOT"
+        | "EQ" | "LT" | "GT" | "LTE" | "GTE" | "SLOAD" | "SSTORE" | "CALLER" | "RETURN" => Ok(1),
         "PUSH" | "JUMP" | "JUMPIF" | "LOAD" | "STORE" => Ok(9),
         "CALL" => Ok(33),
         _ => Err(AssemblerError::UnknownOpcode(tokens[0].to_string(), line_num)),

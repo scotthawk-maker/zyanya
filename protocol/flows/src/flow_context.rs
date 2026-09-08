@@ -7,37 +7,6 @@ use crate::{v5, v6};
 use async_trait::async_trait;
 use futures::future::join_all;
 use parking_lot::{Mutex, RwLock};
-use zyanya_addressmanager::AddressManager;
-use zyanya_connectionmanager::ConnectionManager;
-use zyanya_consensus_core::api::{BlockValidationFuture, BlockValidationFutures};
-use zyanya_consensus_core::block::Block;
-use zyanya_consensus_core::config::Config;
-use zyanya_consensus_core::errors::block::RuleError;
-use zyanya_consensus_core::tx::{Transaction, TransactionId};
-use zyanya_consensus_notify::{
-    notification::{Notification, PruningPointUtxoSetOverrideNotification},
-    root::ConsensusNotificationRoot,
-};
-use zyanya_consensusmanager::{BlockProcessingBatch, ConsensusInstance, ConsensusManager, ConsensusProxy};
-use zyanya_core::{
-    debug, info,
-    zyanyad_env::{name, version},
-    task::tick::TickService,
-};
-use zyanya_core::{time::unix_now, warn};
-use zyanya_hashes::Hash;
-use zyanya_mining::mempool::tx::{Orphan, Priority};
-use zyanya_mining::{manager::MiningManagerProxy, mempool::tx::RbfPolicy};
-use zyanya_notify::notifier::Notify;
-use zyanya_p2p_lib::{
-    common::ProtocolError,
-    convert::model::version::Version,
-    make_message,
-    pb::{zyanyad_message::Payload, InvRelayBlockMessage},
-    ConnectionInitializer, Hub, PeerKey, PeerProperties, Router, ZyanyadHandshake,
-};
-use zyanya_utils::iter::IterExtensions;
-use zyanya_utils::networking::PeerId;
 use std::collections::HashMap;
 use std::time::Instant;
 use std::{collections::hash_map::Entry, fmt::Display};
@@ -56,6 +25,37 @@ use tokio::sync::{
 };
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use uuid::Uuid;
+use zyanya_addressmanager::AddressManager;
+use zyanya_connectionmanager::ConnectionManager;
+use zyanya_consensus_core::api::{BlockValidationFuture, BlockValidationFutures};
+use zyanya_consensus_core::block::Block;
+use zyanya_consensus_core::config::Config;
+use zyanya_consensus_core::errors::block::RuleError;
+use zyanya_consensus_core::tx::{Transaction, TransactionId};
+use zyanya_consensus_notify::{
+    notification::{Notification, PruningPointUtxoSetOverrideNotification},
+    root::ConsensusNotificationRoot,
+};
+use zyanya_consensusmanager::{BlockProcessingBatch, ConsensusInstance, ConsensusManager, ConsensusProxy};
+use zyanya_core::{
+    debug, info,
+    task::tick::TickService,
+    zyanyad_env::{name, version},
+};
+use zyanya_core::{time::unix_now, warn};
+use zyanya_hashes::Hash;
+use zyanya_mining::mempool::tx::{Orphan, Priority};
+use zyanya_mining::{manager::MiningManagerProxy, mempool::tx::RbfPolicy};
+use zyanya_notify::notifier::Notify;
+use zyanya_p2p_lib::{
+    common::ProtocolError,
+    convert::model::version::Version,
+    make_message,
+    pb::{zyanyad_message::Payload, InvRelayBlockMessage},
+    ConnectionInitializer, Hub, PeerKey, PeerProperties, Router, ZyanyadHandshake,
+};
+use zyanya_utils::iter::IterExtensions;
+use zyanya_utils::networking::PeerId;
 
 /// The P2P protocol version. Currently the only one supported.
 const PROTOCOL_VERSION: u32 = 6;

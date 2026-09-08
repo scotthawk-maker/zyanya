@@ -14,16 +14,16 @@ use crate::{
     model::{topological_index::TopologicalIndex, TransactionIdSet},
     Policy,
 };
-use zyanya_consensus_core::{
-    block::TemplateTransactionSelector,
-    tx::{MutableTransaction, TransactionId, TransactionOutpoint},
-};
-use zyanya_core::{debug, time::unix_now, trace};
 use std::{
     collections::{hash_map::Keys, hash_set::Iter},
     iter::once,
     sync::Arc,
 };
+use zyanya_consensus_core::{
+    block::TemplateTransactionSelector,
+    tx::{MutableTransaction, TransactionId, TransactionOutpoint},
+};
+use zyanya_core::{debug, time::unix_now, trace};
 
 use super::frontier::Frontier;
 

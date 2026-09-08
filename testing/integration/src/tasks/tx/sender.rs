@@ -1,16 +1,16 @@
 use crate::tasks::{tx::submitter::IndexedTransaction, Stopper, Task};
 use async_channel::Sender;
 use async_trait::async_trait;
-use zyanya_consensus_core::tx::Transaction;
-use zyanya_core::{info, warn};
-use zyanya_grpc_client::GrpcClient;
-use zyanya_rpc_core::api::rpc::RpcApi;
-use zyanya_utils::triggers::SingleTrigger;
 use std::{sync::Arc, time::Duration};
 use tokio::{
     task::JoinHandle,
     time::{sleep, Instant},
 };
+use zyanya_consensus_core::tx::Transaction;
+use zyanya_core::{info, warn};
+use zyanya_grpc_client::GrpcClient;
+use zyanya_rpc_core::api::rpc::RpcApi;
+use zyanya_utils::triggers::SingleTrigger;
 
 pub struct TransactionSenderTask {
     client: Arc<GrpcClient>,

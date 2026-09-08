@@ -3,6 +3,10 @@ use crate::{
     IDENT,
 };
 use async_trait::async_trait;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use zyanya_consensus_notify::{notification as consensus_notification, notification::Notification as ConsensusNotification};
 use zyanya_core::{debug, trace};
 use zyanya_index_core::notification::{Notification, PruningPointUtxoSetOverrideNotification, UtxosChangedNotification};
@@ -15,10 +19,6 @@ use zyanya_notify::{
 };
 use zyanya_utils::triggers::SingleTrigger;
 use zyanya_utxoindex::api::UtxoIndexProxy;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
 
 /// Processor processes incoming consensus UtxosChanged and PruningPointUtxoSetOverride
 /// notifications submitting them to a UtxoIndex.
@@ -130,6 +130,7 @@ mod tests {
     use super::*;
     use async_channel::{unbounded, Receiver, Sender};
     use rand::{rngs::SmallRng, SeedableRng};
+    use std::sync::Arc;
     use zyanya_consensus::{config::Config, consensus::test_consensus::TestConsensus, params::DEVNET_PARAMS, test_helpers::*};
     use zyanya_consensus_core::utxo::{utxo_collection::UtxoCollection, utxo_diff::UtxoDiff};
     use zyanya_consensusmanager::ConsensusManager;
@@ -138,7 +139,6 @@ mod tests {
     use zyanya_database::utils::DbLifetime;
     use zyanya_notify::notifier::test_helpers::NotifyMock;
     use zyanya_utxoindex::UtxoIndex;
-    use std::sync::Arc;
 
     // TODO: rewrite with Simnet, when possible.
 

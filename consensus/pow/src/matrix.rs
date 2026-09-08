@@ -96,7 +96,11 @@ impl Matrix {
         // that performs the same nibble expansion: vec[2*i] = byte >> 4, vec[2*i+1] = byte & 0x0F.
         let vec: [u8; 64] = array_from_fn(|i| {
             let element = hash.as_bytes()[i / 2];
-            if i % 2 == 0 { element >> 4 } else { element & 0x0F }
+            if i % 2 == 0 {
+                element >> 4
+            } else {
+                element & 0x0F
+            }
         });
 
         // Matrix-vector multiplication, convert to 4 bits, and then combine back to 8 bits.

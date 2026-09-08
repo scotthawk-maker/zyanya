@@ -3,8 +3,8 @@ use crate::result::Result;
 use borsh::{BorshDeserialize, BorshSerialize};
 use separator::{separated_float, separated_int, separated_uint_with_output, Separatable};
 use serde::{Deserialize, Serialize};
-use zyanya_rpc_core::GetMetricsResponse;
 use workflow_core::enums::Describe;
+use zyanya_rpc_core::GetMetricsResponse;
 
 #[derive(Describe, Debug, Clone, Copy, Eq, PartialEq, Hash, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
 pub enum MetricGroup {

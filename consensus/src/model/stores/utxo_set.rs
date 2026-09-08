@@ -1,4 +1,5 @@
 use rocksdb::WriteBatch;
+use std::{error::Error, fmt::Display, sync::Arc};
 use zyanya_consensus_core::{
     tx::{TransactionIndexType, TransactionOutpoint, UtxoEntry},
     utxo::{
@@ -11,7 +12,6 @@ use zyanya_database::prelude::DB;
 use zyanya_database::prelude::{BatchDbWriter, CachedDbAccess, DirectDbWriter};
 use zyanya_database::prelude::{CachePolicy, StoreError};
 use zyanya_hashes::Hash;
-use std::{error::Error, fmt::Display, sync::Arc};
 
 type UtxoCollectionIterator<'a> = Box<dyn Iterator<Item = Result<(TransactionOutpoint, UtxoEntry), Box<dyn Error>>> + 'a>;
 

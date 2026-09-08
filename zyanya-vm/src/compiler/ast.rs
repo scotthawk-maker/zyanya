@@ -15,19 +15,9 @@ pub struct FunctionDef {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Statement {
-    Let {
-        name: String,
-        initializer: Expression,
-    },
-    Assign {
-        name: String,
-        value: Expression,
-    },
-    If {
-        condition: Expression,
-        then_branch: Vec<Statement>,
-        else_branch: Option<Vec<Statement>>,
-    },
+    Let { name: String, initializer: Expression },
+    Assign { name: String, value: Expression },
+    If { condition: Expression, then_branch: Vec<Statement>, else_branch: Option<Vec<Statement>> },
     Return(Option<Expression>),
     Expr(Expression),
 }
@@ -36,15 +26,8 @@ pub enum Statement {
 pub enum Expression {
     Number(u64),
     Variable(String),
-    Binary {
-        op: BinaryOp,
-        left: Box<Expression>,
-        right: Box<Expression>,
-    },
-    Call {
-        name: String,
-        args: Vec<Expression>,
-    },
+    Binary { op: BinaryOp, left: Box<Expression>, right: Box<Expression> },
+    Call { name: String, args: Vec<Expression> },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

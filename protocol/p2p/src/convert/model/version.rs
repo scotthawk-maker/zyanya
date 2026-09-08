@@ -1,7 +1,7 @@
 use zyanya_consensus_core::subnets::SubnetworkId;
 use zyanya_core::{
-    zyanyad_env::{name, version},
     time::unix_now,
+    zyanyad_env::{name, version},
 };
 use zyanya_utils::networking::{NetAddress, PeerId};
 

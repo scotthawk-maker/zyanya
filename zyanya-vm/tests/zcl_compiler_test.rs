@@ -116,14 +116,14 @@ fn test_zcl_compiler_counter_contract_lifecycle() {
     // 2. Run add_val(50) -> should update key 0 to 150
     let mut vm = VM::new(100_000);
     vm.stack.push(50).unwrap(); // param delta = 50
-    vm.stack.push(1).unwrap();  // entry point 1 (add_val)
+    vm.stack.push(1).unwrap(); // entry point 1 (add_val)
     let res = vm.execute_stateful(&opcodes, &contract_addr, &mut state).unwrap();
     assert_eq!(res.return_value, Some(150));
     assert_eq!(state.get(&contract_addr, 0), 150);
 
     // 3. Run get_val() -> should return 150
     let mut vm = VM::new(100_000);
-    vm.stack.push(2).unwrap();  // entry point 2 (get_val)
+    vm.stack.push(2).unwrap(); // entry point 2 (get_val)
     let res = vm.execute_stateful(&opcodes, &contract_addr, &mut state).unwrap();
     assert_eq!(res.return_value, Some(150));
 }
@@ -182,9 +182,9 @@ fn test_zcl_compiler_token_contract_full_lifecycle() {
     // 2. Transfer 300,000 from Alice to Bob (entry point 1)
     let mut vm = VM::new(100_000);
     vm.stack.push(300_000).unwrap(); // amount
-    vm.stack.push(bob).unwrap();     // to
-    vm.stack.push(alice).unwrap();   // from
-    vm.stack.push(1).unwrap();       // entry point 1
+    vm.stack.push(bob).unwrap(); // to
+    vm.stack.push(alice).unwrap(); // from
+    vm.stack.push(1).unwrap(); // entry point 1
     let res = vm.execute_stateful(&opcodes, &token_addr, &mut state).unwrap();
     assert_eq!(res.return_value, Some(1)); // success
     assert_eq!(state.get(&token_addr, alice), 700_000);
@@ -193,9 +193,9 @@ fn test_zcl_compiler_token_contract_full_lifecycle() {
     // 3. Failed Transfer: Bob tries to send 500,000 to Alice (insufficient balance)
     let mut vm = VM::new(100_000);
     vm.stack.push(500_000).unwrap(); // amount
-    vm.stack.push(alice).unwrap();   // to
-    vm.stack.push(bob).unwrap();     // from
-    vm.stack.push(1).unwrap();       // entry point 1
+    vm.stack.push(alice).unwrap(); // to
+    vm.stack.push(bob).unwrap(); // from
+    vm.stack.push(1).unwrap(); // entry point 1
     let res = vm.execute_stateful(&opcodes, &token_addr, &mut state).unwrap();
     assert_eq!(res.return_value, Some(0)); // failed
     assert_eq!(state.get(&token_addr, bob), 300_000); // balance unchanged

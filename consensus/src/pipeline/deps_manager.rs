@@ -1,12 +1,12 @@
 use crate::errors::BlockProcessResult;
 use parking_lot::{Condvar, Mutex};
-use zyanya_consensus_core::{block::Block, blockstatus::BlockStatus};
-use zyanya_hashes::Hash;
 use std::collections::{
     hash_map::Entry::{Occupied, Vacant},
     HashMap, VecDeque,
 };
 use tokio::sync::oneshot;
+use zyanya_consensus_core::{block::Block, blockstatus::BlockStatus};
+use zyanya_hashes::Hash;
 
 pub type BlockResultSender = oneshot::Sender<BlockProcessResult<BlockStatus>>;
 

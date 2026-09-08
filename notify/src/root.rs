@@ -14,8 +14,8 @@ use crate::{
 use async_channel::Sender;
 use async_trait::async_trait;
 use parking_lot::RwLock;
-use zyanya_core::{debug, trace};
 use std::sync::Arc;
+use zyanya_core::{debug, trace};
 
 /// Root of a notification system
 ///

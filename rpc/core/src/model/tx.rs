@@ -1,12 +1,12 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
+use workflow_serializer::prelude::*;
 use zyanya_addresses::Address;
 use zyanya_consensus_core::tx::{
     ScriptPublicKey, ScriptVec, TransactionId, TransactionIndexType, TransactionInput, TransactionOutpoint, TransactionOutput,
     UtxoEntry,
 };
 use zyanya_utils::{hex::ToHex, serde_bytes_fixed_ref};
-use workflow_serializer::prelude::*;
 
 use crate::prelude::{RpcHash, RpcScriptClass, RpcSubnetworkId};
 

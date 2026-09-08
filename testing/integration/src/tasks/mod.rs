@@ -2,9 +2,9 @@ use self::stop::StopTask;
 use async_trait::async_trait;
 use futures_util::future::join_all;
 use itertools::Itertools;
-use zyanya_utils::triggers::SingleTrigger;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
+use zyanya_utils::triggers::SingleTrigger;
 
 pub mod block;
 pub mod daemon;

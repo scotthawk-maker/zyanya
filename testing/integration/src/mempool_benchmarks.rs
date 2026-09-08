@@ -12,6 +12,15 @@ use futures_util::future::join_all;
 use parking_lot::Mutex;
 use rand::thread_rng;
 use rand_distr::{Distribution, Exp};
+use std::{
+    cmp::max,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    time::{Duration, Instant},
+};
+use tokio::join;
 use zyanya_addresses::Address;
 use zyanya_consensus::params::Params;
 use zyanya_consensus_core::{constants::SOMPI_PER_ZYANYA, network::NetworkType, tx::Transaction};
@@ -24,15 +33,6 @@ use zyanya_rpc_core::{api::rpc::RpcApi, Notification, RpcError};
 use zyanya_txscript::pay_to_address_script;
 use zyanya_utils::fd_budget;
 use zyanyad_lib::args::Args;
-use std::{
-    cmp::max,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
-    time::{Duration, Instant},
-};
-use tokio::join;
 
 /// Run this benchmark with the following command line:
 /// `cargo test --release --package zyanya-testing-integration --lib --features devnet-prealloc -- mempool_benchmarks::bench_bbt_latency --exact --nocapture --ignored`

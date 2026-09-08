@@ -1,9 +1,9 @@
 use crate::model::stores::relations::RelationsStoreReader;
 use parking_lot::RwLock;
+use std::sync::Arc;
 use zyanya_consensus_core::BlockHashSet;
 use zyanya_database::prelude::{ReadLock, StoreError, StoreResult};
 use zyanya_hashes::Hash;
-use std::sync::Arc;
 
 /// Multi-threaded block-relations service imp
 #[derive(Clone)]

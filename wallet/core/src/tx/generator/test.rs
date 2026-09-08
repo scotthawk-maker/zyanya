@@ -6,13 +6,13 @@ use crate::tx::{Fees, MassCalculator, PaymentDestination};
 use crate::utxo::UtxoEntryReference;
 use crate::{tx::PaymentOutputs, utils::zyanya_to_sompi};
 use rand::prelude::*;
-use zyanya_addresses::Address;
-use zyanya_consensus_core::network::{NetworkId, NetworkType};
-use zyanya_consensus_core::tx::Transaction;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
 use workflow_log::style;
+use zyanya_addresses::Address;
+use zyanya_consensus_core::network::{NetworkId, NetworkType};
+use zyanya_consensus_core::tx::Transaction;
 
 use super::*;
 
@@ -438,9 +438,7 @@ where
 pub(crate) fn change_address(network_type: NetworkType) -> Address {
     match network_type {
         NetworkType::Mainnet => Address::try_from("zyanya:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjxa3h2n6v").unwrap(),
-        NetworkType::Testnet => {
-            Address::try_from("zyanyatest:qqz22l98sf8jun72rwh5rqe2tm8lhwtdxdmynrz4ypwak427qed5jcf5es549").unwrap()
-        }
+        NetworkType::Testnet => Address::try_from("zyanyatest:qqz22l98sf8jun72rwh5rqe2tm8lhwtdxdmynrz4ypwak427qed5jcf5es549").unwrap(),
         _ => unreachable!("network type not supported"),
     }
 }
@@ -448,9 +446,7 @@ pub(crate) fn change_address(network_type: NetworkType) -> Address {
 pub(crate) fn output_address(network_type: NetworkType) -> Address {
     match network_type {
         NetworkType::Mainnet => Address::try_from("zyanya:qrd9efkvg3pg34sgp6ztwyv3r569qlc43wa5w8nfs302532dzj47knu04aftm").unwrap(),
-        NetworkType::Testnet => {
-            Address::try_from("zyanyatest:qqrewmx4gpuekvk8grenkvj2hp7xt0c35rxgq383f6gy223c4ud5ssc7qqs76").unwrap()
-        }
+        NetworkType::Testnet => Address::try_from("zyanyatest:qqrewmx4gpuekvk8grenkvj2hp7xt0c35rxgq383f6gy223c4ud5ssc7qqs76").unwrap(),
         _ => unreachable!("network type not supported"),
     }
 }
@@ -516,11 +512,7 @@ fn test_generator_compound_100k_random_transactions() -> Result<()> {
     let inputs: Vec<f64> = (0..100_000).map(|_| rng.gen_range(0.001..10.0)).collect();
     let total = inputs.iter().sum::<f64>();
     let outputs = [(output_address, Zyanya(total - 10.0))];
-    generator(test_network_id(), &inputs, &[], Fees::sender(Zyanya(5.0)), outputs.as_slice())
-        .unwrap()
-        .harness()
-        .validate()
-        .finalize();
+    generator(test_network_id(), &inputs, &[], Fees::sender(Zyanya(5.0)), outputs.as_slice()).unwrap().harness().validate().finalize();
 
     Ok(())
 }

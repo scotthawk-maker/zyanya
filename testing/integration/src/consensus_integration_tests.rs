@@ -52,6 +52,18 @@ use flate2::read::GzDecoder;
 use futures_util::future::try_join_all;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use std::cmp::{max, Ordering};
+use std::collections::HashSet;
+use std::path::Path;
+use std::sync::Arc;
+use std::time::Duration;
+use std::{
+    collections::HashMap,
+    fs::File,
+    future::Future,
+    io::{BufRead, BufReader},
+    str::{from_utf8, FromStr},
+};
 use zyanya_consensus_core::coinbase::MinerData;
 use zyanya_consensus_core::merkle::calc_hash_merkle_root;
 use zyanya_consensus_core::muhash::MuHashExtensions;
@@ -70,18 +82,6 @@ use zyanya_txscript::opcodes::codes::OpTrue;
 use zyanya_txscript::script_builder::ScriptBuilderResult;
 use zyanya_utxoindex::api::{UtxoIndexApi, UtxoIndexProxy};
 use zyanya_utxoindex::UtxoIndex;
-use std::cmp::{max, Ordering};
-use std::collections::HashSet;
-use std::path::Path;
-use std::sync::Arc;
-use std::time::Duration;
-use std::{
-    collections::HashMap,
-    fs::File,
-    future::Future,
-    io::{BufRead, BufReader},
-    str::{from_utf8, FromStr},
-};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct JsonBlock {
@@ -854,6 +854,7 @@ impl ZyanyadGoParams {
             payload_activation: ForkActivation::never(),
             runtime_sig_op_counting: ForkActivation::never(),
             net_magic: [0x5A, 0x59, 0x41, 0x4E],
+            enable_smart_contracts: false,
         }
     }
 }

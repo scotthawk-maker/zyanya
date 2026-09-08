@@ -3,6 +3,7 @@ use clap::Parser;
 use futures::{future::try_join_all, Future};
 use itertools::Itertools;
 use simulator::network::ZyanyaNetworkSimulator;
+use std::{collections::VecDeque, sync::Arc, time::Duration};
 use zyanya_alloc::init_allocator_with_default_settings;
 use zyanya_consensus::{
     config::ConfigBuilder,
@@ -32,7 +33,6 @@ use zyanya_database::{create_temp_db, load_existing_db};
 use zyanya_hashes::Hash;
 use zyanya_perf_monitor::{builder::Builder, counters::CountersSnapshot};
 use zyanya_utils::fd_budget;
-use std::{collections::VecDeque, sync::Arc, time::Duration};
 
 pub mod simulator;
 

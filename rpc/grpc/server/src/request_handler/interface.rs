@@ -4,12 +4,12 @@ use crate::{
     connection_handler::ServerContext,
     error::{GrpcServerError, GrpcServerResult},
 };
+use std::fmt::Debug;
+use std::{collections::HashMap, sync::Arc};
 use zyanya_grpc_core::{
     ops::ZyanyadPayloadOps,
     protowire::{ZyanyadRequest, ZyanyadResponse},
 };
-use std::fmt::Debug;
-use std::{collections::HashMap, sync::Arc};
 
 pub type ZyanyadMethod = Method<ServerContext, Connection, ZyanyadRequest, ZyanyadResponse>;
 pub type DynZyanyadMethod = Arc<dyn MethodTrait<ServerContext, Connection, ZyanyadRequest, ZyanyadResponse>>;

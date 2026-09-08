@@ -1,15 +1,15 @@
 use crate::{flow_context::FlowContext, flow_trait::Flow};
 use rand::Rng;
+use std::{
+    sync::{Arc, Weak},
+    time::{Duration, Instant},
+};
 use zyanya_core::{debug, task::tick::TickReason};
 use zyanya_p2p_lib::{
     common::ProtocolError,
     dequeue, dequeue_with_timeout, make_message,
     pb::{zyanyad_message::Payload, PingMessage, PongMessage},
     IncomingRoute, Router,
-};
-use std::{
-    sync::{Arc, Weak},
-    time::{Duration, Instant},
 };
 
 /// Flow for managing a loop receiving pings and responding with pongs

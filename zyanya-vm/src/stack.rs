@@ -21,10 +21,7 @@ impl Stack {
 
     /// Create a new stack with a specified max depth limit.
     pub fn with_max_depth(max_depth: usize) -> Self {
-        Self {
-            data: Vec::with_capacity(64),
-            max_depth,
-        }
+        Self { data: Vec::with_capacity(64), max_depth }
     }
 
     /// Push a value onto the stack.

@@ -1,9 +1,9 @@
 use crate::imports::*;
-use zyanya_daemon::ZyanyadConfig;
 use workflow_core::task::sleep;
 use workflow_node::process;
 pub use workflow_node::process::Event;
 use workflow_store::fs;
+use zyanya_daemon::ZyanyadConfig;
 
 #[derive(Describe, Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd)]
 #[serde(rename_all = "lowercase")]
@@ -96,7 +96,10 @@ impl Node {
         if argv.is_empty() {
             return self.display_help(ctx, argv).await;
         }
-        let zyanyad = ctx.daemons().zyanyad().ok_or(Error::custom("No zyanyad daemon configured, please use 'node select' to select a binary."))?;
+        let zyanyad = ctx
+            .daemons()
+            .zyanyad()
+            .ok_or(Error::custom("No zyanyad daemon configured, please use 'node select' to select a binary."))?;
         match argv.remove(0).as_str() {
             "start" => {
                 let mute = self.mute.load(Ordering::SeqCst);

@@ -1,5 +1,5 @@
-use zyanya_hashes::Hash;
 use std::num::Wrapping;
+use zyanya_hashes::Hash;
 
 pub struct XoShiRo256PlusPlus {
     s0: Wrapping<u64>,

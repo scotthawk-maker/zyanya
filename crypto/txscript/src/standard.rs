@@ -5,10 +5,10 @@ use crate::{
 };
 use blake2b_simd::Params;
 use smallvec::SmallVec;
+use std::iter::once;
 use zyanya_addresses::{Address, Prefix, Version};
 use zyanya_consensus_core::tx::{ScriptPublicKey, ScriptVec};
 use zyanya_txscript_errors::TxScriptError;
-use std::iter::once;
 
 mod multisig;
 
@@ -184,9 +184,7 @@ mod tests {
                     ),
                 ),
                 prefix: Prefix::Testnet,
-                expected_address: Ok("zyanyatest:qxaqrlzlf6wes72en3568khahq66wf27tuhfxn5nytkd8tcep2c0vrsed0nf9p3"
-                    .try_into()
-                    .unwrap()),
+                expected_address: Ok("zyanyatest:qxaqrlzlf6wes72en3568khahq66wf27tuhfxn5nytkd8tcep2c0vrsed0nf9p3".try_into().unwrap()),
             },
             Test {
                 name: "Testnet non standard script",

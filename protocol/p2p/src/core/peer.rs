@@ -1,6 +1,6 @@
+use std::{fmt::Display, net::SocketAddr, sync::Arc, time::Instant};
 use zyanya_consensus_core::subnets::SubnetworkId;
 use zyanya_utils::networking::{IpAddress, PeerId};
-use std::{fmt::Display, net::SocketAddr, sync::Arc, time::Instant};
 
 #[derive(Debug, Clone, Default)]
 pub struct PeerProperties {

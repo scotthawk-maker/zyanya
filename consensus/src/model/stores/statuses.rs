@@ -1,8 +1,8 @@
 use parking_lot::{RwLock, RwLockWriteGuard};
 use rocksdb::WriteBatch;
+use std::sync::Arc;
 use zyanya_consensus_core::{blockstatus::BlockStatus, BlockHasher};
 use zyanya_database::registry::DatabaseStorePrefixes;
-use std::sync::Arc;
 
 use zyanya_database::prelude::{BatchDbWriter, CachedDbAccess, DirectDbWriter};
 use zyanya_database::prelude::{CachePolicy, DB};

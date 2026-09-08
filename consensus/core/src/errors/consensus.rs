@@ -1,5 +1,5 @@
-use zyanya_hashes::Hash;
 use thiserror::Error;
+use zyanya_hashes::Hash;
 
 use super::{difficulty::DifficultyError, sync::SyncManagerError, traversal::TraversalError};
 

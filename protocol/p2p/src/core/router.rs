@@ -5,8 +5,6 @@ use crate::{common::ProtocolError, ZyanyadMessagePayloadType};
 use crate::{make_message, Peer};
 use parking_lot::{Mutex, RwLock};
 use seqlock::SeqLock;
-use zyanya_core::{debug, error, info, trace, warn};
-use zyanya_utils::networking::PeerId;
 use std::fmt::{Debug, Display};
 use std::net::SocketAddr;
 use std::ops::{Deref, DerefMut};
@@ -18,6 +16,8 @@ use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::mpsc::{channel as mpsc_channel, Receiver as MpscReceiver, Sender as MpscSender};
 use tokio::sync::oneshot::{channel as oneshot_channel, Sender as OneshotSender};
 use tonic::Streaming;
+use zyanya_core::{debug, error, info, trace, warn};
+use zyanya_utils::networking::PeerId;
 
 use super::peer::{PeerKey, PeerProperties};
 
@@ -83,9 +83,7 @@ impl From<ZyanyadMessagePayloadType> for IncomingRouteOverflowPolicy {
     fn from(msg_type: ZyanyadMessagePayloadType) -> Self {
         match msg_type {
             // Inv messages are unique in the sense that no harm is done if some of them are dropped
-            ZyanyadMessagePayloadType::InvTransactions | ZyanyadMessagePayloadType::InvRelayBlock => {
-                IncomingRouteOverflowPolicy::Drop
-            }
+            ZyanyadMessagePayloadType::InvTransactions | ZyanyadMessagePayloadType::InvRelayBlock => IncomingRouteOverflowPolicy::Drop,
             _ => IncomingRouteOverflowPolicy::Disconnect,
         }
     }

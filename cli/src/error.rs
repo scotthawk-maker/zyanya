@@ -1,9 +1,9 @@
 use std::net::AddrParseError;
 
 use downcast::DowncastError;
-use zyanya_wallet_core::error::Error as WalletError;
 use workflow_core::channel::ChannelError;
 use workflow_terminal::error::Error as TerminalError;
+use zyanya_wallet_core::error::Error as WalletError;
 
 use thiserror::Error;
 

@@ -2,7 +2,7 @@ use hmac::Mac;
 use std::fmt::{self, Debug};
 use std::str::FromStr;
 use subtle::{Choice, ConstantTimeEq};
-use zeroize::{Zeroize, Zeroizing, ZeroizeOnDrop};
+use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
 
 use crate::{
     result::Result, types::*, ChildNumber, DerivationPath, ExtendedKey, ExtendedKeyAttrs, ExtendedPublicKey, Prefix, PrivateKey,

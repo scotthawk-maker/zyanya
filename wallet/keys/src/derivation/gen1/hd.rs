@@ -3,13 +3,13 @@ use crate::imports::*;
 use hmac::Mac;
 use ripemd::Ripemd160;
 use sha2::{Digest, Sha256};
+use std::fmt::Debug;
 use zyanya_addresses::{Address, Prefix as AddressPrefix, Version as AddressVersion};
 use zyanya_bip32::types::{ChainCode, HmacSha512, KeyFingerprint, PublicKeyBytes, KEY_SIZE};
 use zyanya_bip32::{
     AddressType, ChildNumber, DerivationPath, ExtendedKey, ExtendedKeyAttrs, ExtendedPrivateKey, ExtendedPublicKey, Prefix,
     PrivateKey, PublicKey, SecretKey, SecretKeyExt,
 };
-use std::fmt::Debug;
 // use wasm_bindgen::prelude::*;
 
 fn get_fingerprint<K>(private_key: &K) -> KeyFingerprint

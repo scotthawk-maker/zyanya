@@ -1,10 +1,10 @@
-use std::io::{self, Write};
-use std::str::FromStr;
-use zyanya_consensus_core::constants::SOMPI_PER_ZYANYA;
-use zyanya_rpc_core::api::rpc::RpcApi;
 use crate::key_management::{display_mnemonic, WalletKeypair};
 use crate::wallet_ops::WalletOps;
+use std::io::{self, Write};
+use std::str::FromStr;
 use zyanya_addresses::Prefix;
+use zyanya_consensus_core::constants::SOMPI_PER_ZYANYA;
+use zyanya_rpc_core::api::rpc::RpcApi;
 
 pub struct WalletTui {
     ops: WalletOps,
@@ -15,12 +15,7 @@ pub struct WalletTui {
 
 impl WalletTui {
     pub fn new(ops: WalletOps, prefix: Prefix) -> Self {
-        Self {
-            ops,
-            prefix,
-            ghost_token_contract: None,
-            dex_contract: None,
-        }
+        Self { ops, prefix, ghost_token_contract: None, dex_contract: None }
     }
 
     pub async fn run(&mut self) {

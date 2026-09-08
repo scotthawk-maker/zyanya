@@ -15,12 +15,12 @@ use itertools::{
 };
 use local_ip_address::list_afinet_netifas;
 use parking_lot::Mutex;
+use stores::banned_address_store::{BannedAddressesStore, BannedAddressesStoreReader, ConnectionBanTimestamp, DbBannedAddressesStore};
+use thiserror::Error;
 use zyanya_consensus_core::config::Config;
 use zyanya_core::{debug, info, task::tick::TickService, time::unix_now, warn};
 use zyanya_database::prelude::{CachePolicy, StoreResultExtensions, DB};
 use zyanya_utils::networking::IpAddress;
-use stores::banned_address_store::{BannedAddressesStore, BannedAddressesStoreReader, ConnectionBanTimestamp, DbBannedAddressesStore};
-use thiserror::Error;
 
 pub use stores::NetAddress;
 
@@ -436,11 +436,7 @@ mod address_store_with_cache {
                     .iter()
                     .filter(|(key, _)| !self.connected.contains(key))
                     .max_by(|a, b| (a.1).connection_failed_count.cmp(&(b.1).connection_failed_count))
-                    .or_else(|| {
-                        self.addresses
-                            .iter()
-                            .max_by(|a, b| (a.1).connection_failed_count.cmp(&(b.1).connection_failed_count))
-                    })
+                    .or_else(|| self.addresses.iter().max_by(|a, b| (a.1).connection_failed_count.cmp(&(b.1).connection_failed_count)))
                     .map(|(key, _)| *key)
                     .unwrap();
                 self.remove_by_key(to_remove);
@@ -578,16 +574,16 @@ mod address_store_with_cache {
         use std::str::FromStr;
 
         use super::*;
+        use crate::stores::banned_address_store::{BannedAddressesStore, BannedAddressesStoreReader, ConnectionBanTimestamp};
         use address_manager::AddressManager;
         use rv::{dist::Uniform, misc::ks_test as one_way_ks_test, traits::Cdf};
+        use std::net::{IpAddr, Ipv6Addr};
         use zyanya_consensus_core::config::{params::SIMNET_PARAMS, Config};
         use zyanya_core::{task::tick::TickService, time::unix_now};
         use zyanya_database::create_temp_db;
         use zyanya_database::prelude::ConnBuilder;
-        use zyanya_utils::networking::IpAddress;
-        use std::net::{IpAddr, Ipv6Addr};
-        use crate::stores::banned_address_store::{ConnectionBanTimestamp, BannedAddressesStore, BannedAddressesStoreReader};
         use zyanya_database::prelude::StoreResultExtensions;
+        use zyanya_utils::networking::IpAddress;
 
         #[test]
         fn test_weighted_iterator() {
@@ -627,14 +623,17 @@ mod address_store_with_cache {
                 for current_suffix_bytes in 0..current_bucket_size {
                     let current_ip_bytes =
                         [current_prefix_bytes.to_be_bytes(), current_suffix_bytes.to_be_bytes()].concat().to_owned();
-                    am_guard.add_address(NetAddress::new(
-                        IpAddress::from_str(&format!(
-                            "{0}.{1}.{2}.{3}",
-                            current_ip_bytes[0], current_ip_bytes[1], current_ip_bytes[2], current_ip_bytes[3]
-                        ))
-                        .unwrap(),
-                        18111,
-                    ), true);
+                    am_guard.add_address(
+                        NetAddress::new(
+                            IpAddress::from_str(&format!(
+                                "{0}.{1}.{2}.{3}",
+                                current_ip_bytes[0], current_ip_bytes[1], current_ip_bytes[2], current_ip_bytes[3]
+                            ))
+                            .unwrap(),
+                            18111,
+                        ),
+                        true,
+                    );
                     num_of_addresses += 1;
                 }
 

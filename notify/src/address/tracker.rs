@@ -2,14 +2,14 @@ use crate::address::error::{Error, Result};
 use indexmap::{map::Entry, IndexMap};
 use itertools::Itertools;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use zyanya_addresses::{Address, Prefix};
-use zyanya_consensus_core::tx::ScriptPublicKey;
-use zyanya_core::{debug, trace};
-use zyanya_txscript::{extract_script_pub_key_address, pay_to_address_script};
 use std::{
     collections::{hash_map, hash_set, HashMap, HashSet},
     fmt::Display,
 };
+use zyanya_addresses::{Address, Prefix};
+use zyanya_consensus_core::tx::ScriptPublicKey;
+use zyanya_core::{debug, trace};
+use zyanya_txscript::{extract_script_pub_key_address, pay_to_address_script};
 
 pub trait Indexer {
     fn contains(&self, index: Index) -> bool;

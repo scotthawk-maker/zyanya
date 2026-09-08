@@ -26,6 +26,15 @@ use crossbeam_channel::Receiver as CrossbeamReceiver;
 use itertools::Itertools;
 use parking_lot::RwLockUpgradableReadGuard;
 use rocksdb::WriteBatch;
+use std::{
+    collections::{hash_map::Entry::Vacant, VecDeque},
+    ops::Deref,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    time::{Duration, Instant},
+};
 use zyanya_consensus_core::{
     blockhash::ORIGIN,
     blockstatus::BlockStatus::StatusHeaderOnly,
@@ -41,15 +50,6 @@ use zyanya_database::prelude::{BatchDbWriter, MemoryWriter, StoreResultExtension
 use zyanya_hashes::Hash;
 use zyanya_muhash::MuHash;
 use zyanya_utils::iter::IterExtensions;
-use std::{
-    collections::{hash_map::Entry::Vacant, VecDeque},
-    ops::Deref,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
-    time::{Duration, Instant},
-};
 
 pub enum PruningProcessingMessage {
     Exit,

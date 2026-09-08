@@ -2,6 +2,8 @@ mod api;
 mod client;
 mod web;
 
+use crate::api::*;
+use crate::client::RpcClientManager;
 use axum::{
     body::Body,
     extract::{ConnectInfo, Request, State},
@@ -19,8 +21,6 @@ use std::sync::Arc;
 use std::time::Instant;
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
-use crate::api::*;
-use crate::client::RpcClientManager;
 
 /// F-L-29: Per-IP rate limiter state (100 req/sec fixed window).
 type RateLimitState = Arc<Mutex<HashMap<IpAddr, (Instant, u32)>>>;
@@ -44,8 +44,10 @@ async fn rate_limit(
         drop(map);
         return Response::builder()
             .status(StatusCode::TOO_MANY_REQUESTS)
-            .body(Body::from("rate limit exceeded
-"))
+            .body(Body::from(
+                "rate limit exceeded
+",
+            ))
             .unwrap();
     }
     drop(map);
@@ -112,14 +114,8 @@ async fn cors_same_origin(req: Request, next: Next) -> Response {
             if let Some(origin) = origin {
                 resp.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
             }
-            resp.headers_mut().insert(
-                header::ACCESS_CONTROL_ALLOW_METHODS,
-                HeaderValue::from_static("GET, POST, OPTIONS"),
-            );
-            resp.headers_mut().insert(
-                header::ACCESS_CONTROL_ALLOW_HEADERS,
-                HeaderValue::from_static("Content-Type"),
-            );
+            resp.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_METHODS, HeaderValue::from_static("GET, POST, OPTIONS"));
+            resp.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_HEADERS, HeaderValue::from_static("Content-Type"));
             resp.headers_mut().insert(header::VARY, HeaderValue::from_static("Origin"));
         }
         return resp;

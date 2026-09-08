@@ -1,7 +1,7 @@
+use std::sync::Arc;
 use zyanya_core::warn;
 use zyanya_p2p_lib::{common::ProtocolError, Router};
 use zyanya_utils::any::type_name_short;
-use std::sync::Arc;
 
 #[async_trait::async_trait]
 pub trait Flow

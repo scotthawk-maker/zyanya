@@ -11,10 +11,6 @@ use futures_util::future::{join_all, try_join_all};
 use itertools::Itertools;
 use parking_lot::Mutex as ParkingLotMutex;
 use rand::{seq::SliceRandom, thread_rng};
-use zyanya_addressmanager::{AddressManager, NetAddress};
-use zyanya_core::{debug, info, warn};
-use zyanya_p2p_lib::{common::ProtocolError, ConnectionError, Peer};
-use zyanya_utils::triggers::SingleTrigger;
 use tokio::{
     select,
     sync::{
@@ -23,6 +19,10 @@ use tokio::{
     },
     time::{interval, MissedTickBehavior},
 };
+use zyanya_addressmanager::{AddressManager, NetAddress};
+use zyanya_core::{debug, info, warn};
+use zyanya_p2p_lib::{common::ProtocolError, ConnectionError, Peer};
+use zyanya_utils::triggers::SingleTrigger;
 
 pub struct ConnectionManager {
     p2p_adaptor: Arc<zyanya_p2p_lib::Adaptor>,
@@ -100,7 +100,8 @@ impl ConnectionManager {
 
         // Sync the connected-peer set so eviction (keep_limit) never displaces a
         // currently-connected peer.
-        let connected: HashSet<NetAddress> = peer_by_address.keys().map(|addr| NetAddress::new(addr.ip().into(), addr.port())).collect();
+        let connected: HashSet<NetAddress> =
+            peer_by_address.keys().map(|addr| NetAddress::new(addr.ip().into(), addr.port())).collect();
         self.address_manager.lock().set_connected(connected);
 
         self.handle_connection_requests(&peer_by_address).await;

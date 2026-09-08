@@ -2,8 +2,8 @@ use super::events::EventType;
 use borsh::{BorshDeserialize, BorshSerialize};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
-use zyanya_addresses::Address;
 use workflow_serializer::prelude::*;
+use zyanya_addresses::Address;
 
 macro_rules! scope_enum {
     ($(#[$meta:meta])* $vis:vis enum $name:ident {

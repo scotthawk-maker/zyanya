@@ -2,11 +2,11 @@
 //! [`RpcError`] enum used by RPC primitives.
 //!
 
-use zyanya_consensus_core::{subnets::SubnetworkConversionError, tx::TransactionId, utxo::utxo_inquirer::UtxoInquirerError};
-use zyanya_utils::networking::IpAddress;
 use std::{net::AddrParseError, num::TryFromIntError};
 use thiserror::Error;
 use workflow_core::channel::ChannelError;
+use zyanya_consensus_core::{subnets::SubnetworkConversionError, tx::TransactionId, utxo::utxo_inquirer::UtxoInquirerError};
+use zyanya_utils::networking::IpAddress;
 
 use crate::{api::ctl::RpcState, RpcHash, RpcTransactionId, SubmitBlockRejectReason};
 
@@ -156,11 +156,20 @@ impl RpcError {
             // the internal rejection reason.
             RejectedTransaction(id, _) => RejectedTransaction(id, "transaction rejected".to_string()),
             // Collapse all internal-detail variants to a generic message.
-            ConsensusError(_) | MiningManagerError(_) | NotificationError(_) | ConsensusClient(_) | WasmError(_)
-            | SerdeWasmBindgen(_) | ScriptClassError(_) | AddressError(_) | NetworkTypeError(_) | NetworkIdError(_)
-            | NodeIdError(_) | SubnetParsingError(_) | UtxoReturnAddressNotFound(_) | RpcSubsystem(_) => {
-                General("internal error".to_string())
-            }
+            ConsensusError(_)
+            | MiningManagerError(_)
+            | NotificationError(_)
+            | ConsensusClient(_)
+            | WasmError(_)
+            | SerdeWasmBindgen(_)
+            | ScriptClassError(_)
+            | AddressError(_)
+            | NetworkTypeError(_)
+            | NetworkIdError(_)
+            | NodeIdError(_)
+            | SubnetParsingError(_)
+            | UtxoReturnAddressNotFound(_)
+            | RpcSubsystem(_) => General("internal error".to_string()),
             // User-facing variants pass through unchanged.
             other => other,
         }

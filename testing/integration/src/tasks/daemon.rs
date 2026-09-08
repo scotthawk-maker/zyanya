@@ -4,13 +4,13 @@ use crate::{
 };
 use async_trait::async_trait;
 use clap::Parser;
+use std::{iter::once, sync::Arc};
+use tokio::task::JoinHandle;
 use zyanya_addresses::Address;
 use zyanya_consensus_core::network::NetworkType;
 use zyanya_core::{trace, warn};
 use zyanya_utils::{fd_budget, triggers::SingleTrigger};
 use zyanyad_lib::args::Args;
-use std::{iter::once, sync::Arc};
-use tokio::task::JoinHandle;
 
 /// Arguments for configuring a [`DaemonTask`]
 #[derive(Parser, Debug)]

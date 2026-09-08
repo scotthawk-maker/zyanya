@@ -1,12 +1,12 @@
 use super::{factory::MultiConsensusManagementStore, Consensus};
 use parking_lot::RwLock;
-use zyanya_consensusmanager::ConsensusCtl;
-use zyanya_database::prelude::DB;
 use std::{
     path::PathBuf,
     sync::{Arc, Weak},
     thread::JoinHandle,
 };
+use zyanya_consensusmanager::ConsensusCtl;
+use zyanya_database::prelude::DB;
 
 pub struct Ctl {
     management_store: Arc<RwLock<MultiConsensusManagementStore>>,

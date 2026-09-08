@@ -7,6 +7,10 @@ use crate::{
     IDENT,
 };
 use parking_lot::RwLock;
+use std::{
+    fmt::Debug,
+    sync::{Arc, Weak},
+};
 use zyanya_consensus_core::{tx::ScriptPublicKeys, utxo::utxo_diff::UtxoDiff, BlockHashSet};
 use zyanya_consensusmanager::{ConsensusManager, ConsensusResetHandler};
 use zyanya_core::{info, trace};
@@ -14,10 +18,6 @@ use zyanya_database::prelude::{StoreError, StoreResult, DB};
 use zyanya_hashes::Hash;
 use zyanya_index_core::indexed_utxos::BalanceByScriptPublicKey;
 use zyanya_utils::arc::ArcExtensions;
-use std::{
-    fmt::Debug,
-    sync::{Arc, Weak},
-};
 
 const RESYNC_CHUNK_SIZE: usize = 2048; //Increased from 1k (used in go-zyanyad), for quicker resets, while still having a low memory footprint.
 
@@ -223,6 +223,7 @@ impl ConsensusResetHandler for UtxoIndexConsensusResetHandler {
 #[cfg(test)]
 mod tests {
     use crate::{api::UtxoIndexApi, model::CirculatingSupply, testutils::virtual_change_emulator::VirtualChangeEmulator, UtxoIndex};
+    use std::{collections::HashSet, sync::Arc, time::Instant};
     use zyanya_consensus::{
         config::Config,
         consensus::test_consensus::TestConsensus,
@@ -240,7 +241,6 @@ mod tests {
     use zyanya_core::info;
     use zyanya_database::create_temp_db;
     use zyanya_database::prelude::ConnBuilder;
-    use std::{collections::HashSet, sync::Arc, time::Instant};
 
     /// TODO: use proper Simnet when implemented.
     #[test]

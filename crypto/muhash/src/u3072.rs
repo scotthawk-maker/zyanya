@@ -1,7 +1,7 @@
 use crate::ELEMENT_BYTE_SIZE;
 use serde::{Deserialize, Serialize};
-use zyanya_math::Uint3072;
 use std::ops::{DivAssign, MulAssign};
+use zyanya_math::Uint3072;
 
 // TODO: Add u32 support for optimization on 32 bit machines.
 

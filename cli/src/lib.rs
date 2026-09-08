@@ -12,5 +12,5 @@ pub mod result;
 pub mod utils;
 mod wizards;
 
-pub use cli::{zyanya_cli, Options, ZyanyaCli, TerminalOptions, TerminalTarget};
+pub use cli::{zyanya_cli, Options, TerminalOptions, TerminalTarget, ZyanyaCli};
 pub use workflow_terminal::Terminal;

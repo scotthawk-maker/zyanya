@@ -7,7 +7,7 @@ use zyanya_consensus_core::{
 };
 use zyanya_consensus_notify::{root::ConsensusNotificationRoot, service::NotifyService};
 use zyanya_core::{core::Core, debug, info, trace};
-use zyanya_core::{zyanyad_env::version, task::tick::TickService};
+use zyanya_core::{task::tick::TickService, zyanyad_env::version};
 use zyanya_database::{
     prelude::{CachePolicy, DbWriter, DirectDbWriter},
     registry::DatabaseStorePrefixes,
@@ -152,7 +152,10 @@ pub fn get_app_dir_from_args(args: &Args) -> PathBuf {
 
 /// Get the log directory from the supplied [`Args`].
 pub fn get_log_dir(args: &Args) -> Option<String> {
-    let network = args.network().unwrap_or_else(|e| { eprintln!("Error: {e}"); std::process::exit(1); });
+    let network = args.network().unwrap_or_else(|e| {
+        eprintln!("Error: {e}");
+        std::process::exit(1);
+    });
     let app_dir = get_app_dir_from_args(args);
 
     // Logs directory is usually under the application directory, unless otherwise specified
@@ -211,7 +214,10 @@ pub fn create_core(args: Args, fd_total_budget: i32) -> (Arc<Core>, Arc<RpcCoreS
 /// (dropped) before the `Core` is shut down.
 ///
 pub fn create_core_with_runtime(runtime: &Runtime, args: &Args, fd_total_budget: i32) -> (Arc<Core>, Arc<RpcCoreService>) {
-    let network = args.network().unwrap_or_else(|e| { eprintln!("Error: {e}"); std::process::exit(1); });
+    let network = args.network().unwrap_or_else(|e| {
+        eprintln!("Error: {e}");
+        std::process::exit(1);
+    });
     let mut fd_remaining = fd_total_budget;
     let utxo_files_limit = if args.utxoindex {
         let utxo_files_limit = fd_remaining * 10 / 100;
@@ -576,7 +582,7 @@ do you confirm? (answer y/n or pass --yes to the Zyanyad command line to confirm
         system_info,
     ));
     let grpc_service_broadcasters: usize = 3; // TODO: add a command line argument or derive from other arg/config/host-related fields
-    // F-C-13 FOLLOW-UP: extract the RPC auth token before `config` is moved into the gRPC service.
+                                              // F-C-13 FOLLOW-UP: extract the RPC auth token before `config` is moved into the gRPC service.
     let rpc_auth_token = config.rpc_auth_token.clone();
     let grpc_service = if !args.disable_grpc {
         Some(Arc::new(GrpcService::new(

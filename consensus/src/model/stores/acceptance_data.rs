@@ -1,6 +1,7 @@
 use rocksdb::WriteBatch;
 use serde::Deserialize;
 use serde::Serialize;
+use std::sync::Arc;
 use zyanya_consensus_core::acceptance_data::AcceptanceData;
 use zyanya_consensus_core::acceptance_data::AcceptedTxEntry;
 use zyanya_consensus_core::acceptance_data::MergesetBlockAcceptanceData;
@@ -12,7 +13,6 @@ use zyanya_database::prelude::{BatchDbWriter, CachedDbAccess, DirectDbWriter};
 use zyanya_database::registry::DatabaseStorePrefixes;
 use zyanya_hashes::Hash;
 use zyanya_utils::mem_size::MemSizeEstimator;
-use std::sync::Arc;
 
 pub trait AcceptanceDataStoreReader {
     fn get(&self, hash: Hash) -> Result<Arc<AcceptanceData>, StoreError>;

@@ -7,6 +7,8 @@
 
 use crate::imports::*;
 // use futures::pin_mut;
+use workflow_core::channel::{Channel, DuplexChannel, Sender};
+use workflow_core::task::spawn;
 use zyanya_notify::{
     listener::ListenerId,
     scope::{Scope, UtxosChangedScope, VirtualDaaScoreChangedScope},
@@ -20,8 +22,6 @@ use zyanya_rpc_core::{
     GetServerInfoResponse,
 };
 use zyanya_wrpc_client::ZyanyaRpcClient;
-use workflow_core::channel::{Channel, DuplexChannel, Sender};
-use workflow_core::task::spawn;
 
 use crate::events::Events;
 use crate::result::Result;

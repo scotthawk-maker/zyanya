@@ -3,18 +3,18 @@ use crate::model::stores::{
     ghostdag::{GhostdagData, GhostdagStoreReader},
     headers::HeaderStoreReader,
 };
-use zyanya_consensus_core::{
-    config::params::MIN_DIFFICULTY_WINDOW_LEN,
-    errors::difficulty::{DifficultyError, DifficultyResult},
-    BlockHashSet, BlueWorkType, MAX_WORK_LEVEL,
-};
-use zyanya_math::{Uint256, Uint320};
 use std::{
     cmp::{max, Ordering},
     iter::once_with,
     ops::Deref,
     sync::Arc,
 };
+use zyanya_consensus_core::{
+    config::params::MIN_DIFFICULTY_WINDOW_LEN,
+    errors::difficulty::{DifficultyError, DifficultyResult},
+    BlockHashSet, BlueWorkType, MAX_WORK_LEVEL,
+};
+use zyanya_math::{Uint256, Uint320};
 
 use super::ghostdag::ordering::SortableBlock;
 use itertools::Itertools;

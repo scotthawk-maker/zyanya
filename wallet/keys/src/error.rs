@@ -2,13 +2,13 @@
 //! Error types used by the wallet framework.
 //!
 
-use zyanya_bip32::Error as BIP32Error;
 use std::sync::PoisonError;
 use thiserror::Error;
 use wasm_bindgen::JsValue;
 use workflow_core::sendable::*;
 use workflow_wasm::jserror::*;
 use workflow_wasm::printable::*;
+use zyanya_bip32::Error as BIP32Error;
 
 /// [`Error`](enum@Error) variants emitted by the wallet framework.
 #[derive(Debug, Error)]

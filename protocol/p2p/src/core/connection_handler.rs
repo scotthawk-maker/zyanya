@@ -5,12 +5,6 @@ use crate::pb::{
 };
 use crate::{ConnectionInitializer, Router};
 use futures::FutureExt;
-use zyanya_core::{debug, error, info, warn};
-use zyanya_utils::networking::{IpAddress, NetAddress};
-use zyanya_utils_tower::{
-    counters::TowerConnectionCounters,
-    middleware::{BodyExt, CountBytesBody, MapRequestBodyLayer, MapResponseBodyLayer, ServiceBuilder},
-};
 use std::collections::{HashMap, VecDeque};
 use std::net::ToSocketAddrs;
 use std::pin::Pin;
@@ -24,6 +18,12 @@ use tokio_stream::wrappers::ReceiverStream;
 use tokio_stream::StreamExt;
 use tonic::transport::{Error as TonicError, Server as TonicServer};
 use tonic::{Request, Response, Status as TonicStatus, Streaming};
+use zyanya_core::{debug, error, info, warn};
+use zyanya_utils::networking::{IpAddress, NetAddress};
+use zyanya_utils_tower::{
+    counters::TowerConnectionCounters,
+    middleware::{BodyExt, CountBytesBody, MapRequestBodyLayer, MapResponseBodyLayer, ServiceBuilder},
+};
 
 /// Maximum number of concurrent inbound P2P connections (F-H-18).
 const MAX_CONNECTIONS: usize = 128;

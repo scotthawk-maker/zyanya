@@ -1,12 +1,3 @@
-use zyanya_grpc_client::{GrpcClient, GrpcClientNotify};
-use zyanya_notify::{
-    connection::Connection as ConnectionT,
-    error::{Error as NotifyError, Result as NotifyResult},
-    listener::ListenerId,
-    notification::Notification as NotificationT,
-    notifier::Notify,
-};
-use zyanya_rpc_core::{api::ops::RpcApiOps, notify::mode::NotificationMode, Notification};
 use std::{
     fmt::{Debug, Display},
     sync::{Arc, Mutex},
@@ -17,6 +8,15 @@ use workflow_rpc::{
     types::{MsgT, OpsT},
 };
 use workflow_serializer::prelude::*;
+use zyanya_grpc_client::{GrpcClient, GrpcClientNotify};
+use zyanya_notify::{
+    connection::Connection as ConnectionT,
+    error::{Error as NotifyError, Result as NotifyResult},
+    listener::ListenerId,
+    notification::Notification as NotificationT,
+    notifier::Notify,
+};
+use zyanya_rpc_core::{api::ops::RpcApiOps, notify::mode::NotificationMode, Notification};
 
 //
 // FIXME: Use workflow_rpc::encoding::Encoding directly in the ConnectionT implementation by deriving Hash, Eq and PartialEq in situ
@@ -86,7 +86,13 @@ pub struct Connection {
 }
 
 impl Connection {
-    pub fn new(id: u64, peer: &SocketAddr, messenger: Arc<Messenger>, grpc_client: Option<Arc<GrpcClient>>, auth_token: Option<String>) -> Connection {
+    pub fn new(
+        id: u64,
+        peer: &SocketAddr,
+        messenger: Arc<Messenger>,
+        grpc_client: Option<Arc<GrpcClient>>,
+        auth_token: Option<String>,
+    ) -> Connection {
         // If a GrpcClient is provided, it has to come configured in direct mode
         assert!(grpc_client.is_none() || grpc_client.as_ref().unwrap().notification_mode() == NotificationMode::Direct);
         // Should a gRPC client be provided, no listener_id is required for subscriptions so the listener id is set to default

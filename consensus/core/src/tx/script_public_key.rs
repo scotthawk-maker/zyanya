@@ -7,16 +7,16 @@ use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
 };
 use smallvec::SmallVec;
-use zyanya_utils::{
-    hex::{FromHex, ToHex},
-    serde_bytes::FromHexVisitor,
-};
 use std::{
     collections::HashSet,
     str::{self, FromStr},
 };
 use wasm_bindgen::prelude::*;
 use workflow_wasm::prelude::*;
+use zyanya_utils::{
+    hex::{FromHex, ToHex},
+    serde_bytes::FromHexVisitor,
+};
 
 /// Size of the underlying script vector of a script.
 pub const SCRIPT_VECTOR_SIZE: usize = 36;

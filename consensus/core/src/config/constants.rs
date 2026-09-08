@@ -16,8 +16,7 @@ pub mod contract {
 
     /// Upper bound on the serialized contract payload before borsh deserialization.
     /// Covers the largest deploy (bytecode) plus invoke (parameters) plus fixed field overhead.
-    pub const MAX_CONTRACT_PAYLOAD_SIZE: usize =
-        MAX_CONTRACT_BYTECODE_SIZE + MAX_CONTRACT_CALLDATA_SIZE + 1024;
+    pub const MAX_CONTRACT_PAYLOAD_SIZE: usize = MAX_CONTRACT_BYTECODE_SIZE + MAX_CONTRACT_CALLDATA_SIZE + 1024;
 
     /// Server-side cap on client-supplied max_gas (CPU DoS hardening).
     pub const MAX_CONTRACT_MAX_GAS: u64 = 100_000_000;

@@ -13,19 +13,13 @@ pub fn transaction_estimated_serialized_size(tx: &Transaction) -> u64 {
     let mut size: u64 = 0;
     size = size.saturating_add(2); // Tx version (u16)
     size = size.saturating_add(8); // Number of inputs (u64)
-    let inputs_size: u64 = tx
-        .inputs
-        .iter()
-        .map(transaction_input_estimated_serialized_size)
-        .fold(0u64, |acc, x| acc.saturating_add(x));
+    let inputs_size: u64 =
+        tx.inputs.iter().map(transaction_input_estimated_serialized_size).fold(0u64, |acc, x| acc.saturating_add(x));
     size = size.saturating_add(inputs_size);
 
     size = size.saturating_add(8); // number of outputs (u64)
-    let outputs_size: u64 = tx
-        .outputs
-        .iter()
-        .map(transaction_output_estimated_serialized_size)
-        .fold(0u64, |acc, x| acc.saturating_add(x));
+    let outputs_size: u64 =
+        tx.outputs.iter().map(transaction_output_estimated_serialized_size).fold(0u64, |acc, x| acc.saturating_add(x));
     size = size.saturating_add(outputs_size);
 
     size = size.saturating_add(8); // lock time (u64)
@@ -106,16 +100,10 @@ impl MassCalculator {
             .fold(0u64, |acc, x| acc.saturating_add(x));
         let total_script_public_key_mass = total_script_public_key_size.saturating_mul(self.mass_per_script_pub_key_byte);
 
-        let total_sigops: u64 = tx
-            .inputs
-            .iter()
-            .map(|input| input.sig_op_count as u64)
-            .fold(0u64, |acc, x| acc.saturating_add(x));
+        let total_sigops: u64 = tx.inputs.iter().map(|input| input.sig_op_count as u64).fold(0u64, |acc, x| acc.saturating_add(x));
         let total_sigops_mass = total_sigops.saturating_mul(self.mass_per_sig_op);
 
-        mass_for_size
-            .saturating_add(total_script_public_key_mass)
-            .saturating_add(total_sigops_mass)
+        mass_for_size.saturating_add(total_script_public_key_mass).saturating_add(total_sigops_mass)
     }
 
     /// Calculates the storage mass for this populated transaction.

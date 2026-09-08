@@ -13,9 +13,6 @@ pub use script_public_key::{
     scriptvec, ScriptPublicKey, ScriptPublicKeyT, ScriptPublicKeyVersion, ScriptPublicKeys, ScriptVec, SCRIPT_VECTOR_SIZE,
 };
 use serde::{Deserialize, Serialize};
-use zyanya_utils::hex::ToHex;
-use zyanya_utils::mem_size::MemSizeEstimator;
-use zyanya_utils::{serde_bytes, serde_bytes_fixed_ref};
 use std::collections::HashSet;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering::SeqCst;
@@ -25,6 +22,9 @@ use std::{
     str::{self},
 };
 use wasm_bindgen::prelude::*;
+use zyanya_utils::hex::ToHex;
+use zyanya_utils::mem_size::MemSizeEstimator;
+use zyanya_utils::{serde_bytes, serde_bytes_fixed_ref};
 
 use crate::{
     hashing,

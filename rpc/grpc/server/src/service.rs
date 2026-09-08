@@ -1,4 +1,6 @@
 use crate::{adaptor::Adaptor, manager::Manager};
+use std::sync::Arc;
+use triggered::Listener;
 use zyanya_consensus_core::config::Config;
 use zyanya_core::{
     debug,
@@ -8,8 +10,6 @@ use zyanya_core::{
 use zyanya_rpc_service::service::RpcCoreService;
 use zyanya_utils::{networking::NetAddress, triggers::SingleTrigger};
 use zyanya_utils_tower::counters::TowerConnectionCounters;
-use std::sync::Arc;
-use triggered::Listener;
 
 pub struct GrpcService {
     net_address: NetAddress,

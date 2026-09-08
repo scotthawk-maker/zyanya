@@ -1,6 +1,6 @@
 use futures_util::future::BoxFuture;
-use zyanya_muhash::MuHash;
 use std::sync::Arc;
+use zyanya_muhash::MuHash;
 
 use crate::{
     acceptance_data::AcceptanceData,

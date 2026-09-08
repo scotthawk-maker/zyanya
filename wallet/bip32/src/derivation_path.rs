@@ -128,9 +128,7 @@ impl FromStr for DerivationPath {
 
         let segments: Vec<ChildNumber> = path.map(str::parse).collect::<Result<_>>()?;
         if segments.len() > 100 {
-            return Err(Error::String(
-                "Derivation path exceeds maximum of 100 segments".to_string(),
-            ));
+            return Err(Error::String("Derivation path exceeds maximum of 100 segments".to_string()));
         }
         Ok(DerivationPath { path: segments })
     }

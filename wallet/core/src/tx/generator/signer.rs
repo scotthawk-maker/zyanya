@@ -3,9 +3,9 @@
 //!
 
 use crate::imports::*;
+use zeroize::Zeroize;
 use zyanya_bip32::PrivateKey;
 use zyanya_consensus_core::{sign::sign_with_multiple_v2, tx::SignableTransaction};
-use zeroize::Zeroize;
 
 pub trait SignerT: Send + Sync + 'static {
     fn try_sign(&self, transaction: SignableTransaction, addresses: &[Address]) -> Result<SignableTransaction>;

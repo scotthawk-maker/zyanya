@@ -8,9 +8,9 @@
 use crate::utils::*;
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use zyanya_consensus_core::network::{NetworkId, NetworkType};
 use zyanya_consensus_core::tx::TransactionId;
-use std::fmt;
 
 #[derive(Clone, Debug, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct GeneratorSummary {

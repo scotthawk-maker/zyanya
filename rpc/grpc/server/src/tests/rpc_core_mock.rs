@@ -1,5 +1,6 @@
 use async_channel::{unbounded, Receiver};
 use async_trait::async_trait;
+use std::sync::Arc;
 use zyanya_notify::events::EVENT_TYPE_ARRAY;
 use zyanya_notify::listener::{ListenerId, ListenerLifespan};
 use zyanya_notify::notifier::{Notifier, Notify};
@@ -8,7 +9,6 @@ use zyanya_notify::subscription::context::SubscriptionContext;
 use zyanya_notify::subscription::{MutationPolicies, UtxosChangedMutationPolicy};
 use zyanya_rpc_core::{api::connection::DynRpcConnection, api::rpc::RpcApi, *};
 use zyanya_rpc_core::{notify::connection::ChannelConnection, RpcResult};
-use std::sync::Arc;
 
 pub(super) type RpcCoreNotifier = Notifier<Notification, ChannelConnection>;
 

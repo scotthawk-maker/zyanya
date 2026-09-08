@@ -11,9 +11,6 @@ use crate::{
 };
 use itertools::Itertools;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use zyanya_addresses::{Address, Prefix};
-use zyanya_consensus_core::tx::ScriptPublicKey;
-use zyanya_core::trace;
 use std::{
     collections::hash_set,
     fmt::{Debug, Display},
@@ -23,6 +20,9 @@ use std::{
         Arc,
     },
 };
+use zyanya_addresses::{Address, Prefix};
+use zyanya_consensus_core::tx::ScriptPublicKey;
+use zyanya_core::trace;
 
 /// Subscription with a all or none scope.
 ///

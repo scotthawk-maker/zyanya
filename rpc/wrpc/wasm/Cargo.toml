@@ -17,6 +17,7 @@ default = []
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
 ahash.workspace = true
 async-std.workspace = true
 cfg-if.workspace = true

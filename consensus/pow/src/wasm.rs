@@ -1,6 +1,10 @@
 use crate::matrix::Matrix;
 use js_sys::BigInt;
 use num::Float;
+use wasm_bindgen::prelude::*;
+use workflow_wasm::convert::TryCastFromJs;
+use workflow_wasm::error::Error;
+use workflow_wasm::result::Result;
 use zyanya_consensus_client::Header;
 use zyanya_consensus_client::HeaderT;
 use zyanya_consensus_core::hashing;
@@ -9,10 +13,6 @@ use zyanya_hashes::PowHash;
 use zyanya_math::Uint256;
 use zyanya_utils::hex::FromHex;
 use zyanya_utils::hex::ToHex;
-use wasm_bindgen::prelude::*;
-use workflow_wasm::convert::TryCastFromJs;
-use workflow_wasm::error::Error;
-use workflow_wasm::result::Result;
 
 #[wasm_bindgen]
 extern "C" {

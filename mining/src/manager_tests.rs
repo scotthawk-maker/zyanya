@@ -15,6 +15,7 @@ mod tests {
         MiningCounters,
     };
     use itertools::Itertools;
+    use std::{iter::once, sync::Arc};
     use zyanya_addresses::{Address, Prefix, Version};
     use zyanya_consensus_core::{
         api::ConsensusApi,
@@ -36,7 +37,6 @@ mod tests {
         test_helpers::{create_transaction, create_transaction_with_change, op_true_script},
     };
     use zyanya_utils::mem_size::MemSizeEstimator;
-    use std::{iter::once, sync::Arc};
     // F-L-31: use a bounded channel to match the production sender type.
     use tokio::sync::mpsc::{channel, error::TryRecvError};
 
@@ -1359,8 +1359,7 @@ mod tests {
         // Make the funding amounts always different so that funding txs have different ids
         (0..count)
             .map(|i| {
-                let funding_tx =
-                    create_transaction_without_input(vec![1_000 * SOMPI_PER_ZYANYA, 2_500 * SOMPI_PER_ZYANYA + i as u64]);
+                let funding_tx = create_transaction_without_input(vec![1_000 * SOMPI_PER_ZYANYA, 2_500 * SOMPI_PER_ZYANYA + i as u64]);
                 consensus.add_transaction(funding_tx.clone(), 1);
                 funding_tx
             })

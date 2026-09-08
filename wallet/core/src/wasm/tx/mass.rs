@@ -1,10 +1,10 @@
 use crate::result::Result;
 use crate::tx::{mass, MAXIMUM_STANDARD_TRANSACTION_MASS};
+use wasm_bindgen::prelude::*;
+use workflow_wasm::convert::*;
 use zyanya_consensus_client::*;
 use zyanya_consensus_core::config::params::Params;
 use zyanya_consensus_core::network::{NetworkId, NetworkIdT};
-use wasm_bindgen::prelude::*;
-use workflow_wasm::convert::*;
 
 /// `maximumStandardTransactionMass()` returns the maximum transaction
 /// size allowed by the network.

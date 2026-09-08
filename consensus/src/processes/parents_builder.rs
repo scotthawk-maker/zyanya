@@ -1,9 +1,9 @@
 use indexmap::IndexSet;
 use itertools::Itertools;
 use smallvec::{smallvec, SmallVec};
+use std::sync::Arc;
 use zyanya_consensus_core::{blockhash::ORIGIN, header::Header, BlockHashMap, BlockHasher, BlockLevel};
 use zyanya_hashes::Hash;
-use std::sync::Arc;
 
 use crate::model::{
     services::reachability::{MTReachabilityService, ReachabilityService},

@@ -9,10 +9,10 @@ use std::fmt::Display;
 use crate::imports::*;
 pub use crate::result::Result;
 pub use cpu_miner::{CpuMiner, CpuMinerConfig, CpuMinerCtl};
-pub use zyanyad::{Zyanyad, ZyanyadConfig, ZyanyadCtl};
 use workflow_core::runtime;
 use workflow_node::process::Event as ProcessEvent;
 use workflow_store::fs::*;
+pub use zyanyad::{Zyanyad, ZyanyadConfig, ZyanyadCtl};
 
 pub static LOCATIONS: &[&str] = &[
     "bin",

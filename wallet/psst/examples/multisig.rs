@@ -1,4 +1,5 @@
 use secp256k1::{rand::thread_rng, Keypair};
+use std::{iter, str::FromStr};
 use zyanya_consensus_core::{
     hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync},
     tx::{TransactionId, TransactionOutpoint, UtxoEntry},
@@ -7,7 +8,6 @@ use zyanya_txscript::{multisig_redeem_script, opcodes::codes::OpData65, pay_to_s
 use zyanya_wallet_psst::prelude::{
     Combiner, Creator, Extractor, Finalizer, Inner, InputBuilder, SignInputOk, Signature, Signer, Updater, PSST,
 };
-use std::{iter, str::FromStr};
 
 fn main() {
     let kps = [Keypair::new(secp256k1::SECP256K1, &mut thread_rng()), Keypair::new(secp256k1::SECP256K1, &mut thread_rng())];

@@ -9,6 +9,7 @@ use crate::tx::PaymentOutputs;
 use futures::stream;
 use secp256k1::schnorr;
 use secp256k1::{Message, PublicKey};
+use std::iter;
 use zyanya_bip32::{DerivationPath, KeyFingerprint, PrivateKey};
 use zyanya_consensus_client::UtxoEntry as ClientUTXO;
 use zyanya_consensus_core::hashing::sighash::{calc_schnorr_signature_hash, SigHashReusedValuesUnsync};
@@ -22,7 +23,6 @@ pub use zyanya_wallet_psst::bundle::Bundle;
 use zyanya_wallet_psst::prelude::KeySource;
 use zyanya_wallet_psst::prelude::{Finalizer, Inner, SignInputOk, Signature, Signer};
 pub use zyanya_wallet_psst::psst::{Creator, PSST};
-use std::iter;
 
 struct PSSBSignerInner {
     keydata: PrvKeyData,
@@ -270,7 +270,10 @@ pub fn finalize_psst_one_or_more_sig_and_redeem_script(psst: PSST<Finalizer>) ->
                     sigs.sort_by_key(|(pk, _)| {
                         let xonly = pk.x_only_public_key().0.serialize();
                         let compressed = pk.serialize();
-                        pk_order.iter().position(|sp| sp.as_slice() == xonly.as_slice() || sp.as_slice() == compressed.as_slice()).unwrap_or(usize::MAX)
+                        pk_order
+                            .iter()
+                            .position(|sp| sp.as_slice() == xonly.as_slice() || sp.as_slice() == compressed.as_slice())
+                            .unwrap_or(usize::MAX)
                     });
                     // Verify every partial-sig pubkey is present in the redeem script.
                     for (pk, _) in &sigs {
@@ -375,7 +378,8 @@ pub fn psst_to_pending_transaction(
 
     // F-M-18: return an error on empty outputs instead of indexing output[0] and panicking.
     let output: Vec<zyanya_consensus_core::tx::TransactionOutput> = signed_tx.outputs.clone();
-    let first_output = output.first().ok_or_else(|| Error::PendingTransactionFromPSSTError("no outputs in transaction".to_string()))?;
+    let first_output =
+        output.first().ok_or_else(|| Error::PendingTransactionFromPSSTError("no outputs in transaction".to_string()))?;
     let recipient = extract_script_pub_key_address(&first_output.script_public_key, network_id.into())?;
 
     // F-M-18: compute fee as inputs - outputs instead of hardcoding 0.
@@ -386,7 +390,8 @@ pub fn psst_to_pending_transaction(
     let utxo_iterator: Box<dyn Iterator<Item = UtxoEntryReference> + Send + Sync + 'static> =
         Box::new(utxo_entries_ref.clone().into_iter());
 
-    let final_transaction_destination = PaymentDestination::PaymentOutputs(PaymentOutputs::from((recipient.clone(), first_output.value)));
+    let final_transaction_destination =
+        PaymentDestination::PaymentOutputs(PaymentOutputs::from((recipient.clone(), first_output.value)));
 
     let settings = GeneratorSettings {
         network_id,

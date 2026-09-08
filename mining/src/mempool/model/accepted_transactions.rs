@@ -1,7 +1,7 @@
 use crate::mempool::config::Config;
+use std::{collections::HashMap, sync::Arc};
 use zyanya_consensus_core::tx::TransactionId;
 use zyanya_core::{debug, time::unix_now};
-use std::{collections::HashMap, sync::Arc};
 
 pub(crate) struct AcceptedTransactions {
     /// Mempool config

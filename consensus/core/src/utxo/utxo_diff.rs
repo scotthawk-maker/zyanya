@@ -4,8 +4,8 @@ use super::{
 };
 use crate::tx::{TransactionOutpoint, UtxoEntry, VerifiableTransaction};
 use serde::{Deserialize, Serialize};
-use zyanya_utils::mem_size::MemSizeEstimator;
 use std::collections::hash_map::Entry::Vacant;
+use zyanya_utils::mem_size::MemSizeEstimator;
 
 pub trait ImmutableUtxoDiff {
     fn added(&self) -> &UtxoCollection;

@@ -1,8 +1,8 @@
 use async_channel::unbounded;
-use zyanya_consensus_notify::root::ConsensusNotificationRoot;
-use zyanya_core::time::unix_now;
 use std::sync::Arc;
 use std::thread::JoinHandle;
+use zyanya_consensus_notify::root::ConsensusNotificationRoot;
+use zyanya_core::time::unix_now;
 
 use super::miner::Miner;
 

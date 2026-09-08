@@ -151,9 +151,7 @@ RETURN
 
 /// Generate assembly source code for reference token contract with custom supply and owner address.
 pub fn token_contract_asm(initial_supply: u64, owner_addr: u64) -> String {
-    TOKEN_CONTRACT_ASM_TEMPLATE
-        .replace("{SUPPLY}", &initial_supply.to_string())
-        .replace("{OWNER}", &owner_addr.to_string())
+    TOKEN_CONTRACT_ASM_TEMPLATE.replace("{SUPPLY}", &initial_supply.to_string()).replace("{OWNER}", &owner_addr.to_string())
 }
 
 /// Assemble token contract source code into VM bytecode.

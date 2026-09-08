@@ -4,6 +4,9 @@ use rand::rngs::ThreadRng;
 use rand::Rng;
 use rand_distr::{Distribution, Exp};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
+use std::cmp::max;
+use std::iter::once;
+use std::sync::Arc;
 use zyanya_consensus::consensus::Consensus;
 use zyanya_consensus::model::stores::virtual_state::VirtualStateStoreReader;
 use zyanya_consensus::params::Params;
@@ -19,9 +22,6 @@ use zyanya_consensus_core::tx::{
 use zyanya_consensus_core::utxo::utxo_view::UtxoView;
 use zyanya_core::trace;
 use zyanya_utils::sim::{Environment, Process, Resumption, Suspension};
-use std::cmp::max;
-use std::iter::once;
-use std::sync::Arc;
 
 struct OnetimeTxSelector {
     txs: Option<Vec<Transaction>>,

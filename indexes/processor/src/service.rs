@@ -1,4 +1,5 @@
 use crate::{processor::Processor, IDENT};
+use std::sync::Arc;
 use zyanya_consensus_notify::{
     connection::ConsensusChannelConnection, notification::Notification as ConsensusNotification, notifier::ConsensusNotifier,
 };
@@ -16,7 +17,6 @@ use zyanya_notify::{
 };
 use zyanya_utils::{channel::Channel, triggers::SingleTrigger};
 use zyanya_utxoindex::api::UtxoIndexProxy;
-use std::sync::Arc;
 
 const INDEX_SERVICE: &str = IDENT;
 

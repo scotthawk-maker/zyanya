@@ -2,9 +2,9 @@ use crate::error::Error;
 use crate::imports::*;
 use crate::result::Result;
 use crate::ZyanyaCli;
+use std::sync::Arc;
 use zyanya_bip32::{Language, Mnemonic};
 use zyanya_wallet_core::account::{BIP32_ACCOUNT_KIND, LEGACY_ACCOUNT_KIND, MULTISIG_ACCOUNT_KIND};
-use std::sync::Arc;
 
 pub async fn prompt_for_mnemonic(term: &Arc<Terminal>) -> Result<Vec<String>> {
     let mut words: Vec<String> = vec![];

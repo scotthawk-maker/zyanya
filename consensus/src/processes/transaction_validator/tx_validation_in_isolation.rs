@@ -1,6 +1,6 @@
 use crate::constants::{MAX_SOMPI, TX_VERSION};
-use zyanya_consensus_core::tx::Transaction;
 use std::collections::HashSet;
+use zyanya_consensus_core::tx::Transaction;
 
 use super::{
     errors::{TxResult, TxRuleError},
@@ -115,37 +115,37 @@ impl TransactionValidator {
         Ok(())
     }
 
-fn check_transaction_version(&self, tx: &Transaction) -> TxResult<()> {
-    if tx.version != TX_VERSION {
-        return Err(TxRuleError::UnknownTxVersion(tx.version));
-    }
-    Ok(())
-}
-
-fn check_transaction_output_value_ranges(&self, tx: &Transaction) -> TxResult<()> {
-    let mut total: u64 = 0;
-    for (i, output) in tx.outputs.iter().enumerate() {
-        if output.value == 0 {
-            return Err(TxRuleError::TxOutZero(i));
+    fn check_transaction_version(&self, tx: &Transaction) -> TxResult<()> {
+        if tx.version != TX_VERSION {
+            return Err(TxRuleError::UnknownTxVersion(tx.version));
         }
-
-        if output.value > MAX_SOMPI {
-            return Err(TxRuleError::TxOutTooHigh(i));
-        }
-
-        if let Some(new_total) = total.checked_add(output.value) {
-            total = new_total
-        } else {
-            return Err(TxRuleError::OutputsValueOverflow);
-        }
-
-        if total > MAX_SOMPI {
-            return Err(TxRuleError::TotalTxOutTooHigh);
-        }
+        Ok(())
     }
 
-    Ok(())
-}
+    fn check_transaction_output_value_ranges(&self, tx: &Transaction) -> TxResult<()> {
+        let mut total: u64 = 0;
+        for (i, output) in tx.outputs.iter().enumerate() {
+            if output.value == 0 {
+                return Err(TxRuleError::TxOutZero(i));
+            }
+
+            if output.value > MAX_SOMPI {
+                return Err(TxRuleError::TxOutTooHigh(i));
+            }
+
+            if let Some(new_total) = total.checked_add(output.value) {
+                total = new_total
+            } else {
+                return Err(TxRuleError::OutputsValueOverflow);
+            }
+
+            if total > MAX_SOMPI {
+                return Err(TxRuleError::TotalTxOutTooHigh);
+            }
+        }
+
+        Ok(())
+    }
 
     fn check_transaction_subnetwork(&self, tx: &Transaction) -> TxResult<()> {
         if tx.is_coinbase() || tx.subnetwork_id.is_native() {
@@ -164,72 +164,74 @@ fn check_transaction_output_value_ranges(&self, tx: &Transaction) -> TxResult<()
         if !self.smart_contracts_enabled {
             return Err(TxRuleError::SubnetworksDisabled(tx.subnetwork_id.clone()));
         }
-    if !tx.subnetwork_id.is_smart_contract() {
-        return Ok(());
-    }
+        if !tx.subnetwork_id.is_smart_contract() {
+            return Ok(());
+        }
 
-    use zyanya_consensus_core::config::constants::contract::{
-        MAX_CONTRACT_BYTECODE_SIZE, MAX_CONTRACT_PARAMETERS, MAX_CONTRACT_PAYLOAD_SIZE,
-    };
+        use zyanya_consensus_core::config::constants::contract::{
+            MAX_CONTRACT_BYTECODE_SIZE, MAX_CONTRACT_PARAMETERS, MAX_CONTRACT_PAYLOAD_SIZE,
+        };
 
-    // F-C-10: Reject oversized payloads BEFORE borsh deserialization.
-    // Borsh reads a u32 length prefix and allocates that many elements —
-    // a crafted length prefix of 0xFFFFFFFF can OOM the node.
-    if tx.payload.len() > MAX_CONTRACT_PAYLOAD_SIZE {
-        return Err(TxRuleError::InvalidContractPayload(format!(
-            "contract payload size {} exceeds maximum {}",
-            tx.payload.len(), MAX_CONTRACT_PAYLOAD_SIZE
-        )));
-    }
+        // F-C-10: Reject oversized payloads BEFORE borsh deserialization.
+        // Borsh reads a u32 length prefix and allocates that many elements —
+        // a crafted length prefix of 0xFFFFFFFF can OOM the node.
+        if tx.payload.len() > MAX_CONTRACT_PAYLOAD_SIZE {
+            return Err(TxRuleError::InvalidContractPayload(format!(
+                "contract payload size {} exceeds maximum {}",
+                tx.payload.len(),
+                MAX_CONTRACT_PAYLOAD_SIZE
+            )));
+        }
 
-    let payload = zyanya_consensus_core::tx::ContractPayload::from_slice(&tx.payload)
-        .map_err(|e| TxRuleError::InvalidContractPayload(e.to_string()))?;
+        let payload = zyanya_consensus_core::tx::ContractPayload::from_slice(&tx.payload)
+            .map_err(|e| TxRuleError::InvalidContractPayload(e.to_string()))?;
 
-    match payload {
-        zyanya_consensus_core::tx::ContractPayload::Deploy(deploy) => {
-            if deploy.bytecode.is_empty() {
-                return Err(TxRuleError::InvalidContractPayload("empty bytecode".to_string()));
+        match payload {
+            zyanya_consensus_core::tx::ContractPayload::Deploy(deploy) => {
+                if deploy.bytecode.is_empty() {
+                    return Err(TxRuleError::InvalidContractPayload("empty bytecode".to_string()));
+                }
+                // F-C-10: Bound bytecode size (consensus rule).
+                if deploy.bytecode.len() > MAX_CONTRACT_BYTECODE_SIZE {
+                    return Err(TxRuleError::InvalidContractPayload(format!(
+                        "bytecode size {} exceeds maximum {}",
+                        deploy.bytecode.len(),
+                        MAX_CONTRACT_BYTECODE_SIZE
+                    )));
+                }
+                if deploy.max_gas == 0 {
+                    return Err(TxRuleError::InvalidContractPayload("zero max gas".to_string()));
+                }
+                if deploy.gas_price == 0 {
+                    return Err(TxRuleError::InvalidContractPayload("zero gas price".to_string()));
+                }
+                if tx.gas != deploy.max_gas {
+                    return Err(TxRuleError::InvalidContractPayload("tx gas does not match deploy max gas".to_string()));
+                }
             }
-            // F-C-10: Bound bytecode size (consensus rule).
-            if deploy.bytecode.len() > MAX_CONTRACT_BYTECODE_SIZE {
-                return Err(TxRuleError::InvalidContractPayload(format!(
-                    "bytecode size {} exceeds maximum {}",
-                    deploy.bytecode.len(), MAX_CONTRACT_BYTECODE_SIZE
-                )));
-            }
-            if deploy.max_gas == 0 {
-                return Err(TxRuleError::InvalidContractPayload("zero max gas".to_string()));
-            }
-            if deploy.gas_price == 0 {
-                return Err(TxRuleError::InvalidContractPayload("zero gas price".to_string()));
-            }
-            if tx.gas != deploy.max_gas {
-                return Err(TxRuleError::InvalidContractPayload("tx gas does not match deploy max gas".to_string()));
+            zyanya_consensus_core::tx::ContractPayload::Invoke(invoke) => {
+                // F-C-10: Bound parameters count (consensus rule).
+                if invoke.parameters.len() > MAX_CONTRACT_PARAMETERS {
+                    return Err(TxRuleError::InvalidContractPayload(format!(
+                        "parameters length {} exceeds maximum {}",
+                        invoke.parameters.len(),
+                        MAX_CONTRACT_PARAMETERS
+                    )));
+                }
+                if invoke.max_gas == 0 {
+                    return Err(TxRuleError::InvalidContractPayload("zero max gas".to_string()));
+                }
+                if invoke.gas_price == 0 {
+                    return Err(TxRuleError::InvalidContractPayload("zero gas price".to_string()));
+                }
+                if tx.gas != invoke.max_gas {
+                    return Err(TxRuleError::InvalidContractPayload("tx gas does not match invoke max gas".to_string()));
+                }
             }
         }
-        zyanya_consensus_core::tx::ContractPayload::Invoke(invoke) => {
-            // F-C-10: Bound parameters count (consensus rule).
-            if invoke.parameters.len() > MAX_CONTRACT_PARAMETERS {
-                return Err(TxRuleError::InvalidContractPayload(format!(
-                    "parameters length {} exceeds maximum {}",
-                    invoke.parameters.len(), MAX_CONTRACT_PARAMETERS
-                )));
-            }
-            if invoke.max_gas == 0 {
-                return Err(TxRuleError::InvalidContractPayload("zero max gas".to_string()));
-            }
-            if invoke.gas_price == 0 {
-                return Err(TxRuleError::InvalidContractPayload("zero gas price".to_string()));
-            }
-            if tx.gas != invoke.max_gas {
-                return Err(TxRuleError::InvalidContractPayload("tx gas does not match invoke max gas".to_string()));
-            }
-        }
+
+        Ok(())
     }
-
-    Ok(())
-}
-
 }
 #[cfg(test)]
 mod tests {
@@ -354,15 +356,13 @@ mod tests {
         let mut sc_tx = valid_tx.clone();
         sc_tx.subnetwork_id = zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT;
         sc_tx.gas = 5000;
-        sc_tx.payload = zyanya_consensus_core::tx::ContractPayload::Deploy(
-            zyanya_consensus_core::tx::DeployContractPayload {
-                bytecode: vec![0x01],
-                max_gas: 5000,
-                gas_price: 1,
-                deposit_amount: 0,
-                metadata_hash: [0u8; 32],
-            },
-        )
+        sc_tx.payload = zyanya_consensus_core::tx::ContractPayload::Deploy(zyanya_consensus_core::tx::DeployContractPayload {
+            bytecode: vec![0x01],
+            max_gas: 5000,
+            gas_price: 1,
+            deposit_amount: 0,
+            metadata_hash: [0u8; 32],
+        })
         .to_bytes()
         .unwrap();
         tv.validate_tx_in_isolation(&sc_tx).unwrap();
@@ -406,38 +406,30 @@ mod tests {
 
     #[test]
     fn test_smart_contract_gated_on_mainnet() {
-        let mut tv = TransactionValidator::new_for_tests(
-            10, 10, 1000, 1000, 18, 180, 150, 100, Default::default(),
-        );
+        let mut tv = TransactionValidator::new_for_tests(10, 10, 1000, 1000, 18, 180, 150, 100, Default::default());
         tv.smart_contracts_enabled = false;
 
         let sc_tx = Transaction::new(
             0,
             vec![TransactionInput {
-                previous_outpoint: TransactionOutpoint {
-                    transaction_id: TransactionId::from_slice(&[0x01; 32]),
-                    index: 0,
-                },
+                previous_outpoint: TransactionOutpoint { transaction_id: TransactionId::from_slice(&[0x01; 32]), index: 0 },
                 signature_script: vec![0x49; 73],
                 sequence: u64::MAX,
                 sig_op_count: 0,
             }],
-            vec![TransactionOutput {
-                value: 1000,
-                script_public_key: ScriptPublicKey::new(0, scriptvec![0x76, 0xa9]),
-            }],
+            vec![TransactionOutput { value: 1000, script_public_key: ScriptPublicKey::new(0, scriptvec![0x76, 0xa9]) }],
             0,
             zyanya_consensus_core::subnets::SUBNETWORK_ID_SMART_CONTRACT,
             5000,
-            zyanya_consensus_core::tx::ContractPayload::Deploy(
-                zyanya_consensus_core::tx::DeployContractPayload {
-                    bytecode: vec![0x01],
-                    max_gas: 5000,
-                    gas_price: 1,
-                    deposit_amount: 0,
-                    metadata_hash: [0u8; 32],
-                },
-            ).to_bytes().unwrap(),
+            zyanya_consensus_core::tx::ContractPayload::Deploy(zyanya_consensus_core::tx::DeployContractPayload {
+                bytecode: vec![0x01],
+                max_gas: 5000,
+                gas_price: 1,
+                deposit_amount: 0,
+                metadata_hash: [0u8; 32],
+            })
+            .to_bytes()
+            .unwrap(),
         );
 
         // When smart contracts are disabled (Mainnet), transaction must be rejected
@@ -447,5 +439,4 @@ mod tests {
         tv.smart_contracts_enabled = true;
         tv.validate_tx_in_isolation(&sc_tx).unwrap();
     }
-
 }

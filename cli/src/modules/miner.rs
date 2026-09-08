@@ -1,6 +1,6 @@
 use crate::imports::*;
-use zyanya_daemon::{locate_binaries, CpuMinerConfig};
 pub use workflow_node::process::Event;
+use zyanya_daemon::{locate_binaries, CpuMinerConfig};
 
 #[derive(Describe, Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd)]
 #[serde(rename_all = "lowercase")]
@@ -99,7 +99,10 @@ impl Miner {
         if argv.is_empty() {
             return self.display_help(ctx, argv).await;
         }
-        let cpu_miner = ctx.daemons().cpu_miner().ok_or(Error::custom("No cpu_miner daemon configured, please use 'miner select' to select a binary."))?;
+        let cpu_miner = ctx
+            .daemons()
+            .cpu_miner()
+            .ok_or(Error::custom("No cpu_miner daemon configured, please use 'miner select' to select a binary."))?;
         match argv.remove(0).as_str() {
             "start" => {
                 let mute = self.mute.load(Ordering::SeqCst);

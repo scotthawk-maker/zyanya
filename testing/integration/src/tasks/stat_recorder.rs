@@ -1,6 +1,5 @@
 use crate::tasks::{DynTask, Task};
 use async_trait::async_trait;
-use zyanya_utils::triggers::SingleTrigger;
 use std::{
     io::{BufWriter, Write},
     path::PathBuf,
@@ -9,6 +8,7 @@ use std::{
 };
 use tokio::{task::JoinHandle, time::sleep};
 use workflow_perf_monitor::mem::{get_process_memory_info, ProcessMemoryInfo};
+use zyanya_utils::triggers::SingleTrigger;
 
 pub struct StatRecorderTask {
     tick: Duration,

@@ -1,9 +1,9 @@
 use crate::tasks::Task;
 use async_trait::async_trait;
-use zyanya_core::{trace, warn};
-use zyanya_utils::triggers::SingleTrigger;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
+use zyanya_core::{trace, warn};
+use zyanya_utils::triggers::SingleTrigger;
 
 pub(super) struct StopTask {
     main_stop_signal: SingleTrigger,

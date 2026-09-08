@@ -11,10 +11,10 @@ use crate::{
     },
 };
 use once_cell::unsync::Lazy;
+use std::sync::Arc;
 use zyanya_consensus_core::block::Block;
 use zyanya_database::prelude::StoreResultExtensions;
 use zyanya_hashes::Hash;
-use std::sync::Arc;
 
 impl BlockBodyProcessor {
     pub fn validate_body_in_context(self: &Arc<Self>, block: &Block) -> BlockProcessResult<()> {

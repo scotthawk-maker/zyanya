@@ -18,6 +18,7 @@ use crate::{
 };
 use itertools::Itertools;
 use rand::thread_rng;
+use std::{sync::Arc, time::Duration};
 use zyanya_addresses::Address;
 use zyanya_alloc::init_allocator_with_default_settings;
 use zyanya_consensus::params::Params;
@@ -27,7 +28,6 @@ use zyanya_math::Uint256;
 use zyanya_notify::scope::VirtualDaaScoreChangedScope;
 use zyanya_rpc_core::api::rpc::RpcApi;
 use zyanya_txscript::pay_to_address_script;
-use std::{sync::Arc, time::Duration};
 
 // Constants
 const BLOCK_COUNT: usize = usize::MAX;

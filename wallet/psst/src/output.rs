@@ -4,8 +4,8 @@ use crate::psst::KeySource;
 use crate::utils::combine_if_no_conflicts;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-use zyanya_consensus_core::tx::ScriptPublicKey;
 use std::{collections::BTreeMap, ops::Add};
+use zyanya_consensus_core::tx::ScriptPublicKey;
 
 #[derive(Builder, Default, Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]

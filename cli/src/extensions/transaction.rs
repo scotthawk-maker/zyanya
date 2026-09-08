@@ -1,9 +1,9 @@
 use crate::imports::*;
+use workflow_log::style;
 use zyanya_consensus_core::tx::{TransactionInput, TransactionOutpoint};
 use zyanya_wallet_core::storage::Binding;
 use zyanya_wallet_core::storage::{TransactionData, TransactionKind, TransactionRecord};
 use zyanya_wallet_core::wallet::WalletGuard;
-use workflow_log::style;
 
 pub trait TransactionTypeExtension {
     fn style(&self, s: &str) -> String;

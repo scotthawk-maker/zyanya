@@ -1,4 +1,5 @@
 use igd_next::{aio::tokio::Tokio, AddPortError};
+use std::{net::SocketAddr, sync::Arc, time::Duration};
 use zyanya_core::{
     debug, error, info,
     task::{
@@ -7,7 +8,6 @@ use zyanya_core::{
     },
     trace, warn,
 };
-use std::{net::SocketAddr, sync::Arc, time::Duration};
 
 use crate::UPNP_REGISTRATION_NAME;
 

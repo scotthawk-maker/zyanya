@@ -5,17 +5,17 @@ use crate::modules::miner::Miner;
 use crate::modules::node::Node;
 use crate::notifier::{Notification, Notifier};
 use crate::result::Result;
-use zyanya_daemon::{DaemonEvent, DaemonKind, Daemons};
-use zyanya_wallet_core::account::Account;
-use zyanya_wallet_core::rpc::DynRpcApi;
-use zyanya_wallet_core::storage::{IdT, PrvKeyDataInfo};
-use zyanya_wrpc_client::{Resolver, ZyanyaRpcClient};
 use workflow_core::channel::*;
 use workflow_core::time::Instant;
 use workflow_log::*;
 pub use workflow_terminal::Event as TerminalEvent;
 use workflow_terminal::*;
 pub use workflow_terminal::{Options as TerminalOptions, TargetElement as TerminalTarget};
+use zyanya_daemon::{DaemonEvent, DaemonKind, Daemons};
+use zyanya_wallet_core::account::Account;
+use zyanya_wallet_core::rpc::DynRpcApi;
+use zyanya_wallet_core::storage::{IdT, PrvKeyDataInfo};
+use zyanya_wrpc_client::{Resolver, ZyanyaRpcClient};
 
 const NOTIFY: &str = "\x1B[2m⎟\x1B[0m";
 

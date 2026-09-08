@@ -143,7 +143,11 @@ pub fn sign_with_multiple_v2(mut mutable_tx: SignableTransaction, privkeys: &[[u
     let reused_values = SigHashReusedValuesUnsync::new();
     let mut additional_signatures_required = false;
     for i in 0..mutable_tx.tx.inputs.len() {
-        let entry = mutable_tx.entries.get(i).and_then(|e| e.as_ref()).ok_or_else(|| Error::Message(format!("missing UTXO entry for input {i}")))?;
+        let entry = mutable_tx
+            .entries
+            .get(i)
+            .and_then(|e| e.as_ref())
+            .ok_or_else(|| Error::Message(format!("missing UTXO entry for input {i}")))?;
         let script = entry.script_public_key.script();
         if let Some(schnorr_key) = map.get(script) {
             let sig_hash = calc_schnorr_signature_hash(&mutable_tx.as_verifiable(), i, SIG_HASH_ALL, &reused_values);

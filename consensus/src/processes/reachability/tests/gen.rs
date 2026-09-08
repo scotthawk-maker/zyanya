@@ -1,7 +1,7 @@
 use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Exp};
-use zyanya_utils::sim::{Environment, Process, Resumption, Simulation, Suspension};
 use std::{cell::RefCell, cmp::max, collections::HashSet, iter::once, rc::Rc};
+use zyanya_utils::sim::{Environment, Process, Resumption, Simulation, Suspension};
 
 type Message = (u64, Vec<u64>);
 

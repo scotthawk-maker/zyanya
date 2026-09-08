@@ -12,9 +12,9 @@ use pssb::{
     bundle_from_psst_generator, bundle_to_finalizer_stream, pssb_signer_for_address, psst_to_pending_transaction, PSSBSigner,
     PSSTGenerator,
 };
+pub use variants::*;
 use zyanya_hashes::Hash;
 use zyanya_wallet_psst::bundle::Bundle;
-pub use variants::*;
 
 use crate::derivation::build_derivate_paths;
 use crate::derivation::AddressDerivationManagerTrait;
@@ -26,10 +26,10 @@ use crate::tx::PaymentOutput;
 use crate::tx::{Fees, Generator, GeneratorSettings, GeneratorSummary, PaymentDestination, PendingTransaction, Signer};
 use crate::utxo::balance::{AtomicBalance, BalanceStrings};
 use crate::utxo::UtxoContextBinding;
+use workflow_core::abortable::Abortable;
 use zyanya_bip32::{ChildNumber, ExtendedPrivateKey, PrivateKey};
 use zyanya_consensus_client::UtxoEntryReference;
 use zyanya_wallet_keys::derivation::gen0::WalletDerivationManagerV0;
-use workflow_core::abortable::Abortable;
 
 /// Notification callback type used by [`Account::sweep`] and [`Account::send`].
 /// Allows tracking in-flight transactions during transaction generation.
@@ -742,13 +742,13 @@ mod tests {
     use super::create_private_keys;
     use super::ExtendedPrivateKey;
     use crate::imports::LEGACY_ACCOUNT_KIND;
+    use std::str::FromStr;
     use zyanya_addresses::Address;
     use zyanya_addresses::Prefix;
     use zyanya_bip32::secp256k1::SecretKey;
     use zyanya_bip32::PrivateKey;
     use zyanya_bip32::SecretKeyExt;
     use zyanya_wallet_keys::derivation::gen0::PubkeyDerivationManagerV0;
-    use std::str::FromStr;
 
     fn gen0_receive_addresses() -> Vec<&'static str> {
         vec![

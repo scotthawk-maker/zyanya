@@ -4,6 +4,15 @@ use crate::{
     result::Result,
     service::Options,
 };
+use std::{
+    collections::HashMap,
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc, Mutex,
+    },
+};
+use workflow_log::*;
+use workflow_rpc::server::prelude::*;
 use zyanya_grpc_client::GrpcClient;
 use zyanya_notify::{
     connection::ChannelType,
@@ -20,15 +29,6 @@ use zyanya_rpc_core::{
     Notification, RpcResult,
 };
 use zyanya_rpc_service::service::RpcCoreService;
-use std::{
-    collections::HashMap,
-    sync::{
-        atomic::{AtomicU64, Ordering},
-        Arc, Mutex,
-    },
-};
-use workflow_log::*;
-use workflow_rpc::server::prelude::*;
 
 pub type WrpcNotifier = Notifier<Notification, Connection>;
 
@@ -123,11 +123,7 @@ impl Server {
         {
             let sockets = self.inner.sockets.lock()?;
             if sockets.len() >= self.inner.max_connections {
-                return Err(WebSocketError::Other(format!(
-                    "wRPC connection limit reached ({})",
-                    self.inner.max_connections
-                ))
-                .into());
+                return Err(WebSocketError::Other(format!("wRPC connection limit reached ({})", self.inner.max_connections)).into());
             }
         }
 
@@ -164,7 +160,6 @@ impl Server {
         Ok(connection)
     }
 
-
     /// F-M-26: returns `Err` on a poisoned sockets mutex instead of unwrapping
     /// (which would panic the server task). Callers should log and ignore.
     pub async fn disconnect(&self, connection: Connection) -> std::result::Result<(), WebSocketError> {
@@ -182,11 +177,7 @@ impl Server {
 
         // F-M-26: avoid panicking on a poisoned sockets mutex; surface the
         // error so the caller can log it without crashing the server task.
-        self.inner
-            .sockets
-            .lock()
-            .map_err(|e| WebSocketError::Other(format!("sockets mutex poisoned: {e}")))?
-            .remove(&connection.id());
+        self.inner.sockets.lock().map_err(|e| WebSocketError::Other(format!("sockets mutex poisoned: {e}")))?.remove(&connection.id());
 
         // FIXME: determine if messenger should be closed explicitly
         // connection.close();

@@ -1,7 +1,7 @@
 use crate::protowire;
 use crate::{from, try_from};
-use zyanya_rpc_core::{FromRpcHex, RpcError, RpcHash, RpcResult, RpcScriptVec, ToRpcHex};
 use std::str::FromStr;
+use zyanya_rpc_core::{FromRpcHex, RpcError, RpcHash, RpcResult, RpcScriptVec, ToRpcHex};
 
 // ----------------------------------------------------------------------------
 // rpc_core to protowire
