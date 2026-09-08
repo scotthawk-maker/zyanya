@@ -18,12 +18,12 @@ impl TransactionValidator {
         self.check_transaction_outputs_in_isolation(tx)?;
         self.check_coinbase_in_isolation(tx)?;
 
-        check_transaction_output_value_ranges(tx)?;
+        self.check_transaction_output_value_ranges(tx)?;
         check_duplicate_transaction_inputs(tx)?;
         self.check_gas(tx)?;
         self.check_transaction_subnetwork(tx)?;
         self.check_contract_payload_in_isolation(tx)?;
-        check_transaction_version(tx)
+        self.check_transaction_version(tx)
     }
 
     fn check_transaction_inputs_in_isolation(&self, tx: &Transaction) -> TxResult<()> {
@@ -115,14 +115,14 @@ impl TransactionValidator {
         Ok(())
     }
 
-fn check_transaction_version(tx: &Transaction) -> TxResult<()> {
+fn check_transaction_version(&self, tx: &Transaction) -> TxResult<()> {
     if tx.version != TX_VERSION {
         return Err(TxRuleError::UnknownTxVersion(tx.version));
     }
     Ok(())
 }
 
-fn check_transaction_output_value_ranges(tx: &Transaction) -> TxResult<()> {
+fn check_transaction_output_value_ranges(&self, tx: &Transaction) -> TxResult<()> {
     let mut total: u64 = 0;
     for (i, output) in tx.outputs.iter().enumerate() {
         if output.value == 0 {
