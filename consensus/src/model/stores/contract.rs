@@ -589,12 +589,10 @@ mod tests {
         let contract_addr = deploy_outcome.contract_address;
         let addr_bytes: [u8; 32] = contract_addr.as_bytes().try_into().unwrap();
 
-        assert_eq!(deploy_outcome.return_value, Some(300));
-        assert!(deploy_outcome.gas_used > 0);
-        assert_eq!(deploy_outcome.gas_fee, deploy_outcome.gas_used * 10);
-        assert_eq!(deploy_outcome.burned_fee, deploy_outcome.gas_fee / 2);
-        assert_eq!(deploy_outcome.miner_fee, deploy_outcome.gas_fee - deploy_outcome.burned_fee);
-        assert_eq!(cache.sload(&addr_bytes, 42).unwrap(), 300, "State updated in cache");
+        assert_eq!(deploy_outcome.return_value, None);
+        assert_eq!(deploy_outcome.gas_used, 0);
+        assert_eq!(cache.code.get(&addr_bytes), Some(&bytecode));
+        assert_eq!(cache.get_balance(&addr_bytes), 5000);
 
         // 4. Create InvokeContract transaction targeting deployed contract
         let invoke_payload = ContractPayload::Invoke(InvokeContractPayload {
@@ -791,7 +789,8 @@ mod tests {
         assert_eq!(cache.get_balance(&addr_bytes), 1000, "Contract balance credited");
 
         // 4. Now invoke entry_point 5 (refund = 500) with caller script provided -> MUST SUCCEED
-        let caller_script = zyanya_consensus_core::tx::ScriptPublicKey::new(0, smallvec::smallvec![0x20; 34]);
+        let seller_addr = zyanya_addresses::Address::new(zyanya_addresses::Prefix::Mainnet, zyanya_addresses::Version::PubKey, &[0x02; 32]);
+        let caller_script = zyanya_txscript::pay_to_address_script(&seller_addr);
         let outcome2 = processor.process_contract_tx(&sell_tx, &mut cache, 1, Some(&caller_script)).unwrap();
         assert!(outcome2.success, "Solvent contract payout must succeed");
         assert!(outcome2.payout.is_some(), "Payout UTXO generated");

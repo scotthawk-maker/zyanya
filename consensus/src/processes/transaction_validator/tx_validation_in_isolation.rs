@@ -20,8 +20,8 @@ impl TransactionValidator {
 
         self.check_transaction_output_value_ranges(tx)?;
         check_duplicate_transaction_inputs(tx)?;
-        self.check_gas(tx)?;
         self.check_transaction_subnetwork(tx)?;
+        self.check_gas(tx)?;
         self.check_contract_payload_in_isolation(tx)?;
         self.check_transaction_version(tx)
     }
