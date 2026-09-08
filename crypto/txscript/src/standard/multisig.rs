@@ -21,6 +21,9 @@ pub fn multisig_redeem_script(pub_keys: impl Iterator<Item = impl Borrow<[u8; 32
     if required == 0 {
         return Err(Error::ErrZeroRequiredSigs);
     }
+    if pub_keys.size_hint().1 == Some(0) {
+        return Err(Error::EmptyKeys);
+    }
     if pub_keys.size_hint().1.is_some_and(|upper| upper < required) {
         return Err(Error::ErrTooManyRequiredSigs);
     }
@@ -33,11 +36,11 @@ pub fn multisig_redeem_script(pub_keys: impl Iterator<Item = impl Borrow<[u8; 32
         builder.add_data(pub_key.borrow().as_slice())?;
     }
 
-    if (count as usize) < required {
-        return Err(Error::ErrTooManyRequiredSigs);
-    }
     if count == 0 {
         return Err(Error::EmptyKeys);
+    }
+    if (count as usize) < required {
+        return Err(Error::ErrTooManyRequiredSigs);
     }
 
     builder.add_i64(count)?;
@@ -50,6 +53,9 @@ pub fn multisig_redeem_script_ecdsa(pub_keys: impl Iterator<Item = impl Borrow<[
     if required == 0 {
         return Err(Error::ErrZeroRequiredSigs);
     }
+    if pub_keys.size_hint().1 == Some(0) {
+        return Err(Error::EmptyKeys);
+    }
     if pub_keys.size_hint().1.is_some_and(|upper| upper < required) {
         return Err(Error::ErrTooManyRequiredSigs);
     }
@@ -62,11 +68,11 @@ pub fn multisig_redeem_script_ecdsa(pub_keys: impl Iterator<Item = impl Borrow<[
         builder.add_data(pub_key.borrow().as_slice())?;
     }
 
-    if (count as usize) < required {
-        return Err(Error::ErrTooManyRequiredSigs);
-    }
     if count == 0 {
         return Err(Error::EmptyKeys);
+    }
+    if (count as usize) < required {
+        return Err(Error::ErrTooManyRequiredSigs);
     }
 
     builder.add_i64(count)?;
