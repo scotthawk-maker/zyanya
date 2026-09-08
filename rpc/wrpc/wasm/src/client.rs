@@ -272,7 +272,7 @@ cfg_if! {
             addEventListener<M extends keyof RpcEventMap>(
                 event: M,
                 callback: (eventData: RpcEventMap[M]) => void
-            )
+            ): void;
         }"#;
     }
 }

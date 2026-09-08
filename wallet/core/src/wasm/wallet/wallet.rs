@@ -135,7 +135,7 @@ cfg_if! {
             addEventListener<M extends keyof WalletEventMap>(
                 event: M,
                 callback: (eventData: WalletEventMap[M]) => void
-            )
+            ): void;
         }"#;
     }
 }

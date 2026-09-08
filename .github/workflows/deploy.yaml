@@ -91,14 +91,14 @@ jobs:
           RUSTFLAGS: -C linker=x86_64-linux-gnu-gcc
         run: |
           rustup target add x86_64-unknown-linux-gnu
-          cargo build --target x86_64-unknown-linux-gnu --bin spectred --release
+          cargo build --target x86_64-unknown-linux-gnu --bin zyanyad --release
           cargo build --target x86_64-unknown-linux-gnu --bin rothschild --release
-          cargo build --target x86_64-unknown-linux-gnu --bin spectre-wallet --release
+          cargo build --target x86_64-unknown-linux-gnu --bin zyanya-wallet --release
           mkdir bin || true
-          cp target/x86_64-unknown-linux-gnu/release/spectred bin/
+          cp target/x86_64-unknown-linux-gnu/release/zyanyad bin/
           cp target/x86_64-unknown-linux-gnu/release/rothschild bin/
-          cp target/x86_64-unknown-linux-gnu/release/spectre-wallet bin/
-          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-gnu-amd64.zip"
+          cp target/x86_64-unknown-linux-gnu/release/zyanya-wallet bin/
+          archive="bin/zyanya-${{ github.event.release.tag_name }}-linux-gnu-amd64.zip"
           zip -r "${archive}" ./bin/*
 
       - name: Build on Linux for linux-gnu/aarch64
@@ -110,14 +110,14 @@ jobs:
         run: |
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
           rustup target add aarch64-unknown-linux-gnu
-          cargo build --target aarch64-unknown-linux-gnu --bin spectred --release
+          cargo build --target aarch64-unknown-linux-gnu --bin zyanyad --release
           cargo build --target aarch64-unknown-linux-gnu --bin rothschild --release
-          cargo build --target aarch64-unknown-linux-gnu --bin spectre-wallet --release
+          cargo build --target aarch64-unknown-linux-gnu --bin zyanya-wallet --release
           mkdir bin || true
-          cp target/aarch64-unknown-linux-gnu/release/spectred bin/
+          cp target/aarch64-unknown-linux-gnu/release/zyanyad bin/
           cp target/aarch64-unknown-linux-gnu/release/rothschild bin/
-          cp target/aarch64-unknown-linux-gnu/release/spectre-wallet bin/
-          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-gnu-aarch64.zip"
+          cp target/aarch64-unknown-linux-gnu/release/zyanya-wallet bin/
+          archive="bin/zyanya-${{ github.event.release.tag_name }}-linux-gnu-aarch64.zip"
           zip -r "${archive}" ./bin/*
 
       - name: Build on Linux for linux-gnu/riscv64
@@ -129,14 +129,14 @@ jobs:
         run: |
           sudo apt-get install -y gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
           rustup target add riscv64gc-unknown-linux-gnu
-          cargo build --target riscv64gc-unknown-linux-gnu --bin spectred --release
+          cargo build --target riscv64gc-unknown-linux-gnu --bin zyanyad --release
           cargo build --target riscv64gc-unknown-linux-gnu --bin rothschild --release
-          cargo build --target riscv64gc-unknown-linux-gnu --bin spectre-wallet --release
+          cargo build --target riscv64gc-unknown-linux-gnu --bin zyanya-wallet --release
           mkdir bin || true
-          cp target/riscv64gc-unknown-linux-gnu/release/spectred bin/
+          cp target/riscv64gc-unknown-linux-gnu/release/zyanyad bin/
           cp target/riscv64gc-unknown-linux-gnu/release/rothschild bin/
-          cp target/riscv64gc-unknown-linux-gnu/release/spectre-wallet bin/
-          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-gnu-riscv64gc.zip"
+          cp target/riscv64gc-unknown-linux-gnu/release/zyanya-wallet bin/
+          archive="bin/zyanya-${{ github.event.release.tag_name }}-linux-gnu-riscv64gc.zip"
           zip -r "${archive}" ./bin/*
 
       - name: Build on Linux for linux-gnu/powerpc64
@@ -148,14 +148,14 @@ jobs:
         run: |
           sudo apt-get install -y gcc-powerpc64-linux-gnu g++-powerpc64-linux-gnu
           rustup target add powerpc64-unknown-linux-gnu
-          cargo build --target powerpc64-unknown-linux-gnu --bin spectred --release
+          cargo build --target powerpc64-unknown-linux-gnu --bin zyanyad --release
           cargo build --target powerpc64-unknown-linux-gnu --bin rothschild --release
-          cargo build --target powerpc64-unknown-linux-gnu --bin spectre-wallet --release
+          cargo build --target powerpc64-unknown-linux-gnu --bin zyanya-wallet --release
           mkdir bin || true
-          cp target/powerpc64-unknown-linux-gnu/release/spectred bin/
+          cp target/powerpc64-unknown-linux-gnu/release/zyanyad bin/
           cp target/powerpc64-unknown-linux-gnu/release/rothschild bin/
-          cp target/powerpc64-unknown-linux-gnu/release/spectre-wallet bin/
-          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-gnu-powerpc64.zip"
+          cp target/powerpc64-unknown-linux-gnu/release/zyanya-wallet bin/
+          archive="bin/zyanya-${{ github.event.release.tag_name }}-linux-gnu-powerpc64.zip"
           zip -r "${archive}" ./bin/*
 
       - name: Build on Linux for linux-gnu/powerpc64le
@@ -167,14 +167,14 @@ jobs:
         run: |
           sudo apt-get install -y gcc-powerpc64le-linux-gnu g++-powerpc64le-linux-gnu
           rustup target add powerpc64le-unknown-linux-gnu
-          cargo build --target powerpc64le-unknown-linux-gnu --bin spectred --release
+          cargo build --target powerpc64le-unknown-linux-gnu --bin zyanyad --release
           cargo build --target powerpc64le-unknown-linux-gnu --bin rothschild --release
-          cargo build --target powerpc64le-unknown-linux-gnu --bin spectre-wallet --release
+          cargo build --target powerpc64le-unknown-linux-gnu --bin zyanya-wallet --release
           mkdir bin || true
-          cp target/powerpc64le-unknown-linux-gnu/release/spectred bin/
+          cp target/powerpc64le-unknown-linux-gnu/release/zyanyad bin/
           cp target/powerpc64le-unknown-linux-gnu/release/rothschild bin/
-          cp target/powerpc64le-unknown-linux-gnu/release/spectre-wallet bin/
-          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-gnu-powerpc64le.zip"
+          cp target/powerpc64le-unknown-linux-gnu/release/zyanya-wallet bin/
+          archive="bin/zyanya-${{ github.event.release.tag_name }}-linux-gnu-powerpc64le.zip"
           zip -r "${archive}" ./bin/*
 
       - name: Build on Linux for linux-musl/amd64
@@ -190,12 +190,12 @@ jobs:
           cd "${GITHUB_WORKSPACE}"
 
           # Build for musl.
-          cargo --verbose build --bin spectred --bin rothschild --bin spectre-wallet --release --target x86_64-unknown-linux-musl
+          cargo --verbose build --bin zyanyad --bin rothschild --bin zyanya-wallet --release --target x86_64-unknown-linux-musl
           mkdir bin || true
-          cp target/x86_64-unknown-linux-musl/release/spectred bin/
+          cp target/x86_64-unknown-linux-musl/release/zyanyad bin/
           cp target/x86_64-unknown-linux-musl/release/rothschild bin/
-          cp target/x86_64-unknown-linux-musl/release/spectre-wallet bin/
-          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-musl-amd64.zip"
+          cp target/x86_64-unknown-linux-musl/release/zyanya-wallet bin/
+          archive="bin/zyanya-${{ github.event.release.tag_name }}-linux-musl-amd64.zip"
           zip -r "${archive}" ./bin/*
 
       - name: Build on Linux for linux-musl/aarch64
@@ -211,12 +211,12 @@ jobs:
           cd "${GITHUB_WORKSPACE}"
 
           # Build for musl.
-          cargo --verbose build --bin spectred --bin rothschild --bin spectre-wallet --release --target aarch64-unknown-linux-musl
+          cargo --verbose build --bin zyanyad --bin rothschild --bin zyanya-wallet --release --target aarch64-unknown-linux-musl
           mkdir bin || true
-          cp target/aarch64-unknown-linux-musl/release/spectred bin/
+          cp target/aarch64-unknown-linux-musl/release/zyanyad bin/
           cp target/aarch64-unknown-linux-musl/release/rothschild bin/
-          cp target/aarch64-unknown-linux-musl/release/spectre-wallet bin/
-          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-linux-musl-aarch64.zip"
+          cp target/aarch64-unknown-linux-musl/release/zyanya-wallet bin/
+          archive="bin/zyanya-${{ github.event.release.tag_name }}-linux-musl-aarch64.zip"
           zip -r "${archive}" ./bin/*
 
       - name: Build on Windows for windows-gnullvm/amd64
@@ -238,14 +238,14 @@ jobs:
             https://repo.msys2.org/mingw/clang64/mingw-w64-clang-x86_64-llvm-18.1.8-2-any.pkg.tar.zst \
             https://repo.msys2.org/mingw/clang64/mingw-w64-clang-x86_64-llvm-libs-18.1.8-2-any.pkg.tar.zst
           rustup target add x86_64-pc-windows-gnullvm
-          cargo build --target x86_64-pc-windows-gnullvm --bin spectred --release
+          cargo build --target x86_64-pc-windows-gnullvm --bin zyanyad --release
           cargo build --target x86_64-pc-windows-gnullvm --bin rothschild --release
-          cargo build --target x86_64-pc-windows-gnullvm --bin spectre-wallet --release
+          cargo build --target x86_64-pc-windows-gnullvm --bin zyanya-wallet --release
           mkdir bin || true
-          cp target/x86_64-pc-windows-gnullvm/release/spectred.exe bin/
+          cp target/x86_64-pc-windows-gnullvm/release/zyanyad.exe bin/
           cp target/x86_64-pc-windows-gnullvm/release/rothschild.exe bin/
-          cp target/x86_64-pc-windows-gnullvm/release/spectre-wallet.exe bin/
-          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-windows-gnullvm-amd64.zip"
+          cp target/x86_64-pc-windows-gnullvm/release/zyanya-wallet.exe bin/
+          archive="bin/zyanya-${{ github.event.release.tag_name }}-windows-gnullvm-amd64.zip"
           zip -r "${archive}" ./bin/*
 
       - name: Build on Windows for windows-msvc/amd64
@@ -254,42 +254,42 @@ jobs:
         run: |
           export PATH="${PATH}:/c/Users/runneradmin/.cargo/bin" # manually override path to select proper msys2 build tools.
           rustup target add x86_64-pc-windows-msvc
-          cargo build --target x86_64-pc-windows-msvc --bin spectred --release
+          cargo build --target x86_64-pc-windows-msvc --bin zyanyad --release
           cargo build --target x86_64-pc-windows-msvc --bin rothschild --release
-          cargo build --target x86_64-pc-windows-msvc --bin spectre-wallet --release
+          cargo build --target x86_64-pc-windows-msvc --bin zyanya-wallet --release
           mkdir bin || true
-          cp target/x86_64-pc-windows-msvc/release/spectred.exe bin/
+          cp target/x86_64-pc-windows-msvc/release/zyanyad.exe bin/
           cp target/x86_64-pc-windows-msvc/release/rothschild.exe bin/
-          cp target/x86_64-pc-windows-msvc/release/spectre-wallet.exe bin/
-          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-windows-msvc-amd64.zip"
+          cp target/x86_64-pc-windows-msvc/release/zyanya-wallet.exe bin/
+          archive="bin/zyanya-${{ github.event.release.tag_name }}-windows-msvc-amd64.zip"
           zip -r "${archive}" ./bin/*
 
       - name: Build on macOS for macos/amd64
         if: matrix.TARGET == 'macos/amd64'
         run: |
           rustup target add x86_64-apple-darwin
-          cargo build --target x86_64-apple-darwin --bin spectred --release
+          cargo build --target x86_64-apple-darwin --bin zyanyad --release
           cargo build --target x86_64-apple-darwin --bin rothschild --release
-          cargo build --target x86_64-apple-darwin --bin spectre-wallet --release
+          cargo build --target x86_64-apple-darwin --bin zyanya-wallet --release
           mkdir bin || true
-          cp target/x86_64-apple-darwin/release/spectred bin/
+          cp target/x86_64-apple-darwin/release/zyanyad bin/
           cp target/x86_64-apple-darwin/release/rothschild bin/
-          cp target/x86_64-apple-darwin/release/spectre-wallet bin/
-          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-macos-amd64.zip"
+          cp target/x86_64-apple-darwin/release/zyanya-wallet bin/
+          archive="bin/zyanya-${{ github.event.release.tag_name }}-macos-amd64.zip"
           zip -r "${archive}" ./bin/*
 
       - name: Build on macOS for macos/aarch64
         if: matrix.TARGET == 'macos/aarch64'
         run: |
           rustup target add aarch64-apple-darwin
-          cargo build --target aarch64-apple-darwin --bin spectred --release
+          cargo build --target aarch64-apple-darwin --bin zyanyad --release
           cargo build --target aarch64-apple-darwin --bin rothschild --release
-          cargo build --target aarch64-apple-darwin --bin spectre-wallet --release
+          cargo build --target aarch64-apple-darwin --bin zyanya-wallet --release
           mkdir bin || true
-          cp target/aarch64-apple-darwin/release/spectred bin/
+          cp target/aarch64-apple-darwin/release/zyanyad bin/
           cp target/aarch64-apple-darwin/release/rothschild bin/
-          cp target/aarch64-apple-darwin/release/spectre-wallet bin/
-          archive="bin/rusty-spectre-${{ github.event.release.tag_name }}-macos-aarch64.zip"
+          cp target/aarch64-apple-darwin/release/zyanya-wallet bin/
+          archive="bin/zyanya-${{ github.event.release.tag_name }}-macos-aarch64.zip"
           zip -r "${archive}" ./bin/*
 
       - name: Upload release asset
@@ -369,10 +369,10 @@ jobs:
         run: |
           cd wasm
           bash build-release
-          mv release/spectre-wasm32-sdk.zip ../spectre-wasm32-sdk-${{ github.event.release.tag_name }}.zip
+          mv release/zyanya-wasm32-sdk.zip ../zyanya-wasm32-sdk-${{ github.event.release.tag_name }}.zip
 
-          archive="spectre-wasm32-sdk-${{ github.event.release.tag_name }}.zip"
-          asset_name="spectre-wasm32-sdk-${{ github.event.release.tag_name }}.zip"
+          archive="zyanya-wasm32-sdk-${{ github.event.release.tag_name }}.zip"
+          asset_name="zyanya-wasm32-sdk-${{ github.event.release.tag_name }}.zip"
           echo "archive=${archive}" >> $GITHUB_ENV
           echo "asset_name=${asset_name}" >> $GITHUB_ENV
 

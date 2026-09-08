@@ -71,7 +71,7 @@ cfg_if! {
             addEventListener<E extends keyof UtxoProcessorEventMap>(
                 event: E,
                 callback: UtxoProcessorNotificationCallback<E>
-            )
+            ): void;
         }"#;
     }
 }

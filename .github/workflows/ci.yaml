@@ -121,10 +121,10 @@ jobs:
         run: cargo test --doc --release --workspace
 
       - name: Run cargo test on spectre-hashes without asm
-        run: cargo nextest run --release -p spectre-hashes --features=no-asm --benches
+        run: cargo nextest run --release -p zyanya-hashes --features=no-asm --benches
 
       - name: Run cargo doc tests with features=no-asm on spectre-hashes
-        run: cargo test --doc --release -p spectre-hashes --features=no-asm
+        run: cargo test --doc --release -p zyanya-hashes --features=no-asm
 
       - name: Run cargo doc
         run: cargo doc --release --no-deps --workspace
@@ -223,19 +223,19 @@ jobs:
         env:
           TARGET_CC: clang
           TARGET_CFLAGS: -I/usr/include
-        run: cargo clippy -p spectre-wrpc-wasm --target wasm32-unknown-unknown
+        run: cargo clippy -p zyanya-wrpc-wasm --target wasm32-unknown-unknown
 
       - name: Run cargo check of spectre-wallet-cli-wasm for wasm32 target
         env:
           TARGET_CC: clang
           TARGET_CFLAGS: -I/usr/include
-        run: cargo clippy -p spectre-wallet-cli-wasm --target wasm32-unknown-unknown
+        run: cargo clippy -p zyanya-wallet-cli-wasm --target wasm32-unknown-unknown
 
       - name: Run cargo check of spectre-wasm for wasm32 target
         env:
           TARGET_CC: clang
           TARGET_CFLAGS: -I/usr/include
-        run: cargo clippy -p spectre-wasm --target wasm32-unknown-unknown
+        run: cargo clippy -p zyanya-wasm --target wasm32-unknown-unknown
 
   build-wasm32:
     name: Build WASM32 SDK
@@ -314,13 +314,13 @@ jobs:
           cd wasm
           bash build-release
           popd
-          mv wasm/release/spectre-wasm32-sdk.zip wasm/release/spectre-wasm32-sdk-${{ env.SHORT_SHA }}.zip
+          mv wasm/release/zyanya-wasm32-sdk.zip wasm/release/zyanya-wasm32-sdk-${{ env.SHORT_SHA }}.zip
 
       - name: Upload WASM build to GitHub 
         uses: actions/upload-artifact@v4
         with: 
-          name: spectre-wasm32-sdk-${{ env.SHORT_SHA }}.zip
-          path: wasm/release/spectre-wasm32-sdk-${{ env.SHORT_SHA }}.zip
+          name: zyanya-wasm32-sdk-${{ env.SHORT_SHA }}.zip
+          path: wasm/release/zyanya-wasm32-sdk-${{ env.SHORT_SHA }}.zip
 
   build-release:
     name: Build Linux Release
@@ -369,4 +369,4 @@ jobs:
           source musl-toolchain/build-amd64.sh
 
           # Build for musl
-          cargo --verbose build --bin spectred --bin rothschild --bin spectre-wallet --release --target x86_64-unknown-linux-musl
+          cargo --verbose build --bin zyanyad --bin rothschild --bin zyanya-wallet --release --target x86_64-unknown-linux-musl
