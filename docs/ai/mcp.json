@@ -1,0 +1,108 @@
+{
+  "mcpVersion": "2024-11-05",
+  "name": "zyanya-webmcp",
+  "version": "1.0.0",
+  "description": "Zyanya GhostDAG L1 Agentic Tool Protocol for autonomous node queries, mining diagnostics, and DAG state retrieval.",
+  "website": "https://zyanya-network.org",
+  "capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": true
+  },
+  "tools": [
+    {
+      "name": "zyanya_get_dag_info",
+      "description": "Returns real-time GhostDAG metrics including block count, tip hashes, virtual difficulty, and DAA score.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string",
+            "enum": [
+              "mainnet",
+              "testnet-10"
+            ],
+            "default": "mainnet",
+            "description": "Target Zyanya network."
+          }
+        }
+      }
+    },
+    {
+      "name": "zyanya_get_node_info",
+      "description": "Returns node health, daemon version, connection counts, and sync status.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "default": "http://127.0.0.1:18110",
+            "description": "Zyanya RPC endpoint URL."
+          }
+        }
+      }
+    },
+    {
+      "name": "zyanya_get_balance",
+      "description": "Queries confirmed and unconfirmed balance (in sompi and ZYAN) for any valid Zyanya address.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "address"
+        ],
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Zyanya Bech32 address (e.g., zyanya:q... or zyanyatest:q...)."
+          }
+        }
+      }
+    },
+    {
+      "name": "zyanya_get_utxos",
+      "description": "Fetches unspent transaction outputs (UTXOs) with sompi amounts, script public keys, and DAA scores.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "addresses"
+        ],
+        "properties": {
+          "addresses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of Bech32 addresses to query."
+          }
+        }
+      }
+    },
+    {
+      "name": "zyanya_check_ipv6_pinhole",
+      "description": "Executes an IPv6 GhostDAG mesh connectivity test to canonical seeds and returns pinhole diagnostics.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "port": {
+            "type": "integer",
+            "default": 18111,
+            "description": "GhostDAG P2P port to probe."
+          }
+        }
+      }
+    },
+    {
+      "name": "zyanya_estimate_mining_target",
+      "description": "Calculates the current AstroBWTv3 mining difficulty target and estimated block time.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "hashrate_khs": {
+            "type": "number",
+            "description": "Optional miner hashrate in KH/s to estimate expected reward times."
+          }
+        }
+      }
+    }
+  ]
+}

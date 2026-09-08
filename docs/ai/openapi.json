@@ -1,0 +1,250 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Zyanya GhostDAG L1 RPC API",
+    "version": "1.0.0",
+    "description": "High-throughput JSON-RPC and REST interface for querying Zyanya GhostDAG consensus, UTXOs, balances, and block metrics.",
+    "contact": {
+      "name": "Zyanya Core Developers",
+      "url": "https://github.com/scotthawk-maker/zyanya"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:18110",
+      "description": "Local Mainnet Zyanyad Daemon RPC"
+    },
+    {
+      "url": "http://10.10.1.99:18210",
+      "description": "CT 100 Testnet-10 RPC Gateway"
+    }
+  ],
+  "paths": {
+    "/api/v1/info": {
+      "get": {
+        "summary": "Get Node Information",
+        "description": "Returns node version, network type, peer counts, and synchronization status.",
+        "operationId": "getInfo",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "string",
+                      "example": "0.3.17"
+                    },
+                    "p2pId": {
+                      "type": "string"
+                    },
+                    "isSynced": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "serverVersion": {
+                      "type": "string"
+                    },
+                    "hasUtxoIndex": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dag": {
+      "get": {
+        "summary": "Get Block-DAG Metrics",
+        "description": "Returns DAG tips, block count, header count, virtual DAA score, and difficulty.",
+        "operationId": "getBlockDagInfo",
+        "responses": {
+          "200": {
+            "description": "DAG state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "network": {
+                      "type": "string",
+                      "example": "mainnet"
+                    },
+                    "blockCount": {
+                      "type": "integer",
+                      "example": 142850
+                    },
+                    "headerCount": {
+                      "type": "integer",
+                      "example": 142850
+                    },
+                    "tipHashes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "difficulty": {
+                      "type": "number",
+                      "example": 124.52
+                    },
+                    "virtualDaaScore": {
+                      "type": "integer",
+                      "example": 145000
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/balance/{address}": {
+      "get": {
+        "summary": "Get Address Balance",
+        "description": "Returns confirmed and unconfirmed balance in sompi for a given Bech32 address.",
+        "operationId": "getBalanceByAddress",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Address balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string"
+                    },
+                    "balanceSompi": {
+                      "type": "integer",
+                      "example": 500000000
+                    },
+                    "balanceZyan": {
+                      "type": "number",
+                      "example": 5.0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/utxos/{address}": {
+      "get": {
+        "summary": "Get UTXOs for Address",
+        "description": "Fetches unspent transaction outputs including outpoints, amounts, and script public keys.",
+        "operationId": "getUtxosByAddress",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of unspent outputs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "transactionId": {
+                        "type": "string"
+                      },
+                      "index": {
+                        "type": "integer"
+                      },
+                      "amount": {
+                        "type": "integer"
+                      },
+                      "scriptPublicKey": {
+                        "type": "string"
+                      },
+                      "blockDaaScore": {
+                        "type": "integer"
+                      },
+                      "isCoinbase": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tx/submit": {
+      "post": {
+        "summary": "Submit Transaction",
+        "description": "Submits a signed GhostDAG transaction to the local mempool.",
+        "operationId": "submitTransaction",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "transaction"
+                ],
+                "properties": {
+                  "transaction": {
+                    "type": "object"
+                  },
+                  "allowOrphan": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transactionId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

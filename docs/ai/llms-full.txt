@@ -1,0 +1,62 @@
+# Zyanya GhostDAG Layer 1: Comprehensive LLM Context & Protocol Specification
+
+## 1. Protocol Architecture & Consensus Mechanics
+Zyanya implements the PHANTOM/GhostDAG consensus protocol over a Directed Acyclic Graph (Block-DAG). Unlike traditional single-chain blockchains where blocks competing for the same height result in orphaned blocks, GhostDAG references multiple parent blocks, rapidly incorporating parallel blocks into a single unified topological order.
+
+- Topological Ordering: The greedy GhostDAG algorithm finds the largest k-cluster of well-connected blocks (blue set) and penalizes attacker blocks outside this cluster (red set).
+- Block Creation Velocity: Genesis target is 1 block per second (1 BPS). Dynamic Difficulty Adjustment (DAA) recalculates target difficulty every block using an invariant window.
+- Block Finality: Rapid probabilistic finality within seconds, reaching full economic irreversibility across standard GhostDAG confirmation depths.
+- Denomination:
+  - 1 ZYAN = 100,000,000 sompi (10^8 sompi).
+  - Minimum transaction fee: 1,000 sompi (0.00001 ZYAN).
+
+## 2. ASIC/FPGA Resistance: AstroBWTv3 Proof of Work
+Mining democratization is maintained through AstroBWTv3:
+1. Stage 1: AstroBWT algorithm generates memory-hard suffix array permutations. It forces continuous memory reads and branch prediction dependencies, neutralizing parallel ASIC hash circuits.
+2. Stage 2: HeavyHash matrix multiplication executes dynamic pseudo-random linear transforms across 64x64 matrices seeded by the pre-PoW header hash.
+3. Mining Efficiency: Commodity x86_64 CPUs (AMD Ryzen, Intel Core) and modern ARM64 silicon achieve maximum hash efficiency per watt. GPU mining offers moderate throughput with high memory bandwidth requirement, preventing centralized ASIC mining farms.
+
+## 3. IPv6 GhostDAG Mesh Networking & Ghost Pinhole
+Zyanya utilizes an IPv6-first peer-to-peer transport layer:
+- Direct Addressing: Every node operates on an end-to-end routable IPv6 address, bypassing legacy IPv4 NAT traversal, STUN/TURN relays, and UPnP vulnerabilities.
+- Canonical Seeds:
+  - `[2600:1f13:955:2001:5a4a:c577:fa93:6e6f]:18111`
+  - `[2600:1f13:955:2001:99a1:b6b4:46d8:53f4]:18111`
+- Residential Gateway Pinhole Configuration:
+  Home internet service providers (ISPs) delegate native /64 or /60 IPv6 subnets. Home routers (e.g. Comcast, AT&T, Asus, Netgear) employ stateful firewalls that filter unsolicited inbound connections.
+  To establish a full GhostDAG peer node:
+  1. Open the router firewall settings.
+  2. Create an IPv6 pinhole rule allowing inbound TCP traffic on Port 18111 to the node's local global IPv6 address.
+  3. No port forwarding (DNAT) is required because IPv6 provides end-to-end unicast addressing.
+
+## 4. Subnetwork Architecture & Launch Hardening
+To eliminate genesis day inflation and consensus halt risks:
+- Subnetwork 0 (Native PoW GhostDAG L1): Fully active on Mainnet. Handles peer-to-peer value transfer, coinbase vesting, and mining reward distribution.
+- Subnetwork 3 (Smart Contracts VM): Quarantined strictly to Testnet-10, Devnet, and Simnet for the October 1, 2026 launch. Smart contract transactions on Mainnet are rejected fail-closed with `TxRuleError::SubnetworksDisabled`.
+- Solvency Enforcement: The consensus engine enforces mathematical balance checks on all smart contract custody vaults, guaranteeing that refund payouts can never exceed verified on-chain deposits.
+
+## 5. Automated Node Deployment
+Headless 1-liner provisioners automate system configuration, firewalling, and background daemon execution:
+
+- Linux & macOS:
+  ```bash
+  curl -sSfL https://raw.githubusercontent.com/scotthawk-maker/zyanya/main/install.sh | bash
+  ```
+- Windows PowerShell:
+  ```powershell
+  irm https://raw.githubusercontent.com/scotthawk-maker/zyanya/main/install.ps1 | iex
+  ```
+
+## 6. Official SDKs & Toolchains
+- TypeScript/WASM SDK: `zyanya-wasm` (Node.js & Web browser ESM).
+  Provides address generation, BIP-32 HD key derivation, transaction signing, and wRPC WebSocket communication.
+- Async Python Client: `zyanya-py` (asyncio).
+  Provides structured asynchronous queries for AI agents, trading automation, and monitoring pipelines.
+
+## 7. JSON-RPC & wRPC WebSocket Specification
+- Default Local RPC Endpoint: `ws://127.0.0.1:18110` (or `[::1]:18110`)
+- Standard Payloads:
+  - `getInfo`: Returns daemon version, network name, synced state.
+  - `getBlockDagInfo`: Returns current tip hashes, DAA score, virtual difficulty.
+  - `getUtxosByAddresses`: Takes `addresses: string[]`, returns unspent outpoints with script public keys and sompi amounts.
+  - `submitTransaction`: Takes signed transaction object, returns transaction ID hash.

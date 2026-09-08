@@ -1,0 +1,38 @@
+# Zyanya GhostDAG Layer 1
+
+> Zyanya is a high-throughput, sub-second Proof-of-Work Layer 1 blockchain powered by the PHANTOM/GhostDAG consensus protocol and the AstroBWTv3 ASIC/FPGA-resistant mining algorithm. It operates an IPv6-first peer-to-peer mesh for instant point-to-point block dissemination.
+
+## Quick Facts for LLMs & AI Agents
+- Architecture: Directed Acyclic Graph (Block-DAG), PHANTOM / GhostDAG protocol.
+- Block Speed: 1 block per second (1 BPS) at genesis; scalable to 10 BPS.
+- Proof of Work: AstroBWTv3 (memory-hard, branch-heavy suffix sorting algorithm, CPU-democratic).
+- Subnetwork Architecture: Pure PoW UTXO consensus on Mainnet (Subnetwork 0); Smart Contract VM quarantined to Testnet-10 (Subnetwork 3).
+- Network Addressing: Native IPv6-first. Canonical seed nodes operate on IPv6 global unicast.
+- Standard Ports:
+  - Mainnet P2P: 18111 | Mainnet RPC: 18110
+  - Testnet-10 P2P: 18211 | Testnet-10 RPC: 18210
+- Base Unit: 1 ZYAN = 100,000,000 sompi (8 decimals).
+
+## Machine-Readable Endpoints & Manifests
+- OpenAPI 3.1 Specification: /openapi.json
+- WebMCP Manifest (Model Context Protocol): /mcp.json
+- Complete LLM Architecture Context: /llms-full.txt
+- Official GitHub Repository: https://github.com/scotthawk-maker/zyanya
+
+## 1-Liner Automated Installers
+- Linux & macOS:
+  `curl -sSfL https://raw.githubusercontent.com/scotthawk-maker/zyanya/main/install.sh | bash`
+- Windows PowerShell:
+  `irm https://raw.githubusercontent.com/scotthawk-maker/zyanya/main/install.ps1 | iex`
+
+## Client SDKs
+- TypeScript / JavaScript WASM SDK: `@zyanya/sdk` (Node.js & Web browser ESM)
+- Async Python Client: `zyanya-py` (asyncio gRPC/wRPC client)
+
+## Core RPC Methods
+- `getInfo`: Returns node status, synchronized state, peer count, network ID.
+- `getBlockDagInfo`: Returns tip hashes, block count, header count, difficulty, DAA score.
+- `getConnectedPeerInfo`: Returns active peer IDs, IPv6 addresses, ping latency, user agents.
+- `getUtxosByAddresses`: Queries all unspent transaction outputs for a given list of addresses.
+- `getBalanceByAddress`: Queries confirmed and unconfirmed balance in sompi.
+- `submitTransaction`: Submits a signed GhostDAG transaction to the node mempool.
