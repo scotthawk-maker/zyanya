@@ -21,6 +21,12 @@
 
 ---
 
+> [!TIP]
+> **Lean Core Engine · Complete Frontend Freedom**  
+> This repository provides all the essential primitives you need for the Zyanya blockchain (consensus, VM, wallet, and open machine APIs) without opinionated GUI bloat. If you want web dashboards, trading charts, desktop apps, or mobile wallets, you and your AI agent have complete freedom to build whatever you want on top.
+
+---
+
 ## 1. Agent-First Architecture (No Human GUI Required)
 
 Zyanya is built from the ground up for **Autonomous AI Agents**. Agents interact directly via standardized WebMCP JSON-RPC endpoints to discover schemas, compile Subnetwork 3 ZCL smart contracts, execute UTXO transfers, and query consensus state.
@@ -49,7 +55,29 @@ curl -6 -X POST https://zyanya.scottcloudhawk.org/mcp/rpc \
 
 ---
 
-## 2. System Architecture
+## 2. Extensible & Agent-Ready: Build Whatever You Want
+
+This repository contains the pure, sovereign core engine for the Zyanya blockchain. We deliberately omit heavy frontend frameworks, Electron bloat, and opinionated desktop GUIs so that the core node remains lean, fast, and secure.
+
+Everything you need to build custom interfaces is exposed via open machine-readable protocols:
+- **WebMCP Gateway**: Standardized tool schemas at `/mcp.json` and `/mcp/rpc` for LLMs and autonomous agents.
+- **High-Performance JSON-RPC**: Full blockDAG inspection, UTXO queries, and mempool access on `:18210` / `:20110`.
+- **Subnetwork 3 VM Handlers**: Direct contract deployment, state queries, and token interaction.
+- **Real-Time WebSocket Streams**: Instant block, transaction, and DAG event subscriptions.
+
+### You + Your Agent = Infinite Frontend Possibilities
+
+Whether you want to build:
+- **Interactive Dashboards**: Live GhostDAG visualizers or block explorers (Vue, Svelte, React).
+- **Trading Terminals**: AMM swap interfaces, bonding curve launchpads, and DEX charts (TradingView, Lightweight Charts).
+- **Desktop & Mobile Wallets**: Sovereign non-custodial wallets (Tauri, Flutter, React Native).
+- **Homelab Telemetry**: Grafana dashboards, Prometheus metrics, or terminal TUI monitors.
+
+You and your favorite AI coding agent (Antigravity, Claude Code, OMP, Cursor, or Codex) can hook directly into the WebMCP or JSON-RPC endpoints and generate custom applications in whatever language or design aesthetic you choose.
+
+---
+
+## 3. System Architecture
 
 ```mermaid
 flowchart TB
@@ -84,7 +112,7 @@ flowchart TB
 
 ---
 
-## 3. Core Specifications
+## 4. Core Specifications
 
 - **Transport**: Native IPv6 global unicast transport. IPv4 peer discovery is strictly rejected at the socket layer.
 - **Consensus**: 1 Block-Per-Second parallel GhostDAG ordering ($k=18$, DAA parameterization for rapid confirmation).
@@ -96,7 +124,7 @@ flowchart TB
 
 ---
 
-## 4. Subnetwork 3 ZCL Smart Contracts
+## 5. Subnetwork 3 ZCL Smart Contracts
 
 Zyanya features native stack-based smart contracts operating on Subnetwork 3. The repository ships with production reference contracts:
 
@@ -111,7 +139,7 @@ Zyanya features native stack-based smart contracts operating on Subnetwork 3. Th
 
 ---
 
-## 5. Public Testnet Connection Parameters
+## 6. Public Testnet Connection Parameters
 
 | Parameter | Value |
 | :--- | :--- |
@@ -127,7 +155,7 @@ Zyanya features native stack-based smart contracts operating on Subnetwork 3. Th
 
 ---
 
-## 6. Building & Installation
+## 7. Building & Installation
 
 ### Quick Install (Headless 1-Liners)
 
@@ -165,7 +193,7 @@ cargo build --release --bin zyanyad --bin zyanya-wallet --bin zyanya-query
 
 ---
 
-## 7. Security Hardening
+## 8. Security Hardening
 
 Zyanya has undergone comprehensive security hardening:
 
@@ -176,7 +204,7 @@ Zyanya has undergone comprehensive security hardening:
 
 ---
 
-## 8. Documentation Index
+## 9. Documentation Index
 
 - [AGENTS.md](AGENTS.md): Machine instructions, tool schemas, and agent integration guidelines.
 - [docs/WEBMCP.md](docs/WEBMCP.md): Sovereign WebMCP gateway specification and OpenAPI schema.
@@ -186,6 +214,6 @@ Zyanya has undergone comprehensive security hardening:
 
 ---
 
-## 9. License
+## 10. License
 
 Zyanya is released under the terms of the ISC License. See [LICENSE](LICENSE) for details.
