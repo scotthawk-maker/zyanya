@@ -1,0 +1,66 @@
+# ==============================================================================
+# Zyanya High-Throughput GhostDAG Node & Miner Production Image
+# Multi-Stage Build: Rust 1.83 (Debian Bookworm) -> Minimal Runtime
+# ==============================================================================
+
+FROM rust:1.83-slim-bookworm AS builder
+
+# Install build dependencies: Protobuf, Clang, C++ build tools for RocksDB & AstroBWTv3
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    protobuf-compiler \
+    libclang-dev \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    git \
+    cmake \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# Copy entire workspace
+COPY . .
+
+# Compiler flags for maximum throughput & memory optimization
+ENV CARGO_INCREMENTAL=0
+ENV RUSTFLAGS="-C target-cpu=native"
+
+# Build release binaries for zyanyad and zyanya-wallet
+RUN cargo build --release -p zyanyad -p zyanya-wallet -p zyanya-query
+
+# ------------------------------------------------------------------------------
+# Runtime Image
+# ------------------------------------------------------------------------------
+FROM debian:bookworm-slim AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    jq \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy compiled binaries from builder stage
+COPY --from=builder /build/target/release/zyanyad /usr/local/bin/zyanyad
+COPY --from=builder /build/target/release/zyanya-wallet /usr/local/bin/zyanya-wallet
+COPY --from=builder /build/target/release/zyanya-query /usr/local/bin/zyanya-query
+
+# Create non-root user and data directories
+RUN useradd -m -u 1000 -U -s /bin/bash zyanya && \
+    mkdir -p /home/zyanya/.zyanyad && \
+    chown -R zyanya:zyanya /home/zyanya
+
+USER zyanya
+VOLUME ["/home/zyanya/.zyanyad"]
+
+# Ports:
+# 18111: Mainnet P2P (18211 Testnet, 18511 Simnet)
+# 18110: Mainnet gRPC (18210 Testnet, 18510 Simnet)
+# 19110: Mainnet Borsh wRPC (19210 Testnet, 19510 Simnet)
+# 20110: Mainnet JSON wRPC (20210 Testnet, 20510 Simnet)
+EXPOSE 18111 18110 19110 20110
+
+ENTRYPOINT ["/usr/local/bin/zyanyad"]
+CMD ["--rpclisten=0.0.0.0:18110", "--rpclisten-borsh=0.0.0.0:19110", "--listen=0.0.0.0:18111", "--utxoindex"]

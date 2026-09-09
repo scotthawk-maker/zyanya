@@ -1,0 +1,92 @@
+version: '3.8'
+
+networks:
+  zyanya-mesh-net:
+    driver: bridge
+
+volumes:
+  us-data:
+  london-data:
+  tokyo-data:
+
+services:
+  # ============================================================================
+  # 🇺🇸 US East Homelab Archival Core (Seed 1)
+  # ============================================================================
+  zyanya-node-us:
+    image: zyanya/zyanyad:latest
+    container_name: zyanya-node-us
+    restart: unless-stopped
+    networks:
+      - zyanya-mesh-net
+    ports:
+      - "18511:18511"   # P2P
+      - "18510:18510"   # gRPC
+      - "19510:19510"   # Borsh wRPC
+      - "20510:20510"   # JSON wRPC
+    volumes:
+      - us-data:/home/zyanya/.zyanyad
+    command: >
+      --simnet
+      --listen=0.0.0.0:18511
+      --rpclisten=0.0.0.0:18510
+      --rpclisten-borsh=0.0.0.0:19510
+      --rpclisten-json=0.0.0.0:20510
+      --utxoindex
+      --enable-unsynced-mining
+      --nodnsseed
+      --loglevel=info
+
+  # ============================================================================
+  # 🇬🇧 London European Cloud Relay (Seed 2)
+  # ============================================================================
+  zyanya-node-london:
+    image: zyanya/zyanyad:latest
+    container_name: zyanya-node-london
+    restart: unless-stopped
+    depends_on:
+      - zyanya-node-us
+    networks:
+      - zyanya-mesh-net
+    ports:
+      - "18512:18512"   # P2P
+      - "18520:18520"   # gRPC
+      - "19520:19520"   # Borsh wRPC
+    volumes:
+      - london-data:/home/zyanya/.zyanyad
+    command: >
+      --simnet
+      --listen=0.0.0.0:18512
+      --rpclisten=0.0.0.0:18520
+      --rpclisten-borsh=0.0.0.0:19520
+      --connect=zyanya-node-us:18511
+      --nodnsseed
+      --loglevel=info
+
+  # ============================================================================
+  # 🇯🇵 Tokyo Asia-Pacific Cloud Relay (Seed 3)
+  # ============================================================================
+  zyanya-node-tokyo:
+    image: zyanya/zyanyad:latest
+    container_name: zyanya-node-tokyo
+    restart: unless-stopped
+    depends_on:
+      - zyanya-node-us
+      - zyanya-node-london
+    networks:
+      - zyanya-mesh-net
+    ports:
+      - "18513:18513"   # P2P
+      - "18530:18530"   # gRPC
+      - "19530:19530"   # Borsh wRPC
+    volumes:
+      - tokyo-data:/home/zyanya/.zyanyad
+    command: >
+      --simnet
+      --listen=0.0.0.0:18513
+      --rpclisten=0.0.0.0:18530
+      --rpclisten-borsh=0.0.0.0:19530
+      --connect=zyanya-node-us:18511
+      --connect=zyanya-node-london:18512
+      --nodnsseed
+      --loglevel=info

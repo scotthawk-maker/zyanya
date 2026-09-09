@@ -1,465 +1,192 @@
-# Zyanya On Rust
-
-[![Build Status](https://github.com/zyanya-project/rusty-zyanya/actions/workflows/ci.yaml/badge.svg)](https://github.com/zyanya-project/rusty-zyanya/actions/workflows/ci.yaml)
-[![GitHub release](https://img.shields.io/github/v/release/zyanya-project/rusty-zyanya.svg)](https://github.com/zyanya-project/rusty-zyanya/releases)
-[![GitHub license](https://img.shields.io/github/license/zyanya-project/rusty-zyanya.svg)](https://github.com/zyanya-project/rusty-zyanya/blob/main/LICENSE)
-[![GitHub downloads](https://img.shields.io/github/downloads/zyanya-project/rusty-zyanya/total.svg)](https://github.com/zyanya-project/rusty-zyanya/releases)
-[![Join the Zyanya Discord Server](https://img.shields.io/discord/1233113243741061240.svg?label=&logo=discord&logoColor=ffffff&color=5865F2)](https://discord.com/invite/FZPYpwszcF)
-
-Welcome to the Rust-based implementation of the Zyanya full-node and
-its ancillary libraries. The contained node release serves as a
-drop-in replacement to the established [Golang node](https://github.com/zyanya-project/zyanyad)
-and to date is the recommended node software for the Zyanya network,
-introducing developers to the possibilities of Rust in the Zyanya
-network's context.
-
-We invite developers and blockchain enthusiasts to collaborate, test,
-and optimize our Rust implementation. Each line of code here is an
-opportunity to contribute to the open-source blockchain movement,
-shaping a platform designed for scalability and speed without
-compromising on decentralization.
-
-Your feedback, contributions, and issue reports will be integral to
-evolving this codebase and continuing its maturity as a reliable node
-in the Zyanya network.
-
-## Overview
-
-Zyanya on Rust is a fork of [Kaspa on Rust](https://github.com/kaspanet/rusty-kaspa)
-introducing CPU-only mining algorithm [SpectreX](https://github.com/zyanya-project/rusty-spectrex).
-
-SpectreX is based on [AstroBWTv3](https://github.com/deroproject/derohe/tree/main/astrobwt/astrobwtv3)
-and proof-of-work calculation is done in the following steps:
-
-- Step 1: SHA-3
-- Step 2: AstroBWTv3
-- Step 3: HeavyHash
-
-Zyanya will add full non-disclosable privacy and anonymous
-transactions in future implemented with the GhostFACE protocol
-build by a team of anonymous crypto algorithm researchers and
-engineers. Simple and plain goal:
-
-- PHANTOM Protocol + GhostDAG + GhostFACE = Zyanya
-
-Zyanya will become a ghostchain; nothing more, nothing less. Design
-decisions have been made already and more details about the GhostFACE
-protocol will be released at a later stage. Sneak peak: It will use
-[Pedersen Commitments](https://github.com/dalek-cryptography/bulletproofs)
-as it allows perfect integration with the Zyanya UTXO model and
-allows perfect hiding. ElGamal will be used for TX signature signing
-as it has a superior TPS (transactions per second) performance. Any PRs
-are welcome and can be made with anonymous accounts. No pre-mine, no
-shit, pure privacy is a hit!
-
-## Comparison
-
-Why another fork? Kaspa is great but we love privacy, Monero and DERO
-are great but we love speed! So lets join the cool things from both.
-We decided to take Kaspa as codebase, quick comparison:
-
-| Feature                      | Zyanya  | Kaspa      | Monero  | DERO       |
-| ---------------------------- | -------- | ---------- | ------- | ---------- |
-| PoW Algorithm                | SpectreX | kHeavyHash | RandomX | AstroBWTv3 |
-| Balance Encryption           | Future   | No         | Yes     | Yes        |
-| Transaction Encryption       | Future   | No         | Yes     | Yes        |
-| Message Encyrption           | Future   | No         | No      | Yes        |
-| Untraceable Transactions     | Future   | No         | Yes     | Yes        |
-| Untraceable Mining           | Yes      | No         | No      | Yes        |
-| Built-in multicore CPU-miner | Yes      | No         | Yes     | Yes        |
-| High BPS                     | Yes      | Yes        | No      | No         |
-| High TPS                     | Yes      | Yes        | No      | No         |
-
-Untraceable Mining is already achieved with AstroBWTv3 and a multicore
-miner is already being shipped with Zyanya, working on ARM/x86. We
-leave it up to the community to build an highly optimized CPU-miner.
-
-## Mathematics
-
-We love numbers, you will find a lot of mathematical constants in the
-source code, in the genesis hash, genesis payload, genesis merkle hash
-and more. Mathematical constants like [Pi](https://en.wikipedia.org/wiki/Pi),
-[E](<https://en.wikipedia.org/wiki/E_(mathematical_constant)>) and
-several prime numbers used as starting values for nonce or difficulty.
-The first released version is `0.3.14`, the famous Pi divided by 10.
-
-## Installation
-
-### Binaries
-
-We provide a comprehensive range of pre-compiled binaries for the
-Zyanya full-node daemon, CLI wallet application, and testing
-utilities, all designed to promote decentralization. Here's an
-overview of the different builds:
-
-| Build                 | Description                                                                                                                                          |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| linux-gnu-aarch64     | Dynamically linked Linux (arm64)                                                                                                                     |
-| linux-gnu-powerpc64   | Dynamically linked Linux (ppc64)                                                                                                                     |
-| linux-gnu-powerpc64le | Dynamically linked Linux (ppc64le)                                                                                                                   |
-| linux-gnu-riscv64     | Dynamically linked Linux (riscv64)                                                                                                                   |
-| linux-gnu-amd64       | Dynamically linked Linux (x86_64)                                                                                                                    |
-| linux-musl-aarch64    | Statically linked Linux (arm64)                                                                                                                      |
-| linux-musl-amd64      | Statically linked Linux (x86_64)                                                                                                                     |
-| windows-gnullvm-amd64 | Windows version using GNU ABI from Clang/LLVM                                                                                                        |
-| windows-msvc-amd64    | Windows version using Microsoft ABI, requires [MSVC runtime](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) |
-| macos-amd64           | macOS version for Intel-based systems                                                                                                                |
-| macos-aarch64         | macOS version for Arm-based systems (M1, M2, etc.)                                                                                                   |
-
-The dynamically linked versions are always preferred for security
-reasons. However, for older Linux distributions, statically linked
-versions may be necessary due to glibc incompatibilities.
-
-The `windows-msvc-amd64` is recommended for most purposes as it offers
-the best interoperability with other Windows software. Note that this
-requires accepting the End User License Agreement (EULA) for the
-Microsoft Visual C++ Redistributable runtime. You can download and
-install the runtime from [here](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170).
-
-Use the `windows-gnullvm-amd64` version if you prefer not to accept
-the MSVC runtime EULA.
-
-### Building on Linux
-
-1. Install general prerequisites
-
-   ```bash
-   sudo apt install curl git build-essential libssl-dev pkg-config
-   ```
-
-2. Install Protobuf (required for gRPC)
-
-   ```bash
-   sudo apt install protobuf-compiler libprotobuf-dev #Required for gRPC
-   ```
-
-3. Install the clang toolchain (required for RocksDB and WASM secp256k1
-   builds)
-
-   ```bash
-   sudo apt-get install clang-format clang-tidy \
-   clang-tools clang clangd libc++-dev \
-   libc++1 libc++abi-dev libc++abi1 \
-   libclang-dev libclang1 liblldb-dev \
-   libllvm-ocaml-dev libomp-dev libomp5 \
-   lld lldb llvm-dev llvm-runtime \
-   llvm python3-clang
-   ```
-
-4. Install the [rust toolchain](https://rustup.rs/)
-
-   If you already have rust installed, update it by running:
-   `rustup update`.
-
-5. Install wasm-pack
-
-   ```bash
-   cargo install wasm-pack
-   ```
-
-6. Install wasm32 target
-
-   ```bash
-   rustup target add wasm32-unknown-unknown
-   ```
-
-7. Clone the repo
-
-   ```bash
-   git clone https://github.com/zyanya-project/rusty-zyanya
-   cd rusty-zyanya
-   ```
-
-### Building on Windows
-
-1. [Install Git for Windows](https://gitforwindows.org/) or an alternative Git distribution.
-
-2. Install [Protocol Buffers](https://github.com/protocolbuffers/protobuf/releases/download/v21.10/protoc-21.10-win64.zip) and add the `bin` directory to your `Path`
-
-3. Install [LLVM-15.0.6-win64.exe](https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.6/LLVM-15.0.6-win64.exe)
-
-   Add the `bin` directory of the LLVM installation
-   (`C:\Program Files\LLVM\bin`) to PATH.
-
-   Set `LIBCLANG_PATH` environment variable to point to the `bin`
-   directory as well.
-
-   **IMPORTANT:** Due to C++ dependency configuration issues, LLVM
-   `AR` installation on Windows may not function correctly when
-   switching between WASM and native C++ code compilation (native
-   `RocksDB+secp256k1` vs WASM32 builds of `secp256k1`). Unfortunately,
-   manually setting `AR` environment variable also confuses C++ build
-   toolchain (it should not be set for native but should be set for
-   WASM32 targets). Currently, the best way to address this, is as
-   follows: after installing LLVM on Windows, go to the target `bin`
-   installation directory and copy or rename `LLVM_AR.exe` to `AR.exe`.
-
-4. Install the [rust toolchain](https://rustup.rs/)
-
-   If you already have rust installed, update it by running:
-   `rustup update`.
-
-5. Install wasm-pack
-
-   ```bash
-   cargo install wasm-pack
-   ```
-
-6. Install wasm32 target
-
-   ```bash
-   rustup target add wasm32-unknown-unknown
-   ```
-
-7. Clone the repo
-
-   ```bash
-   git clone https://github.com/zyanya-project/rusty-zyanya
-   cd rusty-zyanya
-   ```
-
-### Building on Mac OS
-
-1. Install Protobuf (required for gRPC)
-
-   ```bash
-   brew install protobuf
-   ```
-
-2. Install LLVM.
-
-   The default XCode installation of `llvm` does not support WASM
-   build targets. To build WASM on MacOS you need to install `llvm`
-   from homebrew (at the time of writing, the llvm version for MacOS
-   is 16.0.1).
-
-   ```bash
-   brew install llvm
-   ```
-
-   **NOTE:** Homebrew can use different keg installation locations
-   depending on your configuration. For example:
-
-   - `/opt/homebrew/opt/llvm` -> `/opt/homebrew/Cellar/llvm/16.0.1`
-   - `/usr/local/Cellar/llvm/16.0.1`
-
-   To determine the installation location you can use `brew list llvm`
-   command and then modify the paths below accordingly:
-
-   ```bash
-   % brew list llvm
-   /usr/local/Cellar/llvm/16.0.1/bin/FileCheck
-   /usr/local/Cellar/llvm/16.0.1/bin/UnicodeNameMappingGenerator
-   ...
-   ```
-
-   If you have `/opt/homebrew/Cellar`, then you should be able to use
-   `/opt/homebrew/opt/llvm`.
-
-   Add the following to your `~/.zshrc` file:
-
-   ```bash
-   export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
-   export LDFLAGS="-L/opt/homebrew/opt/llvm/lib"
-   export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
-   export AR=/opt/homebrew/opt/llvm/bin/llvm-ar
-   ```
-
-   Reload the `~/.zshrc` file:
-
-   ```bash
-   source ~/.zshrc
-   ```
-
-3. Install the [rust toolchain](https://rustup.rs/)
-
-   If you already have rust installed, update it by running:
-   `rustup update`.
-
-4. Install wasm-pack
-
-   ```bash
-   cargo install wasm-pack
-   ```
-
-5. Install wasm32 target
-
-   ```bash
-   rustup target add wasm32-unknown-unknown
-   ```
-
-6. Clone the repo
-
-   ```bash
-   git clone https://github.com/zyanya-project/rusty-zyanya
-   cd rusty-zyanya
-   ```
-
-### Building WASM32 SDK
-
-Rust WebAssembly (WASM) refers to the use of the Rust programming
-language to write code that can be compiled into WebAssembly, a binary
-instruction format that runs in web browsers and NodeJs. This allows
-for easy development using JavaScript and TypeScript programming
-languages while retaining the benefits of Rust.
-
-Zyanya on Rust utilizes the SpectreX mining algorithm library for Rust
-and leverages `cdivsufsort` for enhanced performance. To compile the
-WASM32 SDK using `clang`, additional environment variables need to be
-configured:
-
-```
-export TARGET_CC=clang
-export TARGET_CFLAGS=-I/usr/include
+<p align="center">
+  <img src="brand/zyn-squircle.svg" width="130" height="130" alt="Zyanya Sovereign Logo" />
+</p>
+
+<h1 align="center">Zyanya ($ZYN)</h1>
+
+<p align="center">
+  <b>The Sovereign Agent-Native Layer 1 Blockchain</b><br>
+  <i>GhostDAG Consensus (1 BPS) · AstroBWTv3 CPU PoW · Subnetwork 3 ZCL Stack VM · Native WebMCP Protocol · Pure IPv6 Mesh</i>
+</p>
+
+<p align="center">
+  <a href="https://zyanya.scottcloudhawk.org"><img src="https://img.shields.io/badge/Website-zyanya.scottcloudhawk.org-0284C7?style=flat-square&logo=googlechrome&logoColor=white" alt="Website" /></a>
+  <img src="https://img.shields.io/badge/Network-IPv6%20Only-38BDF8?style=flat-square" alt="Network IPv6" />
+  <img src="https://img.shields.io/badge/Consensus-GhostDAG%20(1%20BPS)-F59E0B?style=flat-square" alt="GhostDAG" />
+  <img src="https://img.shields.io/badge/PoW-AstroBWTv3-8B5CF6?style=flat-square" alt="AstroBWTv3" />
+  <img src="https://img.shields.io/badge/VM-Subnetwork%203%20ZCL%20(64--bit)-10B981?style=flat-square" alt="ZCL VM" />
+  <img src="https://img.shields.io/badge/Interface-WebMCP%20JSON--RPC-EC4899?style=flat-square" alt="WebMCP" />
+  <a href="docs/SECURITY.md"><img src="https://img.shields.io/badge/Security-112%20Remediations%20Fixed-22C55E?style=flat-square" alt="Audit" /></a>
+</p>
+
+---
+
+## 1. Agent-First Architecture (No Human GUI Required)
+
+Zyanya is built from the ground up for **Autonomous AI Agents**. Agents interact directly via standardized WebMCP JSON-RPC endpoints to discover schemas, compile Subnetwork 3 ZCL smart contracts, execute UTXO transfers, and query consensus state.
+
+### Discover Tool Schema
+```bash
+curl -6 https://zyanya.scottcloudhawk.org/mcp.json
 ```
 
-WASM SDK components can be built from sources by running:
+### Call via WebMCP / JSON-RPC
+```bash
+curl -6 -X POST https://zyanya.scottcloudhawk.org/mcp/rpc \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "zyanya_get_dag_info",
+      "arguments": {}
+    }
+  }'
+```
 
-- `./build-release` - build a full release package (includes both
-  release and debug builds for web and nodejs targets)
-- `./build-docs` - build TypeScript documentation
-- `./build-web` - release web build
-- `./build-web-dev` - development web build
-- `./build-nodejs` - release nodejs build
-- `./build-nodejs-dev` - development nodejs build
+*For comprehensive machine-to-machine instructions and tool schemas, see [AGENTS.md](AGENTS.md) and [docs/WEBMCP.md](docs/WEBMCP.md).*
 
-**IMPORTANT:** do not use `dev` builds in production. They are
-significantly larger, slower and include debug symbols.
+---
 
-#### Requirements
+## 2. System Architecture
 
-- NodeJs (v20+): https://nodejs.org/en
-- TypeDoc: https://typedoc.org/
+```mermaid
+flowchart TB
+    subgraph External["External World"]
+        Agent["Autonomous AI Agent"]
+        Miner["AstroBWTv3 CPU Miner"]
+    end
 
-#### Builds & documentation
+    subgraph Sovereign["Sovereign Node Appliance"]
+        Gateway["WebMCP Gateway (:8092)<br/>/mcp.json · /mcp/rpc"]
+        
+        subgraph Core["Zyanya Core Daemon (zyanyad)"]
+            ZCL["Subnetwork 3: ZCL Stack VM<br/>DEX · Bonding Curve · Staking"]
+            Consensus["GhostDAG Ordering Engine<br/>1 Block / Second (k=18)"]
+            PoW["AstroBWTv3 Verifier<br/>Democratic CPU Mining"]
+            P2P["Pure IPv6 Transport<br/>Strict Peer Discovery [::]:18211"]
+        end
+    end
 
-- Release builds: https://github.com/zyanya-project/rusty-zyanya/releases
-- Developer TypeScript documentation is available from Kaspa
+    subgraph Network["Decentralized Mesh"]
+        Peers["Global IPv6 Peer Mesh"]
+    end
 
-## Running Zyanya CLI + Wallet
+    Agent -->|JSON-RPC 2.0| Gateway
+    Gateway -->|Tx / Contract Dispatch| ZCL
+    Miner -->|CPU Mining Templates| PoW
+    PoW --> Consensus
+    ZCL -->|State Transitions| Consensus
+    Consensus <--> P2P
+    P2P <--> Peers
+```
 
-`zyanya-cli` crate provides cli-driven RPC interface to the node and
-a terminal interface to the Rusty Zyanya Wallet runtime. These wallets
-are compatible with WASM SDK Wallet API and Zyanya NG projects.
+---
+
+## 3. Core Specifications
+
+- **Transport**: Native IPv6 global unicast transport. IPv4 peer discovery is strictly rejected at the socket layer.
+- **Consensus**: 1 Block-Per-Second parallel GhostDAG ordering ($k=18$, DAA parameterization for rapid confirmation).
+- **Proof-of-Work**: AstroBWTv3 memory-hard and branch-heavy CPU mining algorithm, ensuring ASIC and FPGA immunity.
+- **Smart Contracts**: Subnetwork 3 ZCL 64-bit deterministic stack machine with fixed-point math ($10^8$ precision) and gas metering.
+- **Agent Interface**: Sovereign WebMCP gateway exposing OpenAPI 3.1, JSON-RPC 2.0, `/mcp.json`, and `/llms.txt`.
+- **Security Posture**: 112 audit remediations verified (26 High, 39 Medium, 47 Low) across consensus, cryptography, networking, wallet, and execution layers.
+- **Coinbase Economics**: 50 ZYAN per block with 50% liquid immediate payout and 50% vested linearly over 12 months.
+
+---
+
+## 4. Subnetwork 3 ZCL Smart Contracts
+
+Zyanya features native stack-based smart contracts operating on Subnetwork 3. The repository ships with production reference contracts:
+
+- [`bonding_curve.zcl`](bonding_curve.zcl): Automated price discovery with continuous liquidity curves.
+- [`dex.zcl`](dex.zcl): Constant-product automated market maker ($x \cdot y = k$) for ZRC-20 token pairs.
+- [`staking.zcl`](staking.zcl): Time-locked UTXO reward yield and staking vault.
+- [`router.zcl`](router.zcl): Multi-hop swap router and liquidity pathfinder.
+- [`token.zcl`](token.zcl): Standardized ZRC-20 fungible token contract.
+- [`Counter.zcl`](Counter.zcl): Minimal stateful contract for deterministic execution verification.
+
+*For opcode specifications and virtual machine details, see [docs/CONTRACTS.md](docs/CONTRACTS.md).*
+
+---
+
+## 5. Public Testnet Connection Parameters
+
+| Parameter | Value |
+| :--- | :--- |
+| **Network Name** | `testnet-10` |
+| **Network Magic** | `ZYNT` |
+| **P2P Seed Node** | `[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18211` |
+| **RPC Endpoint** | `[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18210` |
+| **Block Explorer** | [https://testnet.zyanya.scottcloudhawk.org/](https://testnet.zyanya.scottcloudhawk.org/) |
+| **Live Portal** | [https://zyanya.scottcloudhawk.org/](https://zyanya.scottcloudhawk.org/) |
+| **Address Prefix** | `zyanyatest:` |
+| **Block Rate** | 1 Block / Second target |
+| **Mining Reward** | 50 ZYAN / block (50% liquid + 50% 12-month vest) |
+
+---
+
+## 6. Building & Installation
+
+### Quick Install (Headless 1-Liners)
+
+#### Linux & macOS
+```bash
+curl -fsSL https://zyanya.scottcloudhawk.org/install.sh | bash
+```
+
+#### Windows PowerShell
+```powershell
+irm https://zyanya.scottcloudhawk.org/install.ps1 | iex
+```
+
+---
+
+### Building from Source
+
+Ensure you have Rust 1.80+ and an IPv6-capable network interface.
 
 ```bash
-cd cli
-cargo run --release
+# Clone the sovereign repository
+git clone https://github.com/scotthawk-maker/zyanya.git
+cd zyanya
+
+# Build all release binaries
+cargo build --release --bin zyanyad --bin zyanya-wallet --bin zyanya-query
+
+# Run the full node connected to canonical seed
+./target/release/zyanyad --testnet \
+  --listen=[::]:18211 \
+  --rpclisten=[::]:18210 \
+  --connect=[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18211 \
+  --utxoindex
 ```
 
-## Running Local Web Wallet
+---
 
-Run an http server inside of `wallet/wasm/web` folder. If you don't
-have once, you can use the following:
+## 7. Security & Appliance Hardening
 
-```bash
-cd wallet/wasm/web
-cargo install basic-http-server
-basic-http-server
-```
+Zyanya has undergone comprehensive security hardening:
 
-The _basic-http-server_ will serve on port 4000 by default, so open
-your web browser and load http://localhost:4000
+- **112 Audit Remediations**: All 26 High, 39 Medium, and 47 Low findings from the multi-phase security audit have been remediated, verified, and regression-tested.
+- **Sovereign DMZ Isolation**: Production seed node runs in an isolated Debian 12 LXC appliance on dedicated Dell Micro hardware, protected by kernel firewall rules that hard-drop all internal LAN and cross-VLAN packets.
+- **Memory Safety**: Strict zeroization of private keys in wallet memory, fixed derivation path limits, and fail-closed refund payouts.
 
-The framework is compatible with all major desktop and mobile browsers.
+*Review the complete audit breakdown and verification proofs in [docs/SECURITY.md](docs/SECURITY.md).*
 
-## Running the node
+---
 
-Start a mainnet node:
+## 8. Documentation Index
 
-```bash
-cargo run --release --bin zyanyad
-```
+- [AGENTS.md](AGENTS.md): Machine instructions, tool schemas, and agent integration guidelines.
+- [docs/WEBMCP.md](docs/WEBMCP.md): Sovereign WebMCP gateway specification and OpenAPI schema.
+- [docs/CONTRACTS.md](docs/CONTRACTS.md): Subnetwork 3 ZCL Virtual Machine opcode manual and contract guides.
+- [docs/SECURITY.md](docs/SECURITY.md): 112 audit findings scorecard and zero-trust appliance architecture.
+- [docs/NETWORK.md](docs/NETWORK.md): Pure IPv6 routing topology, socket guidelines, and peering policy.
 
-Start a testnet node:
+---
 
-```bash
-cargo run --release --bin zyanyad -- --testnet
-```
+## 9. License
 
-Using a configuration file
-
-```bash
-cargo run --release --bin zyanyad -- --configfile /path/to/configfile.toml
-# or
-cargo run --release --bin zyanyad -- -C /path/to/configfile.toml
-```
-
-- The config file should be a list of \<CLI argument\> = \<value\>
-  separated by newlines.
-- Whitespace around the `=` is fine, `arg=value` and `arg = value`
-  are both parsed correctly.
-- Values with special characters like `.` or `=` will require quoting
-  the value i.e \<CLI argument\> = "\<value\>".
-- Arguments with multiple values should be surrounded with brackets
-  like `addpeer = ["10.0.0.1", "1.2.3.4"]`.
-
-For example:
-
-```
-testnet = true
-utxoindex = false
-disable-upnp = true
-perf-metrics = true
-appdir = "some-dir"
-netsuffix = 11
-addpeer = ["10.0.0.1", "1.2.3.4"]
-```
-
-Pass the `--help` flag to view all possible arguments.
-
-```bash
-cargo run --release --bin zyanyad -- --help
-```
-
-## wRPC
-
-wRPC subsystem is disabled by default in `zyanyad` and can be enabled via:
-
-JSON protocol:
-
-```bash
---rpclisten-json = <interface:port>
-```
-
-Borsh protocol:
-
-```bash
---rpclisten-borsh = <interface:port>
-```
-
-### Sidenote
-
-Rusty Zyanya integrates an optional wRPC subsystem. wRPC is a
-high-performance, platform-neutral, Rust-centric, WebSocket-framed
-RPC implementation that can use [Borsh](https://borsh.io/) and JSON
-protocol encoding.
-
-JSON protocol messaging is similar to JSON-RPC 1.0, but differs from
-the specification due to server-side notifications.
-
-[Borsh](https://borsh.io/) encoding is meant for inter-process
-communication. When using [Borsh](https://borsh.io/) both client and
-server should be built from the same codebase.
-
-JSON protocol is based on Zyanya data structures and is
-data-structure-version agnostic. You can connect to the JSON endpoint
-using any WebSocket library. Built-in RPC clients for JavaScript and
-TypeScript capable of running in web browsers and Node.js are
-available as a part of the Zyanya WASM framework.
-
-**wRPC to gRPC Proxy is deprecated and no longer supported.**
-
-## Mining
-
-Mining is currently supported on all networks, so once you've setup a
-node, follow these instructions. Download and unzip the latest miner
-binaries from [zyanya-project/zyanya-miner](https://github.com/zyanya-project/zyanya-miner/releases).
-In a separate terminal run the miner:
-
-```
-./zyanya-miner --mining-address zyanya:qrxf48dgrdkjxllxczek3uweuldtan9nanzjsavk0ak9ynwn0zsayjjh7upez
-```
-
-You can replace the above mining address with your own address by
-creating one.
+Zyanya is released under the terms of the MIT License. See [LICENSE](LICENSE) for details.
