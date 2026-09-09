@@ -38,7 +38,7 @@ We emphasize that **only the included miner should be used** to maintain fairnes
 
 ### Step 1: Set Up a Node
 
-1. Download and extract the [rusty-zyanya binaries](https://github.com/zyanya-project/rusty-zyanya/releases). Alternatively, you can compile it from source by following [these instructions](https://github.com/zyanya-project/rusty-zyanya/blob/main/README.md). This guide assumes you are using the precompiled binaries. If compiling locally, adjust commands like `<program> <arguments>` to `cargo run --bin <program> --release -- <arguments>`.
+1. Download and extract the [zyanya binaries](https://github.com/scotthawk-maker/zyanya/releases). Alternatively, you can compile it from source by following [these instructions](https://github.com/scotthawk-maker/zyanya/blob/main/README.md). This guide assumes you are using the precompiled binaries. If compiling locally, adjust commands like `<program> <arguments>` to `cargo run --bin <program> --release -- <arguments>`.
 
    All commands below should be run from the directory where the binaries were extracted.
 
@@ -80,7 +80,7 @@ We emphasize that **only the included miner should be used** to maintain fairnes
 
 ### Step 3: Start Mining
 
-Download `zyanya-miner` from the latest [Release](https://github.com/zyanya-project/zyanya-miner/releases) and run it with the following flags (**this is the only miner that supports Testnet 11**):
+Download `zyanya-miner` from the latest [Release](https://github.com/scotthawk-maker/zyanya/releases) and run it with the following flags (**this is the only miner that supports Testnet 11**):
 
 ```
 zyanya-miner --testnet --mining-address <address> -p 18210 -t 1

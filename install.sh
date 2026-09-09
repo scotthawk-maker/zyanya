@@ -173,12 +173,12 @@ if [ "$DOWNLOAD_SUCCESS" = true ]; then
     [ -f "${TEMP_DIR}/zyanya-miner" ] && install -m 755 "${TEMP_DIR}/zyanya-miner" "${INSTALL_DIR}/zyanya-miner"
 else
     echo -e "${YELLOW}[i] Pre-built binary package not found on latest GitHub release.${RESET}"
-    echo -e "${CYAN}[*] Checking for local workspace build or cargo toolchain...${RESET}"
-    if [ -f "/opt/zyanya/zyanya-build/rusty-spectre/target/release/zyanyad" ]; then
-        echo -e "${GREEN}[✓] Found locally compiled binaries in /opt/zyanya! Copying...${RESET}"
-        cp /opt/zyanya/zyanya-build/rusty-spectre/target/release/zyanyad "${INSTALL_DIR}/zyanyad"
-        cp /opt/zyanya/zyanya-build/rusty-spectre/target/release/zyanya-cli "${INSTALL_DIR}/zyanya-cli"
-        [ -f "/opt/zyanya/zyanya-build/rusty-spectre/target/release/zyanya-miner" ] && cp /opt/zyanya/zyanya-build/rusty-spectre/target/release/zyanya-miner "${INSTALL_DIR}/zyanya-miner"
+    LOCAL_BUILD="${ZYANYA_LOCAL_BUILD:-./target/release}"
+    if [ -f "${LOCAL_BUILD}/zyanyad" ]; then
+        echo -e "${GREEN}[✓] Found locally compiled binaries in ${LOCAL_BUILD}! Copying...${RESET}"
+        cp "${LOCAL_BUILD}/zyanyad" "${INSTALL_DIR}/zyanyad"
+        cp "${LOCAL_BUILD}/zyanya-cli" "${INSTALL_DIR}/zyanya-cli"
+        [ -f "${LOCAL_BUILD}/zyanya-miner" ] && cp "${LOCAL_BUILD}/zyanya-miner" "${INSTALL_DIR}/zyanya-miner"
         chmod +x "${INSTALL_DIR}/zyanyad" "${INSTALL_DIR}/zyanya-cli"
     elif command -v cargo >/dev/null 2>&1; then
         echo -e "${CYAN}[*] Building from source using cargo...${RESET}"

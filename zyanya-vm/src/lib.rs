@@ -132,7 +132,7 @@ mod tests {
             OpCode::SStore,
             OpCode::Push(1),
             OpCode::SLoad,
-            OpCode::JumpIf(12),
+            OpCode::JumpIf(0),
             OpCode::Halt,
             OpCode::Return,
         ];

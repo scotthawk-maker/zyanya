@@ -61,7 +61,6 @@ Windows GCM defaults to `wincredman` (Windows Credential Manager), which require
 ### Resolution
 - `git config --global credential.credentialStore dpapi` on Windows host
 - DPAPI-protected files work in SSH sessions (only needs user identity, not desktop session)
-- GitHub PAT saved to `~/.pi/agent/auth.json` master secrets
 - Wiki docs created in `docs/wiki/` (6 pages: Home, Architecture, Smart Contracts, Deployment, Work Orders, Audit Results)
 
 ---

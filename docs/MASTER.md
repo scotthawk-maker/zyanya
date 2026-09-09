@@ -303,10 +303,10 @@ zyanya-wallet --devnet --rpcserver 127.0.0.1:18610  # Launch TUI
 
 ## 9. Build & Deployment
 
-### Build Host
-- **Primary**: minisforum (Windows 11, MSVC toolchain)
-- **Path**: `C:\Users\Shawn\zyanya-build\rusty-spectre-git`
-- **Cross-compile from Linux**: `x86_64-pc-windows-msvc` (NOT `gnu` — causes crash, Issue #1)
+### Supported Platforms
+- **Windows**: Windows 10/11 x86_64 (MSVC toolchain required)
+- **Linux**: Ubuntu 22.04+ / Debian 12+ x86_64
+- **Cross-compile from Linux**: `x86_64-pc-windows-msvc` (MSVC required; GNU toolchain crashes on Windows)
 
 ### ⚠️ Critical Build Notes
 - Always pass `-p <package>` (ambiguous `zyanya-wallet` binary target)
@@ -343,7 +343,7 @@ zyanya-wallet --devnet --rpcserver 127.0.0.1:18610  # Launch TUI
 | LOW-02 | Low | RocksDB FD limits | ✅ Assessed safe | ZYN-AUD-11 |
 | INFO-01 | Info | Genesis zero-premine | ✅ Verified | ZYN-AUD-12 |
 
-Full report: [AUDIT.md](../../AUDIT.md) | Wiki: [Audit Results](wiki/Audit-Results.md)
+Full report: [AUDIT.md](../AUDIT.md) | Wiki: [Audit Results](wiki/Audit-Results.md)
 
 ---
 

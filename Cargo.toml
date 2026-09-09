@@ -71,7 +71,7 @@ rust-version = "1.83.0"
 version = "0.3.17"
 authors = ["Zyanya developers"]
 license = "ISC"
-repository = "https://github.com/zyanya-project/rusty-zyanya"
+repository = "https://github.com/scotthawk-maker/zyanya"
 edition = "2021"
 include = [
     "src/**/*.rs",

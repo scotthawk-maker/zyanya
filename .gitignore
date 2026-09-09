@@ -38,8 +38,13 @@ testing/integration/perflogs*
 Servers.toml
 
 # Sensitive Data & Wallets
+.env
 *.env*
 *.key
 *.priv
 *.wallet
 *.pem
+
+# Local Scratch & Agent Harnesses
+scratch/
+.claude/

@@ -2,13 +2,10 @@
 
 ## Simulation framework (Simpa)
 
-Logging in `zyanyad` and `simpa` can be [filtered](https://docs.rs/env_logger/0.10.0/env_logger/#filtering-results)
-by either:
-
 The current codebase supports a full in-process network simulation,
 building an actual DAG over virtual time with virtual delay and
 benchmarking validation time (following the simulation generation).
-To see the available commands.
+To see the available commands:
 
 ```bash
 cargo run --release --bin simpa -- --help
@@ -39,22 +36,14 @@ that can be inspected by the [dhat-viewer](https://github.com/unofficial-mirror/
 Run unit and most integration tests:
 
 ```bash
-cd rusty-zyanya
 cargo test --release
-// or install nextest and run
-```
-
-Using nextest:
-
-```bash
-cd rusty-zyanya
+# or install nextest and run
 cargo nextest run --release
 ```
 
 ## Benchmarks
 
 ```bash
-cd rusty-zyanya
 cargo bench
 ```
 
@@ -66,8 +55,8 @@ by either:
 1. Defining the environment variable `RUST_LOG`
 2. Adding the --loglevel argument like in the following example:
 
-   ```
-   (cargo run --bin zyanyad -- --loglevel info,zyanya_rpc_core=trace,zyanya_grpc_core=trace,consensus=trace,zyanya_core=trace) 2>&1 | tee ~/rusty-zyanya.log
+   ```bash
+   (cargo run --bin zyanyad -- --loglevel info,zyanya_rpc_core=trace,zyanya_grpc_core=trace,consensus=trace,zyanya_core=trace) 2>&1 | tee ~/zyanya.log
    ```
 
    In this command we set the `loglevel` to `INFO`.

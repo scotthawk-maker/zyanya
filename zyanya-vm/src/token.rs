@@ -44,13 +44,14 @@ RETURN
 // --- Initialization ---
 :initialize
 POP
-PUSH {SUPPLY}
-DUP
 PUSH 0
-SWAP
+PUSH {SUPPLY}
+SSTORE
+PUSH 1
+PUSH {OWNER}
 SSTORE
 PUSH {OWNER}
-SWAP
+PUSH {SUPPLY}
 SSTORE
 PUSH {SUPPLY}
 RETURN
@@ -167,19 +168,20 @@ mod tests {
 
     #[test]
     fn test_token_contract_full_lifecycle() {
-        let bytecode = token_contract_bytecode(1_000_000, 1).expect("Failed to assemble token contract");
+        let owner = 100u64;
+        let recipient = 200u64;
+        let bytecode = token_contract_bytecode(1_000_000, owner).expect("Failed to assemble token contract");
         let opcodes = OpCode::deserialize_slice(&bytecode).expect("Failed to deserialize bytecode");
         let mut state = MockStateBackend::new();
         let addr = [0x99u8; 32];
-        let owner = 1u64;
-        let recipient = 2u64;
 
         // 1. Deploy / Initial Execution
         let mut vm = VM::new(100_000);
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("Deploy failed");
         assert_eq!(res.return_value, Some(1_000_000));
         assert_eq!(state.get(&addr, 0), 1_000_000, "Total supply stored at Key 0");
-        assert_eq!(state.get(&addr, owner), 1_000_000, "Owner balance stored at Key 1");
+        assert_eq!(state.get(&addr, 1), owner, "Owner address stored at Key 1");
+        assert_eq!(state.get(&addr, owner), 1_000_000, "Owner balance stored at Key 100");
 
         // 2. Query Total Supply (Entry Point 2)
         let mut vm = VM::new(100_000);
@@ -189,19 +191,19 @@ mod tests {
 
         // 3. Query Owner Balance (Entry Point 1)
         let mut vm = VM::new(100_000);
-        vm.stack.push(owner).unwrap(); // holder = 1
+        vm.stack.push(owner).unwrap(); // holder = 100
         vm.stack.push(1).unwrap(); // entry_point = 1
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("BalanceOf owner failed");
         assert_eq!(res.return_value, Some(1_000_000));
 
         // 4. Query Recipient Balance before transfer (Entry Point 1)
         let mut vm = VM::new(100_000);
-        vm.stack.push(recipient).unwrap(); // holder = 2
+        vm.stack.push(recipient).unwrap(); // holder = 200
         vm.stack.push(1).unwrap(); // entry_point = 1
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).expect("BalanceOf recipient failed");
         assert_eq!(res.return_value, Some(0));
 
-        // 5. Transfer 100 tokens from owner (1) to recipient (2) (Entry Point 0)
+        // 5. Transfer 100 tokens from owner (100) to recipient (200) (Entry Point 0)
         let mut vm = VM::new(100_000);
         vm.caller = owner; // F-C-04: caller must match `from` parameter
         vm.stack.push(100).unwrap(); // amount
@@ -226,7 +228,7 @@ mod tests {
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
         assert_eq!(res.return_value, Some(100));
 
-        // 7. Mint 50,000 tokens to recipient (2) (Entry Point 3)
+        // 7. Mint 50,000 tokens to recipient (200) (Entry Point 3)
         let mut vm = VM::new(100_000);
         vm.caller = owner; // F-C-04: caller must match owner (stored at Key 1)
         vm.stack.push(50_000).unwrap(); // amount
@@ -240,25 +242,27 @@ mod tests {
 
     #[test]
     fn test_token_transfer_insufficient_balance() {
-        let bytecode = token_contract_bytecode(100, 1).unwrap();
+        let owner = 100u64;
+        let recipient = 200u64;
+        let bytecode = token_contract_bytecode(100, owner).unwrap();
         let opcodes = OpCode::deserialize_slice(&bytecode).unwrap();
         let mut state = MockStateBackend::new();
         let addr = [0x88u8; 32];
 
-        // Deploy (owner=1 gets 100 supply)
+        // Deploy (owner=100 gets 100 supply)
         let mut vm = VM::new(100_000);
         let _ = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
 
-        // Attempt to transfer 200 tokens from owner (1) to recipient (2) -> should fail
+        // Attempt to transfer 200 tokens from owner (100) to recipient (200) -> should fail
         let mut vm = VM::new(100_000);
-        vm.caller = 1; // F-C-04: caller must match `from` for auth to pass, then insufficient balance fails
+        vm.caller = owner; // F-C-04: caller must match `from` for auth to pass, then insufficient balance fails
         vm.stack.push(200).unwrap(); // amount
-        vm.stack.push(2).unwrap(); // to
-        vm.stack.push(1).unwrap(); // from
+        vm.stack.push(recipient).unwrap(); // to
+        vm.stack.push(owner).unwrap(); // from
         vm.stack.push(0).unwrap(); // entry_point = 0
         let res = vm.execute_stateful(&opcodes, &addr, &mut state).unwrap();
         assert_eq!(res.return_value, Some(0), "Transfer failed due to insufficient balance");
-        assert_eq!(state.get(&addr, 1), 100, "Owner balance unchanged");
-        assert_eq!(state.get(&addr, 2), 0, "Recipient balance unchanged");
+        assert_eq!(state.get(&addr, owner), 100, "Owner balance unchanged");
+        assert_eq!(state.get(&addr, recipient), 0, "Recipient balance unchanged");
     }
 }

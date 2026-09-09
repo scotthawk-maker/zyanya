@@ -14,7 +14,7 @@
 ssh windows
 
 # Build (always specify -p <package> due to ambiguous binary targets)
-cd C:\Users\Shawn\zyanya-build\rusty-spectre-git
+cd /path/to/zyanya
 cargo build -p zyanya-vm --release
 cargo build -p zyanya-consensus --release
 cargo build -p zyanyad --release

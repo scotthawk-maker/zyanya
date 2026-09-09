@@ -25,6 +25,7 @@ fn test_dex_contract_full_lifecycle() {
     // 2. Add Liquidity: 1000 ZYAN (Token A) + 1000 GHOST (Token B)
     // Entry Point 1: addLiquidity(caller, amountA, amountB)
     let mut vm = VM::new(100_000);
+    vm.caller = caller; // F-C-04: caller must match caller_param
     vm.stack.push(1000).unwrap(); // amountB
     vm.stack.push(1000).unwrap(); // amountA
     vm.stack.push(caller).unwrap(); // caller
@@ -69,6 +70,7 @@ fn test_dex_contract_full_lifecycle() {
     // 5. Remove Liquidity: burn 500 LP tokens
     // Entry Point 3: removeLiquidity(caller, lpAmount)
     let mut vm = VM::new(100_000);
+    vm.caller = caller; // F-C-04: caller must match caller_param
     vm.stack.push(500).unwrap(); // lpAmount = 500
     vm.stack.push(caller).unwrap(); // caller
     vm.stack.push(3).unwrap(); // entry point 3

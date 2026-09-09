@@ -188,4 +188,4 @@ Zyanya has undergone comprehensive security hardening:
 
 ## 9. License
 
-Zyanya is released under the terms of the MIT License. See [LICENSE](LICENSE) for details.
+Zyanya is released under the terms of the ISC License. See [LICENSE](LICENSE) for details.

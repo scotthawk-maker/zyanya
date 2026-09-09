@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
-# Zyanya devnet launcher — crypto server (10.10.1.119)
+# Zyanya devnet launcher
 # Starts: zyanyad (with --utxoindex) + miner (25% CPU) + pool
 # Usage: ./start-devnet.sh   (idempotent — kills existing instances first)
 set -euo pipefail
 
-NODE_BIN=/home/shawn/projects/blockchain-fork/rusty-spectre/target/release/zyanyad
-MINER_BIN=/home/shawn/projects/blockchain-fork/zyanya-miner/target/release/zyanya-miner
-POOL_BIN=/home/shawn/projects/blockchain-fork/zyanya-pool/target/release/zyanya-pool
-APPDIR=/home/shawn/.local/share/zyanya-devnet
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+NODE_BIN="${ZYANYA_NODE_BIN:-${WORKSPACE_ROOT}/target/release/zyanyad}"
+MINER_BIN="${ZYANYA_MINER_BIN:-${WORKSPACE_ROOT}/../zyanya-miner/target/release/zyanya-miner}"
+POOL_BIN="${ZYANYA_POOL_BIN:-${WORKSPACE_ROOT}/../zyanya-pool/target/release/zyanya-pool}"
+APPDIR="${ZYANYA_DATA_DIR:-${HOME}/.local/share/zyanya-devnet}"
 MINING_ADDR=zyanyadev:qrncgmfvvgp63rlhuew6phnzxc9cy2fczt4pgsqpdaepft8592zwg4l7fma02
 
 # Kill any existing instances

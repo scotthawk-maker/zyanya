@@ -164,7 +164,7 @@ if ($DownloadSuccess) {
     Write-Host "[i] Release zip not found on latest GitHub release." -ForegroundColor Yellow
     Write-Host "[*] Checking local workspace binaries..." -ForegroundColor Cyan
     # Check if binaries exist in local target/release
-    $LocalRelease = "C:\Users\Shawn\.gemini\antigravity\scratch\zyanya\target\release"
+    $LocalRelease = if ($env:ZYANYA_RELEASE_DIR) { $env:ZYANYA_RELEASE_DIR } else { Join-Path $PSScriptRoot "target\release" }
     if (Test-Path "$LocalRelease\zyanyad.exe") {
         Copy-Item "$LocalRelease\zyanyad.exe" $BinDir -Force
         Copy-Item "$LocalRelease\zyanya-cli.exe" $BinDir -Force
