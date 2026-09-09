@@ -32,11 +32,11 @@ Zyanya is a UTXO-based blockDAG blockchain (forked from Kaspa/Spectre) with:
 
 ## Testnet Nodes
 
-| Node | OS | Tailscale IP | Role |
-|------|-----|-------------|------|
-| cachyos | Linux (CachyOS) | 100.124.134.6 | Build + dev |
-| minisforum | Windows 11 | 100.83.211.115 | Build + deploy |
-| scotthawk | Linux | 100.106.22.123 | Testnet peer |
+| Node | OS | Network | Role |
+|------|-----|---------|------|
+| Node 1 | Linux | IPv6 Mesh | Build + dev |
+| Node 2 | Windows 11 | IPv6 Mesh | Build + deploy |
+| Node 3 | Linux | IPv6 Mesh | Testnet peer |
 
 ## Current Status
 

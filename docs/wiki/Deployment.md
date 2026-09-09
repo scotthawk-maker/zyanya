@@ -57,13 +57,13 @@ zyanyad --devnet --appdir=/path/to/node-data --nologfiles
 
 ## 3-Node Testnet
 
-| Node | OS | Tailscale IP | Command |
-|------|-----|-------------|---------|
-| cachyos | Linux | 100.124.134.6 | `zyanyad --devnet --appdir=~/node-data` |
-| minisforum | Windows | 100.83.211.115 | `zyanyad.exe --devnet --appdir=C:\node-data` |
-| scotthawk | Linux | 100.106.22.123 | `zyanyad --devnet --appdir=~/node-data` |
+| Node | OS | Network | Command |
+|------|-----|---------|---------|
+| Node 1 | Linux | IPv6 Mesh | `zyanyad --devnet --appdir=~/node-data` |
+| Node 2 | Windows | IPv6 Mesh | `zyanyad.exe --devnet --appdir=C:\node-data` |
+| Node 3 | Linux | IPv6 Mesh | `zyanyad --devnet --appdir=~/node-data` |
 
-Nodes peer over IPv6 via Tailscale.
+Nodes peer over canonical IPv6 transport.
 
 ## Explorer
 

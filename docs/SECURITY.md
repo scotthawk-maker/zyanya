@@ -38,11 +38,11 @@ The primary seed node and public gateway operate on dedicated, sovereign Dell Mi
               │
               ▼ Cloudflare Ingress (HTTPS)
 ┌─────────────────────────────────────────────────────────┐
-│     Dedicated Dell Micro Appliance (pve3: 10.10.1.203)  │
+│     Dedicated Dell Micro Appliance (Sovereign DMZ Hardware)  │
 │     Intel Core i5-8500T (6 Cores) | 8 GB RAM            │
 │                                                         │
 │   ┌─────────────────────────────────────────────────┐   │
-│   │ Sovereign Zyanya Container (LXC 250: 10.10.1.250)│  │
+│   │ Sovereign Zyanya Container (Isolated Appliance)│  │
 │   │  • Caddy Web Server (:80, :8080)                │   │
 │   │  • WebMCP JSON-RPC Gateway (:8092)              │   │
 │   │  • Zyanya L1 GhostDAG Node (zyanyad)            │   │
@@ -51,9 +51,9 @@ The primary seed node and public gateway operate on dedicated, sovereign Dell Mi
 │                             │                           │
 │   ┌─────────────────────────▼───────────────────────┐   │
 │   │ Proxmox Kernel Firewall (veth250i0-OUT)         │   │
-│   │  • DROP -dest 10.10.1.0/24  (Core LAN)          │   │
-│   │  • DROP -dest 10.10.20.0/24 (IoT Subnet)        │   │
-│   │  • DROP -dest 10.10.40.0/24 (Guest Subnet)      │   │
+│   │  • DROP -dest 10.0.0.0/8     (Private LAN)          │   │
+│   │  • DROP -dest 172.16.0.0/12  (Internal Subnet)        │   │
+│   │  • DROP -dest 192.168.0.0/16 (Guest Subnet)      │   │
 │   │  • DROP -dest 192.168.0.0/16 & 172.16.0.0/12    │   │
 │   │  • ACCEPT DNS (53) & Outbound WAN (Internet)    │   │
 │   └─────────────────────────────────────────────────┘   │

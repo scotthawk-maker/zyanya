@@ -55,13 +55,13 @@
 
 ### Testnet Nodes
 
-| Node | OS | Tailscale IP | Role | SSH |
-|------|-----|-------------|------|-----|
-| cachyos | Linux (CachyOS 7.1.5) | 100.124.134.6 | Build + dev | `localhost` |
-| minisforum | Windows 11 | 100.83.211.115 | Build + deploy | `ssh windows` |
-| scotthawk | Linux | 100.106.22.123 | Testnet peer | — |
+| Node | OS | Network | Role |
+|------|-----|---------|------|
+| Node 1 | Linux | IPv6 Mesh | Build + dev |
+| Node 2 | Windows 11 | IPv6 Mesh | Build + deploy |
+| Node 3 | Linux | IPv6 Mesh | Testnet peer |
 
-Nodes peer over IPv6 via Tailscale.
+Nodes peer over canonical IPv6 transport.
 
 ---
 
@@ -368,7 +368,7 @@ Full report: [AUDIT.md](../../AUDIT.md) | Wiki: [Audit Results](wiki/Audit-Resul
 ### Node won't start
 1. Check FD limit: `ulimit -n` (needs ≥8192; Windows may show error 203 — non-fatal)
 2. Check data dir: `--appdir` path exists and is writable
-3. Check peer connectivity: `tailscale status` (all 3 nodes online?)
+3. Check peer connectivity: verify peer connections via `zyanya-query`
 
 ### Consensus fork suspected
 1. Check BTreeMap: `grep BTreeMap consensus/src/model/stores/contract.rs` (should NOT contain HashMap)

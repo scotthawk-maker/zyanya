@@ -15,7 +15,7 @@
       "description": "Local Mainnet Zyanyad Daemon RPC"
     },
     {
-      "url": "http://10.10.1.99:18210",
+      "url": "https://zyanya.scottcloudhawk.org/rpc",
       "description": "CT 100 Testnet-10 RPC Gateway"
     }
   ],
