@@ -29,33 +29,11 @@
 
 ---
 
-## 3. Sovereign Hardware & Zero-Trust DMZ Topology
+## 3. Defense-in-Depth & Node Security Invariants
 
-The primary seed node and public gateway operate on dedicated, sovereign Dell Micro hardware isolated behind kernel-level firewall rules:
+Production nodes and public gateways follow a strict zero-trust operational posture:
 
-```
-[Public External AI Agents & Web Clients]
-              │
-              ▼ Cloudflare Ingress (HTTPS)
-┌─────────────────────────────────────────────────────────┐
-│     Dedicated Dell Micro Appliance (Sovereign DMZ Hardware)  │
-│     Intel Core i5-8500T (6 Cores) | 8 GB RAM            │
-│                                                         │
-│   ┌─────────────────────────────────────────────────┐   │
-│   │ Sovereign Zyanya Container (Isolated Appliance)│  │
-│   │  • Caddy Web Server (:80, :8080)                │   │
-│   │  • WebMCP JSON-RPC Gateway (:8092)              │   │
-│   │  • Zyanya L1 GhostDAG Node (zyanyad)            │   │
-│   │  • Subnetwork 3 Block Explorer (:8099)          │   │
-│   └─────────────────────────────────────────────────┘   │
-│                             │                           │
-│   ┌─────────────────────────▼───────────────────────┐   │
-│   │ Proxmox Kernel Firewall (veth250i0-OUT)         │   │
-│   │  • DROP -dest 10.0.0.0/8     (Private LAN)          │   │
-│   │  • DROP -dest 172.16.0.0/12  (Internal Subnet)        │   │
-│   │  • DROP -dest 192.168.0.0/16 (Guest Subnet)      │   │
-│   │  • DROP -dest 192.168.0.0/16 & 172.16.0.0/12    │   │
-│   │  • ACCEPT DNS (53) & Outbound WAN (Internet)    │   │
-│   └─────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-```
+- **Egress Firewall Rules**: Public-facing nodes should restrict outbound traffic strictly to DNS (port 53) and peer discovery, blocking any lateral access to private network ranges.
+- **RPC Isolation**: JSON-RPC and WebMCP endpoints must be placed behind a reverse proxy (e.g. Caddy, Nginx) with rate-limiting, TLS termination, and timeout enforcement.
+- **Process Sandboxing**: Run daemons under dedicated unprivileged system users with minimal capabilities.
+- **Memory Protection**: Sensitive key material is zeroized upon destruction via Rust's `zeroize` crate to prevent memory inspection attacks.

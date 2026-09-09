@@ -165,12 +165,11 @@ cargo build --release --bin zyanyad --bin zyanya-wallet --bin zyanya-query
 
 ---
 
-## 7. Security & Appliance Hardening
+## 7. Security Hardening
 
 Zyanya has undergone comprehensive security hardening:
 
 - **112 Audit Remediations**: All 26 High, 39 Medium, and 47 Low findings from the multi-phase security audit have been remediated, verified, and regression-tested.
-- **Sovereign DMZ Isolation**: Production seed node runs in an isolated Debian 12 LXC appliance on dedicated Dell Micro hardware, protected by kernel firewall rules that hard-drop all internal LAN and cross-VLAN packets.
 - **Memory Safety**: Strict zeroization of private keys in wallet memory, fixed derivation path limits, and fail-closed refund payouts.
 
 *Review the complete audit breakdown and verification proofs in [docs/SECURITY.md](docs/SECURITY.md).*
@@ -182,7 +181,7 @@ Zyanya has undergone comprehensive security hardening:
 - [AGENTS.md](AGENTS.md): Machine instructions, tool schemas, and agent integration guidelines.
 - [docs/WEBMCP.md](docs/WEBMCP.md): Sovereign WebMCP gateway specification and OpenAPI schema.
 - [docs/CONTRACTS.md](docs/CONTRACTS.md): Subnetwork 3 ZCL Virtual Machine opcode manual and contract guides.
-- [docs/SECURITY.md](docs/SECURITY.md): 112 audit findings scorecard and zero-trust appliance architecture.
+- [docs/SECURITY.md](docs/SECURITY.md): 112 audit findings scorecard and security architecture.
 - [docs/NETWORK.md](docs/NETWORK.md): Pure IPv6 routing topology, socket guidelines, and peering policy.
 
 ---
