@@ -155,19 +155,35 @@ Zyanya features native stack-based smart contracts operating on Subnetwork 3. Th
 
 ---
 
-## 7. Building & Installation
+## 7. Official Releases & Standalone CPU Mining
 
-### Quick Install (Headless 1-Liners)
+Standalone pre-compiled release bundles are available for instant deployment. Zero AI agents, zero build toolchains, and zero cloud services required.
 
-#### Linux & macOS
-```bash
-curl -fsSL https://zyanya.scottcloudhawk.org/install.sh | bash
-```
+### Official Release Bundles (v0.4.0)
 
-#### Windows PowerShell
-```powershell
-irm https://zyanya.scottcloudhawk.org/install.ps1 | iex
-```
+- 🐧 **Linux x86_64**: [`zyanya-v0.4.0-linux-x86_64.tar.gz`](https://zyanya.scottcloudhawk.org/releases/zyanya-v0.4.0-linux-x86_64.tar.gz)
+  `SHA256: cfa8cbdc75267298613999b907db8ebec7e07148431d181e6c7cfc723f9201b1`
+- 🪟 **Windows x64**: [`zyanya-v0.4.0-windows-x64.zip`](https://zyanya.scottcloudhawk.org/releases/zyanya-v0.4.0-windows-x64.zip)
+  `SHA256: 9f62b1bd33d4569b07e7695743f5ec6b0732339332d2355c1a09a2b7b4a3dd19`
+
+*Both bundles contain: `zyanyad`, `zyanya-miner` (AstroBWTv3), `zyanya-wallet`, `zyanya-query`, and `zyanya-explorer`.*
+
+### 60-Second Solo CPU Mining Quickstart
+
+1. **Extract Archive & Generate Address**:
+   ```bash
+   ./zyanya-wallet new-address
+   ```
+2. **Start Local Consensus Node**:
+   ```bash
+   ./zyanyad --utxoindex
+   ```
+3. **Start AstroBWTv3 Mining**:
+   ```bash
+   ./zyanya-miner --threads 8 --mining-address <YOUR_ZYANYA_ADDRESS>
+   ```
+
+*For complete rig setup and HiveOS instructions, see [docs/MINING_QUICKSTART.md](docs/MINING_QUICKSTART.md).*
 
 ---
 
@@ -206,6 +222,7 @@ Zyanya has undergone comprehensive security hardening:
 
 ## 9. Documentation Index
 
+- [docs/MINING_QUICKSTART.md](docs/MINING_QUICKSTART.md): 60-second standalone CPU mining setup (Linux & Windows).
 - [AGENTS.md](AGENTS.md): Machine instructions, tool schemas, and agent integration guidelines.
 - [docs/PRESS_KIT.md](docs/PRESS_KIT.md): Official brand assets, project boilerplates, and exchange listing integration specifications.
 - [docs/COMMUNITY_LAUNCH_KIT.md](docs/COMMUNITY_LAUNCH_KIT.md): Pre-written launch threads, Discord announcements, and Telegram broadcasts.
