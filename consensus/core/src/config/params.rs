@@ -392,10 +392,10 @@ pub const MAINNET_PARAMS: Params = Params {
     max_block_level: 225,
     pruning_proof_m: 1000,
 
-    payload_activation: ForkActivation::never(),
+    payload_activation: ForkActivation::new(0),
     runtime_sig_op_counting: ForkActivation::never(),
     net_magic: [0x5A, 0x59, 0x41, 0x4E], // ASCII: "ZYAN"
-    enable_smart_contracts: false,
+    enable_smart_contracts: true,
 };
 
 pub const TESTNET_PARAMS: Params = Params {
@@ -676,6 +676,10 @@ mod tests {
         assert_eq!(genesis_txs.len(), 1);
         assert!(genesis_txs[0].outputs.is_empty(), "Genesis transaction must have ZERO outputs (zero premine)");
         assert!(params.genesis.coinbase_payload.ends_with(b"ZYAN-MAINNET"), "Genesis payload must contain mainnet magic");
+
+        // 5. Smart contracts & payload activation
+        assert_eq!(params.payload_activation, ForkActivation::new(0), "Payload activation must be active from DAA 0");
+        assert!(params.enable_smart_contracts, "Smart contracts must be enabled on mainnet");
     }
 
     #[test]
@@ -706,5 +710,9 @@ mod tests {
         assert_eq!(genesis_txs.len(), 1);
         assert!(genesis_txs[0].outputs.is_empty(), "Genesis transaction must have ZERO outputs (zero premine)");
         assert!(params.genesis.coinbase_payload.ends_with(b"ZYNT-TESTNET"), "Genesis payload must contain testnet magic payload");
+
+        // 5. Smart contracts & payload activation
+        assert_eq!(params.payload_activation, ForkActivation::new(0), "Payload activation must be active from DAA 0");
+        assert!(params.enable_smart_contracts, "Smart contracts must be enabled on testnet");
     }
 }
