@@ -168,6 +168,27 @@ Standalone pre-compiled release bundles are available for instant deployment. Ze
 
 *Both bundles contain: `zyanyad`, `zyanya-miner` (AstroBWTv3), `zyanya-wallet`, `zyanya-query`, and `zyanya-explorer`.*
 
+### Docker Compose Deployment (1-Liner)
+
+Run a complete sovereign full node with built-in block explorer in Docker:
+
+```bash
+# 1. Clone & prepare environment
+git clone https://github.com/scotthawk-maker/zyanya.git
+cd zyanya
+cp .env.example .env
+
+# 2. Launch sovereign node & web explorer
+docker compose up -d
+
+# 3. (Optional) Launch AstroBWTv3 solo CPU miner
+docker compose --profile miner up -d
+```
+
+*Inspect node logs with `docker compose logs -f zyanyad` or visit `http://localhost:8099` for the local block explorer.*
+
+---
+
 ### 60-Second Solo CPU Mining Quickstart
 
 1. **Extract Archive & Generate Address**:

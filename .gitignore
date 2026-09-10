@@ -40,6 +40,7 @@ Servers.toml
 # Sensitive Data & Wallets
 .env
 *.env*
+!.env.example
 *.key
 *.priv
 *.wallet

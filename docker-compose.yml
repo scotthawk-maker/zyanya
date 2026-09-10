@@ -1,0 +1,88 @@
+
+services:
+  # ============================================================================
+  # 🦅 Core GhostDAG Consensus Node Daemon
+  # ============================================================================
+  zyanyad:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: zyanya/zyanyad:v0.4.0
+    container_name: zyanya-node
+    restart: unless-stopped
+    environment:
+      - ZYANYA_NETWORK=${ZYANYA_NETWORK:-mainnet}
+    ports:
+      # P2P transport (Mainnet: 18111, Testnet: 18211)
+      - "${P2P_PORT:-18111}:${P2P_PORT:-18111}"
+      # gRPC RPC endpoint (Mainnet: 18110, Testnet: 18210)
+      - "${RPC_PORT:-18110}:${RPC_PORT:-18110}"
+      # wRPC Borsh endpoint (Mainnet: 19110, Testnet: 19210)
+      - "${WRPC_BORSH_PORT:-19110}:${WRPC_BORSH_PORT:-19110}"
+      # wRPC JSON / WebMCP endpoint (Mainnet: 20110, Testnet: 20210)
+      - "${WRPC_JSON_PORT:-20110}:${WRPC_JSON_PORT:-20110}"
+    volumes:
+      - zyanya-data:/home/zyanya/.zyanyad
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 ${RPC_PORT:-18110} || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ============================================================================
+  # 🔍 Built-In BlockDAG Web Explorer
+  # ============================================================================
+  zyanya-explorer:
+    image: zyanya/zyanyad:v0.4.0
+    container_name: zyanya-explorer
+    restart: unless-stopped
+    depends_on:
+      zyanyad:
+        condition: service_started
+    entrypoint: ["/usr/local/bin/zyanya-explorer"]
+    command: >
+      --listen 0.0.0.0:8099
+      --rpcserver zyanyad:${RPC_PORT:-18110}
+    ports:
+      - "${EXPLORER_PORT:-8099}:8099"
+
+  # ============================================================================
+  # ⛏️ AstroBWTv3 Standalone CPU Miner (Optional Profile)
+  # ============================================================================
+  zyanya-miner:
+    image: zyanya/zyanyad:v0.4.0
+    container_name: zyanya-miner
+    restart: unless-stopped
+    profiles:
+      - miner
+    depends_on:
+      zyanyad:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "if [ -z \"$MINING_ADDRESS\" ]; then
+         echo 'ERROR: MINING_ADDRESS environment variable is required to mine!';
+         exit 1;
+       fi;
+       EXTRA_FLAG='';
+       if [ \"$ZYANYA_NETWORK\" = 'testnet' ] || [ \"$ZYANYA_NETWORK\" = 'testnet-10' ]; then
+         EXTRA_FLAG='--testnet';
+       fi;
+       echo \"=== [Miner] Starting AstroBWTv3 on $$ZYANYA_NETWORK ($$MINER_THREADS threads) ===\";
+       exec /usr/local/bin/zyanya-miner \
+         $$EXTRA_FLAG \
+         --zyanyad-address zyanyad \
+         --port ${RPC_PORT:-18110} \
+         --mining-address \"$$MINING_ADDRESS\" \
+         --threads ${MINER_THREADS:-4} \
+         --cpu-percent ${CPU_PERCENT:-50}"
+    environment:
+      - ZYANYA_NETWORK=${ZYANYA_NETWORK:-mainnet}
+      - MINING_ADDRESS=${MINING_ADDRESS:-}
+      - MINER_THREADS=${MINER_THREADS:-4}
+      - CPU_PERCENT=${CPU_PERCENT:-50}
+
+volumes:
+  zyanya-data:
+    name: zyanya-node-data
