@@ -1,43 +1,73 @@
-# Zyanya Blockchain
+# Zyanya Sovereign Blockchain ($ZYN)
 
-> **"Forever, Always"** — a high-performance Spectre/GhostDAG fork featuring an embedded smart-contract VM and custom token ecosystem.
+> **"Forever, Always"**  
+> *The sovereign, agent-native Layer 1 blockchain powered by GhostDAG 1 BPS consensus, AstroBWTv3 democratic CPU proof-of-work, Subnetwork 3 ZCL stack smart contracts, and pure-IPv6 mesh transport.*
 
-## Quick Links
+---
 
-- [Architecture](Architecture.md) — BlockDAG consensus, crate structure, node architecture
-- [Smart Contracts](Smart-Contracts.md) — VM opcodes, ZCL language, bonding curve, AMM graduation
-- [Deployment](Deployment.md) — Build instructions, cross-compilation, 3-node testnet
-- [Work Orders](Work-Orders.md) — Task tracking, work order history, current status
-- [Audit Results](Audit-Results.md) — Security audit findings and remediation status
+### 📚 Sovereign Documentation Chapters
 
-## What is Zyanya?
+- 🏛️ **[System Architecture](Architecture.md)**  
+  Topological GhostDAG ordering ($k=18$), parallel block DAG engine, virtual processor, and RocksDB UTXO state storage.
 
-Zyanya is a UTXO-based blockDAG blockchain (forked from Kaspa/Spectre) with:
+- ⛏️ **[AstroBWTv3 Proof-of-Work](Proof-of-Work.md)**  
+  Mathematical foundations of Burrows-Wheeler Transform sorting, branch-heavy memory hardness, ASIC/FPGA immunity, and CPU hardware tuning.
 
-- **GhostDAG consensus** — parallel block inclusion with topological ordering
-- **Embedded smart contract VM** — stack-based VM with gas metering, persistent state storage
-- **Bonding curve token launch** — tokens launch on a bonding curve, automatically graduate to an AMM at 1B sompi reserve
-- **0.3% protocol fee** — routed to staking rewards on every buy/sell/swap
-- **ZYAN staking** — stake ZYAN to earn protocol fees from DEX activity
-- **Zero premine** — genesis sends 50 ZYAN to an unspendable `OP_FALSE` script
-- **IPv6-first** — explorer and node enforce IPv6-only listener semantics
+- 🛠️ **[Mining Operations Guide](Mining-Operations.md)**  
+  60-second solo CPU mining setup, v0.4.0 release binaries, dynamic thread scaling, HiveOS / mmpOS flight sheets, and Stratum pool configuration.
 
-## Network Info
+- 🖥️ **[Node Deployment Runbook](Node-Deployment.md)**  
+  Production node administration, systemd service units, pure-IPv6 socket binding, UTXO indexing, memory scaling, and health verification.
 
-| Network | Prefix | Default Port | Genesis |
-|---------|--------|-------------|---------|
-| Mainnet | ZYAN-MAINNET | 18110 | 50 ZYAN → OP_FALSE (unspendable) |
-| Testnet | ZYNT-TESTNET | 18210 | 50 ZYAN → OP_FALSE (unspendable) |
-| Devnet | — | 18610 | — |
+- 💎 **[Tokenomics & Monetary Policy](Tokenomics.md)**  
+  Zero premine (`OP_FALSE` genesis), 50 ZYAN coinbase emission (50% liquid + 50% 12-month linear vest), and 0.3% protocol fee staking rewards.
 
-## Testnet Nodes
+- 📜 **[Subnetwork 3 ZCL Smart Contracts](Smart-Contracts.md)**  
+  64-bit deterministic stack VM, gas metering, continuous bonding curves, constant-product AMM, and UTXO staking vaults.
 
-| Node | OS | Network | Role |
-|------|-----|---------|------|
-| Node 1 | Linux | IPv6 Mesh | Build + dev |
-| Node 2 | Windows 11 | IPv6 Mesh | Build + deploy |
-| Node 3 | Linux | IPv6 Mesh | Testnet peer |
+- 🤖 **[WebMCP Agent Integration](WebMCP-Agent-Guide.md)**  
+  The zero-GUI machine-native protocol: `/mcp.json` tool discovery, JSON-RPC 2.0 execution at `/mcp/rpc`, and LLM autonomous pairing.
 
-## Current Status
+- 🌐 **[Network Parameters & Wire Specs](Network-Parameters.md)**  
+  October 1 Mainnet production configuration vs live Testnet-10 parameters, ports, seed nodes, and pure-IPv6 transport rules.
 
-**Phase 4a complete** — AMM graduation + fee routing live. All 11 security audit findings remediated. Ready for public testnet launch.
+- 🛡️ **[Security Audit Scorecard](Audit-Results.md)**  
+  Comprehensive audit findings breakdown and cryptographic verification for all 112 remediated vulnerabilities.
+
+---
+
+### 🌐 Dual Network Quick Reference
+
+- 🦅 **Mainnet (Public Launch: October 1, 2026)**:
+  • Network ID: `mainnet`  
+  • Address Prefix: `zyanya:`  
+  • Default Ports: P2P `18111` | gRPC `18110` | wRPC Borsh `19110` | wRPC JSON `20110`  
+  • Launch Command: `./zyanyad --utxoindex`  
+
+- 🧪 **Testnet-10 (Live Active Staging Mesh)**:
+  • Network ID: `testnet-10`  
+  • Address Prefix: `zyanyatest:`  
+  • Current State: Block Height > 210,000  
+  • Default Ports: P2P `18211` | gRPC `18210` | wRPC Borsh `19210` | wRPC JSON `20210`  
+  • Launch Command: `./zyanyad --testnet --utxoindex`  
+  • Canonical Seed Peer: `[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18211`  
+
+---
+
+### 📦 Official Pre-Compiled Releases (v0.4.0)
+
+- 🐧 **Linux x86_64**: [`zyanya-v0.4.0-linux-x86_64.tar.gz`](https://zyanya.scottcloudhawk.org/releases/zyanya-v0.4.0-linux-x86_64.tar.gz)  
+  `SHA256: cfa8cbdc75267298613999b907db8ebec7e07148431d181e6c7cfc723f9201b1`
+- 🪟 **Windows x64**: [`zyanya-v0.4.0-windows-x64.zip`](https://zyanya.scottcloudhawk.org/releases/zyanya-v0.4.0-windows-x64.zip)  
+  `SHA256: 9f62b1bd33d4569b07e7695743f5ec6b0732339332d2355c1a09a2b7b4a3dd19`
+- 🔗 **GitHub Releases**: [v0.4.0 on GitHub](https://github.com/scotthawk-maker/zyanya/releases/tag/v0.4.0)
+
+---
+
+### 🌐 Official Network Resources
+
+- 🌐 **Sovereign Portal**: [https://zyanya.scottcloudhawk.org](https://zyanya.scottcloudhawk.org)
+- 📊 **Block Explorer**: [https://testnet.zyanya.scottcloudhawk.org](https://testnet.zyanya.scottcloudhawk.org)
+- 🤖 **WebMCP Gateway**: [https://zyanya.scottcloudhawk.org/mcp/rpc](https://zyanya.scottcloudhawk.org/mcp/rpc)
+- 📦 **Core Node Source**: [https://github.com/scotthawk-maker/zyanya](https://github.com/scotthawk-maker/zyanya)
+- ⛏️ **Standalone Miner Source**: [https://github.com/scotthawk-maker/zyanya-miner](https://github.com/scotthawk-maker/zyanya-miner)
