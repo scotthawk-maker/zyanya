@@ -207,6 +207,8 @@ Zyanya has undergone comprehensive security hardening:
 ## 9. Documentation Index
 
 - [AGENTS.md](AGENTS.md): Machine instructions, tool schemas, and agent integration guidelines.
+- [docs/PRESS_KIT.md](docs/PRESS_KIT.md): Official brand assets, project boilerplates, and exchange listing integration specifications.
+- [docs/COMMUNITY_LAUNCH_KIT.md](docs/COMMUNITY_LAUNCH_KIT.md): Pre-written launch threads, Discord announcements, and Telegram broadcasts.
 - [docs/WEBMCP.md](docs/WEBMCP.md): Sovereign WebMCP gateway specification and OpenAPI schema.
 - [docs/CONTRACTS.md](docs/CONTRACTS.md): Subnetwork 3 ZCL Virtual Machine opcode manual and contract guides.
 - [docs/SECURITY.md](docs/SECURITY.md): 112 audit findings scorecard and security architecture.
