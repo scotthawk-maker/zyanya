@@ -4,6 +4,11 @@ pub const ZYAN_COIN_SVG: &str = include_str!("../assets/brand/zyan-coin.svg");
 pub const GHOST_TOKEN_SVG: &str = include_str!("../assets/brand/ghost-token.svg");
 pub const GAS_BURN_SVG: &str = include_str!("../assets/brand/gas-burn-icon.svg");
 pub const TOKEN_SET_SVG: &str = include_str!("../assets/brand/zyanya-token-set.svg");
+pub const ZYN_SQUIRCLE_SVG: &str = include_str!("../assets/brand/zyn-squircle.svg");
+pub const ZYNT_TOKEN_SVG: &str = include_str!("../assets/brand/zynt-token.svg");
+pub const ZRC20_TOKEN_SVG: &str = include_str!("../assets/brand/zrc20-token.svg");
+pub const LP_TOKEN_SVG: &str = include_str!("../assets/brand/lp-token.svg");
+pub const STAKE_TOKEN_SVG: &str = include_str!("../assets/brand/stake-token.svg");
 
 pub const LANDING_HTML: &str = r###"<!DOCTYPE html>
 <html lang="en">

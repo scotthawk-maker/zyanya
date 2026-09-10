@@ -95,6 +95,11 @@ pub async fn brand_asset_handler(Path(asset): Path<String>) -> Response {
         "ghost-token.svg" => ("image/svg+xml", GHOST_TOKEN_SVG),
         "gas-burn-icon.svg" => ("image/svg+xml", GAS_BURN_SVG),
         "zyanya-token-set.svg" => ("image/svg+xml", TOKEN_SET_SVG),
+        "zyn-squircle.svg" => ("image/svg+xml", ZYN_SQUIRCLE_SVG),
+        "zynt-token.svg" => ("image/svg+xml", ZYNT_TOKEN_SVG),
+        "zrc20-token.svg" => ("image/svg+xml", ZRC20_TOKEN_SVG),
+        "lp-token.svg" => ("image/svg+xml", LP_TOKEN_SVG),
+        "stake-token.svg" => ("image/svg+xml", STAKE_TOKEN_SVG),
         _ => return (StatusCode::NOT_FOUND, "Asset not found").into_response(),
     };
 

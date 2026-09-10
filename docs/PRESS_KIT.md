@@ -38,17 +38,36 @@ The network maintains an active, multi-region distributed backbone with seed rel
 All production-ready SVG vectors and raster PNG files are hosted directly in the repository under `/brand/`:
 
 ### Primary Visual Assets
-- **Token Icon (Square/Coin)**:
+- **Sovereign Squircle Icon**:
+  • Vector: [`brand/zyn-squircle.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyn-squircle.svg)  
+  • Raster: [`brand/zyn-squircle.png`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyn-squircle.png) (200x200, 512x512)
+- **Sovereign Token Coin (Circular)**:
   • Vector: [`brand/zyan-coin.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyan-coin.svg)  
   • Raster: [`brand/zyan-coin.png`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyan-coin.png) (240x240, 512x512)
+- **Testnet Sovereign Token**:
+  • Vector: [`brand/zynt-token.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zynt-token.svg)  
+  • Raster: [`brand/zynt-token.png`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zynt-token.png)
+- **ZRC-20 Standard / Launchpad Token**:
+  • Vector: [`brand/zrc20-token.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zrc20-token.svg)  
+  • Raster: [`brand/zrc20-token.png`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zrc20-token.png)
+- **AMM Liquidity Pool (LP) Token**:
+  • Vector: [`brand/lp-token.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/lp-token.svg)  
+  • Raster: [`brand/lp-token.png`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/lp-token.png)
+- **Yield Staking Vault (STK) Token**:
+  • Vector: [`brand/stake-token.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/stake-token.svg)  
+  • Raster: [`brand/stake-token.png`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/stake-token.png)
+- **Quantum Plasma Gas Burn Mark**:
+  • Vector: [`brand/gas-burn-icon.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/gas-burn-icon.svg)  
+  • Raster: [`brand/gas-burn-icon.png`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/gas-burn-icon.png)
+- **Unified Ecosystem Token Set (Wide Banner)**:
+  • Vector: [`brand/zyanya-token-set.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyanya-token-set.svg)  
+  • Raster: [`brand/zyanya-token-set.png`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyanya-token-set.png) (960x240)
 - **Horizontal Logo / Wordmark**:
   • Vector: [`brand/zyanya-logo.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyanya-logo.svg)  
   • Raster: [`brand/zyanya-logo.png`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyanya-logo.png)
 - **Social / Header Banner (1200x630)**:
   • Vector: [`brand/zyanya-hero-banner.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyanya-hero-banner.svg)  
   • Raster: [`brand/zyanya-hero-banner.png`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyanya-hero-banner.png)
-- **Mobile / App Squircle Icon**:
-  • Vector: [`brand/zyn-squircle.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyn-squircle.svg)
 
 ### Official Color Codes
 - **Spectral Cyan (Primary Accent)**: `#7EC8D3` | `rgb(126, 200, 211)`
