@@ -1,130 +1,130 @@
-# 🚀 Zyanya Community Launch Kit
+# Zyanya Community Launch Kit (Anti-Slop Edition)
 
-This kit contains copy-paste ready announcements, threads, and pinned broadcasts for **Twitter/X**, **Discord**, and **Telegram**, designed around the **WebMCP Agent-Native L1** narrative.
+Real developer copy for Twitter/X, Discord, and Telegram. No corporate buzzwords, no PR fluff, no AI-generated clichés. Grounded in real architecture, honest developer pain points, and live testnet numbers.
 
 ---
 
 ## 🐦 Twitter / X Launch Thread
 
-### Tweet 1: The Hook
-Every blockchain team makes the same mistake: they spend months building custom web wallets, clunky block explorers, and brittle dashboards that break every time React updates.
+### Tweet 1 (The Frustration Hook)
+Most new L1 teams waste 6 months building buggy React wallets and block explorers that break every time Vite bumps a minor version.
 
-We took a different path. 
+We decided that was a waste of time.
 
-Introducing **Zyanya**: The first GhostDAG L1 engineered specifically for the AI Agent Era. 🧵👇
-
----
-
-### Tweet 2: The Agent-Native Architecture
-Instead of forcing you to use our frontend, Zyanya ships with native **WebMCP** (Model Context Protocol).
-
-What does that mean?
-• Any AI assistant (Antigravity, Claude, Cursor, local LLMs) can talk directly to your node.
-• Want a glassmorphic staking dashboard? Prompt your agent.
-• Want an automated Telegram trading bot or a retro terminal wallet? Build it in 30 seconds.
-
-Zero frontend lock-in. 100% builder freedom.
+Meet Zyanya: a Rust GhostDAG L1 built specifically to be driven by AI coding agents. 🧵👇
 
 ---
 
-### Tweet 3: Real Performance Under the Hood
-We didn't sacrifice consensus speed for flexibility.
+### Tweet 2 (The Real Problem We Solved)
+Frontend lock-in is dead. 
 
-• ⚡ **1 Block Per Second** continuous GhostDAG throughput
-• 🛡️ Battle-tested Rust engine with UTXO security
-• 🌐 Global tri-region mesh live in US East, Tokyo, and London
-• 📦 Ultra-lean codebase with zero JavaScript dependency bloat
+Instead of maintaining 10 different web apps, we stripped out 1.39M lines of frontend bloat and gave the node a native WebMCP (Model Context Protocol) gateway.
 
-Pure performance. Pure decentralization.
-
----
-
-### Tweet 4: Testnet & Open Source
-Zyanya is completely open-source and permissionless from day one.
-
-• 28/28 VM execution test suites passing
-• 76/76 GhostDAG consensus test suites passing
-• Global seed relays online and peerable
-
-Clone the repo, launch a node, and let your AI agent start interacting with the chain immediately.
+What that means in practice:
+You connect Claude, Cursor, Antigravity, or a local LLM to your node.
+You tell it: "Build me a retro terminal wallet" or "Build me a dark-mode staking chart."
+It writes and runs it in 30 seconds.
 
 ---
 
-### Tweet 5: The Call to Action
-The future of software is autonomous agents building bespoke tools on demand. Blockchains should be built for them.
+### Tweet 3 (The Raw Engine Numbers)
+Under the hood, it's not a toy:
 
-Explore the code, read the architecture docs, and start building:
-🔗 GitHub: https://github.com/scotthawk-maker/zyanya
-📖 WebMCP Docs: https://github.com/scotthawk-maker/zyanya/blob/main/docs/WEBMCP.md
+• 1 block per second continuous GhostDAG consensus
+• Rust-native engine with strict UTXO accounting
+• Sub-second transaction confirmations
+• Multi-region testnet live right now:
+  - 🇺🇸 US East (local hardware)
+  - 🇬🇧 London (96 ms ping to US)
+  - 🇯🇵 Tokyo (199 ms ping to US)
 
-#Web3 #GhostDAG #AI #Rust #OpenSource #DevCommunity
+---
+
+### Tweet 4 (Open Source & No Gatekeeping)
+Everything is open source from day one:
+
+• 28/28 VM tests green
+• 76/76 consensus tests passing
+• 0 VC allocations, 0 pre-mined insider wallets
+• Public seed nodes up and peerable right now
+
+Run `git clone`, compile the daemon, and your node joins the mesh in under 2 minutes.
+
+---
+
+### Tweet 5 (Call to Action)
+The future isn't another cookie-cutter web app. It's autonomous agents building whatever tools you need on demand.
+
+Code, node setup scripts, and WebMCP docs are live on GitHub:
+🔗 https://github.com/scotthawk-maker/zyanya
+📖 Docs: https://github.com/scotthawk-maker/zyanya/tree/main/docs
+
+Drop a star, spin up a node, and tell your agent to start building.
 
 ---
 
 ## 💬 Discord Announcement (`#announcements`)
 
 ```markdown
-@everyone 🚀 **Welcome to Zyanya: The Agent-Native GhostDAG L1**
+@everyone **Zyanya is live on GitHub and public testnet**
 
-We are thrilled to officially unveil the **Zyanya Blockchain** repository and public developer testnet!
+Quick summary of what we built and why we built it this way:
 
-### 💡 What is Zyanya?
-Zyanya is a high-speed, 1-block-per-second GhostDAG Layer 1 built from the ground up in Rust. 
+### What is Zyanya?
+Zyanya is a high-speed GhostDAG Layer 1 written in Rust that does ~1.4 blocks per second. 
 
-Instead of cluttering the project with fragile web frontends and bloated dependencies, Zyanya is built around **WebMCP (Model Context Protocol)**. This turns Zyanya into an open, agent-native engine where you and your AI assistants can spin up custom wallets, analytics charts, trading bots, and explorers in seconds.
+Instead of building official web wallets or shiny dashboards, we wired the entire node into **WebMCP** (Anthropic's Model Context Protocol). 
 
-### 🌐 Live Network Infrastructure
-Our decentralized multi-region backbone is already online and producing blocks:
-• 🇺🇸 **US East Core**: Primary homelab consensus and validation node
-• 🇯🇵 **Tokyo Relay**: Low-latency Asia-Pacific anchor
-• 🇬🇧 **London Relay**: European P2P distribution seed
+That means there is zero official frontend lock-in. When you run a node, you hook your AI assistant (Antigravity, Cursor, Claude, local Ollama) straight into it. If you want a mobile tracker, a terminal wallet, or a Telegram bot, your agent builds it on demand in seconds.
 
-### 🛠️ Developer Quickstart
-1. **GitHub Repository**:
-   https://github.com/scotthawk-maker/zyanya
-2. **Read the Architecture**:
-   Check out `docs/WEBMCP.md` and `docs/SMART_CONTRACTS_DESIGN.md`
-3. **Run a Node**:
-   Follow the deployment scripts in `/deploy` to join the testnet mesh in under 2 minutes.
+### Network Status
+Our initial tri-region testnet mesh is running right now:
+• 🇺🇸 US East: Local Dell Micro core (206k+ blocks processed)
+• 🇬🇧 London: Vultr Canary Wharf seed (96 ms latency)
+• 🇯🇵 Tokyo: Vultr Minamishinagawa seed (199 ms latency)
 
-### 🧭 Channels to Check Out
-• 💬 `#general`: General discussion and project ideas
-• 💻 `#dev-chat`: Node setup, Rust development, and WebMCP tooling
-• 🤖 `#agent-builds`: Share wallets, bots, and UIs built by your AI agents
-• 📢 `#updates`: Protocol releases and network milestones
+### Where to start
+1. Clone the repo: `https://github.com/scotthawk-maker/zyanya`
+2. Check the architecture: Read `docs/WEBMCP.md` and `docs/SMART_CONTRACTS_DESIGN.md`
+3. Spin up a node: Follow the one-click scripts in `/deploy`
 
-Jump into `#general` and say hello. The agent-native era starts now!
+### Channels
+• `#dev-chat`: Node setup, Rust internals, daemon debugging
+• `#agent-builds`: Post the tools, UIs, and scripts your AI agent created
+• `#general`: Casual chat, ideas, roadmap feedback
+
+No corporate hype here. Jump in, grab the code, and let us know what breaks.
 ```
 
 ---
 
-## ✈️ Telegram Pinned Welcome Message
+## ✈️ Telegram Pinned Broadcast
 
 ```markdown
-📌 **WELCOME TO ZYANYA OFFICIAL**
+📌 **ZYANYA DEV TESTNET & CODEBASE LIVE**
 
-Zyanya is a high-throughput, sub-second GhostDAG Layer 1 built in Rust, powered by **WebMCP** for the AI Agent era.
-
----
-
-🔗 **Official Links**
-• **GitHub**: https://github.com/scotthawk-maker/zyanya
-• **Architecture & Docs**: https://github.com/scotthawk-maker/zyanya/tree/main/docs
-• **WebMCP Integration**: https://github.com/scotthawk-maker/zyanya/blob/main/docs/WEBMCP.md
+Zyanya is an agent-native GhostDAG L1 written in Rust.
 
 ---
 
-⚡ **Core Highlights**
-• **Throughput**: ~1.4 blocks/second continuous GhostDAG consensus
-• **Frontend Freedom**: Native MCP tools let any AI (Claude, Antigravity, Cursor) build custom wallets, explorers, and bots on demand
-• **Global Mesh**: Active seeds running across US East, Tokyo, and London
-• **Open Source**: 100% transparent, community-driven, MIT/Apache licensed
+🔗 **Links**
+• GitHub: https://github.com/scotthawk-maker/zyanya
+• WebMCP Protocol Guide: https://github.com/scotthawk-maker/zyanya/blob/main/docs/WEBMCP.md
+• Deploy Scripts: https://github.com/scotthawk-maker/zyanya/tree/main/deploy
 
 ---
 
-⚠️ **Community Rules & Safety**
-• Admins will NEVER DM you first or ask for private keys or seed phrases.
-• Beware of impersonators. Always verify repository links here.
+⚡ **Core Facts**
+• 1.4 blocks per second continuous throughput
+• Sub-second DAG block confirmations
+• Native WebMCP gateway: your AI coding assistant builds your UI on demand
+• Global seeds live in US, London (96 ms), and Tokyo (199 ms)
+• 100% open source (MIT/Apache 2.0)
 
-Welcome to the community! Introduce yourself and let us know what you're building!
+---
+
+⚠️ **Admin Notice**
+We will NEVER DM you first, ask for keys, or sell private allocations. This is an open developer testbed. 
+
+Introduce yourself below and tell us what you're building!
 ```
