@@ -49,9 +49,6 @@ All production-ready SVG vectors and raster PNG files are hosted directly in the
   • Raster: [`brand/zyanya-hero-banner.png`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyanya-hero-banner.png)
 - **Mobile / App Squircle Icon**:
   • Vector: [`brand/zyn-squircle.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/zyn-squircle.svg)
-- **Gas Burn / Utility Mark**:
-  • Vector: [`brand/gas-burn-icon.svg`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/gas-burn-icon.svg)  
-  • Raster: [`brand/gas-burn-icon.png`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/brand/gas-burn-icon.png)
 
 ### Official Color Codes
 - **Spectral Cyan (Primary Accent)**: `#7EC8D3` | `rgb(126, 200, 211)`
