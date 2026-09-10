@@ -34,77 +34,103 @@ Choose the release package for your operating system:
 
 ---
 
-### 3. Generate Your Sovereign Mining Address
+### 3. Networks: Mainnet vs Testnet
+
+The release binaries are unified and support both networks:
+
+- 🦅 **Mainnet (Default - October 1 Launch)**:
+  • Daemon: `./zyanyad --utxoindex` (RPC: `18110`, P2P: `18111`)
+  • Miner: `./zyanya-miner --mining-address zyanya:...`
+  • Address prefix: `zyanya:`
+
+- 🧪 **Testnet (Live Today - Testnet-10)**:
+  • Daemon: `./zyanyad --testnet --utxoindex` (RPC: `18210`, P2P: `18211`)
+  • Miner: `./zyanya-miner --testnet --mining-address zyanyatest:...`
+  • Address prefix: `zyanyatest:`
+
+---
+
+### 4. Generate Your Sovereign Mining Address
 
 Run the native CLI wallet to create a new address:
 
-- **Linux**:
+- **Mainnet (Default)**:
   ```bash
   ./zyanya-wallet new-address
   ```
 
-- **Windows**:
-  ```powershell
-  .\zyanya-wallet.exe new-address
+- **Testnet**:
+  Launch `./zyanya-wallet`, switch network with `network testnet-10`, and run `new-address`:
+  ```bash
+  $ network testnet-10
+  $ new-address
   ```
 
-Save your generated payout address (e.g. `zyanya:qrh5l43xvd05lq36g...`).
+Save your generated payout address (`zyanya:...` for mainnet or `zyanyatest:...` for testnet).
 
 ---
 
-### 4. Start Your Sovereign Node Daemon
+### 5. Start Your Sovereign Node Daemon
 
 Launch the node with the UTXO index enabled:
 
-- **Linux**:
+- **Mainnet**:
   ```bash
   ./zyanyad --utxoindex
   ```
 
-- **Windows**:
-  ```powershell
-  .\zyanyad.exe --utxoindex
+- **Testnet (Live Network)**:
+  ```bash
+  ./zyanyad --testnet --utxoindex
   ```
 
 Wait 10 to 30 seconds for your node to connect to the peer network and sync the latest GHOSTDAG blocks.
 
 ---
 
-### 5. Launch AstroBWTv3 CPU Miner
+### 6. Launch AstroBWTv3 CPU Miner
 
 Open a second terminal window and point the standalone miner to your local node:
 
-- **Linux**:
+- **Mainnet**:
   ```bash
   ./zyanya-miner --threads 8 --mining-address <YOUR_ZYANYA_ADDRESS>
   ```
 
-- **Windows**:
-  ```powershell
-  .\zyanya-miner.exe --threads 8 --mining-address <YOUR_ZYANYA_ADDRESS>
+- **Testnet**:
+  ```bash
+  ./zyanya-miner --testnet --threads 8 --mining-address <YOUR_ZYANYATEST_ADDRESS>
   ```
 
 Replace `8` with the number of CPU threads you wish to allocate. The miner will report your live hashrate and print block acceptance notices when a block solution is discovered.
 
 ---
 
-### 6. HiveOS & Bare-Metal Mining Rigs
+### 7. HiveOS & Bare-Metal Mining Rigs
 
 For headless mining rigs or HiveOS custom miner integration:
 
-- **Miner Command**:
+- **Miner Command (Mainnet)**:
   ```bash
-  ./zyanya-miner --rpc-url <NODE_IP>:16110 --mining-address <YOUR_ZYANYA_ADDRESS> --threads $(nproc)
+  ./zyanya-miner --zyanyad-address <NODE_IP> --port 18110 --mining-address <YOUR_ZYANYA_ADDRESS> --threads $(nproc)
   ```
 
-- **Parameters**:
-  • `--rpc-url`: gRPC Borsh RPC endpoint of any public or private Zyanya node (default `127.0.0.1:16110`).
-  • `--mining-address`: Payout address receiving block rewards directly on-chain.
+- **Miner Command (Testnet)**:
+  ```bash
+  ./zyanya-miner --testnet --zyanyad-address <NODE_IP> --port 18210 --mining-address <YOUR_ZYANYATEST_ADDRESS> --threads $(nproc)
+  ```
+
+- **Key Parameters**:
+  • `--zyanyad-address`: IP of your Zyanya node daemon (default `127.0.0.1`).
+  • `--port`: gRPC RPC port (`18110` for mainnet, `18210` for testnet).
+  • `--mining-address`: Payout address receiving 50 ZYAN block rewards directly on-chain.
   • `--threads`: CPU worker thread count.
+  • `--cpu-percent`: Target CPU load percentage (1-100).
+  • `--dynamic`: Automatically scale threads to system load.
 
 ---
 
-### 7. Verification & Explorer
+### 8. Verification & Explorer
 
 Track your mined blocks, block height, and network difficulty on the live block explorer:
 
