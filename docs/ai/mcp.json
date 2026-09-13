@@ -103,6 +103,48 @@
           }
         }
       }
+    },
+    {
+      "name": "zyanya_claim_genesis_spark",
+      "description": "Claims the 10.0 ZYAN Genesis Pioneer Spark (2.0 ZYAN liquid gas + 8.0 ZYAN staked covenant) for a verified node. Enforces a 4-point anti-sybil anchor requiring a valid wallet address, node P2P ID, IPv6 /64 subnet quarantine verification, and a 10-block liveness check.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "node_p2p_id",
+          "wallet_address"
+        ],
+        "properties": {
+          "node_p2p_id": {
+            "type": "string",
+            "description": "Unique P2P node identifier for the pioneer node."
+          },
+          "wallet_address": {
+            "type": "string",
+            "description": "Zyanya Bech32 wallet address receiving the liquid gas and staked covenant."
+          },
+          "proof_signature": {
+            "type": "string",
+            "description": "Optional cryptographic proof signature verifying node ownership."
+          }
+        }
+      }
+    },
+    {
+      "name": "zyanya_get_pioneer_node_status",
+      "description": "Returns node uptime streak in hours, /64 subnet verification, active block sync height, staked covenant balance (8.0 ZYAN), accrued DEX fee dividends, and AstroBWTv3 mining multiplier.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "node_p2p_id": {
+            "type": "string",
+            "description": "P2P node identifier to query pioneer status."
+          },
+          "wallet_address": {
+            "type": "string",
+            "description": "Zyanya Bech32 wallet address to query pioneer stake and dividend status."
+          }
+        }
+      }
     }
   ]
 }

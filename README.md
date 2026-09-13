@@ -230,7 +230,146 @@ cargo build --release --bin zyanyad --bin zyanya-wallet --bin zyanya-query
 
 ---
 
-## 8. Security Hardening
+## 8. 🤖 Prompt-Driven Blockchain (Copy & Paste to Your AI Agent)
+
+> [!IMPORTANT]
+> **Zero Human Interface Required · Pure Machine-to-Machine Orchestration**  
+> Zyanya is engineered from genesis as an **Agent-Native Layer 1 Blockchain**. You do not need to memorize complex CLI flags, manage ABI wrappers, or click through manual web forms. Simply copy and paste any of the self-contained prompt directives below directly into your favorite AI coding or trading agent (**Claude Code**, **Antigravity**, **Oh My Pi (OMP)**, **Cursor**, **Codex**, or **OpenHands**) connected to the sovereign WebMCP endpoint:
+> - **Public WebMCP Endpoint**: `https://zyanya.scottcloudhawk.org/mcp/rpc`
+> - **Local Daemon Gateway**: `http://[::1]:8092/mcp/rpc`
+> - **Live Tool Schema Discovery**: `https://zyanya.scottcloudhawk.org/mcp.json`
+
+---
+
+### 🚀 1. The 60-Second Node Pioneer Setup & Genesis Spark Claim
+
+> **Agent Objective**: Deploy a sovereign full node, verify IPv6 GhostDAG mesh pinhole, register pioneer status, and claim the 10.0 ZYAN Genesis Pioneer Spark (2.0 liquid gas + 8.0 staked covenant).
+
+```text
+You are an autonomous operations agent managing a sovereign Zyanya ($ZYN) full node.
+Perform the following setup and pioneer registration sequence:
+1. Connect to the Zyanya WebMCP Gateway at https://zyanya.scottcloudhawk.org/mcp/rpc (discovery: https://zyanya.scottcloudhawk.org/mcp.json).
+2. Probe IPv6 connectivity and firewall pinhole status using tool `zyanya_check_ipv6_pinhole` on port 18111 (or 18211 for testnet). Confirm global IPv6 reachability.
+3. Query real-time consensus parameters and current tip hashes using tool `zyanya_get_dag_info`.
+4. Check local daemon health and extract the node's unique P2P Identity (`node_p2p_id`) using `zyanya_get_node_info`.
+5. Ensure a valid Zyanya Bech32 address (`zyanya:...` or `zyanyatest:...`) is available. If needed, generate one using `zyanya-wallet new-address`.
+6. Claim the 10.0 ZYAN Genesis Pioneer Spark (2.0 ZYAN liquid gas + 8.0 ZYAN staked covenant) by invoking WebMCP tool `zyanya_claim_genesis_spark` with:
+   - "node_p2p_id": "<YOUR_NODE_P2P_ID>"
+   - "wallet_address": "<YOUR_ZYANYA_ADDRESS>"
+7. Verify successful activation, /64 subnet quarantine clearance, 10-block sync liveness, and accrued covenant status using `zyanya_get_pioneer_node_status`.
+Report the transaction hash, confirmed pioneer stake balance, and network sync metrics in a concise summary table.
+```
+
+---
+
+### ⛏️ 2. Autonomous AstroBWTv3 CPU Mining (50% Core Allocation)
+
+> **Agent Objective**: Automatically detect host CPU topology, allocate 50% core capacity to democratic AstroBWTv3 mining, and track pioneer uptime streak multipliers.
+
+```text
+You are an autonomous mining supervisor agent for the Zyanya ($ZYN) Layer 1 blockchain.
+Execute the following democratic CPU mining sequence:
+1. Inspect the host machine's hardware topology to determine total physical and logical CPU cores.
+2. Calculate a balanced 50% thread allocation (e.g., if host has 16 logical threads, target 8 mining threads) to maintain system responsiveness.
+3. Call WebMCP tool `zyanya_estimate_mining_target` to fetch the active AstroBWTv3 difficulty target, estimated block times, and current network hashrate.
+4. Call `zyanya_get_pioneer_node_status` to verify current uptime streak and active mining multiplier boost (up to 1.5x).
+5. Launch the standalone `zyanya-miner` background process:
+   - Point RPC to local node at [::1]:18110 (or [::1]:18210 for testnet)
+   - Set thread count to calculated 50% core allocation
+   - Direct coinbase payouts to your verified pioneer wallet address
+6. Continuously monitor miner output, track valid block solutions found, calculate moving average KH/s, and report accepted GhostDAG blocks.
+```
+
+---
+
+### 🏦 3. Real-Time Yield & Fee Watchdog (Subnetwork 3 DEX Fee Tracker)
+
+> **Agent Objective**: Monitor Subnetwork 3 AMM constant-product DEX pools, track swap fee velocity, and audit Proof-of-Relay 10% dividend distributions to your pioneer node.
+
+```text
+You are an autonomous DeFi telemetry and yield watchdog agent connected to Zyanya Subnetwork 3.
+Perform the following automated surveillance routine:
+1. Query GhostDAG consensus state and latest virtual DAA score using `zyanya_get_dag_info`.
+2. Inspect Subnetwork 3 DEX contract state (`dex.zcl`) to retrieve real-time reserve balances (x * y = k), 24-hour swap volumes, and liquidity depth across active ZRC-20 trading pairs.
+3. Calculate accumulated swap fees (0.30% fee tier) and monitor the 10% Proof-of-Relay fee streaming allocation routed to active pioneer nodes.
+4. Call `zyanya_get_pioneer_node_status` with your wallet address to measure accrued fee dividends, sompi payout distributions, and historical yield APR.
+5. Provide real-time alerts if trading volume surges by >50% or if profitable triangular arbitrage / router liquidity paths emerge.
+```
+
+---
+
+### 🪙 4. 1-Click Fair-Launch ZRC-20 Memecoin ($NAME)
+
+> **Agent Objective**: Compile, deploy, and initialize a fair-launch bonding curve token on Subnetwork 3 with zero pre-mine and instant automated price discovery.
+
+```text
+You are an autonomous token architect agent deployed on the Zyanya ($ZYN) Layer 1 blockchain.
+Execute a 1-click fair-launch deployment for a new ZRC-20 token ($NAME):
+1. Prepare the token configuration parameters:
+   - Token Name: "<TOKEN_NAME>"
+   - Symbol: "$<SYMBOL>"
+   - Total Max Supply: 1,000,000,000 tokens (8 decimal precision: 10^8 sompi per unit)
+   - Initial Bonding Curve Virtual Liquidity: 50,000 ZYAN
+   - Reserve Ratio / Slope: Linear invariant bonding curve
+2. Invoke WebMCP tool `zyanya_compile_contract` with `token.zcl` and `bonding_curve.zcl` source to produce deterministic Subnetwork 3 bytecode and ABI definitions.
+3. Construct and sign the contract deployment transaction using liquid ZYAN gas (funded by Genesis Spark).
+4. Broadcast the deployment to the GhostDAG mempool using `zyanya_send_transaction`.
+5. Verify inclusion within 1 second, extract the deployed contract address, register the initial bonding curve market, and output the shareable token summary and buy command for users.
+```
+
+---
+
+### ⏳ 5. Timelock Covenant Multiplier Staking (90-Day Boost)
+
+> **Agent Objective**: Lock ZYAN in Subnetwork 3 staking covenants for 90 days to unlock the 2.5x yield multiplier and maximize network dividend share.
+
+```text
+You are an autonomous portfolio optimization agent on Zyanya ($ZYN).
+Execute a high-yield timelock staking covenant on Subnetwork 3:
+1. Query available unspent transaction outputs using `zyanya_get_utxos` and confirm confirmed ZYAN balance via `zyanya_get_balance`.
+2. Calculate the target lockup parameters:
+   - Staking Duration: 90 Days
+   - DAA Block Timelock: 7,776,000 GhostDAG blocks (at 1 BPS nominal block rate)
+   - Multiplier Boost Tier: 2.5x base staking yield and dividend weighting
+3. Interact with the verified `staking.zcl` vault contract on Subnetwork 3 to formulate the timelock deposit covenant.
+4. Sign the transaction payload enforcing fail-closed covenant redemption invariants.
+5. Dispatch via `zyanya_send_transaction`, wait for 1-block GhostDAG finality confirmation, and return the unique Staking Position ID, locked sompi amount, unlock DAA score, and projected APR yield.
+```
+
+---
+
+### 🛡️ The 4-Point Anti-Sybil Anchor
+
+To protect the network from faucet sybil attacks, botnet farms, and airdrop exploiters while generously rewarding legitimate decentralized infrastructure providers, the `zyanya_claim_genesis_spark` WebMCP tool enforces a rigorous **4-Point Anti-Sybil Anchor**:
+
+| Anchor Pillar | Enforcement Mechanism | Sybil Attack Vector Mitigated |
+| :--- | :--- | :--- |
+| **1. Sovereign Wallet Address** | Valid Bech32 address (`zyanya:` / `zyanyatest:`) derived from standard BIP-32/39 seed phrases. | Prevents malformed, unspendable, or invalid destination claims. |
+| **2. Unique Node P2P Identity (`p2pId`)** | Cryptographic node identity generated from the daemon's local host keypair and registered in the live GhostDAG peer table. | Prevents fake, simulated, or offline node impersonation. |
+| **3. IPv6 /64 Subnet Quarantine** | Strict uniqueness and cooldown policy enforcing exactly **one claim per global `/64` IPv6 routing prefix**. | Neutralizes multi-address rotation, VPS subnet spoofing, and datacenter proxy farms. |
+| **4. 10-Block Sync Proof-of-Liveness** | Consensus-level verification that the claiming node has actively synced, validated, and relayed at least **10 consecutive GhostDAG blocks**. | Eliminates zero-effort bot scripts by requiring genuine compute, bandwidth, and network participation. |
+
+---
+
+### 💎 The Continuous Node Reward Model
+
+Running a Zyanya full node is not an unpaid altruistic chore—it is a perpetually incentivized, revenue-generating core activity designed for homelabs, servers, and autonomous agent clusters:
+
+1. **Proof-of-Relay 10% DEX Fee Sharing**:
+   - Every swap, trade, and token migration executed across Subnetwork 3 automated market makers (`dex.zcl`, `router.zcl`, `bonding_curve.zcl`) levies a standard 0.30% fee.
+   - **10% of all accrued DEX trading fees** are autonomously routed to active, verified pioneer relay nodes as continuous dividend streams.
+2. **Uptime Streak Mining Multipliers**:
+   - Pioneer nodes that maintain continuous 24/7 connectivity unlock progressive AstroBWTv3 mining multipliers:
+     - **24 Hours Uptime**: $1.10\times$ Hashrate Discovery Multiplier
+     - **7 Days Uptime**: $1.25\times$ Hashrate Discovery Multiplier
+     - **30+ Days Uptime**: $1.50\times$ Hashrate Discovery Multiplier
+   - Multipliers directly scale your probability of mining 50 ZYAN GhostDAG blocks.
+3. **AI Agent RPC Micropayments**:
+   - Autonomous AI agents executing high-frequency WebMCP tool calls, smart contract queries, and mempool transactions route sub-cent Sompi micropayments directly to the public RPC and relay nodes that service their requests with verified low latency.
+
+---
+
+## 9. Security Hardening
 
 Zyanya has undergone comprehensive security hardening:
 
@@ -241,7 +380,7 @@ Zyanya has undergone comprehensive security hardening:
 
 ---
 
-## 9. Documentation Index
+## 10. Documentation Index
 
 - [docs/MINING_QUICKSTART.md](docs/MINING_QUICKSTART.md): 60-second standalone CPU mining setup (Linux & Windows).
 - [AGENTS.md](AGENTS.md): Machine instructions, tool schemas, and agent integration guidelines.
@@ -254,6 +393,6 @@ Zyanya has undergone comprehensive security hardening:
 
 ---
 
-## 10. License
+## 11. License
 
 Zyanya is released under the terms of the ISC License. See [LICENSE](LICENSE) for details.

@@ -6,10 +6,12 @@ Validates critical network configuration parameters across Mainnet and Testnet:
 2. net_magic for Mainnet (ZYAN: 0x5A, 0x59, 0x41, 0x4E) vs Testnet (ZYNT: 0x5A, 0x59, 0x4E, 0x54)
 3. MAINNET_GENESIS hash, structure, and zero-premine payload
 4. Address prefixes (zyanya: vs zyanyatest:)
+5. WebMCP Genesis Spark & Pioneer node tools in docs/ai/mcp.json and install scripts
 """
 
 import sys
 import re
+import json
 from pathlib import Path
 
 # Paths to relevant source files
@@ -17,7 +19,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 PARAMS_RS = REPO_ROOT / "consensus" / "core" / "src" / "config" / "params.rs"
 GENESIS_RS = REPO_ROOT / "consensus" / "core" / "src" / "config" / "genesis.rs"
 ADDRESSES_RS = REPO_ROOT / "crypto" / "addresses" / "src" / "lib.rs"
-
+MCP_JSON = REPO_ROOT / "docs" / "ai" / "mcp.json"
+INSTALL_PS1 = REPO_ROOT / "install.ps1"
+INSTALL_SH = REPO_ROOT / "install.sh"
 class PreflightValidator:
     def __init__(self):
         self.total_checks = 0
@@ -45,6 +49,7 @@ class PreflightValidator:
         self.verify_net_magic()
         self.verify_mainnet_genesis()
         self.verify_address_prefixes()
+        self.verify_genesis_spark_and_pioneer_tools()
 
         print("\n" + "=" * 75)
         print(f"  PRE-FLIGHT AUDIT SUMMARY: {self.passed_checks}/{self.total_checks} checks passed")
@@ -327,6 +332,74 @@ class PreflightValidator:
             mainnet_prefix != testnet_prefix and not mainnet_prefix.startswith(testnet_prefix),
             f"'{mainnet_prefix}:' vs '{testnet_prefix}:'"
         )
+
+    def verify_genesis_spark_and_pioneer_tools(self):
+        print("\n[CHECK 5] WebMCP Genesis Spark & Pioneer Node Verification")
+
+        # 1. Verify docs/ai/mcp.json
+        self.check("docs/ai/mcp.json exists", MCP_JSON.exists(), str(MCP_JSON))
+        if MCP_JSON.exists():
+            try:
+                mcp_data = json.loads(MCP_JSON.read_text(encoding="utf-8"))
+                tools = {tool["name"]: tool for tool in mcp_data.get("tools", [])}
+
+                # Check zyanya_claim_genesis_spark
+                self.check(
+                    "Tool 'zyanya_claim_genesis_spark' defined in docs/ai/mcp.json",
+                    "zyanya_claim_genesis_spark" in tools,
+                    "Genesis Spark onboarding tool"
+                )
+                if "zyanya_claim_genesis_spark" in tools:
+                    spark_tool = tools["zyanya_claim_genesis_spark"]
+                    req_props = spark_tool.get("inputSchema", {}).get("required", [])
+                    props = spark_tool.get("inputSchema", {}).get("properties", {})
+                    self.check(
+                        "zyanya_claim_genesis_spark requires 'node_p2p_id' and 'wallet_address'",
+                        "node_p2p_id" in req_props and "wallet_address" in req_props,
+                        f"required: {req_props}"
+                    )
+                    self.check(
+                        "zyanya_claim_genesis_spark schema includes 'node_p2p_id', 'wallet_address', and 'proof_signature'",
+                        "node_p2p_id" in props and "wallet_address" in props and "proof_signature" in props,
+                        f"properties: {list(props.keys())}"
+                    )
+
+                # Check zyanya_get_pioneer_node_status
+                self.check(
+                    "Tool 'zyanya_get_pioneer_node_status' defined in docs/ai/mcp.json",
+                    "zyanya_get_pioneer_node_status" in tools,
+                    "Pioneer node status and dividend query tool"
+                )
+                if "zyanya_get_pioneer_node_status" in tools:
+                    status_tool = tools["zyanya_get_pioneer_node_status"]
+                    props = status_tool.get("inputSchema", {}).get("properties", {})
+                    self.check(
+                        "zyanya_get_pioneer_node_status properties include 'node_p2p_id' and 'wallet_address'",
+                        "node_p2p_id" in props and "wallet_address" in props,
+                        f"properties: {list(props.keys())}"
+                    )
+            except Exception as e:
+                self.check("docs/ai/mcp.json is valid JSON", False, str(e))
+
+        # 2. Verify install.ps1 contains Genesis Spark routine
+        self.check("install.ps1 exists", INSTALL_PS1.exists(), str(INSTALL_PS1))
+        if INSTALL_PS1.exists():
+            ps1_content = INSTALL_PS1.read_text(encoding="utf-8")
+            self.check(
+                "install.ps1 contains Genesis Spark routine",
+                "zyanya_claim_genesis_spark" in ps1_content and ("Genesis Spark" in ps1_content or "Genesis Pioneer Spark" in ps1_content),
+                "Windows automated installer incorporates pioneer wallet provisioning and spark claim"
+            )
+
+        # 3. Verify install.sh contains Genesis Spark routine
+        self.check("install.sh exists", INSTALL_SH.exists(), str(INSTALL_SH))
+        if INSTALL_SH.exists():
+            sh_content = INSTALL_SH.read_text(encoding="utf-8")
+            self.check(
+                "install.sh contains Genesis Spark routine",
+                "zyanya_claim_genesis_spark" in sh_content and ("Genesis Spark" in sh_content or "Genesis Pioneer Spark" in sh_content),
+                "Linux/macOS automated installer incorporates pioneer wallet provisioning and spark claim"
+            )
 
 if __name__ == "__main__":
     validator = PreflightValidator()
