@@ -1,0 +1,75 @@
+# Zyanya
+
+> Zyanya is an IPv6-native, agent-native, CPU-mineable blockDAG ,  a Spectre/GhostDAG fork. The ghost in the IPv6 machine.
+
+## Info
+- URL: https://testnet.zyanya.scottcloudhawk.org/
+- Description: A decentralized blockchain with zero-premine fair launch, a smart contract VM, a pump.fun-style bonding-curve token launcher, a DEX, and a Web MCP for AI agent interaction. Runs entirely over IPv6.
+
+## Sections
+- [Home](https://testnet.zyanya.scottcloudhawk.org/): Landing page with the three pillars (Ghost, Secret, Forever) + economics
+- [Block Explorer](https://testnet.zyanya.scottcloudhawk.org/explorer): Live block explorer with auto-refreshing block table + stats
+- [Token Launcher](https://testnet.zyanya.scottcloudhawk.org/launch): Create bonding-curve tokens with metadata, icon, and socials
+- [Testnet Setup](https://testnet.zyanya.scottcloudhawk.org/testnet): All-in-one setup guide (download → node → wallet → mine)
+- [Roadmap](https://testnet.zyanya.scottcloudhawk.org/future): Features (live + planned) + the 4-phase go-to-market
+- [AI Agents](https://testnet.zyanya.scottcloudhawk.org/agents): Agent-native guide with prompt examples + recommended agents
+- [Documentation](https://testnet.zyanya.scottcloudhawk.org/docs): Technical white paper
+- [IPv6 Safety](https://testnet.zyanya.scottcloudhawk.org/#ipv6-safety): IPv6 rewards, risks, and hardening guide
+
+## API Endpoints (for AI agents)
+- GET /api/info: Chain state (block_count, difficulty, supply, peers)
+- GET /api/blocks: Recent blocks (hash, blue_score, daa_score, timestamp, tx_count)
+- GET /api/block/:hash: Block details by hash
+- GET /api/contracts: Deployed contracts list
+- GET /api/tokens: Deployed tokens list
+- GET /api/token/:address/metadata: Token metadata (name, symbol, description, socials, icon_uri)
+- GET /api/token-balance?token=:addr&holder=:id: Token balance for a holder
+- GET /api/dag: DAG graph data
+- POST /api/deploy-token: Deploy a bonding-curve token (name, symbol, supply, slope, description, twitter, telegram, website, icon_base64)
+- POST /api/invoke-contract: State-changing contract call (contract_address, entry_point, calldata, gas)
+- POST /api/call-contract: Read-only contract call (contract_address, entry_point, calldata, gas)
+- POST /api/deploy-contract: Deploy a custom contract (bytecode)
+- POST /api/swap-on-dex: Swap on the DEX
+- GET /token-icons/:filename: Token icon images
+- GET /webmcp.js: Web MCP polyfill (registers blockchain tools on navigator.modelContext)
+
+## WebMCP Tools (for browser-based agents)
+Query tools (read-only):
+- get-chain-info: Query block count, DAA score, difficulty, supply, sink block, and peer count
+- get-block: Query block details by 64-char hex hash or get recent blocks
+- get-dag-info: Query parallel GHOSTDAG structure, DAG nodes, and sink block
+- get-contract-state: Query key-value storage state of a ZCL contract
+- get-contract-code: Query deployed ZCL bytecode hex and size
+- get-token-balance: Query custom token balance for a holder address
+- get-dex-reserves: Query DEX liquidity pool reserves
+- ipv6-safety: Return IPv6 peer-to-peer security, risk, and firewall guidance
+
+Deploy & Invoke tools:
+- deploy-token: Deploy a bonding-curve token contract with metadata, supply, slope, and socials
+- deploy-contract: Deploy compiled ZCL bytecode to the network
+- compile-contract: Compile ZCL contract source code into VM bytecode hex
+- invoke-contract: Invoke a smart contract entry point with calldata (state-changing)
+- call-contract: Read-only execution of a smart contract function
+- swap-on-dex: Swap tokens on a DEX liquidity pool
+- token-transfer: Transfer custom tokens to a recipient address
+
+## Networks
+- Testnet (public): Seed at [2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18211
+- RPC: [2606:8ac0:2615:79aa:1a66:daff:fe99:31f7]:18210
+- Explorer: https://testnet.zyanya.scottcloudhawk.org/
+- GitHub: https://github.com/scotthawk-maker/zyanya
+
+## Tokenomics
+- Max supply: ~28.7 billion ZYAN (smooth geometric decay)
+- Block reward: 50 ZYAN/block
+- Premine: ZERO (genesis has zero outputs)
+- Gas burn: 50% of every transaction fee permanently burned
+- Coinbase maturity: 100 blocks
+- No team wallets, no foundation allocation, no investor stake
+
+## Smart Contracts
+- VM: zyanya-vm (stack-based, u64-only, checked arithmetic)
+- Language: ZCL (Zyanya Contract Language)
+- Bonding curve: price = slope * supply, buy cost = slope*(2*S*k + k^2)/2, sell refund = slope*(2*S*k - k^2)/2
+- Entry points: 0=init, 1=transfer, 2=balance_of, 3=total_supply, 4=buy, 5=sell, 6=price
+- DEX: Constant-product AMM (x*y=k, 0.3% fee)

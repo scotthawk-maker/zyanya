@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Zyanya ,  Roadmap &amp; Features</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--void:#0A0F1C;--shadow-teal:#0D3B50;--spectral-blue:#7EC8D3;--text:#E0E0E0;--burn:#FF4D4D;--font-mono:'Fira Code',monospace}
+*{box-sizing:border-box;margin:0;padding:0}html,body{background:var(--void);color:var(--text);font-family:var(--font-mono);line-height:1.6;overflow-x:hidden}
+.container{max-width:1000px;margin:0 auto;padding:0 20px}
+header{display:flex;justify-content:center;align-items:center;padding:1.5rem 0;border-bottom:1px solid var(--shadow-teal);position:relative;width:100%}
+.menu-toggle{display:none}
+.hamburger{display:none;font-size:1.8rem;color:var(--spectral-blue);cursor:pointer;padding:.5rem 1rem;user-select:none;z-index:101}
+nav{display:flex;justify-content:center;align-items:center;gap:1.5rem;flex-wrap:wrap}
+nav a{color:var(--spectral-blue);text-decoration:none;font-weight:600;font-size:.95rem;transition:color .3s ease;display:inline-flex;align-items:center}
+nav a:hover,nav a.active{color:#fff;text-shadow:0 0 8px var(--spectral-blue)}
+.top-logo{text-align:center;margin:2rem 0 1rem}.top-logo svg{max-width:520px;width:100%;height:auto}
+main{padding:2rem 0 4rem}section{margin-bottom:4rem;text-align:center}
+h1{font-size:2rem;color:var(--spectral-blue);margin-bottom:.5rem}h2{font-size:1.6rem;margin-bottom:2rem;text-transform:uppercase;letter-spacing:2px}
+p{text-align:left;margin-bottom:1rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;text-align:left}
+.card{background:var(--shadow-teal);padding:1.75rem;border-radius:8px;border:1px solid rgba(126,200,211,.2)}
+.card h3{color:var(--spectral-blue);margin-bottom:.4rem;font-size:1.1rem;display:flex;align-items:center;justify-content:space-between}
+.card p{color:rgba(224,224,224,.8);font-size:.92rem;margin:0}
+.badge{font-size:.65rem;padding:.2rem .5rem;border-radius:3px;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.badge-live{background:var(--spectral-blue);color:var(--void)}.badge-planned{background:transparent;border:1px solid var(--text);color:var(--text)}
+.phase{list-style:none;padding:0;max-width:760px;margin:0 auto;text-align:left}
+.phase li{padding:1.25rem 1.25rem 1.25rem 3.5rem;margin-bottom:1rem;background:var(--shadow-teal);border-radius:8px;border-left:3px solid var(--spectral-blue);position:relative}
+.phase li::before{content:"Phase 0" counter(phase-counter);counter-increment:phase-counter;position:absolute;left:-12px;top:50%;transform:translateY(-50%) rotate(-90deg);color:var(--spectral-blue);font-size:.75rem;font-weight:600}
+.phase{counter-reset:phase-counter}.phase strong{display:block;margin-bottom:.3rem}
+footer{text-align:center;padding:2rem 0;border-top:1px solid var(--shadow-teal);color:rgba(224,224,224,.5);font-size:.85rem}
+a{color:var(--spectral-blue)}
+@media (max-width:768px){
+header{flex-direction:column;padding:1rem 0}
+.hamburger{display:block}
+nav{display:none;flex-direction:column;width:100%;background:rgba(10,15,28,.98);border:1px solid var(--shadow-teal);border-radius:8px;margin-top:.5rem;padding:.5rem 0;gap:0;z-index:100}
+.menu-toggle:checked ~ nav{display:flex}
+nav a{display:flex;align-items:center;justify-content:center;min-height:48px;width:100%;margin:0;padding:0 1rem;border-bottom:1px solid rgba(13,59,80,.5);font-size:1rem}
+nav a:last-child{border-bottom:none}
+.container{padding:0 16px}
+h1{font-size:1.4rem}h2{font-size:1.3rem}
+.grid{grid-template-columns:1fr;gap:1rem}
+.card{padding:1.25rem}
+.phase li{padding:1.25rem 1rem 1.25rem 3rem}
+}
+@media (max-width:480px){
+nav a{min-height:56px}
+h1{font-size:1.2rem}
+}
+</style></head><body>
+<div class="container"><header>
+<input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
+<label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
+<nav>
+<a href="/">Home</a><a href="/explorer">Explorer</a><a href="/testnet">Testnet</a><a href="/launch">Launch</a><a href="/future" class="active">Roadmap</a><a href="/agents">Agents</a><a href="/docs">Docs</a><a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color:var(--spectral-blue)">GitHub</a>
+</nav></header>
+<div class="top-logo"><div id="logo-container"></div></div>
+<main>
+<section><h1>The Path Forward</h1><p style="text-align:center;max-width:640px;margin:0 auto 1.5rem">What's live on testnet today, and what's planned. The ghost is awake ,  more is coming.</p></section>
+
+<section><h2>Live on testnet</h2>
+<div class="grid">
+<div class="card"><h3>⛏️ CPU Mining <span class="badge badge-live">Live</span></h3><p>Solo mining to your own node, or Stratum pool mining via <code>zyanya-pool</code>. Adjustable hashrate (<code>--cpu-percent</code>), mines while syncing.</p></div>
+<div class="card"><h3>🪙 Creating Tokens <span class="badge badge-live">Live</span></h3><p>Deploy custom tokens via the ZCL smart-contract VM. The GHOST token ships as the reference. Mint, transfer, and hold ,  all on-chain.</p></div>
+<div class="card"><h3>🔄 The DEX <span class="badge badge-live">Live</span></h3><p>Swap ZYAN ↔ tokens in an on-chain liquidity pool. Add liquidity, set reserves, trade ,  the demo contract is live on testnet.</p></div>
+<div class="card"><h3>📜 Smart Contracts <span class="badge badge-live">Live</span></h3><p>The <code>zyanya-vm</code>: an opcode VM + the ZCL compiler. Deploy contracts, invoke entry points, store state ,  deterministic consensus execution.</p></div>
+<div class="card"><h3>🤖 Agent-Native (Web MCP) <span class="badge badge-live">Live</span></h3><p>The block explorer exposes a Web MCP ,  agents read chain state, query blocks, and (with the write flag) deploy/invoke contracts directly.</p></div>
+<div class="card"><h3>👛 The Wallet <span class="badge badge-live">Live</span></h3><p>BIP-39 24-word (+ optional passphrase) TUI wallet. Send ZYAN, send tokens, swap on the DEX, view history. Secret-masked by default.</p></div>
+</div></section>
+
+<section><h2>Planned</h2>
+<div class="grid">
+<div class="card"><h3>🔒 Staking <span class="badge badge-planned">Planned</span></h3><p>Stake ZYAN to participate in network consensus/governance and earn rewards. Design in progress ,  details as the protocol matures.</p></div>
+<div class="card"><h3>🚀 Mainnet Launch <span class="badge badge-planned">Planned</span></h3><p>Genesis mined silently, stability monitored, then the public reveal. Zero premine, fair launch.</p></div>
+<div class="card"><h3>🌐 More <span class="badge badge-planned">Planned</span></h3><p>Hardened tooling, broader agent integrations, and whatever the IPv6 + ghost community asks for. The testnet is where we shake it out.</p></div>
+</div></section>
+
+<section><h2>The four phases</h2>
+<ol class="phase">
+<li><strong>Ghost in the Machine</strong><span style="color:rgba(224,224,224,.7)">Public testnet hardening ,  protocol improvements, bug fixes, network stability with the community. (Now.)</span></li>
+<li><strong>Dark Launch</strong><span style="color:rgba(224,224,224,.7)">Mainnet genesis mined silently; initial stability monitoring by the core team.</span></li>
+<li><strong>Prepare Optics</strong><span style="color:rgba(224,224,224,.7)">Finalize docs, exchange integrations, and communications. Ready for the public reveal.</span></li>
+<li><strong>The r/IPv6 Signal</strong><span style="color:rgba(224,224,224,.7)">Public announcement to the wider technical community, starting with the IPv6 pioneers.</span></li>
+</ol></section>
+</main>
+<footer><p>The ghost in the IPv6 machine. Forever, always. &bull; <a href="/">zyanya.scottcloudhawk.org</a></p></footer>
+</div>
+<script>fetch('/brand/zyanya-logo.svg').then(r=>r.text()).then(t=>{document.getElementById('logo-container').innerHTML=t;});</script>
+</body></html>
