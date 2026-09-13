@@ -18,7 +18,7 @@
 | **Track 5** | P2P Mesh & Seed Node Infrastructure | 🟢 READY | Multi-Region Seeds, DNS & Port Matrix (64/64) |
 | **Track 6** | Mining Fleet & AstroBWTv3 Tooling | 🟢 READY | AstroBWTv3 CPU Miner & Scaling Verified |
 | **Track 7** | Release Packaging & Binaries (v1.0.0) | 🟢 READY | Windows ZIP Bundled, Hashes & Release Notes |
-| **Track 8** | Community, PR & Launch Blast | 🟢 READY | `COMMUNITY_LAUNCH_KIT.md` Hardened for Oct 1 |
+| **Track 8** | Satoshi Stealth Launch | 🟢 READY | GitHub & SourceForge Only (Zero Socials/Hype) |
 
 ---
 
@@ -130,18 +130,17 @@
 
 ---
 
-## Track 8: Community, PR & Launch Broadcast
-- [x] **Social Media & Developer Outreach Ready**:
-  - [x] Twitter/X 7-tweet launch thread rewritten for October 1 Mainnet in `docs/COMMUNITY_LAUNCH_KIT.md`.
-  - [x] Discord `#announcements` copy prepared with one-click installer commands and WebMCP highlights.
-  - [x] Telegram pinned broadcast drafted with cypherpunk zero-premine security warnings.
-  - [x] Hacker News / Reddit ("Show HN: Zyanya") technical copy written.
+## Track 8: Satoshi-Style Stealth Launch (GitHub & SourceForge)
+- [x] **Zero Social Media Policy Enforced**:
+  - Strictly no Twitter/X hype threads, paid influencers, or vanity social campaigns.
+  - Cypherpunk release notice drafted in `docs/COMMUNITY_LAUNCH_KIT.md` (modeled on Satoshi's 2009 Cryptography Mailing List announcement).
+- [x] **Primary Distribution Channels**:
+  - [x] GitHub Releases: Tag `v1.0.0-mainnet`, official binaries, and SHA256 verification hashes.
+  - [x] SourceForge Mirror: Independent FOSS mirror project configuration (`sourceforge.net/projects/zyanya`).
 - [x] **Public Explorer & WebMCP Gateway**:
-  - [x] Explorer documentation verified (`https://zyanya.scottcloudhawk.org`).
-  - [x] Write-endpoint safety lock enforced (`ZYANYA_EXPLORER_ENABLE_WRITE=false`).
-- [x] **T-Minus Countdown Schedule Mapped**:
-  - **T-14 Days (Sept 17)**: Staging rehearsal with external miners on isolated test subnet.
-  - **T-7 Days (Sept 24)**: Seed node infrastructure freeze and DNS verification.
-  - **T-3 Days (Sept 28)**: Final binary release publishing on GitHub (`v1.0.0-mainnet`).
-  - **T-1 Day (Sept 30)**: Community announcements and node operator preparation.
-  - **T-0 (Oct 1, 00:00 UTC)**: Genesis launch, block generation commences, mining goes live.
+  - [x] Independent explorer live at `https://zyanya.scottcloudhawk.org`.
+  - [x] Read-only safety default (`ZYANYA_EXPLORER_ENABLE_WRITE=false`).
+- [x] **Launch Day Sequence (Oct 1, 00:00 UTC)**:
+  - Publish GitHub release & SourceForge tarballs/zips.
+  - Seed nodes start generating initial blocks with zero premine.
+  - Community miners connect and begin discovering blocks organically.

@@ -1,189 +1,88 @@
-# 🚀 Zyanya Community Launch Kit (Mainnet Edition)
+# 🏛️ Zyanya Cypherpunk Launch Kit (Satoshi Edition)
 
-> **Mainnet Launch**: October 1, 2026 (00:00 UTC)  
-> **Tagline**: The First GhostDAG L1 Driven by AI Coding Agents  
-> **Philosophy**: 100% Fair Launch, Zero Premine, Pure Cypherpunk Mechanics  
-
----
-
-## 🐦 Twitter / X Launch Thread (Official)
-
-### Tweet 1 (The Hook)
-Most new L1 teams waste 6 months building bloated web frontends and fighting venture capitalists for token allocations.
-
-We decided to do the opposite.
-
-Meet Zyanya ($ZYN): a 1 block-per-second GhostDAG Layer 1 in pure Rust, built from the ground up to be driven by AI coding agents.
-
-Mainnet is officially LIVE. 🧵👇
+> **Launch Policy**: Zero Social Media, Zero Marketing Hype, 100% Code & Mathematics  
+> **Primary Distribution**: GitHub Releases & SourceForge Project Mirror  
+> **Launch Date**: October 1, 2026 (00:00 UTC)  
 
 ---
 
-### Tweet 2 (Zero Premine & Cypherpunk Ethos)
-Let's get the tokenomics out of the way first:
+## 1. The Cypherpunk Announcement
 
-• 0% VC allocation  
-• 0% team or insider reserve  
-• 0 private presales or discounted SAFTs  
-• Genesis block reward: sent to unspendable `OP_FALSE`
+Modeled directly on Satoshi Nakamoto's January 9, 2009 Bitcoin release notice to the Cryptography Mailing List. Understated, factual, and strictly technical.
 
-At Block 0, circulating supply was strictly **0 ZYAN**. Every single coin is mined by the community via AstroBWTv3 CPU proof-of-work.
+```text
+Subject: Announcing Zyanya v1.0.0 — an open-source, peer-to-peer GhostDAG system
 
----
+I've developed a new open-source P2P blockDAG cryptocurrency called Zyanya ($ZYN).
+It is completely decentralized, with no central server or trusted parties,
+and is engineered from inception to be operated directly by autonomous AI agents.
 
-### Tweet 3 (The Agent-Native Revolution)
-Frontend lock-in is dead.
+Key properties:
+- Parallel GhostDAG consensus running at 1 block per second with sub-second finality
+- Zero premine (the genesis transaction outputs 0 coins; initial circulating supply is 0)
+- AstroBWTv3 memory-hard CPU proof-of-work (optimized for consumer CPUs)
+- Dual-stream coinbase emission: 50 ZYAN/block (25 liquid, 25 12-month linear vesting lock)
+- Subnetwork 3 constant-product AMM with 0.3% protocol fee staking rewards
+- Native WebMCP (Model Context Protocol) gateway for autonomous coding agents
+- Pure global unicast IPv6 transport (no NAT traversal or UPnP vulnerabilities)
+- Mathematical lifetime cap of ~28.7 Billion ZYAN (smooth geometric halving)
 
-Instead of forcing you into buggy browser extensions, every Zyanya node runs a native WebMCP (Model Context Protocol) gateway.
+Source code and standalone binaries (Windows x64 & Linux x86_64) are available at:
+GitHub:      https://github.com/scotthawk-maker/zyanya
+SourceForge: https://sourceforge.net/projects/zyanya/
 
-Connect Claude, Cursor, Antigravity, or local Ollama to your node. Tell it:
-"Check my mining rewards and build me a terminal dashboard."
-Your agent builds and runs it in 30 seconds.
-
----
-
-### Tweet 4 (The Raw Engine Specs)
-Under the hood, this isn't a test script—it's high-performance distributed infrastructure:
-
-• 1 block per second GhostDAG ($k=18$)  
-• Sub-second transaction finality  
-• Dual-Stream Coinbase: 50% liquid / 50% 12-month linear covenant lock  
-• Subnetwork 3 AMM DEX (`dex.zcl`) with 0.3% protocol fees paid to sovereign stakers  
-• Pure IPv6 Global Unicast transport  
-
----
-
-### Tweet 5 (Genesis Spark: Pioneer Node Reward)
-Running a node? We reward early network builders:
-
-Run our 1-click installer:
-🪟 Windows: `irm https://zyanya.scottcloudhawk.org/install.ps1 | iex`  
-🐧 Linux: `curl -fsSL https://zyanya.scottcloudhawk.org/install.sh | bash`
-
-Your node automatically claims the Genesis Spark:
-⚡ 2.0 ZYAN liquid gas  
-🏦 8.0 ZYAN auto-staked in the AMM protocol fee vault  
-
----
-
-### Tweet 6 (Start Solo Mining in 60s)
-No specialized ASICs. No industrial farms.
-
-Solo mining is optimized for standard consumer CPUs using AstroBWTv3 with HeavyHash matrix acceleration:
-
-1. Download v1.0.0 from GitHub
-2. Run `.\zyanyad.exe --utxoindex`
-3. Run `.\zyanya-miner.exe --cpu-percent 50 --mining-address <YOUR_ADDRESS>`
-
----
-
-### Tweet 7 (Call to Action)
-Everything is open source from day one. Code, release binaries, and AI agent prompts are live right now:
-
-🔗 GitHub: https://github.com/scotthawk-maker/zyanya  
-📦 v1.0.0 Release: https://github.com/scotthawk-maker/zyanya/releases/tag/v1.0.0-mainnet  
-📖 Docs: https://github.com/scotthawk-maker/zyanya/tree/main/docs  
-🌐 Explorer: https://zyanya.scottcloudhawk.org  
-
-Spin up a node, point your AI assistant at it, and welcome to the agentic era. 🚀
-
----
-
-## 💬 Discord `#announcements` Broadcast
-
-```markdown
-@everyone 🚀 **ZYANYA MAINNET IS OFFICIALLY LIVE**
-
-We are thrilled to announce that **Zyanya ($ZYN)** has officially launched its Mainnet!
-
-### 🪙 What is Zyanya?
-Zyanya is an agent-native Layer 1 blockchain written in Rust. It combines 1 block-per-second parallel GhostDAG consensus with native WebMCP (Anthropic's Model Context Protocol), giving AI coding agents first-class access to inspect state, generate wallets, and execute transactions.
-
-### 🛡️ Radical Fair Launch
-• **Zero Premine:** Genesis block outputs 0 coins (OP_FALSE burn). Circulating supply started at exactly **0 ZYAN**.
-• **No VCs, No Insiders:** 100% of supply is distributed via public AstroBWTv3 CPU mining and ecosystem rewards.
-• **Hard Cap:** ~28.7 Billion ZYAN maximum lifetime supply with smooth monthly geometric halving.
-• **Dual-Stream Rewards:** 50 ZYAN/block (25 Liquid + 25 Locked in a 12-month linear vesting covenant).
-
-### ⚡ Quickstart (60 Seconds to Launch)
-1. **1-Click Node & Pioneer Install:**
-   - Windows: `irm https://zyanya.scottcloudhawk.org/install.ps1 | iex`
-   - Linux: `curl -fsSL https://zyanya.scottcloudhawk.org/install.sh | bash`
-2. **Claim Genesis Spark:**
-   - 2.0 ZYAN liquid + 8.0 ZYAN auto-staked in the AMM fee vault for active nodes.
-3. **Solo CPU Mining:**
-   - `./zyanya-miner --cpu-percent 50 --mining-address <YOUR_ZYANYA_ADDRESS>`
-
-### 📦 Official Links & Binaries
-• **GitHub Repository:** https://github.com/scotthawk-maker/zyanya
-• **Release Binaries (v1.0.0):** https://github.com/scotthawk-maker/zyanya/releases/tag/v1.0.0-mainnet
-• **Live Explorer:** https://zyanya.scottcloudhawk.org
-• **WebMCP Gateway:** https://zyanya.scottcloudhawk.org/mcp/rpc
-
-Jump into `#dev-chat` to share your node telemetry and `#agent-builds` to show off what your AI assistant creates!
+The network is live and open to anyone who wishes to run a node or mine.
 ```
 
 ---
 
-## ✈️ Telegram Pinned Announcement
+## 2. SourceForge Project Configuration
 
-```markdown
-📌 **ZYANYA MAINNET IS LIVE**
+Hosting Zyanya on SourceForge preserves the historical open-source tradition and provides a secondary, independent mirror for miners and node operators.
 
-Welcome to Zyanya ($ZYN) — the decentralized GhostDAG Layer 1 engineered for the autonomous AI agent economy.
+### Project Metadata
+* **Project Name**: `Zyanya`
+* **Unix Name**: `zyanya`
+* **Short Description**: Agent-Native GhostDAG Layer 1 Blockchain with Zero Premine
+* **Categories**: 
+  - Communications > Telephony / P2P
+  - Security > Cryptography
+  - Software Development > Build Tools
+* **License**: MIT License / Apache License 2.0
+* **Programming Language**: Rust (100%)
 
----
-
-⚡ **Core Network Parameters**
-• Consensus: 1 Block Per Second GhostDAG (k=18)
-• Initial Circulating Supply: 0 ZYAN (Zero Premine, OP_FALSE Genesis)
-• Proof-of-Work: AstroBWTv3 CPU Mining
-• Block Reward: 50 ZYAN (25 Liquid / 25 12-Month Vesting Covenant)
-• Max Supply: ~28.7 Billion ZYAN (Smooth Geometric Halving)
-• Transport: Pure Global Unicast IPv6
-
----
-
-🎁 **Pioneer Node Genesis Spark**
-Early node runners receive 2.0 ZYAN liquid gas + 8.0 ZYAN staked in the AMM fee vault!
-Run the automated installer:
-• Windows: `irm https://zyanya.scottcloudhawk.org/install.ps1 | iex`
-• Linux: `curl -fsSL https://zyanya.scottcloudhawk.org/install.sh | bash`
-
----
-
-🔗 **Official Links**
-• GitHub: https://github.com/scotthawk-maker/zyanya
-• v1.0.0 Binaries: https://github.com/scotthawk-maker/zyanya/releases/tag/v1.0.0-mainnet
-• Explorer: https://zyanya.scottcloudhawk.org
-• WebMCP Docs: https://github.com/scotthawk-maker/zyanya/blob/main/docs/WEBMCP.md
-
-⚠️ **Security Warning**
-Admins will NEVER DM you first, ask for your seed phrases, or offer private token sales. Everything is mined openly on public infrastructure.
+### File Distribution Structure on SourceForge
+```text
+/zyanya/
+  ├── v1.0.0/
+  │   ├── zyanya-v1.0.0-mainnet-windows-x64.zip
+  │   ├── zyanya-v1.0.0-mainnet-windows-x64.zip.sha256
+  │   ├── zyanya-v1.0.0-mainnet-linux-x86_64.tar.gz
+  │   ├── zyanya-v1.0.0-mainnet-linux-x86_64.tar.gz.sha256
+  │   ├── sha256sums-v1.0.0-mainnet.txt
+  │   └── README.txt
+  └── latest -> v1.0.0/
 ```
 
 ---
 
-## 🌐 Hacker News / Reddit Submission Copy
+## 3. GitHub Distribution Checklist
 
-**Title**: Show HN: Zyanya – A Rust GhostDAG L1 with Native WebMCP for AI Coding Agents
+On October 1, the launch requires exactly three actions on GitHub:
 
-**Body**:
-Hey HN,
+1. **Tag & Release:**
+   - Tag: `v1.0.0-mainnet`
+   - Attach binaries: `zyanya-v1.0.0-mainnet-windows-x64.zip` and `zyanya-v1.0.0-mainnet-linux-x86_64.tar.gz`
+   - Attach `sha256sums-v1.0.0-mainnet.txt`
+2. **Release Body:**
+   - Copy contents from [`docs/RELEASE_NOTES_v1.0.0.md`](file:///C:/Users/Shawn/zyanya-build/rusty-spectre-git/docs/RELEASE_NOTES_v1.0.0.md)
+3. **Genesis Mining Start:**
+   - Begin block generation on seed nodes and open public P2P mesh on port `18111`
 
-We just launched Mainnet for Zyanya, a high-throughput Layer 1 blockchain written in Rust that achieves 1 block per second via GhostDAG consensus ($k=18$).
+---
 
-Instead of building yet another React web wallet that breaks on every dependency bump, we integrated the node daemon directly with **WebMCP** (Anthropic's Model Context Protocol). 
+## 4. Why Zero Socials?
 
-Developers connect Claude, Cursor, Antigravity, or local LLMs directly to their local or remote node over IPv6. You simply prompt your assistant ("Inspect my UTXOs, assemble a swap on the Subnetwork 3 AMM, and render a terminal dashboard"), and the model generates and executes the code using native MCP tools.
-
-### Architecture Highlights:
-- **Zero Premine Fair Launch:** 0 VC tokens, 0 team allocations. Genesis block burns its output to `OP_FALSE`. Initial supply at T=0 is strictly 0 ZYAN.
-- **Dual-Stream Coinbase:** 50 ZYAN per block, split 50% liquid (immediate spendable after 100 confirmations) and 50% into a 12-month linear time-decay UTXO covenant.
-- **AstroBWTv3 CPU Mining:** Memory-hard, branch-heavy PoW with HeavyHash matrix multiplication optimized for consumer CPUs.
-- **Pure IPv6:** Eliminates NAT traversal bugs, UPnP vulnerabilities, and centralized relay servers.
-
-Source code, precompiled binaries, and documentation:
-https://github.com/scotthawk-maker/zyanya
-
-Would love your feedback on the architecture and WebMCP agent integration!
+1. **Immunity to Regulatory Scrutiny:** No promotion, no securities claims, no marketing claims, no entity. Pure free software.
+2. **Organic Meritocracy:** Only genuine developers, miners, and agent builders join the early network.
+3. **AI-First Discovery:** Autonomous coding agents crawl GitHub, parse `llms.txt`, and interact with MCP servers. They do not get influenced by Twitter hype.
