@@ -132,7 +132,7 @@ def main():
                         help="SourceForge Release API Key")
     parser.add_argument("--project", default=DEFAULT_PROJECT, help="SourceForge project Unix name (default: zyanya)")
     parser.add_argument("--version", default=DEFAULT_VERSION, help="Release version (default: v1.0.0)")
-    parser.add_argument("--username", default=os.environ.get("SOURCEFORGE_USER", "scotthawk"),
+    parser.add_argument("--username", default=os.environ.get("SOURCEFORGE_USER", "washegon"),
                         help="SourceForge username for SFTP/rsync")
     parser.add_argument("--action", choices=["check", "instructions", "set-defaults", "all"], default="check",
                         help="Action to perform")
