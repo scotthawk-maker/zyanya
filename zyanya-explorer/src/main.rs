@@ -137,14 +137,13 @@ async fn cors_same_origin(req: Request, next: Next) -> Response {
     resp
 }
 
-fn create_ipv6_only_listener(addr_str: &str) -> Result<TcpListener, Box<dyn std::error::Error>> {
+fn create_listener(addr_str: &str) -> Result<TcpListener, Box<dyn std::error::Error>> {
     let addr: SocketAddr = addr_str.parse()?;
-    if !addr.is_ipv6() {
-        return Err("Listen address MUST be an IPv6 address (e.g., [::]:8098) to enforce IPv6-only positioning!".into());
+    let domain = if addr.is_ipv6() { Domain::IPV6 } else { Domain::IPV4 };
+    let socket = Socket::new(domain, Type::STREAM, Some(Protocol::TCP))?;
+    if addr.is_ipv6() {
+        let _ = socket.set_only_v6(false);
     }
-
-    let socket = Socket::new(Domain::IPV6, Type::STREAM, Some(Protocol::TCP))?;
-    socket.set_only_v6(true)?;
     socket.set_reuse_address(true)?;
     socket.bind(&addr.into())?;
     socket.listen(1024)?;
@@ -163,16 +162,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  ZYANYA BLOCK EXPLORER + IPv6-ONLY WEBSITE (PHASE 3)");
     println!("  The Ghost in the IPv6 Machine • Forever. Always.");
     println!("===============================================================");
-    println!(" [!] Enforcing IPv6-only socket binding on {}", cli.listen);
+    println!(" [!] Binding listener socket on {}", cli.listen);
     println!(" [*] Connecting to Zyanya Node gRPC at {}", cli.rpcserver);
 
-    let listener = match create_ipv6_only_listener(&cli.listen) {
+    let listener = match create_listener(&cli.listen) {
         Ok(l) => {
-            println!(" [✓] Successfully bound socket [::]:8098 (IPV6_V6ONLY=true, IPv4 disabled)");
+            println!(" [✓] Successfully bound socket {}", cli.listen);
             l
         }
         Err(err) => {
-            eprintln!(" [✗] Failed to bind IPv6-only socket: {}", err);
+            eprintln!(" [✗] Failed to bind socket {}: {}", cli.listen, err);
             return Err(err);
         }
     };
