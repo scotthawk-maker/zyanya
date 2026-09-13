@@ -233,14 +233,26 @@ if (-not $PioneerAddress -and (Test-Path $AddressFile)) {
 if (-not $PioneerAddress) {
     if (Test-Path $WalletExe) {
         try {
-            $WalletArgs = @("--generate-key")
-            if ($Testnet) { $WalletArgs += "--testnet" }
-            $AddrOutput = & $WalletExe @WalletArgs 2>&1 | Out-String
-            $match = [regex]::Match($AddrOutput, "(zyanya|zyanyatest):[a-z0-9]+")
-            if ($match.Success) {
-                $PioneerAddress = $match.Value
-                Set-Content -Path $AddressFile -Value $PioneerAddress
-                Write-Host "[✓] Generated new sovereign address: $PioneerAddress" -ForegroundColor Green
+            $WalletArgs = if ($Testnet) { "--generate-key --testnet" } else { "--generate-key" }
+            $psi = New-Object System.Diagnostics.ProcessStartInfo
+            $psi.FileName = $WalletExe
+            $psi.Arguments = $WalletArgs
+            $psi.UseShellExecute = $false
+            $psi.RedirectStandardOutput = $true
+            $psi.RedirectStandardInput = $true
+            $psi.CreateNoWindow = $true
+            $proc = [System.Diagnostics.Process]::Start($psi)
+            $finished = $proc.WaitForExit(2500)
+            if ($finished) {
+                $AddrOutput = $proc.StandardOutput.ReadToEnd()
+                $match = [regex]::Match($AddrOutput, "(zyanya|zyanyatest):[a-z0-9]+")
+                if ($match.Success) {
+                    $PioneerAddress = $match.Value
+                    Set-Content -Path $AddressFile -Value $PioneerAddress
+                    Write-Host "[✓] Generated new sovereign address: $PioneerAddress" -ForegroundColor Green
+                }
+            } else {
+                try { $proc.Kill() } catch {}
             }
         } catch {
             # Fallback if wallet CLI not available
