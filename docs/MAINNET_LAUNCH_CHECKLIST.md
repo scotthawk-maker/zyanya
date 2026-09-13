@@ -20,6 +20,7 @@
 | **Track 7** | Release Packaging & Binaries (v1.0.0) | 🟢 READY | Windows ZIP Bundled, Hashes & Release Notes |
 | **Track 8** | Satoshi Stealth Launch | 🟢 READY | GitHub & SourceForge Only (Zero Socials/Hype) |
 | **Track 9** | Scoped Agent Session Keys | 🟡 IN PROGRESS | `specs/SESSION_KEYS_SPEC.md` (P0 Blocker, Target: Sept 21) |
+| **Track 10** | IPv6 P2P Anti-Eclipse & Inbound Capping | 🟡 IN PROGRESS | `specs/P2P_IPV6_ECLIPSE_DEFENSE.md` (P0 Blocker, Target: Sept 23) |
 
 ---
 
