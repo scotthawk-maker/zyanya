@@ -5,6 +5,10 @@
 > **Max Supply**: ~28.7 Billion ZYAN (Zero Premine, 50 ZYAN/block, 1 BPS GhostDAG)  
 > **Transport**: Pure Global Unicast IPv6  
 
+> [!IMPORTANT]
+> **Go / No-Go Genesis Policy (Security Trumps Calendar)**:
+> October 1, 2026 is an engineering target date, not an unconditional marketing deadline. Genesis activation is strictly contingent on all 10 tracks achieving verified green status. If Track 9 (Session Keys) or Track 10 (IPv6 Anti-Eclipse) fails adversarial stress testing on Testnet-10, the launch date will be delayed until remediations pass full red-teaming. We will not lower the security bar to hit a calendar date.
+
 ---
 
 ## 📋 Master Launch Status Overview
