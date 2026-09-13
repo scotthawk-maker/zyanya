@@ -3,444 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zyanya Web MCP Tools ,  Agent-Native Blockchain</title>
-    <style>
-        :root {
-            --bg-base: #0A0F1C;
-            --bg-shadow: #0D3B50;
-            --accent-spectral: #7EC8D3;
-            --text-main: #E0E0E0;
-            --burn-red: #FF4D4D;
-            --badge-read: #2E7D32;
-            --badge-op: #C62828;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            background-color: var(--bg-base);
-            color: var(--text-main);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            line-height: 1.6;
-        }
-
-        .mono { font-family: 'Courier New', Courier, monospace; }
-
-        .grid-bg {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: 
-                radial-gradient(circle at 50% 30%, rgba(13, 59, 80, 0.35) 0%, transparent 70%),
-                linear-gradient(rgba(126, 200, 211, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(126, 200, 211, 0.03) 1px, transparent 1px);
-            background-size: 100% 100%, 40px 40px, 40px 40px;
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        .menu-toggle { display: none; }
-        .hamburger {
-            display: none;
-            font-size: 1.8rem;
-            color: var(--accent-spectral);
-            cursor: pointer;
-            padding: 0.5rem 1rem;
-            user-select: none;
-            z-index: 101;
-        }
-
-        header {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 1.2rem 2.5rem;
-            border-bottom: 1px solid rgba(126, 200, 211, 0.2);
-            background: rgba(10, 15, 28, 0.95);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .ipv6-badge {
-            background: rgba(126, 200, 211, 0.1);
-            border: 1px solid var(--accent-spectral);
-            color: var(--accent-spectral);
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-        }
-
-        nav {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        nav a {
-            color: var(--accent-spectral);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: color 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        nav a:hover, nav a.active {
-            color: #FFFFFF;
-            text-shadow: 0 0 8px var(--accent-spectral);
-        }
-
-        .btn {
-            background: rgba(13, 59, 80, 0.5);
-            border: 1px solid var(--accent-spectral);
-            color: var(--accent-spectral);
-            padding: 0.5rem 1.2rem;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-        }
-        .btn:hover {
-            background: var(--accent-spectral);
-            color: var(--bg-base);
-            box-shadow: 0 0 15px rgba(126, 200, 211, 0.5);
-        }
-
-        .container { max-width: 1250px; margin: 0 auto; padding: 2rem; }
-
-        .hero-card {
-            background: linear-gradient(135deg, rgba(13, 59, 80, 0.4), rgba(10, 15, 28, 0.8));
-            border: 1px solid var(--accent-spectral);
-            border-radius: 8px;
-            padding: 2.5rem;
-            margin-bottom: 2.5rem;
-            box-shadow: 0 0 25px rgba(126, 200, 211, 0.15);
-        }
-
-        .hero-title {
-            font-size: 1.8rem;
-            color: var(--accent-spectral);
-            letter-spacing: 2px;
-            margin-bottom: 1rem;
-        }
-
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                padding: 0.8rem 1rem;
-            }
-
-            .hamburger {
-                display: block;
-            }
-
-            nav {
-                display: none;
-                flex-direction: column;
-                width: 100%;
-                background: rgba(10, 15, 28, 0.98);
-                border: 1px solid rgba(126, 200, 211, 0.3);
-                border-radius: 8px;
-                margin-top: 0.5rem;
-                padding: 0.5rem 0;
-                gap: 0;
-            }
-
-            .menu-toggle:checked ~ nav {
-                display: flex;
-            }
-
-            nav a {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-height: 48px;
-                width: 100%;
-                padding: 0 1rem;
-                border-bottom: 1px solid rgba(13, 59, 80, 0.5);
-                font-size: 1rem;
-            }
-
-            nav a:last-child {
-                border-bottom: none;
-            }
-
-            .container {
-                padding: 1rem 16px;
-            }
-
-            .hero-card {
-                padding: 1.5rem;
-            }
-
-            .hero-title {
-                font-size: 1.4rem;
-            }
-
-            .hero-stats {
-                flex-direction: column;
-                gap: 0.75rem;
-            }
-
-            .inspector-card {
-                padding: 1.25rem;
-            }
-
-            .tools-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-
-            select.form-input, textarea.form-input, input.form-input {
-                font-size: 16px;
-                min-height: 48px;
-            }
-
-            .btn {
-                width: 100%;
-                text-align: center;
-                min-height: 48px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0.8rem 1.5rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            nav a {
-                min-height: 56px;
-            }
-
-            .hero-title {
-                font-size: 1.2rem;
-            }
-
-            .output-box {
-                font-size: 0.75rem;
-            }
-        }
-    
-
-        .hero-text {
-            font-size: 1.05rem;
-            color: #B0C4CE;
-            line-height: 1.7;
-            margin-bottom: 1.5rem;
-        }
-
-        .hero-stats {
-            display: flex;
-            gap: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .hero-stat-item {
-            background: rgba(5, 8, 16, 0.7);
-            border: 1px solid rgba(126, 200, 211, 0.2);
-            padding: 0.75rem 1.25rem;
-            border-radius: 6px;
-        }
-
-        .hero-stat-val { font-size: 1.2rem; font-weight: 700; color: var(--accent-spectral); }
-        .hero-stat-lbl { font-size: 0.75rem; color: #90A0B0; }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 2rem 0 1.5rem;
-            border-bottom: 1px solid rgba(126, 200, 211, 0.2);
-            padding-bottom: 0.75rem;
-        }
-
-        .section-title { font-size: 1.3rem; color: var(--accent-spectral); letter-spacing: 2px; }
-
-        /* Inspector card */
-        .inspector-card {
-            background: rgba(13, 59, 80, 0.3);
-            border: 1px solid rgba(126, 200, 211, 0.3);
-            border-radius: 8px;
-            padding: 2rem;
-            margin-bottom: 3rem;
-        }
-
-        .form-group { margin-bottom: 1.25rem; }
-        .form-label { display: block; font-size: 0.85rem; color: var(--accent-spectral); margin-bottom: 0.4rem; letter-spacing: 1px; }
-
-        select.form-input, textarea.form-input, input.form-input {
-            width: 100%;
-            background: #050810;
-            border: 1px solid rgba(126, 200, 211, 0.3);
-            color: var(--text-main);
-            padding: 0.75rem 1rem;
-            border-radius: 4px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9rem;
-        }
-
-        select.form-input option { background: #0A0F1C; color: var(--text-main); }
-
-        .output-box {
-            background: #04060C;
-            border: 1px solid rgba(126, 200, 211, 0.25);
-            border-radius: 6px;
-            padding: 1.25rem;
-            min-height: 120px;
-            max-height: 350px;
-            overflow-y: auto;
-            color: #A0F0D0;
-            white-space: pre-wrap;
-            word-break: break-all;
-            font-size: 0.85rem;
-        }
-
-        /* Tools grid */
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .tool-card {
-            background: rgba(13, 59, 80, 0.2);
-            border: 1px solid rgba(126, 200, 211, 0.2);
-            border-radius: 8px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-        }
-
-        .tool-card:hover {
-            border-color: var(--accent-spectral);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(13, 59, 80, 0.5);
-        }
-
-        .tool-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
-        .tool-name { font-size: 1.1rem; color: var(--accent-spectral); font-weight: 700; }
-
-        .tag-query { background: rgba(46, 125, 50, 0.25); color: #81C784; border: 1px solid #4CAF50; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.7rem; }
-        .tag-op { background: rgba(198, 40, 40, 0.25); color: #E57373; border: 1px solid #F44336; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.7rem; }
-
-        .tool-desc { color: #A0B0BC; font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5; }
-
-        .schema-box {
-            background: #050810;
-            border: 1px solid rgba(126, 200, 211, 0.15);
-            padding: 0.75rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            color: #7EC8D3;
-        }
-
-        footer {
-            border-top: 1px solid rgba(126, 200, 211, 0.15);
-            padding: 2.5rem 0;
-            text-align: center;
-            color: #708090;
-            font-size: 0.85rem;
-        }
-    </style>
+    <title>Zyanya WebMCP: Interactive Tool Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <div class="grid-bg"></div>
+    <header class="site-header">
+        <div class="header-inner container">
+            <a href="/" class="brand-link" aria-label="Zyanya Home">
+                <div class="brand-logo"></div>
+                <span class="brand-name">ZYANYA</span>
+            </a>
+            
+            <div class="header-network-pill">
+                <span class="network-dot"></span>
+                <span id="header-network-name">TESTNET-10 · 1 BPS</span>
+            </div>
 
-    <header>
-        <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
-        <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-        <nav>
-            <a href="/">Home</a>
-            <a href="/explorer">Explorer</a>
-            <a href="/testnet">Testnet</a>
-            <a href="/launch">Launch</a>
-            <a href="/future">Roadmap</a>
-            <a href="/agents">Agents</a>
-            <a href="/docs">Docs</a>
-            <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--accent-spectral);">GitHub</a>
-        </nav>
+            <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+
+            <nav id="site-nav" class="site-nav" aria-label="Primary Navigation">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/explorer" class="nav-link">Explorer</a>
+                <a href="/dag" class="nav-link">DAG Graph</a>
+                <a href="/launch" class="nav-link">Token Launch</a>
+                <a href="/tools" class="nav-link active">WebMCP Tools</a>
+                <a href="/testnet" class="nav-link">Testnet</a>
+                <a href="/future" class="nav-link">Roadmap</a>
+                <a href="/agents" class="nav-link">Agents</a>
+                <a href="/docs" class="nav-link">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" rel="noopener" class="nav-link nav-link-external">GitHub ↗</a>
+            </nav>
+        </div>
     </header>
 
-    <div class="top-logo" style="text-align: center; margin: 1.5rem 0;"><div id="tools-logo"></div></div>
-
     <main class="container">
-        <section class="hero-card">
-            <h1 class="hero-title mono">ZYANYA: THE AGENT-NATIVE BLOCKCHAIN</h1>
-            <p class="hero-text">
-                Zyanya exposes all blockchain queries, smart contract execution, DEX swaps, and token operations as <strong>Web MCP Tools</strong> via <code class="mono">navigator.modelContext</code> (W3C Web MCP standard). AI agents visiting <code class="mono">zyanya.scottcloudhawk.org</code> interact with typed tool definitions directly ,  no OCR, no screenshots, and no clicking.
-            </p>
-            <div class="hero-stats mono">
-                <div class="hero-stat-item">
-                    <div class="hero-stat-val">15 TOOLS</div>
-                    <div class="hero-stat-lbl">REGISTERED WEBMCP TOOLS</div>
-                </div>
-                <div class="hero-stat-item">
-                    <div class="hero-stat-val">W3C SPEC</div>
-                    <div class="hero-stat-lbl">NAVIGATOR.MODELCONTEXT</div>
-                </div>
-                <div class="hero-stat-item">
-                    <div class="hero-stat-val">MCP-B POLYFILL</div>
-                    <div class="hero-stat-lbl">CROSS-BROWSER ENABLED</div>
-                </div>
-                <div class="hero-stat-item">
-                    <div class="hero-stat-val">IPv6 + AGENT</div>
-                    <div class="hero-stat-lbl">WORLD FIRST POSITIONING</div>
-                </div>
-            </div>
-        </section>
-
-        <div class="section-header">
-            <h2 class="section-title mono">INTERACTIVE WEBMCP TOOL INSPECTOR</h2>
-            <span class="mono" style="font-size: 0.8rem; color: #708090;">Test Web MCP execution in browser</span>
+        <div class="page-header">
+            <div class="page-badge">WebMCP Playground · Browser Runtime</div>
+            <h1 class="page-title">Interactive Tool Playground</h1>
+            <p class="page-desc">Test and debug Zyanya WebMCP tool calls in real time directly from your browser. Tools communicate natively with the local BlockDAG node.</p>
         </div>
 
-        <div class="inspector-card">
-            <div class="form-group">
-                <label class="form-label mono">SELECT WEBMCP TOOL</label>
-                <select id="tool-select" class="form-input mono" onchange="onToolSelectChange()">
-                    <option value="">Loading tools from navigator.modelContext...</option>
-                </select>
+        <div class="card-grid-2">
+            <!-- LEFT: TOOL RUNNER -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mono">EXECUTE TOOL</h3>
+                    <span class="tag tag-cyan mono">LIVE RUNNER</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="tool-select">SELECT WEBMCP TOOL</label>
+                    <select id="tool-select" class="form-select mono" onchange="onToolSelectChange()">
+                        <option value="">Loading tools from navigator.modelContext...</option>
+                    </select>
+                </div>
+
+                <p id="tool-desc-display" style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem; min-height: 24px;"></p>
+
+                <div class="form-group">
+                    <label class="form-label" for="tool-params-input">ARGUMENTS (JSON FORMAT)</label>
+                    <textarea id="tool-params-input" class="form-textarea mono" rows="8" style="font-size: 0.85rem;">{}</textarea>
+                </div>
+
+                <button class="btn btn-primary mono" style="width: 100%;" onclick="runSelectedTool()">
+                    EXECUTE TOOL VIA WEBMCP →
+                </button>
             </div>
 
-            <div class="form-group">
-                <label class="form-label mono">TOOL DESCRIPTION & PARAMETERS (JSON INPUT)</label>
-                <div id="tool-desc-display" style="color: #B0C4CE; font-size: 0.9rem; margin-bottom: 0.5rem;" class="mono"></div>
-                <textarea id="tool-params-input" class="form-input mono" rows="4" placeholder="{}"></textarea>
-            </div>
-
-            <button class="btn mono" style="margin-bottom: 1.5rem; font-size: 0.95rem; padding: 0.75rem 2rem;" onclick="runSelectedTool()">EXECUTE WEBMCP TOOL ⚡</button>
-
-            <div class="form-group">
-                <label class="form-label mono">EXECUTION OUTPUT (RESULT JSON)</label>
-                <div id="tool-output-box" class="output-box mono">Select a tool above and click Execute.</div>
+            <!-- RIGHT: EXECUTION OUTPUT -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mono">EXECUTION RESPONSE</h3>
+                    <span class="tag tag-liquid mono">TELEMETRY</span>
+                </div>
+                <div id="tool-output-box" class="code-block mono" style="min-height: 280px; max-height: 400px; overflow-y: auto; margin-top: 0;">
+// Select a tool on the left and click execute.
+// Output, execution latency, and return payloads will appear here.
+                </div>
             </div>
         </div>
 
-        <div class="section-header">
-            <h2 class="section-title mono">REGISTERED WEBMCP BLOCKCHAIN TOOLS</h2>
-            <span class="mono" style="font-size: 0.8rem; color: #708090;">15 Exposed Operations</span>
-        </div>
-
-        <div class="tools-grid" id="tools-cards-grid">
-            <!-- Dynamically populated from navigator.modelContext -->
+        <!-- TOOL CATALOG CARDS -->
+        <div class="card" style="margin-top: 1.5rem;">
+            <div class="card-header">
+                <h3 class="card-title mono">REGISTERED WEBMCP TOOLS</h3>
+                <span class="mono" style="color: var(--text-muted); font-size: 0.8rem;">Auto-detected in browser context</span>
+            </div>
+            <div id="tools-cards-grid" class="card-grid-2" style="gap: 1rem;">
+                <p style="color: var(--text-muted); padding: 1rem;">Scanning modelContext...</p>
+            </div>
         </div>
     </main>
 
-    <footer>
-        <div class="container">
-            <p class="mono">ZYANYA PROTOCOL • THE FIRST IPv6-NATIVE + AGENT-NATIVE BLOCKCHAIN</p>
-            <p style="margin-top: 0.5rem; opacity: 0.6;">Exposing typed blockchain operations via navigator.modelContext</p>
+    <footer class="site-footer">
+        <div class="footer-inner container">
+            <div>
+                <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.25rem;">Zyanya BlockDAG Protocol</p>
+                <p>The ghost in the IPv6 machine. Forever, always.</p>
+            </div>
+            <div class="footer-links">
+                <a href="/explorer" class="footer-link">Explorer</a>
+                <a href="/dag" class="footer-link">DAG Graph</a>
+                <a href="/launch" class="footer-link">Token Launch</a>
+                <a href="/tools" class="footer-link">WebMCP Tools</a>
+                <a href="/agents" class="footer-link">AI Agents</a>
+                <a href="/docs" class="footer-link">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" rel="noopener" class="footer-link">GitHub</a>
+            </div>
         </div>
     </footer>
 
+    <script src="/shared.js"></script>
     <script src="/webmcp.js"></script>
     <script>
         fetch('/brand/zyanya-logo.svg').then(r => r.text()).then(html => {

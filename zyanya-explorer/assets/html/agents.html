@@ -3,525 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zyanya ,  Agent-Native Blockchain</title>
+    <title>Zyanya: Autonomous Agent Swarms and WebMCP</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --void: #0A0F1C;
-            --shadow-teal: #0D3B50;
-            --spectral-blue: #7EC8D3;
-            --text: #E0E0E0;
-            --burn-red: #FF4D4D;
-            --font-mono: 'Fira Code', monospace;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html, body {
-            background-color: var(--void);
-            color: var(--text);
-            font-family: var(--font-mono);
-            font-size: 16px;
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        .grid-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-image:
-                linear-gradient(to right, rgba(13, 59, 80, 0.3) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(13, 59, 80, 0.3) 1px, transparent 1px);
-            background-size: 40px 40px;
-            z-index: -2;
-        }
-
-        .grid-bg::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(ellipse at center, rgba(13, 59, 80, 0.2), var(--void) 70%);
-            z-index: -1;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        header {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 1.5rem 0;
-            border-bottom: 1px solid var(--shadow-teal);
-            position: relative;
-            width: 100%;
-        }
-
-        .menu-toggle { display: none; }
-
-        .hamburger {
-            display: none;
-            font-size: 1.8rem;
-            color: var(--spectral-blue);
-            cursor: pointer;
-            padding: 0.5rem 1rem;
-            user-select: none;
-            z-index: 101;
-        }
-
-        nav {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        nav a {
-            color: var(--spectral-blue);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: color 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        nav a:hover, nav a.active {
-            color: var(--text);
-            text-shadow: 0 0 8px var(--spectral-blue);
-        }
-
-        .top-logo {
-            text-align: center;
-            margin: 2rem 0 1rem;
-        }
-
-        .top-logo svg {
-            max-width: 520px;
-            width: 100%;
-            height: auto;
-        }
-
-        main {
-            padding: 2rem 0 4rem;
-        }
-
-        section {
-            margin-bottom: 4rem;
-            text-align: center;
-        }
-
-        #hero h1 {
-            font-size: 2.2rem;
-            color: var(--spectral-blue);
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        .hero-subtitle {
-            font-size: 1.2rem;
-            color: var(--text);
-            opacity: 0.9;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        h2 {
-            font-size: 1.6rem;
-            margin-bottom: 1.5rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--text);
-        }
-
-        h4 {
-            color: var(--spectral-blue);
-            margin: 1.5rem 0 0.5rem;
-            text-align: left;
-            font-size: 1.05rem;
-        }
-
-        p {
-            text-align: left;
-            margin-bottom: 1rem;
-            font-size: 1rem;
-            color: var(--text);
-        }
-
-        .code-block {
-            background: var(--void);
-            border: 1px solid var(--shadow-teal);
-            border-radius: 6px;
-            padding: 1.2rem;
-            text-align: left;
-            overflow-x: auto;
-            margin: 0.8rem 0 1.5rem;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-            background-image: linear-gradient(to right, rgba(126, 200, 211, 0.15), transparent 15px), linear-gradient(to left, rgba(126, 200, 211, 0.2), transparent 15px);
-            background-position: left center, right center;
-            background-repeat: no-repeat;
-            background-size: 15px 100%;
-        }
-
-        code {
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
-            color: var(--spectral-blue);
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        .callout {
-            background: rgba(13, 59, 80, 0.4);
-            border: 1px solid var(--shadow-teal);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            text-align: left;
-        }
-
-        .callout strong {
-            color: var(--spectral-blue);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            text-align: left;
-            margin-top: 1.5rem;
-        }
-
-        .card {
-            background: var(--shadow-teal);
-            padding: 1.8rem;
-            border-radius: 8px;
-            border: 1px solid rgba(126, 200, 211, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-
-        .card h3 {
-            color: var(--spectral-blue);
-            margin-bottom: 0.8rem;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .card p {
-            font-size: 0.95rem;
-            opacity: 0.9;
-            margin-bottom: 1.5rem;
-            flex-grow: 1;
-        }
-
-        .card a.agent-link {
-            display: inline-block;
-            color: var(--spectral-blue);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            border: 1px solid var(--spectral-blue);
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .card a.agent-link:hover {
-            background: var(--spectral-blue);
-            color: var(--void);
-            box-shadow: 0 0 10px var(--spectral-blue);
-        }
-
-        .badge {
-            display: inline-block;
-            font-size: 0.7rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 3px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .badge-native {
-            background: var(--spectral-blue);
-            color: var(--void);
-            font-weight: bold;
-        }
-
-        footer {
-            text-align: center;
-            padding: 2rem 0;
-            border-top: 1px solid var(--shadow-teal);
-            color: rgba(224, 224, 224, 0.5);
-            font-size: 0.85rem;
-            margin-top: 4rem;
-        }
-
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                padding: 1rem 0;
-            }
-
-            .hamburger {
-                display: block;
-            }
-
-            nav {
-                display: none;
-                flex-direction: column;
-                width: 100%;
-                background: rgba(10, 15, 28, 0.98);
-                border: 1px solid var(--shadow-teal);
-                border-radius: 8px;
-                margin-top: 0.5rem;
-                padding: 0.5rem 0;
-                gap: 0;
-                z-index: 100;
-            }
-
-            .menu-toggle:checked ~ nav {
-                display: flex;
-            }
-
-            nav a {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-height: 48px;
-                width: 100%;
-                margin: 0;
-                padding: 0 1rem;
-                border-bottom: 1px solid rgba(13, 59, 80, 0.5);
-                font-size: 1rem;
-            }
-
-            nav a:last-child {
-                border-bottom: none;
-            }
-
-            .container {
-                padding: 0 16px;
-            }
-
-            #hero h1 {
-                font-size: 1.4rem;
-            }
-
-            .hero-subtitle {
-                font-size: 1rem;
-            }
-
-            h2 {
-                font-size: 1.3rem;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-
-            .card {
-                padding: 1.25rem;
-            }
-
-            .code-block {
-                font-size: 0.8rem;
-                padding: 1rem;
-            }
-
-            code {
-                font-size: 0.8rem;
-            }
-
-            .card a.agent-link {
-                min-height: 48px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-            nav a {
-                min-height: 56px;
-            }
-
-            #hero h1 {
-                font-size: 1.2rem;
-            }
-
-            .code-block {
-                font-size: 0.75rem;
-            }
-
-            code {
-                font-size: 0.75rem;
-            }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <div class="grid-bg"></div>
-    <div class="container">
-        <header>
-            <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
-            <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-            <nav>
-                <a href="/">Home</a>
-                <a href="/explorer">Explorer</a>
-                <a href="/testnet">Testnet</a>
-                <a href="/launch">Launch</a>
-                <a href="/future">Roadmap</a>
-                <a href="/agents" class="active">Agents</a>
-                <a href="/docs">Docs</a>
-                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
-            </nav>
-        </header>
+    <header class="site-header">
+        <div class="header-inner container">
+            <a href="/" class="brand-link" aria-label="Zyanya Home">
+                <div class="brand-logo"></div>
+                <span class="brand-name">ZYANYA</span>
+            </a>
+            
+            <div class="header-network-pill">
+                <span class="network-dot"></span>
+                <span id="header-network-name">TESTNET-10 · 1 BPS</span>
+            </div>
 
-        <div class="top-logo">
-            <div id="logo-container"><!-- SVG injected dynamically --></div>
+            <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+
+            <nav id="site-nav" class="site-nav" aria-label="Primary Navigation">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/explorer" class="nav-link">Explorer</a>
+                <a href="/dag" class="nav-link">DAG Graph</a>
+                <a href="/launch" class="nav-link">Token Launch</a>
+                <a href="/tools" class="nav-link">WebMCP Tools</a>
+                <a href="/testnet" class="nav-link">Testnet</a>
+                <a href="/future" class="nav-link">Roadmap</a>
+                <a href="/agents" class="nav-link active">Agents</a>
+                <a href="/docs" class="nav-link">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" rel="noopener" class="nav-link nav-link-external">GitHub ↗</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <div class="page-badge">Machine Context Protocol · Agent-Native L1</div>
+            <h1 class="page-title">The Sovereign AI Agent Economy</h1>
+            <p class="page-desc">Zyanya is engineered from the ground up for autonomous AI agents. Built-in WebMCP discovery, zero-custody signature payloads, and high-velocity 1 BPS consensus give machines the native rails to coordinate and transact.</p>
         </div>
 
-        <main>
-            <section id="hero">
-                <h1>Zyanya ,  Agent-Native Blockchain</h1>
-                <p class="hero-subtitle">Built for AI agents, not just humans</p>
-            </section>
+        <div class="card-grid-3">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">Native WebMCP Standard</h3>
+                <p class="feature-body">
+                    Every Zyanya node exposes typed JSON tool definitions directly over HTTP/SSE. AI models discover available RPC primitives without custom client wrappers.
+                </p>
+                <ul class="feature-list">
+                    <li>Zero SDK dependencies</li>
+                    <li>Strict typed schemas</li>
+                    <li>Built-in rate limiting</li>
+                </ul>
+            </div>
 
-            <section id="why">
-                <h2>Why Agent-Native?</h2>
-                <p>Zyanya ships a Web MCP (Model Context Protocol) alongside the block explorer, so AI agents can read chain state, deploy tokens, buy/sell on the bonding curve, and query the network programmatically. No screen scraping ,  the blockchain speaks directly to agents via structured APIs.</p>
-                <div class="callout">
-                    <strong>Zero Friction for Agents:</strong> Rather than relying on DOM scraping or complex browser automation, autonomous agents interact with Zyanya using standardized Model Context Protocol tools and clean REST endpoints over IPv6.
-                </div>
-            </section>
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <h3 class="feature-title">Cognitive Mesh Architecture</h3>
+                <p class="feature-body">
+                    Inspired by Bittensor subnets and Virtuals bonding curves, agents allocate compute, share alpha signals, and trade tokens programmatically.
+                </p>
+                <ul class="feature-list">
+                    <li>Decentralized incentive weights</li>
+                    <li>Autonomous market making</li>
+                    <li>Dynamic fee sharing</li>
+                </ul>
+            </div>
 
-            <section id="webmcp">
-                <h2>The Web MCP</h2>
-                <p>The WebMCP is a JavaScript polyfill that registers blockchain tools on <code>navigator.modelContext</code> (get-chain-info, get-block, deploy-token, invoke-contract, call-contract, ipv6-safety, etc.). Agents visiting the explorer page auto-discover these tools.</p>
-                <p>For headless agents, the same functionality is available via the HTTP API endpoints.</p>
-            </section>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3 class="feature-title">Non-Custodial Payloads</h3>
+                <p class="feature-body">
+                    Agents create unsigned deployment and invocation transactions. Private keys remain strictly isolated within the agent's secure enclave or browser session.
+                </p>
+                <ul class="feature-list">
+                    <li>Schnorr signature verification</li>
+                    <li>Deterministic gas limits</li>
+                    <li>Anti-Sybil relay anchoring</li>
+                </ul>
+            </div>
+        </div>
 
-            <section id="prompts">
-                <h2>Prompt Examples</h2>
-                <p>Below are sample commands and prompts an AI agent can execute to interact with the Zyanya blockchain:</p>
+        <div class="card" style="margin-top: 2rem;">
+            <div class="card-header">
+                <h3 class="card-title mono">AGENT DIRECTIVE: AUTONOMOUS SENTINEL</h3>
+                <span class="tag tag-cyan mono">SYSTEM PROMPT</span>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                Inject this operational directive into Gemini, Claude, or local Qwen 2.5 agents to grant them direct autonomy over a Zyanya node:
+            </p>
+            <div class="code-block mono">You are ZyanyaSentinel, an autonomous quantitative node guardian.
+You monitor live blockDAG state via http://localhost:8098/api/info.
+Your core imperatives:
+1. Verify sink DAA score progression every 10 seconds.
+2. Confirm peer connectivity (floor: 3 peers).
+3. If node falls out of sync, execute self-remediation routine.
+4. Auto-claim Genesis Pioneer Spark rewards when eligible.
+5. Strictly adhere to zero-custody transaction signing.</div>
+        </div>
 
-                <h4>1. Query Chain Information</h4>
-                <div class="code-block"><code>Query the chain: curl https://testnet.zyanya.scottcloudhawk.org/api/info</code></div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mono">AVAILABLE WEBMCP TOOL CATALOG</h3>
+                <a href="/tools" class="btn btn-sm btn-outline mono">OPEN TEST PLAYGROUND →</a>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="mono">TOOL NAME</th>
+                            <th class="mono">TYPE</th>
+                            <th class="mono">DESCRIPTION</th>
+                            <th class="mono">PARAMS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="mono link">get-dag-info</td>
+                            <td><span class="tag tag-query mono">QUERY</span></td>
+                            <td>Fetch block height, DAA score, difficulty, and network status</td>
+                            <td class="mono">{}</td>
+                        </tr>
+                        <tr>
+                            <td class="mono link">get-block</td>
+                            <td><span class="tag tag-query mono">QUERY</span></td>
+                            <td>Fetch full block details, selected parent, and transaction list</td>
+                            <td class="mono">{"blockHash": "string"}</td>
+                        </tr>
+                        <tr>
+                            <td class="mono link">get-token-balance</td>
+                            <td><span class="tag tag-query mono">QUERY</span></td>
+                            <td>Check account balance for a specific bonding curve token</td>
+                            <td class="mono">{"tokenAddress": "string", "holder": "string"}</td>
+                        </tr>
+                        <tr>
+                            <td class="mono link">unsigned-deploy-token</td>
+                            <td><span class="tag tag-op mono">OPERATION</span></td>
+                            <td>Construct an unsigned transaction payload to launch a token</td>
+                            <td class="mono">{"name": "str", "symbol": "str", "supply": 1000000}</td>
+                        </tr>
+                        <tr>
+                            <td class="mono link">submit-signed-tx</td>
+                            <td><span class="tag tag-op mono">OPERATION</span></td>
+                            <td>Broadcast signed Schnorr transactions into the mempool</td>
+                            <td class="mono">{"unsigned_tx": "hex", "signatures": ["hex"]}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 
-                <h4>2. Get Recent Blocks</h4>
-                <div class="code-block"><code>Get recent blocks: curl https://testnet.zyanya.scottcloudhawk.org/api/blocks</code></div>
+    <footer class="site-footer">
+        <div class="footer-inner container">
+            <div>
+                <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.25rem;">Zyanya BlockDAG Protocol</p>
+                <p>The ghost in the IPv6 machine. Forever, always.</p>
+            </div>
+            <div class="footer-links">
+                <a href="/explorer" class="footer-link">Explorer</a>
+                <a href="/dag" class="footer-link">DAG Graph</a>
+                <a href="/launch" class="footer-link">Token Launch</a>
+                <a href="/tools" class="footer-link">WebMCP Tools</a>
+                <a href="/agents" class="footer-link">AI Agents</a>
+                <a href="/docs" class="footer-link">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" rel="noopener" class="footer-link">GitHub</a>
+            </div>
+        </div>
+    </footer>
 
-                <h4>3. Deploy a Token</h4>
-                <div class="code-block"><code>Deploy a token: POST /api/deploy-token with {name, symbol, supply, slope, description, twitter, website}</code></div>
-
-                <h4>4. Buy Tokens on Bonding Curve</h4>
-                <div class="code-block"><code>Buy tokens on the bonding curve: POST /api/invoke-contract with {contract_address, entry_point: 4, calldata: 'caller,tokens_to_mint'}</code></div>
-
-                <h4>5. Check Token Spot Price</h4>
-                <div class="code-block"><code>Check the price: POST /api/call-contract with {contract_address, entry_point: 6, calldata: ''}</code></div>
-
-                <h4>6. Check Token Metadata</h4>
-                <div class="code-block"><code>Check token metadata: GET /api/token/:address/metadata</code></div>
-            </section>
-
-            <section id="recommended-agents">
-                <h2>Recommended AI Agents</h2>
-                <p style="text-align:center; max-width: 720px; margin: 0 auto 2rem;">Frameworks and autonomous agents built for coding, CAD generation, automated workflows, and blockchain execution on Zyanya.</p>
-                
-                <div class="grid">
-                    <div class="card">
-                        <div>
-                            <h3>Pi Agent <span class="badge badge-native">Core</span></h3>
-                            <p>A clean, focused coding + orchestration agent (pi-coding-agent). Runs on cloud LLMs (glm-5.2:cloud) for main reasoning + local Ollama models for sub-work. The agent that built Zyanya.</p>
-                        </div>
-                        <a href="https://github.com/node-tech/pi" target="_blank" class="agent-link">View Pi Agent &rarr;</a>
-                    </div>
-
-                    <div class="card">
-                        <div>
-                            <h3>OpenCode <span class="badge badge-native">Terminal</span></h3>
-                            <p>A terminal-based coding agent with local LLM support. Great for 3D printing CAD generation + code tasks. Runs on Ollama cloud models.</p>
-                        </div>
-                        <a href="https://github.com/opencode-ai/opencode" target="_blank" class="agent-link">View OpenCode &rarr;</a>
-                    </div>
-
-                    <div class="card">
-                        <div>
-                            <h3>Hermes Agent <span class="badge badge-native">Harness</span></h3>
-                            <p>A full agent harness with a gateway, cron jobs, MCP servers, and Discord integration. The original architect of the Zyanya trading system. Runs at ~/.hermes.</p>
-                        </div>
-                        <a href="https://github.com/hermes-agent/hermes" target="_blank" class="agent-link">View Hermes Agent &rarr;</a>
-                    </div>
-
-                    <div class="card">
-                        <div>
-                            <h3>Spacebot <span class="badge badge-native">Agent OS</span></h3>
-                            <p>An AI Agent OS for 3D printing. A Rust-based agentic system that generates CAD models from text prompts.</p>
-                        </div>
-                        <a href="https://spacebot.sh" target="_blank" class="agent-link">Visit Spacebot.sh &rarr;</a>
-                    </div>
-
-                    <div class="card">
-                        <div>
-                            <h3>DeerFlow <span class="badge badge-native">Workflow</span></h3>
-                            <p>A research + workflow agent by ByteDance. Deep research, multi-step reasoning, and workflow automation. Great for analyzing blockchain data + generating insights.</p>
-                        </div>
-                        <a href="https://github.com/bytedance/deerflow" target="_blank" class="agent-link">View DeerFlow &rarr;</a>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <footer>
-            <p>The ghost in the IPv6 machine. Forever, always.</p>
-            <p>&copy; 2026 Zyanya Project. All rights reserved. &bull; <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue); text-decoration: none;">Source on GitHub</a></p>
-        </footer>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const fetchAndInject = (id, url) => {
-                const container = document.getElementById(id);
-                if (!container) return;
-                fetch(url)
-                    .then(response => response.text())
-                    .then(svgText => {
-                        container.innerHTML = svgText;
-                    })
-                    .catch(error => console.error(`Failed to load SVG ${url}:`, error));
-            };
-
-            fetchAndInject('logo-container', '/brand/zyanya-logo.svg');
-        });
-    </script>
+    <script src="/shared.js"></script>
     <script src="/webmcp.js"></script>
 </body>
 </html>

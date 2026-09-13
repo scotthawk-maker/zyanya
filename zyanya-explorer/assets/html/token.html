@@ -3,214 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Token Details - Zyanya Explorer</title>
+    <title>Token Details: Zyanya Explorer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --void: #0A0F1C;
-            --shadow-teal: #0D3B50;
-            --spectral-blue: #7EC8D3;
-            --text-color: #E0E0E0;
-            --burn-red: #FF4D4D;
-            --accent-green: #00FFAA;
-            --font-mono: 'Fira Code', monospace;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body {
-            background-color: var(--void);
-            color: var(--text-color);
-            font-family: var(--font-mono);
-            font-size: 15px;
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
-        header {
-            display: flex; justify-content: center; align-items: center;
-            padding: 1.5rem 0; border-bottom: 1px solid var(--shadow-teal);
-            position: relative; width: 100%;
-        }
-        .menu-toggle { display: none; }
-        .hamburger {
-            display: none; font-size: 1.8rem; color: var(--spectral-blue);
-            cursor: pointer; padding: 0.5rem 1rem; user-select: none; z-index: 101;
-        }
-        .logo-wrap { display: flex; align-items: center; text-decoration: none; gap: 10px; }
-        nav {
-            display: flex; justify-content: center; align-items: center;
-            gap: 1.5rem; flex-wrap: wrap;
-        }
-        nav a {
-            color: var(--spectral-blue); text-decoration: none;
-            font-weight: 600; font-size: 0.95rem; transition: color 0.2s;
-            display: inline-flex; align-items: center;
-        }
-        nav a:hover, nav a.active { color: #fff; text-shadow: 0 0 8px var(--spectral-blue); }
-        main { padding: 2.5rem 0; }
-        .token-header-card {
-            background: var(--shadow-teal); padding: 2rem; border-radius: 12px;
-            border: 1px solid rgba(126,200,211,0.3); display: flex; align-items: center; gap: 2rem;
-            margin-bottom: 2rem;
-        }
-        .token-icon {
-            width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
-            border: 2px solid var(--spectral-blue); background: var(--void); display: flex;
-            align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700;
-            color: var(--spectral-blue);
-        }
-        .token-info-main h1 { font-size: 2rem; color: #fff; margin-bottom: 0.2rem; }
-        .token-symbol { color: var(--spectral-blue); font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem; }
-        .token-desc { color: rgba(224,224,224,0.8); margin-bottom: 1rem; max-width: 600px; }
-        .social-links a {
-            display: inline-block; margin-right: 1rem; color: var(--spectral-blue);
-            text-decoration: none; font-size: 0.85rem; padding: 4px 10px;
-            border: 1px solid rgba(126,200,211,0.4); border-radius: 4px; transition: background 0.2s;
-        }
-        .social-links a:hover { background: rgba(126,200,211,0.2); }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; margin-bottom: 2rem; }
-        .stat-card {
-            background: rgba(13, 59, 80, 0.6); padding: 1.2rem; border-radius: 8px;
-            border: 1px solid rgba(126,200,211,0.2);
-        }
-        .stat-title { color: rgba(224,224,224,0.6); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-val { color: var(--spectral-blue); font-size: 1.4rem; font-weight: 700; margin-top: 0.3rem; }
-        .trade-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-        .trade-card {
-            background: var(--shadow-teal); padding: 1.5rem; border-radius: 12px;
-            border: 1px solid rgba(126,200,211,0.3);
-        }
-        .trade-card h3 { color: var(--spectral-blue); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; }
-        .trade-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
-        label { color: rgba(224,224,224,0.8); font-size: 0.85rem; }
-        input {
-            background: rgba(10, 15, 28, 0.8); border: 1px solid rgba(126,200,211,0.3);
-            color: #fff; font-family: var(--font-mono); padding: 0.75rem 1rem; border-radius: 6px;
-            font-size: 16px; min-height: 48px; outline: none; width: 100%;
-        }
-        .btn-buy {
-            background: var(--accent-green); color: var(--void); font-family: var(--font-mono);
-            font-weight: 700; font-size: 1rem; padding: 0.8rem 1.5rem; min-height: 48px; border: none; border-radius: 6px;
-            cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px;
-            display: inline-flex; align-items: center; justify-content: center;
-        }
-        .btn-sell {
-            background: var(--burn-red); color: #fff; font-family: var(--font-mono);
-            font-weight: 700; font-size: 1rem; padding: 0.8rem 1.5rem; min-height: 48px; border: none; border-radius: 6px;
-            cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px;
-            display: inline-flex; align-items: center; justify-content: center;
-        }
-        .status-box { margin-top: 1rem; font-size: 0.9rem; text-align: center; }
-        footer { text-align: center; padding: 2rem 0; color: rgba(224,224,224,0.5); border-top: 1px solid var(--shadow-teal); margin-top: 4rem; }
-
-        @media (max-width: 768px) {
-            header { flex-direction: column; padding: 1rem 0; }
-            .hamburger { display: block; }
-            nav {
-                display: none; flex-direction: column; width: 100%;
-                background: rgba(10, 15, 28, 0.98); border: 1px solid var(--shadow-teal);
-                border-radius: 8px; margin-top: 0.5rem; padding: 0.5rem 0; gap: 0; z-index: 100;
-            }
-            .menu-toggle:checked ~ nav { display: flex; }
-            nav a {
-                display: flex; align-items: center; justify-content: center;
-                min-height: 48px; width: 100%; margin: 0; padding: 0 1rem;
-                border-bottom: 1px solid rgba(13, 59, 80, 0.5); font-size: 1rem;
-            }
-            nav a:last-child { border-bottom: none; }
-            .container { padding: 0 16px; }
-            .token-header-card { flex-direction: column; text-align: center; gap: 1rem; padding: 1.5rem; }
-            .token-desc { max-width: 100%; }
-            .stats-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
-            .trade-container { grid-template-columns: 1fr; gap: 1.5rem; }
-            .social-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
-            .social-links a { margin-right: 0; min-height: 44px; display: inline-flex; align-items: center; padding: 0.5rem 1rem; }
-        }
-
-        @media (max-width: 480px) {
-            nav a { min-height: 56px; }
-            .stats-grid { grid-template-columns: 1fr; gap: 0.75rem; }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
-            <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-            <nav>
-                <a href="/">Home</a>
-                <a href="/explorer">Explorer</a>
-                <a href="/testnet">Testnet</a>
-                <a href="/launch" class="active">Launch</a>
-                <a href="/future">Roadmap</a>
-                <a href="/agents">Agents</a>
-                <a href="/docs">Docs</a>
-                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
+    <div class="grid-bg"></div>
+    <header class="site-header">
+        <div class="header-inner container">
+            <a href="/" class="brand-link" aria-label="Zyanya Home">
+                <div class="brand-logo"></div>
+                <span class="brand-name">ZYANYA</span>
+            </a>
+            
+            <div class="header-network-pill">
+                <span class="network-dot"></span>
+                <span id="header-network-name">TESTNET-10 · 1 BPS</span>
+            </div>
+
+            <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+
+            <nav id="site-nav" class="site-nav" aria-label="Primary Navigation">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/explorer" class="nav-link active">Explorer</a>
+                <a href="/dag" class="nav-link">DAG Graph</a>
+                <a href="/launch" class="nav-link">Token Launch</a>
+                <a href="/tools" class="nav-link">WebMCP Tools</a>
+                <a href="/testnet" class="nav-link">Testnet</a>
+                <a href="/future" class="nav-link">Roadmap</a>
+                <a href="/agents" class="nav-link">Agents</a>
+                <a href="/docs" class="nav-link">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" rel="noopener" class="nav-link nav-link-external">GitHub ↗</a>
             </nav>
-        </header>
+        </div>
+    </header>
 
-        <main>
-            <div class="token-header-card">
-                <div id="icon-container">
-                    <div class="token-icon" id="icon-fallback">?</div>
+    <main class="container">
+        <!-- TOKEN HEADER CARD -->
+        <div class="token-header-card">
+            <div id="icon-container">
+                <div class="token-icon mono" id="icon-fallback">?</div>
+            </div>
+            <div class="token-info">
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+                    <h1 class="page-title" id="token-name" style="margin-bottom: 0;">Loading Token...</h1>
+                    <span class="mono" id="token-symbol" style="font-size: 1.3rem; color: var(--accent-cyan); font-weight: 600;"></span>
                 </div>
-                <div class="token-info-main">
-                    <h1 id="token-name">Loading...</h1>
-                    <div class="token-symbol" id="token-symbol">...</div>
-                    <p class="token-desc" id="token-desc">Loading token metadata...</p>
-                    <div class="social-links" id="social-links"></div>
+                <p id="token-desc" style="color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.5;">
+                    Fetching on-chain contract state and metadata...
+                </p>
+                <div class="social-links" id="social-links"></div>
+            </div>
+        </div>
+
+        <!-- STATS GRID -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label mono">CURRENT SPOT PRICE</div>
+                <div class="stat-value mono" id="stat-price">---</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label mono">CIRCULATING SUPPLY</div>
+                <div class="stat-value mono" id="stat-supply">---</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label mono">YOUR TOKEN BALANCE</div>
+                <div class="stat-value mono" id="stat-balance">---</div>
+            </div>
+        </div>
+
+        <!-- SWAP & SIMULATION GRID -->
+        <div class="card-grid-2">
+            <!-- BUY PANEL -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mono">ACQUIRE TOKENS</h3>
+                    <span class="tag tag-liquid mono">BONDING CURVE BUY</span>
                 </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">
+                    Purchase tokens directly from the sovereign smart contract reserve.
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label" for="buy-amount">TOKEN QUANTITY TO BUY</label>
+                    <input type="number" id="buy-amount" class="form-input mono" value="100" min="1">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="caller-input">CALLER / BUYER ADDRESS</label>
+                    <input type="text" id="caller-input" class="form-input mono" value="1" placeholder="Address identifier">
+                </div>
+
+                <button class="btn btn-primary mono" style="width: 100%; margin-top: 0.5rem;" onclick="handleBuy()">
+                    EXECUTE BUY TRANSACTION →
+                </button>
+                <div id="buy-status" style="margin-top: 1rem; font-size: 0.9rem;"></div>
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-title">Current Price</div>
-                    <div class="stat-val" id="stat-price">0 ZYAN</div>
+            <!-- SELL PANEL -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mono">REDEEM / SELL TOKENS</h3>
+                    <span class="tag tag-red mono">CONTRACT REFUND</span>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-title">Total Supply</div>
-                    <div class="stat-val" id="stat-supply">0</div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">
+                    Return tokens to the contract to recover your proportional ZYAN reserve balance.
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label" for="sell-amount">TOKEN QUANTITY TO REDEEM</label>
+                    <input type="number" id="sell-amount" class="form-input mono" value="50" min="1">
                 </div>
-                <div class="stat-card">
-                    <div class="stat-title">Your Balance</div>
-                    <div class="stat-val" id="stat-balance">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">Active Caller Key</div>
-                    <div style="margin-top: 0.3rem;"><input type="text" id="caller-input" value="1" style="padding: 4px 8px; font-size: 0.9rem;" onchange="loadTokenData()"></div>
-                </div>
+
+                <button class="btn btn-secondary mono" style="width: 100%; margin-top: 2.75rem;" onclick="handleSell()">
+                    EXECUTE SELL / REDEEM →
+                </button>
+                <div id="sell-status" style="margin-top: 1rem; font-size: 0.9rem;"></div>
             </div>
+        </div>
+    </main>
 
-            <div class="trade-container">
-                <div class="trade-card">
-                    <h3>🟢 Buy Tokens</h3>
-                    <div class="trade-group">
-                        <label for="buy-amount">Tokens to Buy</label>
-                        <input type="number" id="buy-amount" value="100" min="1">
-                    </div>
-                    <button class="btn-buy" onclick="handleBuy()">BUY NOW</button>
-                    <div class="status-box" id="buy-status"></div>
-                </div>
-
-                <div class="trade-card">
-                    <h3>🔴 Sell Tokens</h3>
-                    <div class="trade-group">
-                        <label for="sell-amount">Tokens to Sell</label>
-                        <input type="number" id="sell-amount" value="100" min="1">
-                    </div>
-                    <button class="btn-sell" onclick="handleSell()">SELL NOW</button>
-                    <div class="status-box" id="sell-status"></div>
-                </div>
+    <footer class="site-footer">
+        <div class="footer-inner container">
+            <div>
+                <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.25rem;">Zyanya BlockDAG Protocol</p>
+                <p>The ghost in the IPv6 machine. Forever, always.</p>
             </div>
-        </main>
+            <div class="footer-links">
+                <a href="/explorer" class="footer-link">Explorer</a>
+                <a href="/dag" class="footer-link">DAG Graph</a>
+                <a href="/launch" class="footer-link">Token Launch</a>
+                <a href="/tools" class="footer-link">WebMCP Tools</a>
+                <a href="/agents" class="footer-link">AI Agents</a>
+                <a href="/docs" class="footer-link">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" rel="noopener" class="footer-link">GitHub</a>
+            </div>
+        </div>
+    </footer>
 
-        <footer>
-            <p>The ghost in the IPv6 machine. &bull; <a href="/">zyanya.scottcloudhawk.org</a></p>
-        </footer>
-    </div>
-
+    <script src="/shared.js"></script>
+    <script src="/webmcp.js"></script>
     <script>
         const contractAddress = window.location.pathname.split('/').pop();
 

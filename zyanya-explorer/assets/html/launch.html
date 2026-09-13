@@ -3,252 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zyanya Launch - Non-Custodial Token Launcher</title>
+    <title>Zyanya Launch: Non-Custodial Token Launcher</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
     <script type="module">
         import { schnorr, secp256k1 } from 'https://esm.sh/@noble/curves@1.4.0/secp256k1';
         window.nobleSecp256k1 = { schnorr, secp256k1 };
     </script>
-    <style>
-        :root {
-            --void: #0A0F1C;
-            --shadow-teal: #0D3B50;
-            --spectral-blue: #7EC8D3;
-            --text-color: #E0E0E0;
-            --burn-red: #FF4D4D;
-            --accent-green: #00FFAA;
-            --font-mono: 'Fira Code', monospace;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body {
-            background-color: var(--void);
-            color: var(--text-color);
-            font-family: var(--font-mono);
-            font-size: 15px;
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-        .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
-        header {
-            display: flex; justify-content: center; align-items: center;
-            padding: 1.5rem 0; border-bottom: 1px solid var(--shadow-teal);
-            position: relative; width: 100%;
-        }
-        .menu-toggle { display: none; }
-        .hamburger {
-            display: none; font-size: 1.8rem; color: var(--spectral-blue);
-            cursor: pointer; padding: 0.5rem 1rem; user-select: none; z-index: 101;
-        }
-        .logo-wrap { display: flex; align-items: center; text-decoration: none; gap: 10px; }
-        nav {
-            display: flex; justify-content: center; align-items: center;
-            gap: 1.5rem; flex-wrap: wrap;
-        }
-        nav a {
-            color: var(--spectral-blue); text-decoration: none;
-            font-weight: 600; font-size: 0.95rem; transition: color 0.2s;
-            display: inline-flex; align-items: center;
-        }
-        nav a:hover, nav a.active { color: #fff; text-shadow: 0 0 8px var(--spectral-blue); }
-        main { padding: 3rem 0; }
-        .hero-title { font-size: 2.2rem; color: var(--spectral-blue); margin-bottom: 0.5rem; text-align: center; }
-        .hero-subtitle { text-align: center; color: rgba(224,224,224,0.7); margin-bottom: 2.5rem; }
-        .card {
-            background: var(--shadow-teal); padding: 2rem; border-radius: 12px;
-            border: 1px solid rgba(126,200,211,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-        }
-        .wallet-bar {
-            background: rgba(10, 15, 28, 0.8);
-            border: 1px solid rgba(126,200,211,0.4);
-            border-radius: 8px;
-            padding: 1rem 1.25rem;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        .wallet-info { display: flex; flex-direction: column; gap: 0.2rem; }
-        .wallet-status { font-size: 0.85rem; color: rgba(224,224,224,0.7); text-transform: uppercase; }
-        .wallet-addr { color: var(--accent-green); font-weight: 600; word-break: break-all; }
-        .wallet-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        .btn-sm {
-            background: rgba(126,200,211,0.15);
-            border: 1px solid var(--spectral-blue);
-            color: var(--spectral-blue);
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            font-weight: 600;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-sm:hover {
-            background: var(--spectral-blue);
-            color: var(--void);
-        }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
-        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
-        .form-group.full { grid-column: span 2; }
-        label { color: var(--spectral-blue); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-        input, textarea, select {
-            background: rgba(10, 15, 28, 0.8); border: 1px solid rgba(126,200,211,0.3);
-            color: #fff; font-family: var(--font-mono); padding: 0.75rem 1rem; border-radius: 6px;
-            font-size: 16px; min-height: 48px; outline: none; transition: border-color 0.2s;
-            width: 100%;
-        }
-        input[type="file"] { padding: 0.6rem; cursor: pointer; }
-        input:focus, textarea:focus { border-color: var(--spectral-blue); box-shadow: 0 0 8px rgba(126,200,211,0.3); }
-        textarea { resize: vertical; min-height: 90px; }
-        .btn-launch {
-            grid-column: span 2; background: linear-gradient(135deg, var(--spectral-blue), #4a90e2);
-            color: var(--void); font-family: var(--font-mono); font-weight: 700; font-size: 1.1rem;
-            padding: 0.8rem 1.5rem; min-height: 48px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase;
-            letter-spacing: 2px; transition: transform 0.2s, box-shadow 0.2s; margin-top: 1rem;
-            display: inline-flex; align-items: center; justify-content: center;
-        }
-        .btn-launch:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(126,200,211,0.6); }
-        #status-msg { margin-top: 1.5rem; text-align: center; }
-        footer { text-align: center; padding: 2rem 0; color: rgba(224,224,224,0.5); border-top: 1px solid var(--shadow-teal); margin-top: 4rem; }
-
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(10, 15, 28, 0.85); backdrop-filter: blur(4px);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 1000; display: none;
-        }
-        .modal-card {
-            background: var(--shadow-teal); border: 1px solid var(--spectral-blue);
-            border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6); text-align: left;
-        }
-
-        @media (max-width: 768px) {
-            header { flex-direction: column; padding: 1rem 0; }
-            .hamburger { display: block; }
-            nav {
-                display: none; flex-direction: column; width: 100%;
-                background: rgba(10, 15, 28, 0.98); border: 1px solid var(--shadow-teal);
-                border-radius: 8px; margin-top: 0.5rem; padding: 0.5rem 0; gap: 0; z-index: 100;
-            }
-            .menu-toggle:checked ~ nav { display: flex; }
-            nav a {
-                display: flex; align-items: center; justify-content: center;
-                min-height: 48px; width: 100%; margin: 0; padding: 0 1rem;
-                border-bottom: 1px solid rgba(13, 59, 80, 0.5); font-size: 1rem;
-            }
-            nav a:last-child { border-bottom: none; }
-            .container { padding: 0 16px; }
-            .hero-title { font-size: 1.4rem; }
-            .form-grid { grid-template-columns: 1fr; gap: 1rem; }
-            .form-group.full { grid-column: span 1; }
-            .btn-launch { grid-column: span 1; width: 100%; }
-            .card { padding: 1.25rem; }
-        }
-
-        @media (max-width: 480px) {
-            nav a { min-height: 56px; }
-            .hero-title { font-size: 1.2rem; }
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Toggle navigation">
-            <label for="menu-toggle" class="hamburger" aria-label="Open menu">&#9776;</label>
-            <nav>
-                <a href="/">Home</a>
-                <a href="/explorer">Explorer</a>
-                <a href="/testnet">Testnet</a>
-                <a href="/launch" class="active">Launch</a>
-                <a href="/future">Roadmap</a>
-                <a href="/agents">Agents</a>
-                <a href="/docs">Docs</a>
-                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" style="color: var(--spectral-blue);">GitHub</a>
-            </nav>
-        </header>
-        <main>
-            <h1 class="hero-title">🚀 Non-Custodial Token Launcher</h1>
-            <p class="hero-subtitle">Deploy tokens non-custodially. Your keys stay in your browser. Signed locally with Schnorr.</p>
+    <div class="grid-bg"></div>
+    <header class="site-header">
+        <div class="header-inner container">
+            <a href="/" class="brand-link" aria-label="Zyanya Home">
+                <div class="brand-logo"></div>
+                <span class="brand-name">ZYANYA</span>
+            </a>
             
-            <div class="card">
-                <div class="wallet-bar">
-                    <div class="wallet-info">
-                        <span class="wallet-status">🔐 Browser Non-Custodial Wallet:</span>
-                        <span id="walletAddressDisplay" class="wallet-addr">Loading wallet...</span>
+            <div class="header-network-pill">
+                <span class="network-dot"></span>
+                <span id="header-network-name">TESTNET-10 · 1 BPS</span>
+            </div>
+
+            <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+
+            <nav id="site-nav" class="site-nav" aria-label="Primary Navigation">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/explorer" class="nav-link">Explorer</a>
+                <a href="/dag" class="nav-link">DAG Graph</a>
+                <a href="/launch" class="nav-link active">Token Launch</a>
+                <a href="/tools" class="nav-link">WebMCP Tools</a>
+                <a href="/testnet" class="nav-link">Testnet</a>
+                <a href="/future" class="nav-link">Roadmap</a>
+                <a href="/agents" class="nav-link">Agents</a>
+                <a href="/docs" class="nav-link">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" rel="noopener" class="nav-link nav-link-external">GitHub ↗</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <div class="page-badge">Non-Custodial · On-Chain Bonding Curves</div>
+            <h1 class="page-title">Deploy Autonomous Tokens</h1>
+            <p class="page-desc">Instant liquidity and mathematical price discovery. Transactions are signed directly in your browser with pure Schnorr cryptography without holding custody of your private keys.</p>
+        </div>
+
+        <div class="card-grid-2">
+            <!-- LEFT COLUMN: WALLET & CONFIG -->
+            <div>
+                <!-- WALLET CARD -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title mono">SIGNER WALLET</h3>
+                        <span class="tag tag-cyan mono">NON-CUSTODIAL</span>
                     </div>
-                    <div class="wallet-btns">
-                        <button type="button" class="btn-sm" onclick="connectOrGenerateWallet()">⚡ Connect / New Wallet</button>
-                        <button type="button" class="btn-sm" onclick="exportPrivateKey()">🔑 Export Key</button>
-                        <button type="button" class="btn-sm" onclick="importWalletPrompt()">📥 Import Key</button>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+                        Ephemeral keypair generated and stored locally in browser storage. Funds never leave your machine without explicit signature verification.
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label">YOUR ADDRESS (SCHNORR PUBKEY)</label>
+                        <div id="wallet-address" class="mono" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); padding: 0.75rem 1rem; border-radius: 6px; word-break: break-all; color: var(--accent-cyan); font-size: 0.85rem;">
+                            No wallet loaded
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <button class="btn btn-sm btn-secondary mono" onclick="generateNewWallet()">GENERATE NEW KEY</button>
+                        <button class="btn btn-sm btn-outline mono" onclick="importWalletPrompt()">IMPORT PRIVATE KEY</button>
                     </div>
                 </div>
 
-                <form id="launchForm" onsubmit="handleLaunch(event)">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="name">Token Name *</label>
-                            <input type="text" id="name" placeholder="e.g. Spectral Ghost" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="symbol">Ticker Symbol *</label>
-                            <input type="text" id="symbol" placeholder="e.g. GHOST" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="supply">Initial Reserve Supply</label>
-                            <input type="number" id="supply" value="1000000" min="1">
-                        </div>
-                        <div class="form-group">
-                            <label for="slope">Bonding Curve Slope (Price Multiplier)</label>
-                            <input type="number" id="slope" value="1" min="1">
-                        </div>
-                        <div class="form-group full">
-                            <label for="description">Description</label>
-                            <textarea id="description" placeholder="What is this token about?"></textarea>
-                        </div>
-                        <div class="form-group full">
-                            <label for="iconFile">Token Icon (PNG / Image)</label>
-                            <input type="file" id="iconFile" accept="image/*">
-                        </div>
-                        <div class="form-group">
-                            <label for="twitter">Twitter / X URL</label>
-                            <input type="text" id="twitter" placeholder="https://x.com/yourtoken">
-                        </div>
-                        <div class="form-group">
-                            <label for="telegram">Telegram URL</label>
-                            <input type="text" id="telegram" placeholder="https://t.me/yourtoken">
-                        </div>
-                        <div class="form-group full">
-                            <label for="website">Website URL</label>
-                            <input type="url" id="website" placeholder="https://yourtoken.io">
-                        </div>
-                        <button type="submit" id="submitBtn" class="btn-launch">SIGN & DEPLOY TOKEN</button>
+                <!-- LAUNCH DETAILS FORM -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title mono">TOKEN SPECIFICATION</h3>
+                        <span class="tag tag-liquid mono">GENESIS AMM</span>
                     </div>
-                </form>
-                <div id="status-msg"></div>
-            </div>
-        </main>
-        <footer>
-            <p>The ghost in the IPv6 machine. &bull; <a href="/">zyanya.scottcloudhawk.org</a></p>
-        </footer>
-    </div>
 
-    <div id="confirmModal" class="modal-overlay">
-        <div class="modal-card">
-            <h3 style="color: var(--spectral-blue); margin-bottom: 1rem;">✍️ Confirm Non-Custodial Deployment</h3>
-            <div id="modalSummaryContent" style="margin-bottom: 1.5rem; line-height: 1.8;"></div>
-            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                <button type="button" class="btn-sm" style="background: var(--burn-red); border-color: var(--burn-red); color: #fff;" onclick="closeConfirmModal(false)">Cancel</button>
-                <button type="button" class="btn-sm" style="background: var(--accent-green); border-color: var(--accent-green); color: var(--void); font-weight: bold;" onclick="closeConfirmModal(true)">SIGN & SUBMIT</button>
+                    <div class="form-group">
+                        <label class="form-label" for="tokenName">TOKEN NAME</label>
+                        <input type="text" id="tokenName" class="form-input" placeholder="e.g. Cyber Spectre" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="tokenSymbol">TOKEN TICKER</label>
+                        <input type="text" id="tokenSymbol" class="form-input mono" placeholder="e.g. ZSPECTRE" maxlength="10" required>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="totalSupply">INITIAL SUPPLY</label>
+                            <input type="number" id="totalSupply" class="form-input mono" value="1000000" min="1000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="curveSlope">SLOPE MULTIPLIER</label>
+                            <input type="number" id="curveSlope" class="form-input mono" value="1" min="1" max="100">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="description">DESCRIPTION / MANIFESTO</label>
+                        <textarea id="description" class="form-textarea" rows="3" placeholder="Explain the agentic thesis, utility, or autonomous narrative..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">SOCIAL LINKS & CHANNELS</label>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <input type="url" id="twitter" class="form-input" placeholder="https://x.com/youragent">
+                            <input type="url" id="telegram" class="form-input" placeholder="https://t.me/youragent">
+                            <input type="url" id="website" class="form-input" placeholder="https://youragent.ai">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="iconFile">TOKEN ICON (PNG / JPG / WEBP)</label>
+                        <input type="file" id="iconFile" class="form-input" accept="image/*">
+                    </div>
+
+                    <button class="btn btn-primary mono" style="width: 100%; margin-top: 0.5rem;" onclick="handleDeployToken()">
+                        DEPLOY TOKEN TO BLOCKDAG →
+                    </button>
+                    <div id="status-msg" style="margin-top: 1rem; font-size: 0.9rem;"></div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: CURVE SIMULATOR & EXPLANATION -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title mono">BONDING CURVE MECHANICS</h3>
+                        <span class="tag tag-vested mono">LINEAR k*S</span>
+                    </div>
+                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.25rem;">
+                        Every token launched on Zyanya automatically instantiates a sovereign Automated Market Maker on the BlockDAG ledger. As users purchase tokens, collateral accumulates in the contract reserve.
+                    </p>
+
+                    <div class="callout">
+                        <p class="mono" style="font-size: 0.85rem; color: var(--accent-cyan); margin-bottom: 0.5rem;"><strong>Pricing Formula:</strong></p>
+                        <p class="mono" style="font-size: 0.95rem; color: var(--text-primary);">P(S) = BasePrice + (Slope &times; S)</p>
+                    </div>
+
+                    <div class="feature-list" style="margin-bottom: 1.5rem;">
+                        <li><strong>Instant Liquidity:</strong> No external liquidity seeding or centralized exchange listing required.</li>
+                        <li><strong>Zero Premine:</strong> 100% of supply enters circulation via mathematical buys directly through the contract.</li>
+                        <li><strong>Native Refunds:</strong> Sellers can return tokens at any time to recover their proportional ZYAN collateral.</li>
+                        <li><strong>Proof-of-Relay Integration:</strong> 10% of swap fees automatically reward relay nodes processing traffic.</li>
+                    </div>
+
+                    <div class="card-header" style="border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
+                        <h4 class="mono" style="font-size: 0.9rem; color: var(--text-muted);">CURVE ESTIMATOR</h4>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Estimated Starting Price:</span>
+                        <span class="mono" style="color: var(--text-primary);">0.0001 ZYAN</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Estimated Deployment Fee:</span>
+                        <span class="mono" style="color: var(--accent-signal);">0.05 ZYAN</span>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
+        <!-- CONFIRMATION MODAL -->
+        <div id="confirm-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title mono">CONFIRM SCHNORR SIGNATURE</h3>
+                    <button class="close-btn" onclick="cancelConfirm()">✕</button>
+                </div>
+                <div id="confirm-body" style="margin-bottom: 1.5rem;"></div>
+                <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                    <button class="btn btn-secondary mono" onclick="cancelConfirm()">CANCEL</button>
+                    <button class="btn btn-primary mono" onclick="proceedConfirm()">SIGN & BROADCAST →</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner container">
+            <div>
+                <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.25rem;">Zyanya BlockDAG Protocol</p>
+                <p>The ghost in the IPv6 machine. Forever, always.</p>
+            </div>
+            <div class="footer-links">
+                <a href="/explorer" class="footer-link">Explorer</a>
+                <a href="/dag" class="footer-link">DAG Graph</a>
+                <a href="/launch" class="footer-link">Token Launch</a>
+                <a href="/tools" class="footer-link">WebMCP Tools</a>
+                <a href="/agents" class="footer-link">AI Agents</a>
+                <a href="/docs" class="footer-link">Docs</a>
+                <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" rel="noopener" class="footer-link">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/shared.js"></script>
+    <script src="/webmcp.js"></script>
     <script>
         let currentWallet = null; // { privKeyHex, pubKeyHex, address }
 

@@ -198,6 +198,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/llms.txt", get(llms_txt_handler))
         .route("/llms.md", get(llms_md_handler))
         .route("/webmcp.js", get(webmcp_js_handler))
+        .route("/style.css", get(style_css_handler))
+        .route("/shared.js", get(shared_js_handler))
         .route("/brand/:asset", get(brand_asset_handler))
         .route("/api/info", get(api_info_handler))
         .route("/api/blocks", get(api_blocks_handler))

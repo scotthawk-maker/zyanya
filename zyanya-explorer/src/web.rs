@@ -1,4 +1,4 @@
-﻿pub const LOGO_SVG: &str = include_str!("../assets/brand/zyanya-logo.svg");
+pub const LOGO_SVG: &str = include_str!("../assets/brand/zyanya-logo.svg");
 pub const HERO_BANNER_SVG: &str = include_str!("../assets/brand/zyanya-hero-banner.svg");
 pub const ZYAN_COIN_SVG: &str = include_str!("../assets/brand/zyan-coin.svg");
 pub const ZYN_SQUIRCLE_SVG: &str = include_str!("../assets/brand/zyn-squircle.svg");
@@ -16,3 +16,5 @@ pub const DOCS_HTML: &str = include_str!("../assets/html/docs.html");
 pub const LLMS_TXT: &str = include_str!("../assets/html/llms.txt");
 pub const LLMS_MD: &str = include_str!("../assets/html/llms.md");
 pub const DAG_HTML: &str = include_str!("../assets/html/dag.html");
+pub const STYLE_CSS: &str = include_str!("../assets/html/style.css");
+pub const SHARED_JS: &str = include_str!("../assets/html/shared.js");

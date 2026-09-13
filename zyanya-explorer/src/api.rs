@@ -87,6 +87,14 @@ pub async fn webmcp_js_handler() -> Response {
     ([(header::CONTENT_TYPE, "application/javascript")], WEBMCP_SCRIPT).into_response()
 }
 
+pub async fn style_css_handler() -> Response {
+    ([(header::CONTENT_TYPE, "text/css; charset=utf-8")], STYLE_CSS).into_response()
+}
+
+pub async fn shared_js_handler() -> Response {
+    ([(header::CONTENT_TYPE, "application/javascript; charset=utf-8")], SHARED_JS).into_response()
+}
+
 pub async fn brand_asset_handler(Path(asset): Path<String>) -> Response {
     let (content_type, svg_data) = match asset.as_str() {
         "zyanya-logo.svg" => ("image/svg+xml", LOGO_SVG),
