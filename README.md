@@ -238,6 +238,9 @@ cargo build --release --bin zyanyad --bin zyanya-wallet --bin zyanya-query
 > - **Public WebMCP Endpoint**: `https://zyanya.scottcloudhawk.org/mcp/rpc`
 > - **Local Daemon Gateway**: `http://[::1]:8092/mcp/rpc`
 > - **Live Tool Schema Discovery**: `https://zyanya.scottcloudhawk.org/mcp.json`
+>
+> [!CAUTION]
+> **Hot-Wallet Warning & Session Policy**: Never provision unconstrained root private keys to autonomous AI agents. On testnet, only use disposable addresses with minimal testnet gas. Enforced scoped session keys (hard per-transaction limits, daily spend caps, and contract whitelists) are tracked in [`specs/SESSION_KEYS_SPEC.md`](specs/SESSION_KEYS_SPEC.md) as a P0 Mainnet Blocker.
 
 ---
 
