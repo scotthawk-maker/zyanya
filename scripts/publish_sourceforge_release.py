@@ -154,8 +154,8 @@ def main():
 
     if args.action in ["set-defaults"]:
         print("\n🚀 Configuring default download files on SourceForge...")
-        win_file = f"{args.version}/zyanya-{args.version}-mainnet-windows-x64.zip"
-        linux_file = f"{args.version}/zyanya-{args.version}-mainnet-linux-x86_64.tar.gz"
+        win_file = f"{args.version}/zyanya-{args.version}-windows-x64.zip"
+        linux_file = f"{args.version}/zyanya-{args.version}-linux-x86_64.tar.gz"
 
         # Windows default
         set_file_default(
@@ -163,7 +163,7 @@ def main():
             api_key=args.api_key,
             file_path=win_file,
             defaults=["windows"],
-            label=f"Download Zyanya {args.version} for Windows"
+            label=f"Zyanya {args.version} (Windows x64)"
         )
 
         # Linux / BSD default
@@ -172,7 +172,7 @@ def main():
             api_key=args.api_key,
             file_path=linux_file,
             defaults=["linux", "bsd", "solaris", "others"],
-            label=f"Download Zyanya {args.version} for Linux"
+            label=f"Zyanya {args.version} (Linux x86_64)"
         )
 
 
