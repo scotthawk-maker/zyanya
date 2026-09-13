@@ -1498,3 +1498,15 @@ code {
 }
 
 
+
+.footer-icon-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.footer-icon-link svg {
+    flex-shrink: 0;
+}
+.footer-icon-link.sf-link:hover {
+    color: #ee5f22 !important;
+}
