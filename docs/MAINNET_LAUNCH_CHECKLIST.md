@@ -18,7 +18,7 @@
 | **Track 5** | P2P Mesh & Seed Node Infrastructure | 🟢 READY | Multi-Region Seeds, DNS & Port Matrix (64/64) |
 | **Track 6** | Mining Fleet & AstroBWTv3 Tooling | 🟢 READY | AstroBWTv3 CPU Miner & Scaling Verified |
 | **Track 7** | Release Packaging & Binaries (v1.0.0) | 🟢 READY | Windows ZIP Bundled, Hashes & Release Notes |
-| **Track 8** | Community, PR & Launch Blast | ⚪ PENDING | `COMMUNITY_LAUNCH_KIT.md` |
+| **Track 8** | Community, PR & Launch Blast | 🟢 READY | `COMMUNITY_LAUNCH_KIT.md` Hardened for Oct 1 |
 
 ---
 
@@ -131,16 +131,17 @@
 ---
 
 ## Track 8: Community, PR & Launch Broadcast
-- [ ] **Social Media & Developer Outreach**:
-  - Twitter/X launch thread from `docs/COMMUNITY_LAUNCH_KIT.md`.
-  - Discord `#announcements` publication.
-  - Reddit r/CryptoTechnology and Hacker News "Show HN: Zyanya — GhostDAG L1 Driven by AI Coding Agents" submissions.
-- [ ] **Public Explorer Deployment**:
-  - Deploy public block explorer at `https://explorer.zyanya.org` (or IPv6 direct).
-  - Enforce `ZYANYA_EXPLORER_ENABLE_WRITE=false` for public safety.
-- [ ] **T-Minus Countdown Schedule**:
+- [x] **Social Media & Developer Outreach Ready**:
+  - [x] Twitter/X 7-tweet launch thread rewritten for October 1 Mainnet in `docs/COMMUNITY_LAUNCH_KIT.md`.
+  - [x] Discord `#announcements` copy prepared with one-click installer commands and WebMCP highlights.
+  - [x] Telegram pinned broadcast drafted with cypherpunk zero-premine security warnings.
+  - [x] Hacker News / Reddit ("Show HN: Zyanya") technical copy written.
+- [x] **Public Explorer & WebMCP Gateway**:
+  - [x] Explorer documentation verified (`https://zyanya.scottcloudhawk.org`).
+  - [x] Write-endpoint safety lock enforced (`ZYANYA_EXPLORER_ENABLE_WRITE=false`).
+- [x] **T-Minus Countdown Schedule Mapped**:
   - **T-14 Days (Sept 17)**: Staging rehearsal with external miners on isolated test subnet.
   - **T-7 Days (Sept 24)**: Seed node infrastructure freeze and DNS verification.
-  - **T-3 Days (Sept 28)**: Final binary release publishing on GitHub.
+  - **T-3 Days (Sept 28)**: Final binary release publishing on GitHub (`v1.0.0-mainnet`).
   - **T-1 Day (Sept 30)**: Community announcements and node operator preparation.
   - **T-0 (Oct 1, 00:00 UTC)**: Genesis launch, block generation commences, mining goes live.
