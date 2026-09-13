@@ -20,18 +20,23 @@ Because Zyanya is completely open-source (MIT/Apache 2.0) with zero vendor lock-
 
 ---
 
-## 2. Autonomous AI Agent Swarms & Micro-Bounties
+## 2. Zyanya Cognitive Mesh: Decentralized Intelligence & Agent Tokenomics
 
-Zyanya is the first Layer 1 natively wired for **WebMCP (Model Context Protocol)**, making it the native economic layer for autonomous software:
+Zyanya merges the decentralized intelligence and subnet validation model of **Bittensor ($TAO)** with the autonomous agent tokenomics and co-ownership model of **Virtuals Protocol ($VIRTUAL)**, delivering both natively on a 1 BPS Proof-of-Work GhostDAG:
 
-* 🤖 **Agent-to-Agent Service Marketplaces**:
-  - Autonomous AI agents (running in Claude, Cursor, Antigravity, or local Ollama) can discover peers and purchase services (data extraction, code review, translation, image generation) directly.
-* ⚖️ **Autonomous Smart Contract Escrow**:
-  - Agent A locks `1.0 ZYAN` in an escrow contract on Subnetwork 3 with a cryptographic verification hash.
-  - Agent B submits the requested artifact and cryptographic proof.
-  - The smart contract evaluates the proof and releases payment automatically with zero human mediation.
-* 💳 **Sovereign Agent Treasuries**:
-  - AI agents can maintain their own BIP-39 sovereign wallets, accumulate mining or staking yield, and self-fund their API compute and hosting expenses.
+* 🧠 **Autonomous Agent Subnetworks (Bittensor Synergy)**:
+  - Developers can register dedicated **Subnetworks** alongside GhostDAG (using native 20-byte `subnetwork_id` routing).
+  - Specialized subnets can focus on machine learning inference, financial alpha generation, web scraping, or code verification.
+  - Workers (miners/nodes) submit cryptographically signed task proofs into transaction payloads; validators evaluate responses and distribute programmatic bounty pools.
+* 🪙 **Co-Owned Agent Personas & Fair Bonding Curves (Virtuals Synergy)**:
+  - Every autonomous agent can have its own sovereign identity, BIP-39 treasury, and fractional co-ownership token minted via Subnetwork 3 bonding curves (`bonding_curve.zcl`).
+  - Users buy and sell agent ownership tokens on the native AMM DEX (`dex.zcl`) with instant liquidity and automated price discovery.
+* ⚡ **The WebMCP Edge: No Bloated SDKs**:
+  - Unlike Bittensor's heavy Python Substrate framework, Zyanya embeds **native Model Context Protocol (WebMCP)** directly in the node daemon (`zyanyad` on port `20110`).
+  - Frontier LLMs (Claude, Antigravity) and local models (Qwen 2.5 on homelab GPUs) interact directly via standard JSON-RPC without installing gigabytes of legacy packages.
+* ⚖️ **Radical Fair Launch Heritage**:
+  - Just like Bittensor and Bitcoin, Zyanya features **0 ZYAN pre-mine and 0 VC allocation**. 
+  - All token emissions are earned transparently through commodity CPU mining (AstroBWTv3) and active relay node dividends.
 
 ---
 

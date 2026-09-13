@@ -373,13 +373,14 @@ Running a Zyanya full node is not an unpaid altruistic chore—it is a perpetual
 
 Zyanya's combination of **1-second GhostDAG confirmations**, **Subnetwork 3 stack VM**, **pure IPv6 global unicast**, and **native WebMCP** opens unprecedented capabilities for developers, businesses, and researchers:
 
+* 🧠 **Zyanya Cognitive Mesh (Bittensor + Virtuals Synergy)**:
+  - Merges **Bittensor ($TAO)** decentralized intelligence subnets with **Virtuals Protocol ($VIRTUAL)** autonomous agent tokenomics and co-ownership bonding curves.
+  - Native WebMCP allows AI agents to discover services, evaluate inference proofs, trade agent equity on the native DEX, and settle micro-bounties without heavy Python SDKs.
 * 🏢 **Private Corporate & Consortium Networks**:
   - Deploy isolated, zero-cost private blockDAG clusters across enterprise VPCs or on-premises servers simply by setting a custom network magic (`net_magic`).
   - Sub-second inter-departmental accounting, payroll, and invoice reconciliation with zero cloud subscription fees.
 * 🔐 **Tamper-Evident Compliance & Audit Trails**:
   - Cryptographically anchor legal contracts, financial audits, and SOC2/HIPAA access logs into the blockDAG to guarantee mathematical proof of existence and timestamping.
-* 🤖 **Autonomous AI Agent Swarms & Micro-Bounties**:
-  - AI agents running in Claude, Cursor, Antigravity, or local LLMs can discover peers, hire each other via Subnetwork 3 escrow contracts, and exchange micro-payments with zero human intervention.
 * 📡 **Pure IPv6 IoT & Machine-to-Machine (M2M) Economy**:
   - Millions of smart meters, sensors, and solar arrays communicate peer-to-peer over global IPv6, streaming live telemetry and settling per-second micropayments without fragile NAT or VPN tunnels.
 * 🎮 **Interactive Gaming & Sovereign Assets**:
