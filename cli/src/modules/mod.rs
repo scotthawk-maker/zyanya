@@ -32,6 +32,7 @@ pub mod rpc;
 pub mod select;
 pub mod send;
 pub mod server;
+pub mod session;
 pub mod settings;
 pub mod sign;
 pub mod start;
@@ -58,7 +59,7 @@ pub fn register_handlers(cli: &Arc<ZyanyaCli>) -> Result<()> {
         cli.handlers(),
         [
             account, address, close, connect, details, disconnect, estimate, exit, export, guide, help, history, rpc, list, miner,
-            message, monitor, mute, network, node, open, ping, pssb, reload, select, send, server, settings, sweep, track, transfer,
+            message, monitor, mute, network, node, open, ping, pssb, reload, select, send, server, session, settings, sweep, track, transfer,
             wallet,
             // halt,
             // theme,  start, stop

@@ -23,8 +23,8 @@
 | **Track 6** | Mining Fleet & AstroBWTv3 Tooling | 🟢 READY | AstroBWTv3 CPU Miner & Scaling Verified |
 | **Track 7** | Release Packaging & Binaries (v1.0.0) | 🟢 READY | Windows ZIP Bundled, Hashes & Release Notes |
 | **Track 8** | Satoshi Stealth Launch | 🟢 READY | GitHub & SourceForge Only (Zero Socials/Hype) |
-| **Track 9** | Scoped Agent Session Keys | 🟡 IN PROGRESS | `specs/SESSION_KEYS_SPEC.md` (P0 Blocker, Target: Sept 21) |
-| **Track 10** | IPv6 P2P Anti-Eclipse & Inbound Capping | 🟡 IN PROGRESS | `specs/P2P_IPV6_ECLIPSE_DEFENSE.md` (P0 Blocker, Target: Sept 23) |
+| **Track 9** | Scoped Agent Session Keys | 🟢 READY | `wallet/core/src/session.rs` (7/7 tests) & `cli` |
+| **Track 10** | IPv6 P2P Anti-Eclipse & Inbound Capping | 🟢 READY | `p2p` & `addressmanager` (3/3 tests) |
 
 ---
 
@@ -150,3 +150,31 @@
   - Publish GitHub release & SourceForge tarballs/zips.
   - Seed nodes start generating initial blocks with zero premine.
   - Community miners connect and begin discovering blocks organically.
+
+---
+
+## Track 9: Scoped Agent Session Keys & Policy Engine
+- [x] **Cryptographic Session Engine (`wallet/core/src/session.rs`)**:
+  - [x] `SessionPolicy`: Per-tx spend cap, daily velocity limit, destination whitelist, and TTL expiry.
+  - [x] `SessionCertificate`: Master Schnorr signature over canonical payload with verification and tamper detection.
+  - [x] `ScopedSessionKey`: Ephemeral keypair container with fail-closed spend validation.
+  - [x] Test suite: 7 unit tests covering per-tx limits, daily rollover, expiration, whitelisting, signing, verification, and tamper detection.
+- [x] **Wallet CLI Interface (`cli/src/modules/session.rs`)**:
+  - [x] `session create`: Interactive session key generation with custom spend caps, daily limits, and whitelist.
+  - [x] `session verify`: Standalone cryptographic verification of certificate signatures.
+  - [x] `session check`: Pre-flight spend authorization and policy bounds validation.
+
+---
+
+## Track 10: IPv6 P2P Anti-Eclipse & Inbound Slot Defense
+- [x] **Inbound Prefix Capping (`protocol/p2p/src/core/connection_handler.rs`)**:
+  - [x] Strict `/64` limit: Maximum 1 active inbound connection per `/64` subnet (`MAX_INBOUND_PER_NETGROUP_64 = 1`).
+  - [x] Strict `/48` limit: Maximum 4 active inbound connections per `/48` routing prefix (`MAX_INBOUND_PER_NETGROUP_48 = 4`).
+  - [x] Pre-handshake rejection: Saturated prefixes rejected during gRPC stream establishment with `Status::resource_exhausted` before buffer allocation.
+  - [x] RAII `PrefixSlotGuard`: Automatically decrements active prefix counters upon connection termination.
+- [x] **Diversity-First Inbound Eviction (`components/connectionmanager/src/lib.rs`)**:
+  - [x] Replaced naive random eviction with prefix concentration sorting.
+  - [x] Evicts inbound peers from the most over-represented `/48` cluster first, ensuring global topological diversity.
+- [x] **AddressManager Prefix Bucketing (`components/addressmanager/src/lib.rs`)**:
+  - [x] Canonical netgroup extraction helpers (`ipv6_to_netgroup_64` and `ipv6_to_netgroup_48`).
+  - [x] Compound `/64` and `/48` outbound de-weighting in `iterate_prioritized_random_addresses`.

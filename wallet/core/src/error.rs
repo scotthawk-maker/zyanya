@@ -28,6 +28,9 @@ pub enum Error {
     #[error(transparent)]
     WalletKeys(#[from] zyanya_wallet_keys::error::Error),
 
+    #[error(transparent)]
+    SessionPolicy(#[from] crate::session::SessionPolicyError),
+
     #[error("please select an account")]
     AccountSelection,
 

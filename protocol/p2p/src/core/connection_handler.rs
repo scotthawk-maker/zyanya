@@ -19,7 +19,7 @@ use tokio_stream::StreamExt;
 use tonic::transport::{Error as TonicError, Server as TonicServer};
 use tonic::{Request, Response, Status as TonicStatus, Streaming};
 use zyanya_core::{debug, error, info, warn};
-use zyanya_utils::networking::{IpAddress, NetAddress};
+use zyanya_utils::networking::{IpAddress, NetAddress, PrefixBucket, PrefixBucket48};
 use zyanya_utils_tower::{
     counters::TowerConnectionCounters,
     middleware::{BodyExt, CountBytesBody, MapRequestBodyLayer, MapResponseBodyLayer, ServiceBuilder},
@@ -31,6 +31,87 @@ const MAX_CONNECTIONS: usize = 128;
 const MAX_CONNECTIONS_PER_IP_PER_MINUTE: usize = 10;
 /// Sliding window for the per-IP connection rate limit (F-H-18).
 const CONNECTION_RATE_LIMIT_WINDOW: Duration = Duration::from_secs(60);
+
+/// Maximum number of concurrent inbound connections allowed per /64 subnet (Track 10).
+pub const MAX_INBOUND_PER_NETGROUP_64: usize = 1;
+/// Maximum number of concurrent inbound connections allowed per /48 routing prefix (Track 10).
+pub const MAX_INBOUND_PER_NETGROUP_48: usize = 4;
+/// Maximum number of new inbound connection handshakes per /64 subnet per minute (Track 10).
+pub const MAX_HANDSHAKES_PER_NETGROUP_64_PER_MINUTE: usize = 12;
+
+/// Tracks active inbound connection counts and recent handshake rates partitioned by
+/// IPv6 /64 and /48 prefix buckets to defend against subnet starvation and eclipse attacks (Track 10).
+#[derive(Default, Debug)]
+pub struct InboundPrefixLimiter {
+    /// Active inbound connection count per /64 netgroup.
+    pub active_64: HashMap<PrefixBucket, usize>,
+    /// Active inbound connection count per /48 netgroup.
+    pub active_48: HashMap<PrefixBucket48, usize>,
+    /// Recent handshake timestamps per /64 netgroup for sliding-window rate limiting.
+    pub handshakes_64: HashMap<PrefixBucket, VecDeque<Instant>>,
+}
+
+impl InboundPrefixLimiter {
+    /// Evaluates whether an incoming connection from `ip` can be accepted.
+    /// If accepted, increments active counters and records the handshake timestamp.
+    pub fn try_accept(&mut self, ip: &IpAddress) -> Result<(), TonicStatus> {
+        let now = Instant::now();
+        let bucket_64 = ip.prefix_bucket();
+        let bucket_48 = ip.prefix_bucket_48();
+
+        // 1. Sliding window rate-limit check on /64 prefix (defends against rapid IP-cycling in a /64)
+        let hs_entry = self.handshakes_64.entry(bucket_64).or_default();
+        while hs_entry.front().map_or(false, |t| now.duration_since(*t) > CONNECTION_RATE_LIMIT_WINDOW) {
+            hs_entry.pop_front();
+        }
+        if hs_entry.len() >= MAX_HANDSHAKES_PER_NETGROUP_64_PER_MINUTE {
+            return Err(TonicStatus::resource_exhausted("IPv6 /64 subnet connection rate limit exceeded"));
+        }
+
+        // 2. Active concurrent connection limit for /64 subnet (max 1)
+        let count_64 = self.active_64.get(&bucket_64).copied().unwrap_or(0);
+        if count_64 >= MAX_INBOUND_PER_NETGROUP_64 {
+            return Err(TonicStatus::resource_exhausted("IPv6 /64 subnet active inbound slot limit reached (max 1)"));
+        }
+
+        // 3. Active concurrent connection limit for /48 routing prefix (max 4)
+        let count_48 = self.active_48.get(&bucket_48).copied().unwrap_or(0);
+        if count_48 >= MAX_INBOUND_PER_NETGROUP_48 {
+            return Err(TonicStatus::resource_exhausted("IPv6 /48 prefix active inbound slot limit reached (max 4)"));
+        }
+
+        // Accept and record
+        hs_entry.push_back(now);
+        *self.active_64.entry(bucket_64).or_insert(0) += 1;
+        *self.active_48.entry(bucket_48).or_insert(0) += 1;
+
+        Ok(())
+    }
+
+    /// Releases active connection slots when a peer disconnects.
+    pub fn release(&mut self, ip: &IpAddress) {
+        let bucket_64 = ip.prefix_bucket();
+        let bucket_48 = ip.prefix_bucket_48();
+
+        if let Some(count) = self.active_64.get_mut(&bucket_64) {
+            if *count > 0 {
+                *count -= 1;
+                if *count == 0 {
+                    self.active_64.remove(&bucket_64);
+                }
+            }
+        }
+
+        if let Some(count) = self.active_48.get_mut(&bucket_48) {
+            if *count > 0 {
+                *count -= 1;
+                if *count == 0 {
+                    self.active_48.remove(&bucket_48);
+                }
+            }
+        }
+    }
+}
 
 #[derive(Error, Debug)]
 pub enum ConnectionError {
@@ -64,6 +145,8 @@ pub struct ConnectionHandler {
     connection_slots: Arc<tokio::sync::Semaphore>,
     /// Per-IP timestamps of recent inbound connections (sliding window) (F-H-18).
     per_ip_connections: Arc<Mutex<HashMap<IpAddress, VecDeque<Instant>>>>,
+    /// Inbound /64 and /48 prefix limiter and tracker (Track 10).
+    prefix_limiter: Arc<Mutex<InboundPrefixLimiter>>,
 }
 
 impl ConnectionHandler {
@@ -78,6 +161,7 @@ impl ConnectionHandler {
             counters,
             connection_slots: Arc::new(tokio::sync::Semaphore::new(MAX_CONNECTIONS)),
             per_ip_connections: Arc::new(Mutex::new(HashMap::new())),
+            prefix_limiter: Arc::new(Mutex::new(InboundPrefixLimiter::default())),
         }
     }
 
@@ -219,11 +303,25 @@ impl ConnectionHandler {
     }
 }
 
-/// Wraps the outgoing stream and holds a connection-slot permit so the slot is
-/// released when the connection (and thus the stream) is dropped (F-H-18).
+/// RAII guard that decrements active /64 and /48 prefix connection counters upon drop (Track 10).
+pub struct PrefixSlotGuard {
+    ip: IpAddress,
+    limiter: Arc<Mutex<InboundPrefixLimiter>>,
+}
+
+impl Drop for PrefixSlotGuard {
+    fn drop(&mut self) {
+        let mut limiter = self.limiter.lock().unwrap();
+        limiter.release(&self.ip);
+    }
+}
+
+/// Wraps the outgoing stream and holds connection permits so both global slots and
+/// subnet/routing prefix slots are released when the connection drops (Track 10).
 struct ConnectionGuardStream<S> {
     inner: S,
     _permit: tokio::sync::OwnedSemaphorePermit,
+    _prefix_guard: PrefixSlotGuard,
 }
 
 impl<S: futures::Stream + Unpin> futures::Stream for ConnectionGuardStream<S> {
@@ -248,7 +346,17 @@ impl ProtoP2p for ConnectionHandler {
 
         let ip: IpAddress = remote_address.ip().into();
 
-        // Per-IP rate limit (sliding window) (F-H-18).
+        // 1. Inbound /64 and /48 prefix limit and rate limit check (Track 10).
+        {
+            let mut limiter = self.prefix_limiter.lock().unwrap();
+            limiter.try_accept(&ip)?;
+        }
+        let prefix_guard = PrefixSlotGuard {
+            ip,
+            limiter: self.prefix_limiter.clone(),
+        };
+
+        // 2. Per-IP rate limit (sliding window) (F-H-18).
         {
             let mut map = self.per_ip_connections.lock().unwrap();
             let now = Instant::now();
@@ -262,7 +370,7 @@ impl ProtoP2p for ConnectionHandler {
             entry.push_back(now);
         }
 
-        // Global inbound connection limit (F-H-18).
+        // 3. Global inbound connection limit (F-H-18).
         let permit = match self.connection_slots.clone().try_acquire_owned() {
             Ok(permit) => permit,
             Err(_) => return Err(TonicStatus::resource_exhausted("max connections reached")),
@@ -282,10 +390,68 @@ impl ProtoP2p for ConnectionHandler {
         }
 
         // Give tonic a receiver stream (messages sent to it will be forwarded to the network peer).
-        // Wrap the stream with a ConnectionGuardStream so the connection slot is released when the
-        // connection (and thus the stream) is dropped (F-H-18).
+        // Wrap the stream with a ConnectionGuardStream so both global and prefix slots are
+        // automatically released when the connection drops.
         let stream = ReceiverStream::new(outgoing_receiver).map(Ok);
-        let guarded = ConnectionGuardStream { inner: stream, _permit: permit };
+        let guarded = ConnectionGuardStream { inner: stream, _permit: permit, _prefix_guard: prefix_guard };
         Ok(Response::new(Box::pin(guarded) as Self::MessageStreamStream))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::Ipv6Addr;
+
+    #[test]
+    fn test_prefix_limiter_enforces_per_64_limit() {
+        let mut limiter = InboundPrefixLimiter::default();
+
+        let ip1 = IpAddress::from(std::net::IpAddr::V6("2606:4700:4700::1".parse::<Ipv6Addr>().unwrap()));
+        let ip2 = IpAddress::from(std::net::IpAddr::V6("2606:4700:4700::2".parse::<Ipv6Addr>().unwrap()));
+
+        // First connection from /64: accepted
+        assert!(limiter.try_accept(&ip1).is_ok());
+
+        // Second connection from same /64: rejected
+        let res = limiter.try_accept(&ip2);
+        assert!(res.is_err());
+        assert_eq!(res.unwrap_err().code(), tonic::Code::ResourceExhausted);
+
+        // Release first connection
+        limiter.release(&ip1);
+
+        // Now ip2 from that /64 can be accepted
+        assert!(limiter.try_accept(&ip2).is_ok());
+    }
+
+    #[test]
+    fn test_prefix_limiter_enforces_per_48_limit() {
+        let mut limiter = InboundPrefixLimiter::default();
+
+        // 5 distinct /64 subnets all within 2606:4700:4700::/48
+        let ips = (0..5)
+            .map(|i| {
+                IpAddress::from(std::net::IpAddr::V6(
+                    format!("2606:4700:4700:{:04x}::1", i).parse::<Ipv6Addr>().unwrap(),
+                ))
+            })
+            .collect::<Vec<_>>();
+
+        // First 4 (max 4 per /48): all accepted
+        for ip in &ips[0..4] {
+            assert!(limiter.try_accept(ip).is_ok());
+        }
+
+        // 5th connection from same /48: rejected even though /64 is new
+        let res5 = limiter.try_accept(&ips[4]);
+        assert!(res5.is_err());
+        assert_eq!(res5.unwrap_err().code(), tonic::Code::ResourceExhausted);
+
+        // Release one slot
+        limiter.release(&ips[0]);
+
+        // 5th connection now succeeds
+        assert!(limiter.try_accept(&ips[4]).is_ok());
     }
 }

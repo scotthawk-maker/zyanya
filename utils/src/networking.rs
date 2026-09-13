@@ -71,6 +71,45 @@ impl From<&NetAddress> for PrefixBucket {
     }
 }
 
+/// A bucket based on an IP's /48 routing prefix bytes.
+/// For IPv4 it consists of 6 leading zero bytes and the first two octets (/16),
+/// For IPv6 it consists of the first 6 octets (/48) and 2 trailing zero bytes,
+/// encoded into a big-endian u64.
+#[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
+pub struct PrefixBucket48(u64);
+
+impl PrefixBucket48 {
+    pub fn as_u64(&self) -> u64 {
+        self.0
+    }
+}
+
+impl From<&IpAddress> for PrefixBucket48 {
+    fn from(ip_address: &IpAddress) -> Self {
+        match ip_address.0 {
+            IpAddr::V4(ipv4) => {
+                let prefix_bytes = ipv4.octets();
+                Self(u64::from_be_bytes([0u8, 0u8, 0u8, 0u8, 0u8, 0u8, prefix_bytes[0], prefix_bytes[1]]))
+            }
+            IpAddr::V6(ipv6) => {
+                if let Some(ipv4) = ipv6.to_ipv4() {
+                    let prefix_bytes = ipv4.octets();
+                    Self(u64::from_be_bytes([0u8, 0u8, 0u8, 0u8, 0u8, 0u8, prefix_bytes[0], prefix_bytes[1]]))
+                } else {
+                    let oct = ipv6.octets();
+                    Self(u64::from_be_bytes([oct[0], oct[1], oct[2], oct[3], oct[4], oct[5], 0u8, 0u8]))
+                }
+            }
+        }
+    }
+}
+
+impl From<&NetAddress> for PrefixBucket48 {
+    fn from(net_address: &NetAddress) -> Self {
+        Self::from(&net_address.ip)
+    }
+}
+
 /// An IP address, newtype of [IpAddr].
 #[derive(PartialEq, Eq, Hash, Copy, Clone, Serialize, Deserialize, Debug)]
 #[repr(transparent)]
@@ -129,6 +168,10 @@ impl IpAddress {
 
     pub fn prefix_bucket(&self) -> PrefixBucket {
         PrefixBucket::from(self)
+    }
+
+    pub fn prefix_bucket_48(&self) -> PrefixBucket48 {
+        PrefixBucket48::from(self)
     }
 }
 

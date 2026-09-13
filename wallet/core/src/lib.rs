@@ -89,6 +89,7 @@ pub mod prelude;
 pub mod result;
 pub mod rpc;
 pub mod serializer;
+pub mod session;
 pub mod settings;
 pub mod storage;
 pub mod tx;

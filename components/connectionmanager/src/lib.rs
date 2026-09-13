@@ -22,6 +22,7 @@ use tokio::{
 use zyanya_addressmanager::{AddressManager, NetAddress};
 use zyanya_core::{debug, info, warn};
 use zyanya_p2p_lib::{common::ProtocolError, ConnectionError, Peer};
+use zyanya_utils::networking::{IpAddress, PrefixBucket48};
 use zyanya_utils::triggers::SingleTrigger;
 
 pub struct ConnectionManager {
@@ -260,9 +261,41 @@ impl ConnectionManager {
             return;
         }
 
-        let mut futures = Vec::with_capacity(active_inbound_len - self.inbound_limit);
-        for peer in active_inbound.choose_multiple(&mut thread_rng(), active_inbound_len - self.inbound_limit) {
-            debug!("Disconnecting from {} because we're above the inbound limit", peer.net_address());
+        let to_evict_count = active_inbound_len - self.inbound_limit;
+
+        // Group active inbound peers by /48 routing prefix to identify clusters (Track 10)
+        let mut prefix_groups: HashMap<PrefixBucket48, Vec<&Peer>> = HashMap::new();
+        for peer in &active_inbound {
+            let ip = IpAddress::from(peer.net_address().ip());
+            let bucket = ip.prefix_bucket_48();
+            prefix_groups.entry(bucket).or_default().push(peer);
+        }
+
+        // Diversity-first eviction: evict from the most over-represented prefix family first
+        let mut victims = Vec::with_capacity(to_evict_count);
+        while victims.len() < to_evict_count && !prefix_groups.is_empty() {
+            let highest_prefix = prefix_groups
+                .iter()
+                .max_by_key(|(_, peers)| peers.len())
+                .map(|(k, _)| *k);
+
+            if let Some(prefix) = highest_prefix {
+                if let Some(peers) = prefix_groups.get_mut(&prefix) {
+                    if let Some(victim) = peers.pop() {
+                        victims.push(victim);
+                    }
+                    if peers.is_empty() {
+                        prefix_groups.remove(&prefix);
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        let mut futures = Vec::with_capacity(victims.len());
+        for peer in victims {
+            debug!("Evicting inbound peer {} for network prefix diversity (Track 10)", peer.net_address());
             futures.push(self.p2p_adaptor.terminate(peer.key()));
         }
         join_all(futures).await;

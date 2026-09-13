@@ -24,6 +24,22 @@ use zyanya_utils::networking::IpAddress;
 
 pub use stores::NetAddress;
 
+/// Extracts the 64-bit (/64) subnet prefix from an IPv6 address.
+pub fn ipv6_to_netgroup_64(addr: &std::net::Ipv6Addr) -> [u8; 8] {
+    let octets = addr.octets();
+    let mut netgroup = [0u8; 8];
+    netgroup.copy_from_slice(&octets[0..8]);
+    netgroup
+}
+
+/// Extracts the 48-bit (/48) routing prefix from an IPv6 address.
+pub fn ipv6_to_netgroup_48(addr: &std::net::Ipv6Addr) -> [u8; 6] {
+    let octets = addr.octets();
+    let mut netgroup = [0u8; 6];
+    netgroup.copy_from_slice(&octets[0..6]);
+    netgroup
+}
+
 const MAX_ADDRESSES: usize = 4096;
 const MAX_CONNECTION_FAILED_COUNT: u64 = 3;
 
@@ -378,7 +394,7 @@ mod address_store_with_cache {
         prelude::Distribution,
     };
     use zyanya_database::prelude::{CachePolicy, DB};
-    use zyanya_utils::networking::PrefixBucket;
+    use zyanya_utils::networking::{PrefixBucket, PrefixBucket48};
 
     use crate::{
         stores::{
@@ -484,6 +500,7 @@ mod address_store_with_cache {
         ) -> Result<impl ExactSizeIterator<Item = NetAddress>, rand::distributions::WeightedError> {
             let exceptions: HashSet<AddressKey> = exceptions.into_iter().map(|addr| addr.into()).collect();
             let mut prefix_counter: HashMap<PrefixBucket, usize> = HashMap::new();
+            let mut prefix_counter_48: HashMap<PrefixBucket48, usize> = HashMap::new();
             let (mut weights, filtered_addresses): (Vec<f64>, Vec<NetAddress>) = self
                 .addresses
                 .iter()
@@ -491,13 +508,18 @@ mod address_store_with_cache {
                 .map(|(_, e)| {
                     let count = prefix_counter.entry(e.address.prefix_bucket()).or_insert(0);
                     *count += 1;
+                    let count_48 = prefix_counter_48.entry(e.address.ip.prefix_bucket_48()).or_insert(0);
+                    *count_48 += 1;
                     (64f64.powf((MAX_CONNECTION_FAILED_COUNT + 1 - e.connection_failed_count) as f64), e.address)
                 })
                 .unzip();
 
-            // Divide weights by size of bucket of the prefix bytes, to partially uniform the distribution over prefix buckets.
+            // Divide weights by size of bucket of the prefix bytes (/64 and /48),
+            // to prevent single-subnet or single-provider clustering.
             for (i, address) in filtered_addresses.iter().enumerate() {
-                *weights.get_mut(i).unwrap() /= *prefix_counter.get(&address.prefix_bucket()).unwrap() as f64;
+                let divisor_64 = *prefix_counter.get(&address.prefix_bucket()).unwrap() as f64;
+                let divisor_48 = (*prefix_counter_48.get(&address.ip.prefix_bucket_48()).unwrap() as f64).sqrt();
+                *weights.get_mut(i).unwrap() /= divisor_64 * divisor_48;
             }
 
             RandomWeightedIterator::new(weights, filtered_addresses)
@@ -574,6 +596,7 @@ mod address_store_with_cache {
         use std::str::FromStr;
 
         use super::*;
+        use crate::{ipv6_to_netgroup_48, ipv6_to_netgroup_64};
         use crate::stores::banned_address_store::{BannedAddressesStore, BannedAddressesStoreReader, ConnectionBanTimestamp};
         use address_manager::AddressManager;
         use rv::{dist::Uniform, misc::ks_test as one_way_ks_test, traits::Cdf};
@@ -818,6 +841,34 @@ mod address_store_with_cache {
             // highest failure count.
             let remaining: Vec<NetAddress> = am_guard.get_all_addresses();
             assert!(remaining.iter().any(|a| a.ip == connected_ip), "connected peer must not be evicted");
+        }
+
+        #[test]
+        fn test_ipv6_netgroup_extraction() {
+            use std::net::Ipv6Addr;
+
+            // Two distinct host addresses in the exact same /64 subnet
+            let addr1: Ipv6Addr = "2606:4700:4700::1111".parse().unwrap();
+            let addr2: Ipv6Addr = "2606:4700:4700::2222".parse().unwrap();
+
+            // Distinct /64 subnet within the same /48 routing prefix
+            let addr3: Ipv6Addr = "2606:4700:4700:0001::3333".parse().unwrap();
+
+            // Completely different /48 routing prefix
+            let addr4: Ipv6Addr = "2001:0db8:85a3::4444".parse().unwrap();
+
+            // /64 check: addr1 and addr2 share the same /64 prefix
+            assert_eq!(ipv6_to_netgroup_64(&addr1), ipv6_to_netgroup_64(&addr2));
+
+            // addr1 and addr3 have different /64 prefixes
+            assert_ne!(ipv6_to_netgroup_64(&addr1), ipv6_to_netgroup_64(&addr3));
+
+            // /48 check: addr1, addr2, and addr3 all share the same /48 prefix
+            assert_eq!(ipv6_to_netgroup_48(&addr1), ipv6_to_netgroup_48(&addr2));
+            assert_eq!(ipv6_to_netgroup_48(&addr1), ipv6_to_netgroup_48(&addr3));
+
+            // addr4 has a different /48 prefix
+            assert_ne!(ipv6_to_netgroup_48(&addr1), ipv6_to_netgroup_48(&addr4));
         }
     }
 }
