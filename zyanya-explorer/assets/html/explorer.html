@@ -608,12 +608,14 @@
     <script src="/shared.js"></script>
     <script src="/webmcp.js"></script>
     <script>
-        // Global state for live calculations
+        // Global state for live calculations & block streams
         let currentCovenantDays = 0;
         let currentMultiplier = 1.0;
         let currentSlippage = 0.5;
         let loadedPools = [];
         let loadedTokens = [];
+        let seenBlocks = new Set();
+        let firstDashboardLoad = true;
 
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
@@ -665,7 +667,7 @@
         // ==================== DASHBOARD ====================
         async function loadDashboard() {
             try {
-                const infoRes = await fetch('/api/info');
+                const infoRes = await fetch('/api/info?t=' + Date.now(), { cache: 'no-store' });
                 if (infoRes.ok) {
                     const info = await infoRes.json();
                     document.getElementById('stat-blocks').innerText = (info.block_count || 0).toLocaleString();
@@ -675,7 +677,7 @@
                     document.getElementById('stat-peers').innerText = info.peer_count || 0;
                 }
 
-                const blocksRes = await fetch('/api/blocks');
+                const blocksRes = await fetch('/api/blocks?t=' + Date.now(), { cache: 'no-store' });
                 if (blocksRes.ok) {
                     const blocks = await blocksRes.json();
                     const tbody = document.getElementById('blocks-tbody');
@@ -685,7 +687,8 @@
                             const hashShort = b.hash.substring(0, 16) + '...';
                             const parentShort = b.selected_parent ? (b.selected_parent.substring(0, 16) + '...') : 'Genesis';
                             const date = new Date(b.timestamp).toLocaleTimeString();
-                            html += '<tr>' +
+                            const isNew = !firstDashboardLoad && !seenBlocks.has(b.hash);
+                            html += '<tr' + (isNew ? ' class="new-block"' : '') + '>' +
                                 '<td class="mono"><a href="javascript:viewBlock(\'' + b.hash + '\')" class="link">' + hashShort + '</a></td>' +
                                 '<td class="mono">' + (b.blue_score || 0).toLocaleString() + '</td>' +
                                 '<td class="mono">' + (b.daa_score || 0).toLocaleString() + '</td>' +
@@ -693,7 +696,13 @@
                                 '<td class="mono">' + (b.tx_count || 1) + '</td>' +
                                 '<td class="mono" style="color:var(--text-muted);">' + parentShort + '</td>' +
                             '</tr>';
+                            seenBlocks.add(b.hash);
                         });
+                        firstDashboardLoad = false;
+                        if (seenBlocks.size > 300) {
+                            const keep = Array.from(seenBlocks).slice(-150);
+                            seenBlocks = new Set(keep);
+                        }
                         tbody.innerHTML = html;
                         document.getElementById('last-updated').innerText = new Date().toLocaleTimeString();
                     }
@@ -1361,9 +1370,9 @@
             }
         }
 
-        // Initialize dashboard & background poll
+        // Initialize dashboard & background poll (1.5s for 1 BPS ghostdag)
         loadDashboard();
-        setInterval(loadDashboard, 3000);
+        setInterval(loadDashboard, 1500);
     </script>
 </body>
 </html>

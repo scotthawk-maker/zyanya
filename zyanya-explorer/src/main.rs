@@ -54,11 +54,16 @@ async fn rate_limit(
     next.run(req).await
 }
 
-/// F-L-33: Security headers middleware.
+/// F-L-33: Security headers middleware with API cache busting.
 async fn security_headers(req: Request, next: Next) -> Response {
+    let is_api = req.uri().path().starts_with("/api/");
     let mut resp = next.run(req).await;
     resp.headers_mut().insert(header::X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
     resp.headers_mut().insert(header::X_FRAME_OPTIONS, HeaderValue::from_static("DENY"));
+    if is_api {
+        resp.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store, no-cache, must-revalidate"));
+        resp.headers_mut().insert(header::PRAGMA, HeaderValue::from_static("no-cache"));
+    }
     resp
 }
 
