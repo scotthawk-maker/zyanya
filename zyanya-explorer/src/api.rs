@@ -579,3 +579,165 @@ pub async fn api_compile_contract_handler(
         Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
     }
 }
+
+#[derive(Deserialize)]
+pub struct StakingInfoQuery {
+    pub user: Option<String>,
+    pub address: Option<String>,
+}
+
+pub async fn api_staking_info_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Query(query): Query<StakingInfoQuery>,
+) -> Response {
+    let user = query.user.or(query.address);
+    match client.get_staking_info(user.as_deref()).await {
+        Ok(info) => Json(info).into_response(),
+        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+#[allow(non_snake_case)]
+pub struct StakeReq {
+    pub user: Option<String>,
+    pub address: Option<String>,
+    pub amount: Option<f64>,
+    pub amount_sompi: Option<u64>,
+    pub amountSompi: Option<u64>,
+    pub covenant_days: Option<u32>,
+    pub covenantDays: Option<u32>,
+}
+
+pub async fn api_stake_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Json(payload): Json<StakeReq>,
+) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
+    let user = payload.user.or(payload.address).unwrap_or_else(|| "zyanya:qz_sovereign_staker".to_string());
+    let amount_sompi = if let Some(sompi) = payload.amount_sompi.or(payload.amountSompi) {
+        sompi
+    } else if let Some(zyan) = payload.amount {
+        (zyan * 100_000_000.0) as u64
+    } else {
+        0
+    };
+    let covenant_days = payload.covenant_days.or(payload.covenantDays).unwrap_or(0);
+    match client.stake(&user, amount_sompi, covenant_days).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+#[allow(non_snake_case)]
+pub struct UnstakeReq {
+    pub user: Option<String>,
+    pub address: Option<String>,
+    pub amount: Option<f64>,
+    pub amount_sompi: Option<u64>,
+    pub amountSompi: Option<u64>,
+}
+
+pub async fn api_unstake_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Json(payload): Json<UnstakeReq>,
+) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
+    let user = payload.user.or(payload.address).unwrap_or_else(|| "zyanya:qz_sovereign_staker".to_string());
+    let amount_sompi = if let Some(sompi) = payload.amount_sompi.or(payload.amountSompi) {
+        sompi
+    } else if let Some(zyan) = payload.amount {
+        (zyan * 100_000_000.0) as u64
+    } else {
+        0
+    };
+    match client.unstake(&user, amount_sompi).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+pub struct ClaimRewardsReq {
+    pub user: Option<String>,
+    pub address: Option<String>,
+}
+
+pub async fn api_claim_rewards_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Json(payload): Json<ClaimRewardsReq>,
+) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
+    let user = payload.user.or(payload.address).unwrap_or_else(|| "zyanya:qz_sovereign_staker".to_string());
+    match client.claim_rewards(&user).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+#[allow(non_snake_case)]
+pub struct AddLiquidityReq {
+    pub dex: Option<String>,
+    pub dex_address: Option<String>,
+    pub dexAddress: Option<String>,
+    pub amount_a: Option<u64>,
+    pub amountA: Option<u64>,
+    pub amount_b: Option<u64>,
+    pub amountB: Option<u64>,
+}
+
+pub async fn api_add_liquidity_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Json(payload): Json<AddLiquidityReq>,
+) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
+    let dex = payload.dex.or(payload.dex_address).or(payload.dexAddress).unwrap_or_default();
+    if dex.is_empty() {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Missing DEX address" }))).into_response();
+    }
+    let amount_a = payload.amount_a.or(payload.amountA).unwrap_or(0);
+    let amount_b = payload.amount_b.or(payload.amountB).unwrap_or(0);
+    match client.add_liquidity(&dex, amount_a, amount_b).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+#[allow(non_snake_case)]
+pub struct RemoveLiquidityReq {
+    pub dex: Option<String>,
+    pub dex_address: Option<String>,
+    pub dexAddress: Option<String>,
+    pub lp_shares: Option<u64>,
+    pub lpShares: Option<u64>,
+}
+
+pub async fn api_remove_liquidity_handler(
+    State(client): State<Arc<RpcClientManager>>,
+    Json(payload): Json<RemoveLiquidityReq>,
+) -> Response {
+    if let Err(resp) = check_write_enabled() {
+        return resp;
+    }
+    let dex = payload.dex.or(payload.dex_address).or(payload.dexAddress).unwrap_or_default();
+    if dex.is_empty() {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": "Missing DEX address" }))).into_response();
+    }
+    let lp_shares = payload.lp_shares.or(payload.lpShares).unwrap_or(0);
+    match client.remove_liquidity(&dex, lp_shares).await {
+        Ok(res) => Json(res).into_response(),
+        Err(err) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "error": err }))).into_response(),
+    }
+}
+

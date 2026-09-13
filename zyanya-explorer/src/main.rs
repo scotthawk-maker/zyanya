@@ -225,6 +225,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/token-transfer", post(api_token_transfer_handler))
         .route("/api/swap-on-dex", post(api_swap_on_dex_handler))
         .route("/api/compile-contract", post(api_compile_contract_handler))
+        .route("/api/staking-info", get(api_staking_info_handler))
+        .route("/api/stake", post(api_stake_handler))
+        .route("/api/unstake", post(api_unstake_handler))
+        .route("/api/claim-rewards", post(api_claim_rewards_handler))
+        .route("/api/add-liquidity", post(api_add_liquidity_handler))
+        .route("/api/remove-liquidity", post(api_remove_liquidity_handler))
         .with_state(client_mgr)
         // F-M-31: enforce a same-origin CORS policy on all routes. Never emits
         // `Access-Control-Allow-Origin: *`.

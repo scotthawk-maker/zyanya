@@ -359,5 +359,111 @@
         })
     });
 
+    mc.registerTool({
+        name: "get-staking-info",
+        description: "Query Zyanya Staking Vault metrics: total staked ZYAN, accumulated 0.3% protocol fee rewards distributed, base APR (18.4%), and 90-day covenant boosted APR (46.0%). Optionally query user position.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                userAddress: { type: "string", description: "Optional staker address (zyanya:...)" }
+            }
+        },
+        execute: async (params) => {
+            const url = params && params.userAddress ? '/api/staking-info?user=' + encodeURIComponent(params.userAddress) : '/api/staking-info';
+            return await apiFetch(url);
+        }
+    });
+
+    mc.registerTool({
+        name: "stake-zyan",
+        description: "Lock ZYAN in the Subnetwork 3 Staking Vault with optional covenant timelock (0 for Flexible 1.0x, 30 for 1.5x, 90 for 2.5x APR boost).",
+        inputSchema: {
+            type: "object",
+            properties: {
+                user: { type: "string", description: "Staker address or identifier" },
+                amount: { type: "number", description: "Amount of ZYAN to stake" },
+                covenantDays: { type: "number", description: "Covenant lock duration in days (0, 30, or 90)" }
+            },
+            required: ["user", "amount"]
+        },
+        execute: async (params) => await apiFetch('/api/stake', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user: params.user,
+                amount: params.amount,
+                covenant_days: params.covenantDays || 0
+            })
+        })
+    });
+
+    mc.registerTool({
+        name: "unstake-zyan",
+        description: "Unstake ZYAN from the Subnetwork 3 Staking Vault if the covenant timelock period has elapsed.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                user: { type: "string", description: "Staker address or identifier" },
+                amount: { type: "number", description: "Amount of ZYAN to unstake" }
+            },
+            required: ["user", "amount"]
+        },
+        execute: async (params) => await apiFetch('/api/unstake', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user: params.user,
+                amount: params.amount
+            })
+        })
+    });
+
+    mc.registerTool({
+        name: "claim-staking-dividends",
+        description: "Claim accumulated 0.3% protocol fee rewards/dividends from AMM swaps and token launches.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                user: { type: "string", description: "Staker address or identifier" }
+            },
+            required: ["user"]
+        },
+        execute: async (params) => await apiFetch('/api/claim-rewards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user: params.user })
+        })
+    });
+
+    mc.registerTool({
+        name: "get-dex-pools",
+        description: "Retrieve all active AMM constant-product liquidity pools, reserves, 24h volume, and real-time prices.",
+        inputSchema: { type: "object", properties: {} },
+        execute: async () => await apiFetch('/api/dex')
+    });
+
+    mc.registerTool({
+        name: "add-dex-liquidity",
+        description: "Add liquidity to a Zyanya AMM liquidity pool to earn LP shares and trading fee yield.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                dexAddress: { type: "string", description: "DEX contract address" },
+                amountA: { type: "number", description: "Amount of ZYAN in sompi" },
+                amountB: { type: "number", description: "Amount of Token B in units" }
+            },
+            required: ["dexAddress", "amountA", "amountB"]
+        },
+        execute: async (params) => await apiFetch('/api/add-liquidity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                dex: params.dexAddress,
+                amount_a: params.amountA,
+                amount_b: params.amountB
+            })
+        })
+    });
+
     console.log("[WebMCP] Zyanya Web MCP Tool Suite initialized. Total tools:", mc.getTools().length);
 })();

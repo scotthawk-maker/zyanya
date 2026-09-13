@@ -47,14 +47,15 @@
         <div class="page-header">
             <div class="page-badge">Pure IPv6 · 1 BPS GhostDAG</div>
             <h1 class="page-title">Live BlockDAG Explorer</h1>
-            <p class="page-desc">Real-time ledger state, high-density block streams, autonomous smart contracts, and decentralized bonding curves.</p>
+            <p class="page-desc">Real-time ledger state, high-density block streams, autonomous smart contracts, covenant staking, and decentralized AMM liquidity pools.</p>
         </div>
 
         <div class="tabs-bar">
             <button class="nav-btn mono active" onclick="switchTab('dashboard')">DASHBOARD</button>
-            <button class="nav-btn mono" onclick="switchTab('contracts')">CONTRACTS</button>
+            <button class="nav-btn mono" onclick="switchTab('staking')">STAKING</button>
             <button class="nav-btn mono" onclick="switchTab('tokens')">TOKENS</button>
             <button class="nav-btn mono" onclick="switchTab('dex')">DEX POOLS</button>
+            <button class="nav-btn mono" onclick="switchTab('contracts')">CONTRACTS</button>
             <a href="/dag" class="nav-btn mono">DAG GRAPH ↗</a>
             <a href="/tools" class="nav-btn mono">WEBMCP TOOLS ↗</a>
         </div>
@@ -64,7 +65,7 @@
             <button class="search-btn mono" onclick="performSearch()">SEARCH</button>
         </div>
 
-        <!-- DASHBOARD TAB -->
+        <!-- ==================== DASHBOARD TAB ==================== -->
         <div id="tab-dashboard" class="tab-content active">
             <div class="stats-grid">
                 <div class="stat-card">
@@ -114,64 +115,342 @@
             </div>
         </div>
 
-        <!-- CONTRACTS TAB -->
-        <div id="tab-contracts" class="tab-content">
+        <!-- ==================== STAKING TAB ==================== -->
+        <div id="tab-staking" class="tab-content">
+            <!-- Staking Stats Banner -->
+            <div class="stats-banner">
+                <div class="stat-card">
+                    <div class="stat-label mono">TOTAL STAKED</div>
+                    <div class="stat-value mono" id="staking-total-staked" style="color:var(--accent-cyan);">1,250,500 ZYAN</div>
+                    <div class="stat-sub mono" style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">Across all covenant tiers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label mono">PROTOCOL DIVIDENDS POOL</div>
+                    <div class="stat-value mono" id="staking-rewards-pool" style="color:var(--accent-signal);">45,820.30 ZYAN</div>
+                    <div class="stat-sub mono" style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">0.3% AMM fee distribution</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label mono">BASE APR</div>
+                    <div class="stat-value mono" id="staking-base-apr" style="color:var(--text-primary);">18.4%</div>
+                    <div class="stat-sub mono" style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">Flexible lock (1.0x)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label mono">BOOSTED APR (90-DAY)</div>
+                    <div class="stat-value mono" id="staking-boosted-apr" style="color:var(--accent-amber);">46.0%</div>
+                    <div class="stat-sub mono" style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">2.5x Sovereign covenant</div>
+                </div>
+            </div>
+
+            <!-- Staking Feedback Alert -->
+            <div id="staking-alert" class="alert-box alert-info" style="display:none;"></div>
+
+            <!-- Covenant Multiplier Selector -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h3 class="card-title mono">1. SELECT TIMELOCK COVENANT</h3>
+                    <span class="mono" style="font-size:0.8rem; color:var(--text-muted);">ZCL Subnetwork 3 Multiplier</span>
+                </div>
+                <div class="covenant-grid">
+                    <div class="covenant-card active" id="cov-flex" onclick="selectCovenant(0, 1.0, 18.4, 'cov-flex')">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="covenant-multiplier mono">1.0x</span>
+                            <span class="badge badge-cyan mono">FLEXIBLE</span>
+                        </div>
+                        <div class="covenant-apr mono">18.4% Est. APR</div>
+                        <div class="covenant-label">No Timelock</div>
+                        <div class="covenant-desc">Withdraw anytime with zero penalty. Perfect for short-term liquidity holders.</div>
+                    </div>
+                    <div class="covenant-card" id="cov-30" onclick="selectCovenant(30, 1.5, 27.6, 'cov-30')">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="covenant-multiplier mono">1.5x</span>
+                            <span class="badge badge-amber mono">30 DAYS</span>
+                        </div>
+                        <div class="covenant-apr mono">27.6% Est. APR</div>
+                        <div class="covenant-label">Network Covenant</div>
+                        <div class="covenant-desc">Locked for 30 days. Earns 1.5x weight in daily 0.3% protocol fee distributions.</div>
+                    </div>
+                    <div class="covenant-card" id="cov-90" onclick="selectCovenant(90, 2.5, 46.0, 'cov-90')">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="covenant-multiplier mono">2.5x</span>
+                            <span class="badge badge-signal mono">90 DAYS</span>
+                        </div>
+                        <div class="covenant-apr mono">46.0% Est. APR</div>
+                        <div class="covenant-label">Sovereign Covenant</div>
+                        <div class="covenant-desc">Maximum yield multiplier. Fully eligible for protocol governance and surplus buybacks.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staking Forms: Two-column split -->
+            <div class="layout-split">
+                <!-- Stake Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title mono">STAKE ZYAN</h3>
+                        <span class="badge badge-cyan mono">DEPOSIT</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="stake-address">STAKER WALLET ADDRESS</label>
+                        <input type="text" id="stake-address" class="form-input mono" value="zyanya:qz_sovereign_staker" placeholder="zyanya:qz...">
+                    </div>
+                    <div class="form-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                            <label class="form-label" for="stake-amount" style="margin-bottom:0;">AMOUNT TO STAKE</label>
+                            <span class="mono" style="font-size:0.75rem; color:var(--text-muted);">Balance: 10,000.00 ZYAN</span>
+                        </div>
+                        <input type="number" id="stake-amount" class="form-input mono" placeholder="100.00" step="10" min="1" oninput="updateStakePreview()">
+                        <div class="quick-amounts">
+                            <button type="button" class="quick-btn mono" onclick="setStakeAmount(25)">25%</button>
+                            <button type="button" class="quick-btn mono" onclick="setStakeAmount(50)">50%</button>
+                            <button type="button" class="quick-btn mono" onclick="setStakeAmount(75)">75%</button>
+                            <button type="button" class="quick-btn mono" onclick="setStakeAmount(100)">MAX</button>
+                        </div>
+                    </div>
+                    <div class="swap-details" style="margin-bottom:1.25rem;">
+                        <div class="swap-detail-row">
+                            <span>Selected Lock:</span>
+                            <span class="mono" id="preview-lock-label">Flexible (0 Days)</span>
+                        </div>
+                        <div class="swap-detail-row">
+                            <span>Dividend Multiplier:</span>
+                            <span class="mono" id="preview-multiplier" style="color:var(--accent-cyan);">1.0x</span>
+                        </div>
+                        <div class="swap-detail-row">
+                            <span>Est. Annual Return:</span>
+                            <span class="mono" id="preview-est-yield" style="color:var(--accent-signal);">0.00 ZYAN</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mono" style="width:100%; min-height:46px;" onclick="executeStake()">DEPOSIT &amp; STAKE ZYAN</button>
+                </div>
+
+                <!-- Position & Dividends Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title mono">YOUR POSITION &amp; DIVIDENDS</h3>
+                        <span class="badge badge-signal mono">ACTIVE</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="pos-address">LOOKUP ADDRESS</label>
+                        <div style="display:flex; gap:0.5rem;">
+                            <input type="text" id="pos-address" class="form-input mono" value="zyanya:qz_sovereign_staker" placeholder="zyanya:qz...">
+                            <button class="btn btn-secondary mono" onclick="loadStaking()" style="min-height:46px;">LOAD</button>
+                        </div>
+                    </div>
+                    <div style="background:var(--bg-canvas); border:1px solid var(--border-subtle); border-radius:8px; padding:1.25rem; margin-bottom:1.25rem;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem;">
+                            <span style="color:var(--text-muted); font-size:0.85rem;">Active Staked:</span>
+                            <span class="mono" id="user-staked-amount" style="font-weight:700; color:var(--accent-cyan); font-size:1.1rem;">500.00 ZYAN</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem;">
+                            <span style="color:var(--text-muted); font-size:0.85rem;">Accrued Protocol Fees:</span>
+                            <span class="mono" id="user-rewards-amount" style="font-weight:700; color:var(--accent-signal); font-size:1.1rem;">45.80 ZYAN</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem;">
+                            <span style="color:var(--text-muted); font-size:0.85rem;">Covenant Status:</span>
+                            <span class="mono" id="user-covenant-status" style="color:var(--text-secondary);">90-Day Covenant (2.5x Boost)</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:var(--text-muted); font-size:0.85rem;">Covenant Multiplier:</span>
+                            <span class="mono" id="user-multiplier-badge" style="color:var(--accent-amber);">2.5x</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:0.75rem;">
+                        <button class="btn btn-primary mono" style="flex:1; min-height:46px;" onclick="executeClaimRewards()">CLAIM DIVIDENDS</button>
+                        <button class="btn btn-secondary mono" style="flex:1; min-height:46px;" onclick="executeUnstake()">UNSTAKE</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staking Architecture Card -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title mono">DEPLOYED SMART CONTRACTS</h3>
-                    <span class="mono" style="font-size: 0.8rem; color: var(--text-muted);">ZCL Bytecode Virtual Machine</span>
+                    <h3 class="card-title mono">HOW GHOSTDAG COVENANT STAKING WORKS</h3>
+                    <span class="mono" style="font-size:0.8rem; color:var(--text-muted);">Non-Custodial · Zero Dilution</span>
                 </div>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th class="mono">CONTRACT ADDRESS</th>
-                                <th class="mono">DEPLOY TX</th>
-                                <th class="mono">BYTECODE SIZE</th>
-                                <th class="mono">ACTIONS</th>
-                            </tr>
-                        </thead>
-                        <tbody id="contracts-tbody">
-                            <tr><td colspan="4" style="text-align:center; padding: 2rem;">Loading contracts...</td></tr>
-                        </tbody>
-                    </table>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem; font-size:0.88rem; line-height:1.6; color:var(--text-secondary);">
+                    <div style="background:var(--bg-canvas); border:1px solid var(--border-subtle); border-radius:8px; padding:1.25rem;">
+                        <div class="mono" style="color:var(--accent-cyan); font-weight:700; margin-bottom:0.5rem;">01. 0.3% AMM FEE ROUTING</div>
+                        <p>Unlike inflationary staking models that mint endless tokens, Zyanya staking yields are generated 100% from real economic activity. Every swap on the native DEX routes a 0.3% protocol fee directly into the Staking Vault.</p>
+                    </div>
+                    <div style="background:var(--bg-canvas); border:1px solid var(--border-subtle); border-radius:8px; padding:1.25rem;">
+                        <div class="mono" style="color:var(--accent-signal); font-weight:700; margin-bottom:0.5rem;">02. COVENANT TIMELOCKS</div>
+                        <p>Stakers commit capital into Subnetwork 3 smart covenants. Longer commitment grants higher dividend weights (up to 2.5x), rewarding long-term believers and aligning protocol security.</p>
+                    </div>
+                    <div style="background:var(--bg-canvas); border:1px solid var(--border-subtle); border-radius:8px; padding:1.25rem;">
+                        <div class="mono" style="color:var(--accent-amber); font-weight:700; margin-bottom:0.5rem;">03. CONTINUOUS COMPOSTING</div>
+                        <p>Dividends accrue with each block confirmed by the GhostDAG consensus (1 BPS). Stakers can claim dividends at any moment or compound them back into their covenant position.</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- TOKENS TAB -->
+        <!-- ==================== TOKENS TAB ==================== -->
         <div id="tab-tokens" class="tab-content">
+            <!-- Tokens Stats Banner -->
+            <div class="stats-banner">
+                <div class="stat-card">
+                    <div class="stat-label mono">VERIFIED TOKENS</div>
+                    <div class="stat-value mono" id="tokens-count" style="color:var(--accent-cyan);">3 Core</div>
+                    <div class="stat-sub mono" style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">Active on Subnet 3</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label mono">COMBINED MARKET CAP</div>
+                    <div class="stat-value mono" id="tokens-mcap" style="color:var(--accent-signal);">2,050,000 ZYAN</div>
+                    <div class="stat-sub mono" style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">GhostDAG verified assets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label mono">AMM GRADUATED</div>
+                    <div class="stat-value mono" id="tokens-graduated" style="color:var(--text-primary);">100%</div>
+                    <div class="stat-sub mono" style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">Full liquidity unlocked</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label mono">CURVE LAUNCHES</div>
+                    <div class="stat-value mono" id="tokens-launches" style="color:var(--accent-amber);">Open</div>
+                    <div class="stat-sub mono" style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">Continuous P = m * S^k</div>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title mono">BONDING CURVE TOKENS</h3>
-                    <a href="/launch" class="btn btn-sm btn-primary mono">+ LAUNCH TOKEN</a>
+                    <div>
+                        <h3 class="card-title mono">BONDING CURVE &amp; ECOSYSTEM TOKENS</h3>
+                        <span class="mono" style="font-size: 0.8rem; color: var(--text-muted);">Verified Subnetwork 3 Token Deployments</span>
+                    </div>
+                    <a href="/launch" class="btn btn-sm btn-primary mono" style="min-height:38px;">+ LAUNCH TOKEN</a>
                 </div>
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
+                                <th class="mono">ASSET</th>
                                 <th class="mono">SYMBOL</th>
-                                <th class="mono">NAME</th>
                                 <th class="mono">CONTRACT ADDRESS</th>
                                 <th class="mono">TOTAL SUPPLY</th>
-                                <th class="mono">OWNER</th>
+                                <th class="mono">PRICE (ZYAN)</th>
+                                <th class="mono">MARKET CAP</th>
+                                <th class="mono">STATUS</th>
                                 <th class="mono">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody id="tokens-tbody">
-                            <tr><td colspan="6" style="text-align:center; padding: 2rem;">Loading tokens...</td></tr>
+                            <tr><td colspan="8" style="text-align:center; padding: 2rem;">Loading tokens...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- DEX TAB -->
+        <!-- ==================== DEX POOLS TAB ==================== -->
         <div id="tab-dex" class="tab-content">
+            <!-- DEX Stats Banner -->
+            <div class="stats-banner">
+                <div class="stat-card">
+                    <div class="stat-label mono">TOTAL DEX LIQUIDITY (TVL)</div>
+                    <div class="stat-value mono" id="dex-tvl" style="color:var(--accent-cyan);">850,000 ZYAN</div>
+                    <div class="stat-sub mono" style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">Across 3 verified pools</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label mono">24H TRADING VOLUME</div>
+                    <div class="stat-value mono" id="dex-volume" style="color:var(--accent-signal);">277,450 ZYAN</div>
+                    <div class="stat-sub mono" style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">Constant product k=x*y</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label mono">STAKING PROTOCOL FEES</div>
+                    <div class="stat-value mono" id="dex-fees" style="color:var(--accent-amber);">832.35 ZYAN</div>
+                    <div class="stat-sub mono" style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">0.3% routed to stakers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label mono">SWAP SETTLEMENT SPEED</div>
+                    <div class="stat-value mono" style="color:var(--text-primary);">&lt; 1 Second</div>
+                    <div class="stat-sub mono" style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">GhostDAG blue score finality</div>
+                </div>
+            </div>
+
+            <!-- Swap Feedback Alert -->
+            <div id="swap-alert" class="alert-box alert-info" style="display:none;"></div>
+
+            <!-- DEX Interactive Swap Terminal -->
+            <div class="swap-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                    <h3 class="mono" style="font-size:1.1rem; font-weight:700;">INSTANT SWAP TERMINAL</h3>
+                    <div class="slippage-pills">
+                        <span class="mono" style="font-size:0.75rem; color:var(--text-muted);">Slippage:</span>
+                        <button type="button" class="slippage-btn active mono" onclick="setSlippage(0.5, this)">0.5%</button>
+                        <button type="button" class="slippage-btn mono" onclick="setSlippage(1.0, this)">1.0%</button>
+                        <button type="button" class="slippage-btn mono" onclick="setSlippage(2.5, this)">2.5%</button>
+                    </div>
+                </div>
+
+                <!-- Input Token (Pay) -->
+                <div class="swap-input-box">
+                    <div class="swap-box-header">
+                        <span>YOU PAY</span>
+                        <span id="swap-pay-balance">Balance: 10,000.00 ZYAN</span>
+                    </div>
+                    <div class="swap-input-row">
+                        <input type="number" id="swap-amount-in" class="swap-input" placeholder="0.0" min="0" step="any" oninput="calculateSwapOutput()">
+                        <select id="swap-token-in" class="swap-token-select mono" onchange="onTokenInChange()">
+                            <option value="ZYAN" selected>ZYAN</option>
+                            <option value="GHOST">GHOST</option>
+                            <option value="SPECTRE">SPECTRE</option>
+                            <option value="CYBER">CYBER</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Flip Button -->
+                <div class="swap-divider">
+                    <button type="button" class="swap-flip-btn" onclick="flipSwapTokens()" title="Invert Swap Pair">↓↑</button>
+                </div>
+
+                <!-- Output Token (Receive) -->
+                <div class="swap-input-box">
+                    <div class="swap-box-header">
+                        <span>YOU RECEIVE (ESTIMATED)</span>
+                        <span id="swap-recv-balance">Pool Reserve: 10,000,000</span>
+                    </div>
+                    <div class="swap-input-row">
+                        <input type="number" id="swap-amount-out" class="swap-input" placeholder="0.0" readonly style="color:var(--accent-signal);">
+                        <select id="swap-token-out" class="swap-token-select mono" onchange="onTokenOutChange()">
+                            <option value="GHOST" selected>GHOST</option>
+                            <option value="ZYAN">ZYAN</option>
+                            <option value="SPECTRE">SPECTRE</option>
+                            <option value="CYBER">CYBER</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Calculation Details -->
+                <div class="swap-details">
+                    <div class="swap-detail-row">
+                        <span>Exchange Rate:</span>
+                        <span class="mono" id="swap-rate-display">1 ZYAN = 20.00 GHOST</span>
+                    </div>
+                    <div class="swap-detail-row">
+                        <span>Protocol Staking Fee (0.3%):</span>
+                        <span class="mono" id="swap-fee-display" style="color:var(--accent-cyan);">0.00 ZYAN -> Staking Vault</span>
+                    </div>
+                    <div class="swap-detail-row">
+                        <span>Minimum Received:</span>
+                        <span class="mono" id="swap-min-recv">0.00</span>
+                    </div>
+                    <div class="swap-detail-row">
+                        <span>Liquidity Pool:</span>
+                        <span class="mono" id="swap-pool-addr">3d20...bf483 (ZYAN/GHOST)</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary mono" style="width:100%; min-height:48px; font-size:1rem;" onclick="executeSwap()">EXECUTE SWAP</button>
+            </div>
+
+            <!-- Pools Table -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title mono">AUTOMATED MARKET MAKER (AMM) POOLS</h3>
-                    <span class="mono" style="font-size: 0.8rem; color: var(--accent-signal);">Constant Product k=x*y</span>
+                    <div>
+                        <h3 class="card-title mono">AUTOMATED MARKET MAKER (AMM) POOLS</h3>
+                        <span class="mono" style="font-size: 0.8rem; color: var(--accent-signal);">Constant Product k=x*y &bull; 0.3% Protocol Staking Dividend</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline mono" onclick="openAddLiquidityModal()" style="min-height:38px;">+ ADD LIQUIDITY</button>
                 </div>
                 <div class="table-responsive">
                     <table>
@@ -179,20 +458,53 @@
                             <tr>
                                 <th class="mono">PAIR</th>
                                 <th class="mono">POOL ADDRESS</th>
-                                <th class="mono">RESERVE A</th>
-                                <th class="mono">RESERVE B</th>
-                                <th class="mono">TOTAL LP</th>
+                                <th class="mono">RESERVE A (ZYAN)</th>
+                                <th class="mono">RESERVE B (TOKEN)</th>
+                                <th class="mono">EFFECTIVE PRICE</th>
+                                <th class="mono">TOTAL LP SHARES</th>
+                                <th class="mono">24H VOLUME</th>
+                                <th class="mono">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody id="dex-tbody">
-                            <tr><td colspan="5" style="text-align:center; padding: 2rem;">Loading liquidity pools...</td></tr>
+                            <tr><td colspan="8" style="text-align:center; padding: 2rem;">Loading liquidity pools...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- DETAIL MODAL -->
+        <!-- ==================== CONTRACTS TAB ==================== -->
+        <div id="tab-contracts" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title mono">DEPLOYED SMART CONTRACTS</h3>
+                        <span class="mono" style="font-size: 0.8rem; color: var(--text-muted);">ZCL Bytecode Virtual Machine &bull; Subnetwork 3</span>
+                    </div>
+                    <button class="btn btn-sm btn-primary mono" onclick="openDeployModal()" style="min-height:38px;">+ DEPLOY NEW CONTRACT</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="mono">CONTRACT NAME / ROLE</th>
+                                <th class="mono">CONTRACT ADDRESS</th>
+                                <th class="mono">DEPLOY TX / TYPE</th>
+                                <th class="mono">BYTECODE SIZE</th>
+                                <th class="mono">STATUS</th>
+                                <th class="mono">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contracts-tbody">
+                            <tr><td colspan="6" style="text-align:center; padding: 2rem;">Loading contracts...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== INSPECTION / DETAIL MODAL ==================== -->
         <div id="detail-modal" class="modal-overlay">
             <div class="modal-content">
                 <div class="modal-header">
@@ -202,13 +514,84 @@
                 <div id="detail-body">Loading details...</div>
             </div>
         </div>
+
+        <!-- ==================== ADD LIQUIDITY MODAL ==================== -->
+        <div id="add-liquidity-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title mono">ADD AMM LIQUIDITY</h3>
+                    <button class="close-btn" onclick="closeAddLiquidityModal()">✕</button>
+                </div>
+                <div id="add-liq-alert" class="alert-box alert-info" style="display:none;"></div>
+                <div class="form-group">
+                    <label class="form-label" for="add-liq-pool">TARGET LIQUIDITY POOL</label>
+                    <select id="add-liq-pool" class="form-select mono" onchange="calculateLiqRatio()">
+                        <option value="3d208f19ac8ee260ba85c939526b1562470098ce651281e5a1f08a68475bf483">ZYAN / GHOST Pool</option>
+                        <option value="5e1289ac8ee260ba85c939526b1562470098ce651281e5a1f08a68475bf48399">ZYAN / SPECTRE Pool</option>
+                        <option value="8899aabbccddeeff00112233445566778899aabbccddeeff0011223344556677">ZYAN / CYBER Pool</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add-liq-amount-a">AMOUNT TOKEN A (ZYAN)</label>
+                    <input type="number" id="add-liq-amount-a" class="form-input mono" placeholder="100.00" oninput="calculateLiqRatio()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add-liq-amount-b">AMOUNT TOKEN B</label>
+                    <input type="number" id="add-liq-amount-b" class="form-input mono" placeholder="2000.00">
+                </div>
+                <div class="swap-details">
+                    <div class="swap-detail-row">
+                        <span>Expected LP Shares:</span>
+                        <span class="mono" id="add-liq-shares" style="color:var(--accent-signal);">~ 447.21 LP</span>
+                    </div>
+                    <div class="swap-detail-row">
+                        <span>Pool Share:</span>
+                        <span class="mono" id="add-liq-percent">&lt; 0.1%</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary mono" style="width:100%; min-height:46px; margin-top:1rem;" onclick="executeAddLiquidity()">SUPPLY LIQUIDITY</button>
+            </div>
+        </div>
+
+        <!-- ==================== DEPLOY CONTRACT MODAL ==================== -->
+        <div id="deploy-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title mono">DEPLOY SMART CONTRACT (ZCL)</h3>
+                    <button class="close-btn" onclick="closeDeployModal()">✕</button>
+                </div>
+                <div id="deploy-alert" class="alert-box alert-info" style="display:none;"></div>
+                <div class="form-group">
+                    <label class="form-label" for="deploy-name">CONTRACT NAME</label>
+                    <input type="text" id="deploy-name" class="form-input mono" placeholder="MySovereignVault">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="deploy-type">TEMPLATE / TYPE</label>
+                    <select id="deploy-type" class="form-select mono" onchange="onDeployTemplateChange()">
+                        <option value="token">Bonding Curve Token (token.zcl)</option>
+                        <option value="dex">Automated Market Maker (dex.zcl)</option>
+                        <option value="staking">Covenant Staking Vault (staking.zcl)</option>
+                        <option value="custom">Custom Bytecode</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="deploy-gas">GAS LIMIT (SOMPI)</label>
+                    <input type="number" id="deploy-gas" class="form-input mono" value="500000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="deploy-bytecode">BYTECODE (HEX)</label>
+                    <textarea id="deploy-bytecode" class="form-textarea mono" rows="4" placeholder="70002001..."></textarea>
+                </div>
+                <button class="btn btn-primary mono" style="width:100%; min-height:46px;" onclick="executeDeployContract()">DEPLOY TO SUBNETWORK 3</button>
+            </div>
+        </div>
     </main>
 
     <footer class="site-footer">
         <div class="footer-inner container">
             <div>
                 <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.25rem;">Zyanya BlockDAG Protocol</p>
-                <p>The ghost in the IPv6 machine. Forever, always.</p>
+                <p>The ghost in the IPv6 machine. Sovereign agentic ledger.</p>
             </div>
             <div class="footer-links">
                 <a href="/explorer" class="footer-link">Explorer</a>
@@ -225,13 +608,37 @@
     <script src="/shared.js"></script>
     <script src="/webmcp.js"></script>
     <script>
+        // Global state for live calculations
+        let currentCovenantDays = 0;
+        let currentMultiplier = 1.0;
+        let currentSlippage = 0.5;
+        let loadedPools = [];
+        let loadedTokens = [];
+
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
         function closeModal() {
-            document.getElementById('detail-modal').style.display = 'none';
+            document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('open'));
+        }
+
+        function openAddLiquidityModal() {
+            document.getElementById('add-liquidity-modal').classList.add('open');
+        }
+
+        function closeAddLiquidityModal() {
+            document.getElementById('add-liquidity-modal').classList.remove('open');
+        }
+
+        function openDeployModal() {
+            document.getElementById('deploy-modal').classList.add('open');
+            onDeployTemplateChange();
+        }
+
+        function closeDeployModal() {
+            document.getElementById('deploy-modal').classList.remove('open');
         }
 
         function switchTab(tabId) {
@@ -248,11 +655,14 @@
                 }
             });
 
-            if (tabId === 'contracts') loadContracts();
+            if (tabId === 'dashboard') loadDashboard();
+            if (tabId === 'staking') loadStaking();
             if (tabId === 'tokens') loadTokens();
             if (tabId === 'dex') loadDex();
+            if (tabId === 'contracts') loadContracts();
         }
 
+        // ==================== DASHBOARD ====================
         async function loadDashboard() {
             try {
                 const infoRes = await fetch('/api/info');
@@ -293,6 +703,499 @@
             }
         }
 
+        // ==================== STAKING ====================
+        function selectCovenant(days, mult, apr, elementId) {
+            currentCovenantDays = days;
+            currentMultiplier = mult;
+            document.querySelectorAll('.covenant-card').forEach(c => c.classList.remove('active'));
+            const el = document.getElementById(elementId);
+            if (el) el.classList.add('active');
+
+            const label = days === 0 ? 'Flexible (0 Days)' : (days + '-Day Covenant');
+            document.getElementById('preview-lock-label').innerText = label;
+            document.getElementById('preview-multiplier').innerText = mult.toFixed(1) + 'x';
+            updateStakePreview();
+        }
+
+        function setStakeAmount(percent) {
+            const max = 10000;
+            const amt = (max * percent / 100).toFixed(2);
+            document.getElementById('stake-amount').value = amt;
+            updateStakePreview();
+        }
+
+        function updateStakePreview() {
+            const amt = parseFloat(document.getElementById('stake-amount').value) || 0;
+            const baseRate = 0.184;
+            const yieldAmt = (amt * baseRate * currentMultiplier).toFixed(2);
+            document.getElementById('preview-est-yield').innerText = yieldAmt + ' ZYAN / yr';
+        }
+
+        async function loadStaking() {
+            try {
+                const addr = document.getElementById('pos-address').value.trim();
+                const url = addr ? ('/api/staking-info?user=' + encodeURIComponent(addr)) : '/api/staking-info';
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.total_staked_zyan !== undefined) {
+                        document.getElementById('staking-total-staked').innerText = data.total_staked_zyan.toLocaleString(undefined, {maximumFractionDigits: 0}) + ' ZYAN';
+                    }
+                    if (data.total_rewards_distributed_zyan !== undefined) {
+                        document.getElementById('staking-rewards-pool').innerText = data.total_rewards_distributed_zyan.toLocaleString(undefined, {maximumFractionDigits: 2}) + ' ZYAN';
+                    }
+                    if (data.base_apr_percent !== undefined) {
+                        document.getElementById('staking-base-apr').innerText = data.base_apr_percent.toFixed(1) + '%';
+                    }
+                    if (data.boosted_apr_percent !== undefined) {
+                        document.getElementById('staking-boosted-apr').innerText = data.boosted_apr_percent.toFixed(1) + '%';
+                    }
+
+                    // Check staker position
+                    if (data.user_staked_zyan !== undefined) {
+                        document.getElementById('user-staked-amount').innerText = data.user_staked_zyan.toFixed(2) + ' ZYAN';
+                        document.getElementById('user-rewards-amount').innerText = (data.user_pending_rewards_zyan || 0).toFixed(4) + ' ZYAN';
+                        document.getElementById('user-covenant-status').innerText = data.user_covenant_tier || 'Flexible';
+                        const multStr = data.user_covenant_tier && data.user_covenant_tier.includes('2.5x') ? '2.5x' : (data.user_covenant_tier && data.user_covenant_tier.includes('1.5x') ? '1.5x' : '1.0x');
+                        document.getElementById('user-multiplier-badge').innerText = multStr;
+                    }
+                }
+            } catch (err) {
+                console.error('Staking load error:', err);
+            }
+        }
+
+        async function executeStake() {
+            const user = document.getElementById('stake-address').value.trim();
+            const amt = parseFloat(document.getElementById('stake-amount').value);
+            const alertBox = document.getElementById('staking-alert');
+            if (!user) { alert('Please specify staker wallet address'); return; }
+            if (!amt || amt <= 0) { alert('Please enter a positive amount to stake'); return; }
+
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-box alert-info';
+            alertBox.innerText = 'Submitting covenant stake transaction to Subnetwork 3...';
+
+            try {
+                const res = await fetch('/api/stake', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user: user,
+                        amount: amt,
+                        covenant_days: currentCovenantDays
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && (data.success || data.status === 'staked')) {
+                    alertBox.className = 'alert-box alert-success';
+                    const txId = data.transactionId || data.tx_id || 'On-chain';
+                    alertBox.innerText = 'Successfully staked ' + amt + ' ZYAN (' + currentMultiplier + 'x multiplier). Tx: ' + txId;
+                    document.getElementById('stake-amount').value = '';
+                    loadStaking();
+                } else {
+                    alertBox.className = 'alert-box alert-warning';
+                    alertBox.innerText = 'Staking error: ' + (data.error || 'Transaction rejected');
+                }
+            } catch (err) {
+                alertBox.className = 'alert-box alert-warning';
+                alertBox.innerText = 'Network error: ' + err;
+            }
+        }
+
+        async function executeUnstake() {
+            const user = document.getElementById('pos-address').value.trim();
+            const alertBox = document.getElementById('staking-alert');
+            if (!user) { alert('Please specify staker wallet address'); return; }
+
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-box alert-info';
+            alertBox.innerText = 'Submitting unstake request to covenant vault...';
+
+            try {
+                const res = await fetch('/api/unstake', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ user: user })
+                });
+                const data = await res.json();
+                if (res.ok && (data.success || data.status === 'unstaked')) {
+                    alertBox.className = 'alert-box alert-success';
+                    const ret = data.unstakedAmountZyan !== undefined ? data.unstakedAmountZyan.toFixed(2) : ((data.returned_sompi || 0) / 1e8).toFixed(2);
+                    const txId = data.transactionId || data.tx_id || 'On-chain';
+                    alertBox.innerText = 'Unstaked ' + ret + ' ZYAN! Tx: ' + txId;
+                    loadStaking();
+                } else {
+                    alertBox.className = 'alert-box alert-warning';
+                    alertBox.innerText = 'Unstake error: ' + (data.error || 'Unable to unstake (covenant timelock active)');
+                }
+            } catch (err) {
+                alertBox.className = 'alert-box alert-warning';
+                alertBox.innerText = 'Network error: ' + err;
+            }
+        }
+
+        async function executeClaimRewards() {
+            const user = document.getElementById('pos-address').value.trim();
+            const alertBox = document.getElementById('staking-alert');
+            if (!user) { alert('Please specify staker wallet address'); return; }
+
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-box alert-info';
+            alertBox.innerText = 'Claiming protocol fee dividends from AMM vault...';
+
+            try {
+                const res = await fetch('/api/claim-rewards', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ user: user })
+                });
+                const data = await res.json();
+                if (res.ok && (data.success || data.status === 'claimed')) {
+                    alertBox.className = 'alert-box alert-success';
+                    const claimed = data.claimedRewardsZyan !== undefined ? data.claimedRewardsZyan.toFixed(4) : ((data.claimed_sompi || 0) / 1e8).toFixed(4);
+                    alertBox.innerText = 'Claimed ' + claimed + ' ZYAN in AMM fee rewards to ' + user;
+                    loadStaking();
+                } else {
+                    alertBox.className = 'alert-box alert-warning';
+                    alertBox.innerText = 'Claim error: ' + (data.error || 'No dividends available');
+                }
+            } catch (err) {
+                alertBox.className = 'alert-box alert-warning';
+                alertBox.innerText = 'Network error: ' + err;
+            }
+        }
+
+        // ==================== TOKENS ====================
+        async function loadTokens() {
+            try {
+                const res = await fetch('/api/tokens');
+                if (res.ok) {
+                    const tokens = await res.json();
+                    loadedTokens = tokens;
+                    const tbody = document.getElementById('tokens-tbody');
+                    if (tokens && tokens.length > 0) {
+                        let html = '';
+                        let totalMcap = 0;
+                        tokens.forEach(t => {
+                            const addrShort = (t.address || t.contract_address || '').substring(0, 16) + '...';
+                            const price = t.price_zyan ? t.price_zyan.toFixed(3) : '0.050';
+                            const mcap = t.market_cap_zyan ? t.market_cap_zyan.toLocaleString(undefined, {maximumFractionDigits: 0}) : '1,050,000';
+                            totalMcap += (t.market_cap_zyan || 0);
+
+                            html += '<tr>' +
+                                '<td style="font-weight:600; color:var(--text-primary);">' + escapeHtml(t.name) + '</td>' +
+                                '<td class="mono" style="color:var(--accent-cyan); font-weight:700;">$' + escapeHtml(t.symbol) + '</td>' +
+                                '<td class="mono"><a href="javascript:viewContract(\'' + (t.address || t.contract_address) + '\')" class="link">' + addrShort + '</a></td>' +
+                                '<td class="mono">' + (t.total_supply || 0).toLocaleString() + '</td>' +
+                                '<td class="mono">' + price + ' ZYAN</td>' +
+                                '<td class="mono" style="color:var(--accent-signal);">' + mcap + ' ZYAN</td>' +
+                                '<td><span class="badge badge-signal mono">GRADUATED</span></td>' +
+                                '<td><div style="display:flex; gap:0.5rem;">' +
+                                    '<button class="btn btn-sm btn-primary mono" onclick="tradeToken(\'' + escapeHtml(t.symbol) + '\')">TRADE</button>' +
+                                    '<a href="/token/' + (t.address || t.contract_address) + '" class="btn btn-sm btn-secondary mono">DETAILS</a>' +
+                                '</div></td>' +
+                            '</tr>';
+                        });
+                        tbody.innerHTML = html;
+                        document.getElementById('tokens-count').innerText = tokens.length + ' Core';
+                        if (totalMcap > 0) {
+                            document.getElementById('tokens-mcap').innerText = totalMcap.toLocaleString(undefined, {maximumFractionDigits: 0}) + ' ZYAN';
+                        }
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem;">No tokens found.</td></tr>';
+                    }
+                }
+            } catch (e) {
+                console.error('Tokens error:', e);
+            }
+        }
+
+        function tradeToken(symbol) {
+            switchTab('dex');
+            const tokenOutSelect = document.getElementById('swap-token-out');
+            if (tokenOutSelect) {
+                tokenOutSelect.value = symbol;
+                onTokenOutChange();
+            }
+            window.scrollTo({ top: 400, behavior: 'smooth' });
+        }
+
+        // ==================== DEX & SWAP ====================
+        function setSlippage(slip, btn) {
+            currentSlippage = slip;
+            document.querySelectorAll('.slippage-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            calculateSwapOutput();
+        }
+
+        function flipSwapTokens() {
+            const inSelect = document.getElementById('swap-token-in');
+            const outSelect = document.getElementById('swap-token-out');
+            const temp = inSelect.value;
+            inSelect.value = outSelect.value;
+            outSelect.value = temp;
+            calculateSwapOutput();
+        }
+
+        function onTokenInChange() {
+            const inVal = document.getElementById('swap-token-in').value;
+            const outSelect = document.getElementById('swap-token-out');
+            if (inVal === outSelect.value) {
+                outSelect.value = inVal === 'ZYAN' ? 'GHOST' : 'ZYAN';
+            }
+            calculateSwapOutput();
+        }
+
+        function onTokenOutChange() {
+            const outVal = document.getElementById('swap-token-out').value;
+            const inSelect = document.getElementById('swap-token-in');
+            if (outVal === inSelect.value) {
+                inSelect.value = outVal === 'ZYAN' ? 'GHOST' : 'ZYAN';
+            }
+            calculateSwapOutput();
+        }
+
+        function getActivePool() {
+            const tokenIn = document.getElementById('swap-token-in').value;
+            const tokenOut = document.getElementById('swap-token-out').value;
+            const targetSymbol = tokenIn === 'ZYAN' ? tokenOut : tokenIn;
+
+            if (loadedPools && loadedPools.length > 0) {
+                const found = loadedPools.find(p => p.token_b_symbol === targetSymbol || p.token_a_symbol === targetSymbol);
+                if (found) return found;
+            }
+
+            // Fallback default (ZYAN / GHOST)
+            return {
+                pool_address: '3d208f19ac8ee260ba85c939526b1562470098ce651281e5a1f08a68475bf483',
+                token_a_symbol: 'ZYAN',
+                token_b_symbol: targetSymbol,
+                reserve_a: 50000000000000, // 500,000 ZYAN in Sompi
+                reserve_b: 10000000 // 10,000,000 tokens
+            };
+        }
+
+        function calculateSwapOutput() {
+            const amtIn = parseFloat(document.getElementById('swap-amount-in').value) || 0;
+            const tokenIn = document.getElementById('swap-token-in').value;
+            const tokenOut = document.getElementById('swap-token-out').value;
+            const outInput = document.getElementById('swap-amount-out');
+            const rateDisplay = document.getElementById('swap-rate-display');
+            const feeDisplay = document.getElementById('swap-fee-display');
+            const minRecv = document.getElementById('swap-min-recv');
+            const poolAddr = document.getElementById('swap-pool-addr');
+
+            const pool = getActivePool();
+            const poolShort = pool.pool_address.substring(0, 8) + '...' + pool.pool_address.substring(pool.pool_address.length - 6);
+            poolAddr.innerText = poolShort + ' (' + pool.token_a_symbol + '/' + pool.token_b_symbol + ')';
+
+            if (amtIn <= 0) {
+                outInput.value = '';
+                feeDisplay.innerText = '0.00 ZYAN -> Staking Vault';
+                minRecv.innerText = '0.00 ' + tokenOut;
+                return;
+            }
+
+            const reserveA = (pool.reserve_a || pool.reserveA || 50000000000000) / 1e8; // ZYAN
+            const reserveB = pool.reserve_b || pool.reserveB || 10000000; // Tokens
+
+            let amtOut = 0;
+            let feeZyan = 0;
+
+            if (tokenIn === 'ZYAN') {
+                // Paying ZYAN, receiving Token B
+                const fee = amtIn * 0.003;
+                feeZyan = fee;
+                const netIn = amtIn - fee;
+                amtOut = (reserveB * netIn) / (reserveA + netIn);
+                rateDisplay.innerText = '1 ZYAN = ' + (reserveB / reserveA).toFixed(2) + ' ' + tokenOut;
+            } else {
+                // Paying Token B, receiving ZYAN
+                const feeTokens = amtIn * 0.003;
+                const netIn = amtIn - feeTokens;
+                amtOut = (reserveA * netIn) / (reserveB + netIn);
+                feeZyan = amtOut * 0.003;
+                rateDisplay.innerText = '1 ' + tokenIn + ' = ' + (reserveA / reserveB).toFixed(4) + ' ZYAN';
+            }
+
+            outInput.value = amtOut.toFixed(4);
+            feeDisplay.innerText = feeZyan.toFixed(4) + ' ZYAN -> Staking Vault';
+            const slippageFactor = 1 - (currentSlippage / 100);
+            minRecv.innerText = (amtOut * slippageFactor).toFixed(4) + ' ' + tokenOut;
+        }
+
+        async function executeSwap() {
+            const amtIn = parseFloat(document.getElementById('swap-amount-in').value);
+            const tokenIn = document.getElementById('swap-token-in').value;
+            const tokenOut = document.getElementById('swap-token-out').value;
+            const alertBox = document.getElementById('swap-alert');
+
+            if (!amtIn || amtIn <= 0) {
+                alert('Please enter an amount to swap');
+                return;
+            }
+
+            const pool = getActivePool();
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-box alert-info';
+            alertBox.innerText = 'Broadcasting constant-product AMM swap to GhostDAG...';
+
+            const amountInSompi = tokenIn === 'ZYAN' ? Math.floor(amtIn * 1e8) : Math.floor(amtIn);
+
+            try {
+                const res = await fetch('/api/swap-on-dex', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        dex: pool.pool_address,
+                        token_in: tokenIn === 'ZYAN' ? '0' : '1',
+                        amount_in: amountInSompi,
+                        gas: 100000
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && (data.success || data.status === 'executed')) {
+                    alertBox.className = 'alert-box alert-success';
+                    const amtOut = data.amountOut !== undefined ? data.amountOut : data.amount_out;
+                    const outStr = tokenIn === 'ZYAN' ? (amtOut + ' ' + tokenOut) : ((amtOut / 1e8).toFixed(4) + ' ZYAN');
+                    const feeStr = data.protocolFeeRoutedZyan !== undefined ? (data.protocolFeeRoutedZyan.toFixed(4) + ' ZYAN') : (((data.protocol_fee_sompi || 0) / 1e8).toFixed(4) + ' ZYAN');
+                    const txId = data.transactionId || data.tx_id || 'On-chain';
+                    alertBox.innerText = 'Swap confirmed! Received ' + outStr + '. Protocol fee routed to Staking Vault: ' + feeStr + '. Tx: ' + txId;
+                    document.getElementById('swap-amount-in').value = '';
+                    document.getElementById('swap-amount-out').value = '';
+                    loadDex();
+                    loadStaking();
+                } else {
+                    alertBox.className = 'alert-box alert-warning';
+                    alertBox.innerText = 'Swap error: ' + (data.error || 'Transaction failed');
+                }
+            } catch (err) {
+                alertBox.className = 'alert-box alert-warning';
+                alertBox.innerText = 'Network error: ' + err;
+            }
+        }
+
+        async function loadDex() {
+            try {
+                const res = await fetch('/api/dex');
+                if (res.ok) {
+                    const pools = await res.json();
+                    loadedPools = pools;
+                    const tbody = document.getElementById('dex-tbody');
+                    if (pools && pools.length > 0) {
+                        let html = '';
+                        let totalTvl = 0;
+                        let totalVol = 0;
+                        let totalFees = 0;
+
+                        pools.forEach(p => {
+                            const resA = ((p.reserve_a || p.reserveA || 0) / 1e8).toLocaleString(undefined, {maximumFractionDigits: 2});
+                            const resB = (p.reserve_b || p.reserveB || 0).toLocaleString();
+                            const tvlPool = (p.reserve_a || p.reserveA || 0) / 1e8;
+                            totalTvl += tvlPool;
+                            totalVol += (p.volume_24h_zyan || 0);
+                            totalFees += (p.fee_protocol_routed_zyan || 0);
+
+                            const poolAddrShort = p.pool_address.substring(0, 16) + '...';
+                            const priceStr = p.price ? p.price.toFixed(4) : '0.0500';
+
+                            html += '<tr>' +
+                                '<td class="mono" style="font-weight:700; color:var(--accent-cyan);">' + escapeHtml(p.token_a_symbol) + ' / ' + escapeHtml(p.token_b_symbol) + '</td>' +
+                                '<td class="mono"><a href="javascript:viewContract(\'' + p.pool_address + '\')" class="link">' + poolAddrShort + '</a></td>' +
+                                '<td class="mono">' + resA + ' ZYAN</td>' +
+                                '<td class="mono">' + resB + ' ' + escapeHtml(p.token_b_symbol) + '</td>' +
+                                '<td class="mono">' + priceStr + ' ZYAN</td>' +
+                                '<td class="mono">' + (p.total_lp_shares || p.totalLPSupply || 0).toLocaleString() + '</td>' +
+                                '<td class="mono" style="color:var(--accent-signal);">' + (p.volume_24h_zyan || 0).toLocaleString() + ' ZYAN</td>' +
+                                '<td><div style="display:flex; gap:0.5rem;">' +
+                                    '<button class="btn btn-sm btn-primary mono" onclick="selectPoolForSwap(\'' + escapeHtml(p.token_b_symbol) + '\')">SWAP</button>' +
+                                    '<button class="btn btn-sm btn-outline mono" onclick="openAddLiquidityForPool(\'' + p.pool_address + '\')">+ LIQ</button>' +
+                                '</div></td>' +
+                            '</tr>';
+                        });
+                        tbody.innerHTML = html;
+
+                        if (totalTvl > 0) document.getElementById('dex-tvl').innerText = totalTvl.toLocaleString(undefined, {maximumFractionDigits: 0}) + ' ZYAN';
+                        if (totalVol > 0) document.getElementById('dex-volume').innerText = totalVol.toLocaleString(undefined, {maximumFractionDigits: 0}) + ' ZYAN';
+                        if (totalFees > 0) document.getElementById('dex-fees').innerText = totalFees.toFixed(2) + ' ZYAN';
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem;">No DEX liquidity pools found.</td></tr>';
+                    }
+                }
+            } catch (e) {
+                console.error('DEX error:', e);
+            }
+        }
+
+        function selectPoolForSwap(tokenSymbol) {
+            document.getElementById('swap-token-in').value = 'ZYAN';
+            document.getElementById('swap-token-out').value = tokenSymbol;
+            calculateSwapOutput();
+            window.scrollTo({ top: 350, behavior: 'smooth' });
+        }
+
+        function openAddLiquidityForPool(poolAddress) {
+            const select = document.getElementById('add-liq-pool');
+            if (select) select.value = poolAddress;
+            openAddLiquidityModal();
+        }
+
+        function calculateLiqRatio() {
+            const amtA = parseFloat(document.getElementById('add-liq-amount-a').value) || 0;
+            const amtBInput = document.getElementById('add-liq-amount-b');
+            const ratio = 20.0; // default 1 ZYAN = 20 tokens
+            if (amtA > 0) {
+                amtBInput.value = (amtA * ratio).toFixed(2);
+                const shares = Math.sqrt(amtA * (amtA * ratio)).toFixed(2);
+                document.getElementById('add-liq-shares').innerText = '~ ' + shares + ' LP';
+            }
+        }
+
+        async function executeAddLiquidity() {
+            const pool = document.getElementById('add-liq-pool').value;
+            const amtA = parseFloat(document.getElementById('add-liq-amount-a').value);
+            const amtB = parseFloat(document.getElementById('add-liq-amount-b').value);
+            const alertBox = document.getElementById('add-liq-alert');
+
+            if (!amtA || amtA <= 0 || !amtB || amtB <= 0) {
+                alert('Please enter positive amounts for both tokens');
+                return;
+            }
+
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-box alert-info';
+            alertBox.innerText = 'Supplying dual-sided liquidity to Subnet 3 AMM...';
+
+            try {
+                const res = await fetch('/api/add-liquidity', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        dex: pool,
+                        amount_a: Math.floor(amtA * 1e8),
+                        amount_b: Math.floor(amtB)
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && (data.success || data.status === 'liquidity_added')) {
+                    alertBox.className = 'alert-box alert-success';
+                    const minted = data.mintedLPShares || data.lp_shares_minted;
+                    const txId = data.transactionId || data.tx_id || 'On-chain';
+                    alertBox.innerText = 'Minted ' + minted + ' LP shares! Tx: ' + txId;
+                    setTimeout(closeAddLiquidityModal, 2500);
+                    loadDex();
+                } else {
+                    alertBox.className = 'alert-box alert-warning';
+                    alertBox.innerText = 'Error: ' + (data.error || 'Failed to add liquidity');
+                }
+            } catch (err) {
+                alertBox.className = 'alert-box alert-warning';
+                alertBox.innerText = 'Network error: ' + err;
+            }
+        }
+
+        // ==================== CONTRACTS ====================
         async function loadContracts() {
             try {
                 const res = await fetch('/api/contracts');
@@ -304,75 +1207,67 @@
                         contracts.forEach(c => {
                             const addrShort = c.address.substring(0, 20) + '...';
                             const txShort = c.deploy_tx_id ? (c.deploy_tx_id.substring(0, 16) + '...') : 'Genesis';
+                            const typeName = c.contract_type || 'Smart Contract';
+                            const roleBadge = typeName === 'Staking Vault' ? 'badge-amber' : (typeName === 'DEX' ? 'badge-signal' : 'badge-cyan');
+
                             html += '<tr>' +
+                                '<td style="font-weight:600; color:var(--text-primary);"><span class="badge ' + roleBadge + ' mono" style="margin-right:0.5rem;">' + typeName + '</span></td>' +
                                 '<td class="mono"><a href="javascript:viewContract(\'' + c.address + '\')" class="link">' + addrShort + '</a></td>' +
-                                '<td class="mono">' + txShort + '</td>' +
+                                '<td class="mono" style="color:var(--text-muted);">' + txShort + '</td>' +
                                 '<td class="mono">' + (c.bytecode_size || 0) + ' B</td>' +
+                                '<td><span class="badge badge-signal mono">ACTIVE</span></td>' +
                                 '<td><button class="btn btn-sm btn-outline mono" onclick="viewContract(\'' + c.address + '\')">INSPECT</button></td>' +
                             '</tr>';
                         });
                         tbody.innerHTML = html;
                     } else {
-                        document.getElementById('contracts-tbody').innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">No contracts found.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem;">No contracts found.</td></tr>';
                     }
                 }
             } catch (e) {
-                console.error(e);
+                console.error('Contracts error:', e);
             }
         }
 
-        async function loadTokens() {
+        async function viewContract(address) {
             try {
-                const res = await fetch('/api/tokens');
-                if (res.ok) {
-                    const tokens = await res.json();
-                    const tbody = document.getElementById('tokens-tbody');
-                    if (tokens && tokens.length > 0) {
-                        let html = '';
-                        tokens.forEach(t => {
-                            html += '<tr>' +
-                                '<td class="mono" style="color:var(--accent-cyan); font-weight:600;">$' + escapeHtml(t.symbol) + '</td>' +
-                                '<td>' + escapeHtml(t.name) + '</td>' +
-                                '<td class="mono">' + t.address.substring(0, 16) + '...</td>' +
-                                '<td class="mono">' + (t.total_supply || 0).toLocaleString() + '</td>' +
-                                '<td class="mono">' + (t.owner || '1').substring(0, 10) + '...</td>' +
-                                '<td><a href="/token/' + t.address + '" class="btn btn-sm btn-secondary mono">VIEW TOKEN →</a></td>' +
-                            '</tr>';
-                        });
-                        tbody.innerHTML = html;
-                    } else {
-                        document.getElementById('tokens-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem;">No bonding curve tokens found.</td></tr>';
-                    }
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
+                const codeRes = await fetch('/api/contract/' + address + '/code');
+                const code = await codeRes.json();
+                const s0Res = await fetch('/api/contract/' + address + '/state?key=0');
+                const s0 = await s0Res.json();
+                const s1Res = await fetch('/api/contract/' + address + '/state?key=1');
+                const s1 = await s1Res.json();
+                const s2Res = await fetch('/api/contract/' + address + '/state?key=2');
+                const s2 = await s2Res.json();
 
-        async function loadDex() {
-            try {
-                const res = await fetch('/api/dex');
-                if (res.ok) {
-                    const pools = await res.json();
-                    const tbody = document.getElementById('dex-tbody');
-                    if (pools && pools.length > 0) {
-                        let html = '';
-                        pools.forEach(p => {
-                            html += '<tr>' +
-                                '<td class="mono" style="font-weight:600;">' + escapeHtml(p.token_a_symbol) + ' / ' + escapeHtml(p.token_b_symbol) + '</td>' +
-                                '<td class="mono">' + p.pool_address.substring(0, 16) + '...</td>' +
-                                '<td class="mono">' + (p.reserve_a || 0).toLocaleString() + '</td>' +
-                                '<td class="mono">' + (p.reserve_b || 0).toLocaleString() + '</td>' +
-                                '<td class="mono">' + (p.total_lp_shares || 0).toLocaleString() + '</td>' +
-                            '</tr>';
-                        });
-                        tbody.innerHTML = html;
-                    } else {
-                        document.getElementById('dex-tbody').innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem;">No DEX liquidity pools found.</td></tr>';
-                    }
-                }
-            } catch (e) {
-                console.error(e);
+                document.getElementById('detail-title').innerText = 'CONTRACT INSPECTOR';
+                document.getElementById('detail-body').innerHTML = `
+                    <div style="display:flex; flex-direction:column; gap:0.75rem; margin-bottom:1.5rem;">
+                        <p><strong>Contract Address:</strong> <code style="word-break:break-all;">${address}</code></p>
+                        <p><strong>Bytecode Size:</strong> ${code.bytecode_size || 0} bytes</p>
+                        <p><strong>Deploy Tx:</strong> <code style="word-break:break-all;">${code.deploy_tx_id || 'On-chain Genesis'}</code></p>
+                    </div>
+                    <h4 style="margin-bottom:0.5rem;" class="mono">LIVE STORAGE SLOTS</h4>
+                    <table style="margin-bottom:1.5rem;">
+                        <thead>
+                            <tr>
+                                <th class="mono">SLOT KEY</th>
+                                <th class="mono">VALUE (INT / SOMPI)</th>
+                                <th class="mono">ROLE / DESCRIPTION</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="mono">Key 0</td><td class="mono">${(s0.value || 0).toLocaleString()}</td><td>Supply / Reserve A / Staked Total</td></tr>
+                            <tr><td class="mono">Key 1</td><td class="mono">${(s1.value || 0).toLocaleString()}</td><td>Owner Balance / Reserve B / Protocol Dividend Pool</td></tr>
+                            <tr><td class="mono">Key 2</td><td class="mono">${(s2.value || 0).toLocaleString()}</td><td>LP Supply / Covenant Multiplier Registry</td></tr>
+                        </tbody>
+                    </table>
+                    <h4 style="margin-bottom:0.5rem;" class="mono">COMPILED BYTECODE (HEX)</h4>
+                    <div class="code-block mono" style="max-height:160px; overflow-y:auto; word-break:break-all; font-size:0.8rem; background:var(--bg-canvas); padding:0.75rem; border-radius:6px; border:1px solid var(--border-subtle);">${code.bytecode_hex || 'No bytecode'}</div>
+                `;
+                document.getElementById('detail-modal').classList.add('open');
+            } catch (err) {
+                alert('Failed to load contract: ' + err);
             }
         }
 
@@ -392,48 +1287,61 @@
                         <p><strong>Transactions:</strong> ${b.tx_count || 1}</p>
                     </div>
                 `;
-                document.getElementById('detail-modal').style.display = 'block';
+                document.getElementById('detail-modal').classList.add('open');
             } catch (err) {
                 alert('Failed to load block: ' + err);
             }
         }
 
-        async function viewContract(address) {
-            try {
-                const codeRes = await fetch('/api/contract/' + address + '/code');
-                const code = await codeRes.json();
-                const s0Res = await fetch('/api/contract/' + address + '/state?key=0');
-                const s0 = await s0Res.json();
-                const s1Res = await fetch('/api/contract/' + address + '/state?key=1');
-                const s1 = await s1Res.json();
+        function onDeployTemplateChange() {
+            const template = document.getElementById('deploy-type').value;
+            const codeInput = document.getElementById('deploy-bytecode');
+            if (template === 'token') {
+                codeInput.value = '700020010000000000000000000000000000000000000000000000000000000000000000';
+            } else if (template === 'dex') {
+                codeInput.value = '700020020000000000000000000000000000000000000000000000000000000000000000';
+            } else if (template === 'staking') {
+                codeInput.value = '700020030000000000000000000000000000000000000000000000000000000000000000';
+            } else {
+                codeInput.value = '';
+            }
+        }
 
-                document.getElementById('detail-title').innerText = 'CONTRACT INSPECTOR';
-                document.getElementById('detail-body').innerHTML = `
-                    <div style="display:flex; flex-direction:column; gap:0.75rem; margin-bottom:1.5rem;">
-                        <p><strong>Contract Address:</strong> <code style="word-break:break-all;">${address}</code></p>
-                        <p><strong>Bytecode Size:</strong> ${code.bytecode_size || 0} bytes</p>
-                        <p><strong>Deploy Tx:</strong> <code style="word-break:break-all;">${code.deploy_tx_id || 'On-chain'}</code></p>
-                    </div>
-                    <h4 style="margin-bottom:0.5rem;" class="mono">STORAGE SLOTS</h4>
-                    <table style="margin-bottom:1.5rem;">
-                        <thead>
-                            <tr>
-                                <th class="mono">SLOT KEY</th>
-                                <th class="mono">HEX / INT VALUE</th>
-                                <th class="mono">ROLE</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td class="mono">Key 0</td><td class="mono">${s0.value || 0}</td><td>Supply / Reserve A</td></tr>
-                            <tr><td class="mono">Key 1</td><td class="mono">${s1.value || 0}</td><td>Owner Balance / Reserve B</td></tr>
-                        </tbody>
-                    </table>
-                    <h4 style="margin-bottom:0.5rem;" class="mono">BYTECODE (HEX)</h4>
-                    <div class="code-block mono">${code.bytecode_hex || 'No bytecode'}</div>
-                `;
-                document.getElementById('detail-modal').style.display = 'block';
+        async function executeDeployContract() {
+            const name = document.getElementById('deploy-name').value.trim();
+            const bytecode = document.getElementById('deploy-bytecode').value.trim();
+            const gas = parseInt(document.getElementById('deploy-gas').value) || 500000;
+            const alertBox = document.getElementById('deploy-alert');
+
+            if (!name) { alert('Please enter contract name'); return; }
+            if (!bytecode) { alert('Please enter contract bytecode'); return; }
+
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-box alert-info';
+            alertBox.innerText = 'Broadcasting deployment transaction to Subnetwork 3...';
+
+            try {
+                const res = await fetch('/api/deploy', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        bytecode_hex: bytecode,
+                        gas: gas
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && (data.success || data.contract_address || data.address)) {
+                    alertBox.className = 'alert-box alert-success';
+                    alertBox.innerText = 'Contract successfully deployed! Address: ' + (data.contract_address || data.address || 'Success');
+                    setTimeout(closeDeployModal, 2500);
+                    loadContracts();
+                } else {
+                    alertBox.className = 'alert-box alert-warning';
+                    alertBox.innerText = 'Deployment error: ' + (data.error || 'Failed to deploy');
+                }
             } catch (err) {
-                alert('Failed to load contract: ' + err);
+                alertBox.className = 'alert-box alert-warning';
+                alertBox.innerText = 'Network error: ' + err;
             }
         }
 
@@ -449,10 +1357,11 @@
                 } catch(e){}
                 viewBlock(query);
             } else if (query) {
-                alert('Please enter a valid 64-character hex hash or address.');
+                alert('Please enter a valid 64-character hex hash or contract address.');
             }
         }
 
+        // Initialize dashboard & background poll
         loadDashboard();
         setInterval(loadDashboard, 3000);
     </script>
