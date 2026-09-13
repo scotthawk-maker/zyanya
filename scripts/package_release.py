@@ -71,10 +71,11 @@ QUICKSTART (TESTNET):
    .{sep}zyanya-miner{ext} --testnet --threads 8 --mining-address <YOUR_ZYANYATEST_ADDRESS>
 
 DOCUMENTATION & NETWORK EXPLORER:
-  GitHub:   https://github.com/scotthawk-maker/zyanya
-  Docs:     https://github.com/scotthawk-maker/zyanya/tree/main/docs
-  Web:      https://zyanya.scottcloudhawk.org
-  WebMCP:   https://zyanya.scottcloudhawk.org/mcp/rpc
+  GitHub:      https://github.com/scotthawk-maker/zyanya
+  SourceForge: https://sourceforge.net/projects/zyanya/
+  Docs:        https://github.com/scotthawk-maker/zyanya/tree/main/docs
+  Web:         https://zyanya.scottcloudhawk.org
+  WebMCP:      https://zyanya.scottcloudhawk.org/mcp/rpc
 """
 
 def sha256_file(filepath: Path) -> str:
