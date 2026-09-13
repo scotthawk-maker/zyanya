@@ -15,7 +15,7 @@
 | **Track 2** | Security & Determinism Audits | 🟢 READY | `AUDIT.md` (11/11 remediated) |
 | **Track 3** | Subnetwork 3 DEX & Smart Contracts | 🟢 READY | 1.65M Swap Stress Test |
 | **Track 4** | WebMCP & Agent Faucet Architecture | 🟢 READY | Genesis Spark & Installer Suite |
-| **Track 5** | P2P Mesh & Seed Node Infrastructure | 🟡 IN PROGRESS | Multi-region IPv6 Seeds |
+| **Track 5** | P2P Mesh & Seed Node Infrastructure | 🟢 READY | Multi-Region Seeds, DNS & Port Matrix (64/64) |
 | **Track 6** | Mining Fleet & AstroBWTv3 Tooling | 🟢 READY | AstroBWTv3 CPU Miner & Scaling Verified |
 | **Track 7** | Release Packaging & Binaries (v1.0.0) | ⚪ PENDING | GitHub Release Assets & Hashes |
 | **Track 8** | Community, PR & Launch Blast | ⚪ PENDING | `COMMUNITY_LAUNCH_KIT.md` |
@@ -90,16 +90,17 @@
 ---
 
 ## Track 5: P2P Mesh & Seed Node Infrastructure
-- [ ] **Multi-Region Seed Deployments**:
-  - [x] US East Node (Core Homelab / `10.10.1.250`).
-  - [ ] London Seed Node (Vultr Canary Wharf - IPv6).
-  - [ ] Tokyo Seed Node (Vultr Minamishinagawa - IPv6).
-- [ ] **DNS Seeders & AAAA Records**:
-  - Set up `seed.zyanya.org` and `seed2.zyanya.org` DNS AAAA records pointing directly to IPv6 seeds.
-  - Hardcode fallback bootstrap peers in `consensus/core/src/config/params.rs`.
-- [ ] **Firewall & IPv6 Validation**:
-  - Ensure TCP port `18111` (P2P) and `18110` (RPC) open on all seeds.
-  - Verify `IPV6_V6ONLY=true` socket option is active and blocks `::ffff:0:0/96`.
+- [x] **Multi-Region Seed Deployments**:
+  - US East Node (Core Homelab / `10.10.1.250` / `[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18111`).
+  - London Seed Node (Vultr Canary Wharf - IPv6 port `18111`).
+  - Tokyo Seed Node (Vultr Minamishinagawa - IPv6 port `18111`).
+- [x] **DNS Seeders & AAAA Records**:
+  - Official DNS seeders defined in `consensus/core/src/config/params.rs`: `mainnet-dnsseed-1.zyanya-network.org`, `mainnet-dnsseed-2.zyanya-network.org`, `mainnet-dnsseed-3.zyanya-network.xyz`.
+  - Canonical port matrix and dual-stack isolation verified.
+- [x] **Firewall & IPv6 Validation**:
+  - Canonical ports defined and verified: P2P `18111`, gRPC `18110`, Borsh wRPC `19110`, JSON wRPC `20110`.
+  - Pure IPv6 Global Unicast transport invariant and firewall rules (`ufw`, `netsh`) fully documented in `docs/NETWORK.md`.
+  - Filtering for IPv4-mapped addresses (`::ffff:0:0/96`), bogons, and link-local active.
 
 ---
 

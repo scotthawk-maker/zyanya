@@ -22,6 +22,8 @@ ADDRESSES_RS = REPO_ROOT / "crypto" / "addresses" / "src" / "lib.rs"
 MCP_JSON = REPO_ROOT / "docs" / "ai" / "mcp.json"
 INSTALL_PS1 = REPO_ROOT / "install.ps1"
 INSTALL_SH = REPO_ROOT / "install.sh"
+NETWORK_RS = REPO_ROOT / "consensus" / "core" / "src" / "network.rs"
+NETWORK_MD = REPO_ROOT / "docs" / "NETWORK.md"
 class PreflightValidator:
     def __init__(self):
         self.total_checks = 0
@@ -50,6 +52,7 @@ class PreflightValidator:
         self.verify_mainnet_genesis()
         self.verify_address_prefixes()
         self.verify_genesis_spark_and_pioneer_tools()
+        self.verify_p2p_network_and_dns_seeders()
 
         print("\n" + "=" * 75)
         print(f"  PRE-FLIGHT AUDIT SUMMARY: {self.passed_checks}/{self.total_checks} checks passed")
@@ -399,6 +402,80 @@ class PreflightValidator:
                 "install.sh contains Genesis Spark routine",
                 "zyanya_claim_genesis_spark" in sh_content and ("Genesis Spark" in sh_content or "Genesis Pioneer Spark" in sh_content),
                 "Linux/macOS automated installer incorporates pioneer wallet provisioning and spark claim"
+            )
+        
+    def verify_p2p_network_and_dns_seeders(self):
+        print("\n[CHECK 6] P2P Network Ports, DNS Seeders, and IPv6 Mesh")
+        self.check("network.rs exists", NETWORK_RS.exists(), str(NETWORK_RS))
+        if NETWORK_RS.exists():
+            net_content = NETWORK_RS.read_text(encoding="utf-8")
+            
+            # Check Mainnet P2P and RPC default ports
+            self.check(
+                "Mainnet default P2P port is 18111",
+                "NetworkType::Mainnet => 18111" in net_content,
+                "P2P Port: 18111"
+            )
+            self.check(
+                "Mainnet default RPC port is 18110",
+                "NetworkType::Mainnet => 18110" in net_content,
+                "gRPC Port: 18110"
+            )
+            self.check(
+                "Mainnet default Borsh wRPC port is 19110",
+                "NetworkType::Mainnet => 19110" in net_content,
+                "Borsh wRPC Port: 19110"
+            )
+            self.check(
+                "Mainnet default JSON wRPC port is 20110",
+                "NetworkType::Mainnet => 20110" in net_content,
+                "JSON wRPC Port: 20110"
+            )
+
+            # Check Testnet default ports
+            self.check(
+                "Testnet-10 default P2P port is 18211",
+                "Some(10) => 18211" in net_content,
+                "P2P Port: 18211"
+            )
+            self.check(
+                "Testnet default RPC port is 18210",
+                "NetworkType::Testnet => 18210" in net_content,
+                "gRPC Port: 18210"
+            )
+
+        # Check DNS seeders in params.rs
+        if PARAMS_RS.exists():
+            params_content = PARAMS_RS.read_text(encoding="utf-8")
+            self.check(
+                "MAINNET_PARAMS defines official DNS seeders",
+                "mainnet-dnsseed-1.zyanya-network.org" in params_content and "mainnet-dnsseed-2.zyanya-network.org" in params_content,
+                "Official seeders present: mainnet-dnsseed-1, mainnet-dnsseed-2"
+            )
+            self.check(
+                "TESTNET_PARAMS defines official DNS seeders",
+                "testnet-dnsseed-1.zyanya-network.org" in params_content and "testnet-dnsseed-2.zyanya-network.org" in params_content,
+                "Official seeders present: testnet-dnsseed-1, testnet-dnsseed-2"
+            )
+
+        # Check docs/NETWORK.md specification
+        self.check("docs/NETWORK.md exists", NETWORK_MD.exists(), str(NETWORK_MD))
+        if NETWORK_MD.exists():
+            net_md_content = NETWORK_MD.read_text(encoding="utf-8")
+            self.check(
+                "docs/NETWORK.md specifies Pure IPv6 Global Unicast",
+                "Pure IPv6 Global Unicast" in net_md_content,
+                "IPv6 transport invariant documented"
+            )
+            self.check(
+                "docs/NETWORK.md specifies Mainnet port 18111 and 18110",
+                "18111" in net_md_content and "18110" in net_md_content,
+                "Mainnet P2P & RPC ports documented"
+            )
+            self.check(
+                "docs/NETWORK.md documents Tri-Region seed nodes (US East, London, Tokyo)",
+                "US East" in net_md_content and "London" in net_md_content and "Tokyo" in net_md_content,
+                "Tri-region seed nodes documented"
             )
 
 if __name__ == "__main__":
