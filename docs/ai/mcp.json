@@ -145,6 +145,35 @@
           }
         }
       }
+    },
+    {
+      "name": "zyanya_send_transaction",
+      "description": "Submits a transaction or session-delegated transaction to the Zyanya GhostDAG network. Enforces cryptographic session key spend policies (fail-closed, error -32003 on policy violation).",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "recipient",
+          "amount_sompi"
+        ],
+        "properties": {
+          "recipient": {
+            "type": "string",
+            "description": "Destination Zyanya Bech32 address."
+          },
+          "amount_sompi": {
+            "type": "integer",
+            "description": "Transfer amount in sompi (1 ZYAN = 100,000,000 sompi)."
+          },
+          "session_certificate": {
+            "type": "object",
+            "description": "Optional Scoped Session Key certificate for agentic authorization."
+          },
+          "tx_hex": {
+            "type": "string",
+            "description": "Optional serialized signed transaction hex."
+          }
+        }
+      }
     }
   ]
 }

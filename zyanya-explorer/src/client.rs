@@ -248,6 +248,8 @@ pub struct RpcClientManager {
     pub staking_path: String,
     pub dex_pools: Arc<tokio::sync::Mutex<std::collections::HashMap<String, DexPoolState>>>,
     pub dex_path: String,
+    /// In-memory rolling 24-hour spend velocity store per session_id (current_spent, window_start).
+    pub session_velocities: Arc<tokio::sync::Mutex<std::collections::HashMap<String, (u64, u64)>>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -542,6 +544,7 @@ impl RpcClientManager {
             staking_path,
             dex_pools: Arc::new(tokio::sync::Mutex::new(dex_pools)),
             dex_path,
+            session_velocities: Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new())),
         }
     }
 
@@ -2452,7 +2455,7 @@ pub fn decode_base64(s: &str) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
-fn parse_user_address(address_str: &str) -> Result<zyanya_addresses::Address, String> {
+pub fn parse_user_address(address_str: &str) -> Result<zyanya_addresses::Address, String> {
     use zyanya_utils::hex::FromHex;
     let clean = address_str.trim();
     if let Ok(addr) = zyanya_addresses::Address::try_from(clean) {

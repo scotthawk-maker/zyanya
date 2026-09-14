@@ -56,7 +56,7 @@ async fn rate_limit(
 
 /// F-L-33: Security headers middleware with API cache busting.
 async fn security_headers(req: Request, next: Next) -> Response {
-    let is_api = req.uri().path().starts_with("/api/");
+    let is_api = req.uri().path().starts_with("/api/") || req.uri().path().starts_with("/mcp");
     let mut resp = next.run(req).await;
     resp.headers_mut().insert(header::X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
     resp.headers_mut().insert(header::X_FRAME_OPTIONS, HeaderValue::from_static("DENY"));
@@ -201,6 +201,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/docs", get(docs_handler))
         .route("/llms.txt", get(llms_txt_handler))
         .route("/llms.md", get(llms_md_handler))
+        .route("/mcp.json", get(mcp_json_handler))
+        .route("/mcp/rpc", post(mcp_rpc_handler).get(mcp_json_handler))
+        .route("/api/mcp/execute", post(mcp_rpc_handler))
         .route("/webmcp.js", get(webmcp_js_handler))
         .route("/style.css", get(style_css_handler))
         .route("/shared.js", get(shared_js_handler))

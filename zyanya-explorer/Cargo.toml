@@ -15,6 +15,7 @@ zyanya-vm = { workspace = true }
 zyanya-consensus-core = { workspace = true }
 zyanya-addresses = { workspace = true }
 zyanya-txscript = { workspace = true }
+zyanya-wallet-core = { workspace = true }
 
 blake2b_simd = { workspace = true }
 
@@ -25,3 +26,8 @@ serde_json = { workspace = true }
 clap = { workspace = true }
 log = { workspace = true }
 socket2 = "0.5.5"
+
+[dev-dependencies]
+secp256k1 = { workspace = true }
+faster-hex = { workspace = true }
+

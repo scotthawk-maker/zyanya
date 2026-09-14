@@ -18,3 +18,4 @@ pub const LLMS_MD: &str = include_str!("../assets/html/llms.md");
 pub const DAG_HTML: &str = include_str!("../assets/html/dag.html");
 pub const STYLE_CSS: &str = include_str!("../assets/html/style.css");
 pub const SHARED_JS: &str = include_str!("../assets/html/shared.js");
+pub const MCP_JSON: &str = include_str!("../../docs/ai/mcp.json");
