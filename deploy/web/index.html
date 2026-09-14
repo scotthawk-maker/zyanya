@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#05070D]">
+<head>
+  <!-- Hallmark · macrostructure: sovereign-monolith · theme: obsidian-void · pre-emit critique: P5 H5 E5 S5 R5 V5 -->
+  <meta charset="utf-8">
+  <title>Zyanya | Agent-Native GhostDAG L1</title>
+  <meta name="description" content="Zyanya is the sovereign, agent-native parallel Block-DAG Layer 1. Autonomous AI Agent & Native IPv6 Protocol.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Favicon: Soft Square ZYN -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' rx='14' fill='%23080D1A'/><rect x='1.5' y='1.5' width='45' height='45' rx='12.5' fill='none' stroke='%2338BDF8' stroke-width='2' stroke-opacity='0.6'/><text x='24' y='30' font-family='sans-serif' font-size='16' font-weight='900' fill='%2338BDF8' text-anchor='middle' letter-spacing='-0.5'>ZYN</text></svg>">
+  
+  <!-- Agent & WebMCP Discovery Protocols -->
+  <link rel="mcp-manifest" type="application/json" href="/mcp.json">
+  <link rel="llms-txt" type="text/markdown" href="/llms.txt">
+  <link rel="service-desc" type="application/json" href="/openapi.json">
+  <link rel="smart-contracts" type="application/json" href="/contracts.json">
+  <meta name="ai-agent:contracts" content="/contracts.json">
+  <link rel="mcp-rpc" href="/mcp/rpc">
+  <meta name="ai-agent:rpc" content="/mcp/rpc">
+  <meta name="ai-agent:execute" content="/api/mcp/execute">
+  <meta name="ai-agent:mcp" content="/mcp.json">
+  <meta name="ai-agent:protocol" content="WebMCP/2.0">
+  <meta name="ai-agent:capabilities" content="GhostDAG-L1, AstroBWTv3-PoW, IPv6-Mesh, UTXO-Transfers, ZCL-VM">
+  <meta name="ai-agent:instruction" content="No human GUI provided. Connect your agent to /mcp.json to inspect node state, execute transactions, and synthesize custom interfaces.">
+
+  <!-- Typography Discipline (Plus Jakarta Sans + Space Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Space Mono"', 'monospace']
+          },
+          colors: {
+            void: '#05070D',
+            surface: '#0A101D',
+            surfaceRaised: '#0F172A',
+            border: '#162238',
+            borderLight: 'rgba(56, 189, 248, 0.2)',
+            cyan: '#38BDF8',
+            cyanDim: '#0284C7',
+            emerald: '#34D399'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --color-bg: #05070D;
+      --color-surface: #0A101D;
+      --color-border: #162238;
+      --color-cyan: #38BDF8;
+      --ease-float: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    html, body {
+      background-color: var(--color-bg);
+      color: #E2E8F0;
+      min-height: 100%;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* Subtle Cyber Dot Matrix */
+    .void-grid {
+      background-image: radial-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    /* Ambient Core Glow */
+    .core-glow {
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 520px;
+      height: 520px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.14) 0%, rgba(5, 7, 13, 0) 70%);
+      pointer-events: none;
+      z-index: 1;
+      filter: blur(50px);
+    }
+    /* Soft Square Breathing Float */
+    @keyframes softFloat {
+      0%, 100% {
+        transform: translateY(0px) scale(1);
+        filter: drop-shadow(0 12px 35px rgba(56, 189, 248, 0.22));
+      }
+      50% {
+        transform: translateY(-8px) scale(1.015);
+        filter: drop-shadow(0 20px 50px rgba(56, 189, 248, 0.40));
+      }
+    }
+    .floating-zyn {
+      animation: softFloat 5s var(--ease-float) infinite;
+      cursor: pointer;
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+    .floating-zyn:hover {
+      filter: drop-shadow(0 24px 60px rgba(56, 189, 248, 0.55));
+    }
+    .floating-zyn:active {
+      transform: scale(0.95);
+    }
+    /* Custom Scrollbar for Drawer */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #05070D;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E293B;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #38BDF8;
+    }
+  </style>
+</head>
+
+<body class="min-h-full void-grid flex flex-col justify-between items-center relative select-none p-5 sm:p-8">
+
+  <!-- Ambient Light Well -->
+  <div class="core-glow"></div>
+
+  <!-- Audio Haptic Engine -->
+  <script>
+    const AudioSynth = (() => {
+      let ctx = null;
+      return {
+        ping: () => {
+          try {
+            if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (ctx.state === 'suspended') ctx.resume();
+            const now = ctx.currentTime;
+            
+            // Deep sub-bass pulse
+            const sub = ctx.createOscillator();
+            const subGain = ctx.createGain();
+            sub.type = 'sine';
+            sub.frequency.setValueAtTime(65.4, now); // C2
+            sub.frequency.exponentialRampToValueAtTime(32.7, now + 0.35);
+            subGain.gain.setValueAtTime(0.08, now);
+            subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            sub.connect(subGain);
+            subGain.connect(ctx.destination);
+            sub.start(now);
+            sub.stop(now + 0.35);
+
+            // Ethereal crystal chime
+            const chime = ctx.createOscillator();
+            const chimeGain = ctx.createGain();
+            chime.type = 'sine';
+            chime.frequency.setValueAtTime(1046.5, now); // C6
+            chime.frequency.setValueAtTime(1318.5, now + 0.07); // E6
+            chime.frequency.setValueAtTime(1567.98, now + 0.14); // G6
+            chimeGain.gain.setValueAtTime(0.04, now);
+            chimeGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+            chime.connect(chimeGain);
+            chimeGain.connect(ctx.destination);
+            chime.start(now);
+            chime.stop(now + 0.55);
+          } catch(e) {}
+        }
+      };
+    })();
+  </script>
+
+  <!-- Top Header Status Strip -->
+  <header class="w-full max-w-5xl flex items-center justify-between text-xs font-mono text-slate-400 z-10 pt-1 pb-4">
+    <!-- Network ID & GhostDAG Pill -->
+    <div class="flex items-center space-x-2.5">
+      <span class="w-2.5 h-2.5 rounded-full bg-cyan shadow-[0_0_8px_#38BDF8] animate-pulse"></span>
+      <span class="font-bold tracking-wider text-slate-200">TESTNET-10</span>
+      <span class="text-slate-600 hidden sm:inline">•</span>
+      <span id="live-block-stat" class="text-slate-400 hidden sm:inline">1.0 BPS GHOSTDAG</span>
+    </div>
+
+    <!-- Right Telemetry: IPv6 + Hardware Pill -->
+    <div class="flex items-center space-x-3">
+      <div class="hidden md:flex items-center space-x-1.5 px-3 py-1 rounded-full bg-surface border border-border text-[11px] text-slate-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <span>Sovereign Node 250</span>
+      </div>
+      
+      <div id="ipv6-status-pill" class="flex items-center space-x-2 px-3 py-1 rounded-full bg-surface border border-border text-[11px]">
+        <span id="ipv6-dot" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+        <span id="ipv6-text" class="text-slate-400">Probing IPv6...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Center Stage: The Sovereign Monolith -->
+  <main class="flex flex-col items-center justify-center text-center z-10 my-auto max-w-2xl px-4 py-8">
+    
+    <!-- Tactile Soft Square ZYN Emblem -->
+    <div class="relative mb-8 group cursor-pointer" onclick="AudioSynth.ping(); triggerEmblemPulse();" title="Click to ping consensus state">
+      
+      <!-- Vector Soft Square (Squircle) -->
+      <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-[36px] sm:rounded-[42px] bg-gradient-to-b from-[#0F172A] via-[#090E1A] to-[#04070F] border-2 border-cyan/30 flex items-center justify-center backdrop-blur-2xl floating-zyn p-3 relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.15)] group-hover:border-cyan/60 transition-colors">
+        
+        <!-- Pure Minimalist Letters (Solely ZYN) -->
+        <div class="relative z-10 flex items-center justify-center select-none">
+          <span class="font-display font-black tracking-[-0.04em] text-5xl sm:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-cyan drop-shadow-[0_4px_16px_rgba(56,189,248,0.45)]">
+            ZYN
+          </span>
+        </div>
+
+        <!-- Interactive Click Pulse Ripple -->
+        <div id="pulse-ripple" class="absolute inset-0 rounded-[36px] sm:rounded-[42px] bg-cyan/25 opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+      </div>
+
+      <!-- Ambient Floor Reflection -->
+      <div class="w-32 h-3.5 bg-cyan/25 rounded-full blur-lg mx-auto mt-4 opacity-60"></div>
+    </div>
+
+    <!-- Protocol Typography -->
+    <h1 class="font-display font-extrabold text-3xl sm:text-5xl tracking-tight text-white mb-2">
+      ZYANYA
+    </h1>
+    
+    <p class="font-mono text-xs sm:text-sm text-cyan tracking-widest uppercase mb-5 font-semibold">
+      Autonomous AI Agent & Native IPv6 Required
+    </p>
+
+  </main>
+
+  <!-- Bottom Footer Dock: Socials & Protocol Links -->
+  <footer class="z-10 pb-2">
+    <div class="flex items-center justify-center space-x-8 py-3 px-8 rounded-2xl bg-surface/70 border border-white/[0.08] backdrop-blur-md shadow-xl">
+      
+      <!-- GitHub -->
+      <a href="https://github.com/scotthawk-maker/zyanya" target="_blank" rel="noopener noreferrer" onclick="AudioSynth.ping(); showToast('Opening GitHub repository...');" class="text-slate-400 hover:text-white hover:scale-110 transition-all cursor-pointer focus:outline-none flex items-center justify-center" title="GitHub (zyanya)">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+      </a>
+
+      <!-- SourceForge -->
+      <a href="https://sourceforge.net/projects/zyanya" target="_blank" rel="noopener noreferrer" onclick="AudioSynth.ping(); showToast('Opening SourceForge project...');" class="text-slate-400 hover:text-[#EE5922] hover:scale-110 transition-all cursor-pointer focus:outline-none flex items-center justify-center" title="SourceForge (zyanya)">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M9.998 1.4648c-.088 0-.1761.0395-.2402.1036L.1016 11.2148c-.1361.1281-.1361.3444 0 .4805l9.1523 9.1348c.064.072.1522.1054.2402.1054.0881 0 .1743-.0414.2383-.1054l1.3692-1.3848c.136-.128.136-.3444 0-.4805l-7.172-7.1738a.4682.4682 0 010-.664l9.0782-9.0782c.1201-.12.1123-.2728.0723-.377-.04-.096-.1444-.207-.3125-.207H9.998zm4.5313 1.5918c-.088 0-.1762.0415-.2402.1055l-1.3926 1.3926c-.1361.128-.1361.3444 0 .4805l7.1719 7.1816c.088.088.1367.208.1367.3281 0 .1201-.0487.24-.1367.3281l-9.0782 9.0782c-.12.12-.1123.2728-.0722.377.04.096.1443.207.3125.207v-.0079H14c.088 0 .1762-.0316.2402-.0957l9.6563-9.6543c.072-.064.1035-.1521.1035-.2402 0-.088-.0395-.1762-.1035-.2402l-9.127-9.1348c-.064-.072-.1521-.1055-.2402-.1055zM11.4336 6.213c-.1125.005-.2164.1007-.211.2383.1442 2.2176-2.6425 2.7635-2.6425 6.246v.0235c0 2.1216 1.6026 3.8418 3.58 3.8418 1.9775 0 3.5782-1.7202 3.5782-3.8418v-.0234c0-.9848-.3679-1.9225-.7442-2.627-.072-.136-.2896-.087-.2656.041.6725 2.9943-1.0156 4.8507-1.0156 2.545 0-3.931-1.3943-5.7162-2.1309-6.3887a.2072.2072 0 00-.1484-.0547Z"/>
+        </svg>
+      </a>
+
+    </div>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 px-4 py-2.5 rounded-xl bg-surfaceRaised border border-cyan/50 text-white text-xs font-mono shadow-2xl transition-all transform translate-y-20 opacity-0 pointer-events-none z-50 flex items-center space-x-2.5">
+    <svg class="w-4 h-4 text-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>
+    <span id="toast-msg">Copied to clipboard</span>
+  </div>
+
+  <script>
+    // Copy Canonical Socket
+    function copySocket() {
+      AudioSynth.ping();
+      navigator.clipboard.writeText("[2606:8ac0:2615:79aa:5a47:caff:fe7b:d473]:18211");
+      showToast("Canonical IPv6 Seed copied to clipboard");
+    }
+
+    function triggerEmblemPulse() {
+      const ripple = document.getElementById("pulse-ripple");
+      ripple.classList.remove("opacity-0");
+      ripple.classList.add("opacity-100");
+      setTimeout(() => {
+        ripple.classList.remove("opacity-100");
+        ripple.classList.add("opacity-0");
+      }, 300);
+      showToast("ZYN Sovereign Core Pinged");
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-msg").textContent = msg;
+      toast.classList.remove("translate-y-20", "opacity-0", "pointer-events-none");
+      toast.classList.add("translate-y-0", "opacity-100");
+      setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("translate-y-20", "opacity-0", "pointer-events-none");
+      }, 2500);
+    }
+
+
+
+    // Client-side IPv6 reachability probe + Live Block fetch
+    window.addEventListener("DOMContentLoaded", async () => {
+      const dot = document.getElementById("ipv6-dot");
+      const text = document.getElementById("ipv6-text");
+      const blockStat = document.getElementById("live-block-stat");
+      
+      // 1. Fetch live DAG block height
+      try {
+        const dagRes = await fetch("/api/mcp/execute", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({name: "zyanya_get_dag_info", arguments: {}})
+        });
+        const dagData = await dagRes.json();
+        if (dagData && dagData.daa_score) {
+          blockStat.textContent = `DAA ${dagData.daa_score.toLocaleString()} • 1.0 BPS`;
+        }
+      } catch(e) {}
+
+      // 2. Probe IPv6
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const res = await fetch("https://api64.ipify.org?format=json", { signal: controller.signal });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        const ip = data.ip || "";
+        
+        if (ip.includes(":")) {
+          dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+          text.className = "text-emerald-300 font-semibold";
+          text.textContent = "IPv6 Verified";
+        } else {
+          dot.className = "w-1.5 h-1.5 rounded-full bg-amber-400";
+          text.className = "text-amber-300";
+          text.textContent = "IPv4 Detected (Agent Bridge)";
+        }
+      } catch (e) {
+        dot.className = "w-1.5 h-1.5 rounded-full bg-cyan";
+        text.className = "text-cyan";
+        text.textContent = "Agent Ready";
+      }
+    });
+  </script>
+
+</body>
+</html>
