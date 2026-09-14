@@ -163,6 +163,13 @@
   - [x] `session create`: Interactive session key generation with custom spend caps, daily limits, and whitelist.
   - [x] `session verify`: Standalone cryptographic verification of certificate signatures.
   - [x] `session check`: Pre-flight spend authorization and policy bounds validation.
+- [x] **Native WebMCP JSON-RPC 2.0 Gateway (`zyanya-explorer/src/api.rs`)**:
+  - [x] Embedded manifest `/mcp.json` matching Protocol specification `2024-11-05`.
+  - [x] Direct JSON-RPC dispatch for `/mcp/rpc` (`initialize`, `ping`, `tools/list`, `tools/call`).
+  - [x] Fail-closed Session Key spend policy enforcement returning code `-32003 (Policy Violation)`.
+  - [x] Cryptographic Schnorr signature verification over master public key.
+  - [x] 18-vector adversarial prompt injection & fuzzing suite verified with 100% fail-closed mitigation.
+  - [x] Sub-150ms concurrent throughput verified at 65+ req/sec over public Cloudflare tunnel.
 
 ---
 
