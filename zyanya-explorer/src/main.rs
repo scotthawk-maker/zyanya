@@ -141,13 +141,27 @@ fn create_listener(addr_str: &str) -> Result<TcpListener, Box<dyn std::error::Er
     let addr: SocketAddr = addr_str.parse()?;
     let domain = if addr.is_ipv6() { Domain::IPV6 } else { Domain::IPV4 };
     let socket = Socket::new(domain, Type::STREAM, Some(Protocol::TCP))?;
-    if addr.is_ipv6() {
-        let _ = socket.set_only_v6(false);
-    }
     socket.set_reuse_address(true)?;
-    socket.bind(&addr.into())?;
-    socket.listen(1024)?;
 
+    if addr.is_ipv6() {
+        // Try dual-stack first; if IPv4 port is already claimed by a proxy (e.g. socat),
+        // fallback to IPv6-only binding (IPV6_V6ONLY=true) to coexist smoothly.
+        let _ = socket.set_only_v6(false);
+        if let Err(_) = socket.bind(&addr.into()) {
+            let socket_v6 = Socket::new(domain, Type::STREAM, Some(Protocol::TCP))?;
+            socket_v6.set_reuse_address(true)?;
+            let _ = socket_v6.set_only_v6(true);
+            socket_v6.bind(&addr.into())?;
+            socket_v6.listen(1024)?;
+            let std_listener: std::net::TcpListener = socket_v6.into();
+            std_listener.set_nonblocking(true)?;
+            return Ok(TcpListener::from_std(std_listener)?);
+        }
+    } else {
+        socket.bind(&addr.into())?;
+    }
+
+    socket.listen(1024)?;
     let std_listener: std::net::TcpListener = socket.into();
     std_listener.set_nonblocking(true)?;
     let listener = TcpListener::from_std(std_listener)?;
