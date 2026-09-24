@@ -533,11 +533,26 @@ impl RpcClientManager {
             }
         }
 
+        let hashes_path = format!("{}.hashes.json", metadata_path);
+        let mut loaded_hashes = std::collections::HashMap::new();
+        if let Ok(content) = std::fs::read_to_string(&hashes_path) {
+            if let Ok(map) = serde_json::from_str::<std::collections::HashMap<String, [u8; 32]>>(&content) {
+                loaded_hashes = map;
+            }
+        } else {
+            for (k, v) in &loaded_map {
+                loaded_hashes.insert(k.clone(), compute_metadata_hash(v));
+            }
+            if let Ok(json) = serde_json::to_string_pretty(&loaded_hashes) {
+                let _ = write_atomic(std::path::Path::new(&hashes_path), json.as_bytes());
+            }
+        }
+
         Self {
             rpc_url,
             client: Arc::new(RwLock::new(None)),
             metadata_store: Arc::new(tokio::sync::Mutex::new(loaded_map)),
-            metadata_hash_store: Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new())),
+            metadata_hash_store: Arc::new(tokio::sync::Mutex::new(loaded_hashes)),
             metadata_path,
             icons_dir,
             staking_state: Arc::new(tokio::sync::Mutex::new(staking_state)),
@@ -575,6 +590,11 @@ impl RpcClientManager {
             let mut hash_store = self.metadata_hash_store.lock().await;
             hash_store.insert(address.to_string(), committed_hash);
             hash_store.insert(address.to_lowercase(), committed_hash);
+            
+            let hashes_path = format!("{}.hashes.json", self.metadata_path);
+            if let Ok(hashes_json) = serde_json::to_string_pretty(&*hash_store) {
+                let _ = write_atomic(std::path::Path::new(&hashes_path), hashes_json.as_bytes());
+            }
         }
         let mut store = self.metadata_store.lock().await;
         store.insert(address.to_string(), metadata.clone());

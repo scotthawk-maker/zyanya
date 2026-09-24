@@ -921,7 +921,13 @@ async fn execute_mcp_tool(
             Ok(resp)
         }
         "zyanya_claim_genesis_spark" => {
+            if check_write_enabled().is_err() {
+                return Err((-32003, "Policy Violation: Explorer write operations are disabled on this node (ZYANYA_EXPLORER_ENABLE_WRITE=false)".to_string()));
+            }
             let node_p2p_id = args.get("node_p2p_id").and_then(|v| v.as_str()).unwrap_or_default().trim();
+            if node_p2p_id.len() < 1 || node_p2p_id.len() > 64 || !node_p2p_id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.') {
+                return Err((-32602, "Invalid params: node_p2p_id must be between 1 and 64 characters and contain only alphanumeric, hyphens, underscores, and periods".to_string()));
+            }
             let wallet_address = args.get("wallet_address").and_then(|v| v.as_str()).unwrap_or_default().trim();
             if node_p2p_id.is_empty() || wallet_address.is_empty() {
                 return Err((-32602, "Invalid params: 'node_p2p_id' and 'wallet_address' required".to_string()));
@@ -943,6 +949,9 @@ async fn execute_mcp_tool(
         }
         "zyanya_get_pioneer_node_status" => {
             let node_p2p_id = args.get("node_p2p_id").and_then(|v| v.as_str()).unwrap_or("p2p-node-primary");
+            if node_p2p_id.len() < 1 || node_p2p_id.len() > 64 || !node_p2p_id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.') {
+                return Err((-32602, "Invalid params: node_p2p_id must be between 1 and 64 characters and contain only alphanumeric, hyphens, underscores, and periods".to_string()));
+            }
             let wallet_address = args.get("wallet_address").and_then(|v| v.as_str()).unwrap_or("zyanyatest:qq_genesis_pioneer");
             Ok(serde_json::json!({
                 "node_p2p_id": node_p2p_id,
@@ -964,6 +973,9 @@ async fn execute_mcp_tool(
             Ok(serde_json::to_value(detail).unwrap_or_default())
         }
         "zyanya_send_transaction" => {
+            if check_write_enabled().is_err() {
+                return Err((-32003, "Policy Violation: Explorer write operations are disabled on this node (ZYANYA_EXPLORER_ENABLE_WRITE=false)".to_string()));
+            }
             let recipient = args.get("recipient").and_then(|v| v.as_str()).unwrap_or_default().trim().to_string();
             let amount_sompi = args.get("amount_sompi").and_then(|v| v.as_u64()).unwrap_or_default();
             if recipient.is_empty() || amount_sompi == 0 {
@@ -1083,27 +1095,8 @@ async fn execute_mcp_tool(
                     "status": "policy_approved",
                     "message": "Transaction pre-flight policy check approved under session certificate."
                 }))
-            } else if let Some(tx_hex) = tx_hex_val {
-                let clean_hex = tx_hex.trim().trim_start_matches("0x");
-                if !clean_hex.is_empty() {
-                    let bytes = <Vec<u8>>::from_hex(clean_hex)
-                        .map_err(|e| (-32602, format!("Invalid tx_hex: {}", e)))?;
-                    let rpc_tx: RpcTransaction = serde_json::from_slice(&bytes)
-                        .or_else(|_| serde_json::from_str(std::str::from_utf8(&bytes).unwrap_or("")))
-                        .map_err(|e| (-32602, format!("Failed to parse transaction from tx_hex: {}", e)))?;
-                    let grpc = client.ensure_connected().await.map_err(|e| (-32603, e))?;
-                    let tx_id = grpc.submit_transaction(rpc_tx, false).await.map_err(|e| (-32603, e.to_string()))?;
-                    return Ok(serde_json::json!({
-                        "authorized": true,
-                        "recipient": recipient,
-                        "amount_sompi": amount_sompi,
-                        "transaction_id": tx_id.to_string(),
-                        "status": "submitted"
-                    }));
-                }
-                Err((-32602, "Invalid tx_hex payload".to_string()))
             } else {
-                Err((-32602, "Invalid params: session_certificate required for WebMCP autonomous agent transactions".to_string()))
+                Err((-32003, "Policy Violation: session_certificate required for WebMCP autonomous agent transactions".to_string()))
             }
         }
         unknown => Err((-32601, format!("Tool not found: {}", unknown))),
@@ -1271,6 +1264,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_session_spend_policy_fail_closed_enforcement() {
+        std::env::set_var("ZYANYA_EXPLORER_ENABLE_WRITE", "1");
         let client = test_client_manager();
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

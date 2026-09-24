@@ -13,7 +13,7 @@ use zyanya_rpc_core::api::ops::RpcApiOps;
 use zyanya_rpc_service::service::RpcCoreService;
 use zyanya_utils::triggers::SingleTrigger;
 
-pub const MAX_WRPC_MESSAGE_SIZE: usize = 64 * 1024 * 1024; // 64MB
+pub const MAX_WRPC_MESSAGE_SIZE: usize = 16 * 1024 * 1024; // 16MB
 
 /// Options for configuring the wRPC server
 pub struct Options {
