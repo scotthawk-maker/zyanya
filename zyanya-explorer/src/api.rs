@@ -989,6 +989,8 @@ async fn execute_mcp_tool(
                     .as_secs();
 
                 let mut effective_policy = cert.policy.clone();
+                effective_policy.current_daily_spent = 0;
+                effective_policy.daily_window_start = now;
                 {
                     let vel_map = client.session_velocities.lock().await;
                     if let Some(&(spent, start)) = vel_map.get(&cert.session_id) {
@@ -1021,6 +1023,40 @@ async fn execute_mcp_tool(
                         let rpc_tx: RpcTransaction = serde_json::from_slice(&bytes)
                             .or_else(|_| serde_json::from_str(std::str::from_utf8(&bytes).unwrap_or("")))
                             .map_err(|e| (-32602, format!("Failed to parse transaction from tx_hex: {}", e)))?;
+
+                        let recipient_addr = zyanya_addresses::Address::try_from(recipient.as_str())
+                            .map_err(|_| (-32003, "Policy Violation: Invalid recipient address format".to_string()))?;
+                        let prefix = recipient_addr.prefix;
+
+                        let agent_pk_bytes = <Vec<u8>>::from_hex(&cert.public_key)
+                            .map_err(|_| (-32003, "Policy Violation: Invalid agent public key format".to_string()))?;
+                        let agent_addr = zyanya_addresses::Address::new(prefix, zyanya_addresses::Version::PubKey, &agent_pk_bytes).to_string();
+
+                        let master_pk_bytes = <Vec<u8>>::from_hex(&cert.master_public_key)
+                            .map_err(|_| (-32003, "Policy Violation: Invalid master public key format".to_string()))?;
+                        let master_addr = zyanya_addresses::Address::new(prefix, zyanya_addresses::Version::PubKey, &master_pk_bytes).to_string();
+
+                        let mut actual_recipient_sompi: u64 = 0;
+                        for out in &rpc_tx.outputs {
+                            let out_addr = zyanya_txscript::extract_script_pub_key_address(&out.script_public_key, prefix)
+                                .map_err(|_| (-32003, "Policy Violation: Unable to extract output address".to_string()))?;
+                            let out_addr_str = out_addr.to_string();
+
+                            if out_addr_str == recipient {
+                                actual_recipient_sompi += out.value;
+                            } else if out_addr_str == agent_addr || out_addr_str == master_addr {
+                                // Change allowed
+                            } else if effective_policy.contract_whitelist.contains(&out_addr_str) {
+                                // Whitelisted allowed
+                            } else {
+                                return Err((-32003, "Policy Violation: Transaction contains unauthorized output destination".to_string()));
+                            }
+                        }
+
+                        if actual_recipient_sompi != amount_sompi {
+                            return Err((-32003, "Policy Violation: Transaction actual recipient output does not match authorized amount".to_string()));
+                        }
+
                         let grpc = client.ensure_connected().await.map_err(|e| (-32603, e))?;
                         let tx_id = grpc.submit_transaction(rpc_tx, false).await.map_err(|e| (-32603, e.to_string()))?;
                         return Ok(serde_json::json!({

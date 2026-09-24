@@ -176,6 +176,11 @@ impl Session {
         tprintln!(ctx, "Expires At:        {} (TTL: {}s)", scoped_key.certificate.policy.expires_at, ttl_seconds);
         tprintln!(ctx, "Master Signature:  {}", scoped_key.certificate.master_signature.as_deref().unwrap_or("none"));
         tprintln!(ctx, "-------------------------------------------------------");
+        tprintln!(ctx, "⚠️  SECURITY WARNING: EPHEMERAL PRIVATE KEY");
+        tprintln!(ctx, "The following key is highly sensitive and grants transaction");
+        tprintln!(ctx, "authorization under the generated policy. Never commit this");
+        tprintln!(ctx, "key to version control or paste it into public agent prompts.");
+        tprintln!(ctx, "-------------------------------------------------------");
         tprintln!(ctx, "Agent Ephemeral Private Key (Hex):");
         tprintln!(ctx, "{}", privkey_hex);
         tprintln!(ctx, "=======================================================\n");

@@ -191,6 +191,12 @@ impl SessionCertificate {
 
     /// Signs this certificate with the master private key using Schnorr personal message signing.
     pub fn sign(&mut self, master_privkey: &[u8; 32]) -> Result<(), SessionPolicyError> {
+        if self.session_id.contains('\n') || self.session_id.contains('\r') || self.session_id.contains(':') {
+            return Err(SessionPolicyError::InvalidSignature);
+        }
+        if self.agent_label.contains('\n') || self.agent_label.contains('\r') || self.agent_label.contains(':') {
+            return Err(SessionPolicyError::InvalidSignature);
+        }
         let payload = self.payload_for_signing();
         let sig = crate::message::sign_message(
             &crate::message::PersonalMessage(&payload),
@@ -205,6 +211,12 @@ impl SessionCertificate {
 
     /// Verifies the master signature against the master public key and policy payload.
     pub fn verify(&self) -> Result<(), SessionPolicyError> {
+        if self.session_id.contains('\n') || self.session_id.contains('\r') || self.session_id.contains(':') {
+            return Err(SessionPolicyError::InvalidSignature);
+        }
+        if self.agent_label.contains('\n') || self.agent_label.contains('\r') || self.agent_label.contains(':') {
+            return Err(SessionPolicyError::InvalidSignature);
+        }
         let sig_hex = self.master_signature.as_ref().ok_or(SessionPolicyError::InvalidSignature)?;
         let mut sig_bytes = [0u8; 64];
         faster_hex::hex_decode(sig_hex.as_bytes(), &mut sig_bytes).map_err(|_| SessionPolicyError::InvalidSignature)?;
@@ -463,5 +475,47 @@ mod tests {
         scoped_key.certificate.policy.max_spend_per_tx = 10_000_000;
         scoped_key.certificate.policy.expires_at = now + 999_999;
         assert_eq!(scoped_key.certificate.verify(), Err(SessionPolicyError::InvalidSignature));
+    }
+
+    #[test]
+    fn test_identifier_delimiter_injection_rejected() {
+        let now = 1726000000;
+        let secp = secp256k1::Secp256k1::new();
+        let (master_sk, master_pk) = secp.generate_keypair(&mut rand::thread_rng());
+        let (master_xonly, _) = master_pk.x_only_public_key();
+        let master_pk_hex = faster_hex::hex_string(&master_xonly.serialize());
+        let master_sk_bytes = master_sk.secret_bytes();
+
+        let policy = SessionPolicy::new(10_000_000, 100_000_000, vec!["zyanya:dex".to_string()], 3600, now);
+        
+        let mut cert1 = SessionCertificate::new(
+            "sess\nalpha".to_string(),
+            "trading-bot".to_string(),
+            "02abcd1234...".to_string(),
+            master_pk_hex.clone(),
+            policy.clone(),
+        );
+        assert_eq!(cert1.sign(&master_sk_bytes), Err(SessionPolicyError::InvalidSignature));
+        assert_eq!(cert1.verify(), Err(SessionPolicyError::InvalidSignature));
+
+        let mut cert2 = SessionCertificate::new(
+            "sess-alpha".to_string(),
+            "trading:bot".to_string(),
+            "02abcd1234...".to_string(),
+            master_pk_hex.clone(),
+            policy.clone(),
+        );
+        assert_eq!(cert2.sign(&master_sk_bytes), Err(SessionPolicyError::InvalidSignature));
+        assert_eq!(cert2.verify(), Err(SessionPolicyError::InvalidSignature));
+
+        let mut cert3 = SessionCertificate::new(
+            "sess\ralpha".to_string(),
+            "trading-bot".to_string(),
+            "02abcd1234...".to_string(),
+            master_pk_hex,
+            policy,
+        );
+        assert_eq!(cert3.sign(&master_sk_bytes), Err(SessionPolicyError::InvalidSignature));
+        assert_eq!(cert3.verify(), Err(SessionPolicyError::InvalidSignature));
     }
 }
