@@ -3,6 +3,7 @@
 // Key 0: Total Supply
 // Key 1: Slope
 // Key 2: Reserve
+// Key 3: is_graduated
 // Key <address>: Holder Balance
 
 contract BondingCurveToken {
@@ -80,6 +81,9 @@ contract BondingCurveToken {
         sstore(0, supply + k);
         let reserve = sload(2);
         sstore(2, reserve + cost);
+        if (reserve + cost >= 1000000000) {
+            sstore(3, 1);
+        }
         let user_bal = sload(caller_param);
         sstore(caller_param, user_bal + k);
         return cost;
@@ -89,6 +93,9 @@ contract BondingCurveToken {
     // F-C-04: Verify caller == caller_param to prevent unauthorized sells.
     // F-H-02: Use checked multiplication — return 0 on overflow.
     fn sell(caller_param, tokens_in) {
+        if (sload(3) != 0) {
+            return 0;
+        }
         let sender = caller();
         if (caller_param != sender) {
             return 0;

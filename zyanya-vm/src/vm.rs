@@ -307,6 +307,7 @@ impl VM {
                         let _ = child_vm.stack.push(calldata);
                     }
 
+                    let cp = state.checkpoint();
                     let call_result = child_vm.execute_stateful(&target_opcodes, target_addr, state);
 
                     // F-C-05: Unwind the call stack regardless of success or failure.
@@ -321,6 +322,7 @@ impl VM {
                             self.stack.push(res.return_value.unwrap_or(0))?;
                         }
                         Err(_) => {
+                            state.rollback(cp);
                             // F-M-02: refund the unused gas from the failed child so a
                             // failing CALL does not burn the entire forwarded gas.
                             let unused = child_vm.gas_meter.gas_limit().saturating_sub(child_vm.gas_meter.used_gas());

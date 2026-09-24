@@ -17,6 +17,9 @@ contract Staking {
 
     // Entry point 1: stake(caller, amount)
     fn stake(caller, amount) {
+        let sender = caller();
+        if (caller != sender) { return 0; }
+
         if (amount == 0) {
             return 0;
         }
@@ -33,6 +36,9 @@ contract Staking {
 
     // Entry point 2: unstake(caller, amount)
     fn unstake(caller, amount) {
+        let sender = caller();
+        if (caller != sender) { return 0; }
+
         let stakeKey = caller * 1000 + 10;
         let currentStaked = sload(stakeKey);
 
@@ -59,6 +65,9 @@ contract Staking {
 
     // Entry point 4: claimRewards(caller)
     fn claimRewards(caller) {
+        let sender = caller();
+        if (caller != sender) { return 0; }
+
         let totalStaked = sload(0);
         if (totalStaked == 0) {
             return 0;
