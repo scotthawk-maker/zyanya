@@ -285,7 +285,7 @@
             const addressStr = pubKeyHex; // Backend converts to canonical zyanyatest:q...
             currentWallet = { privKeyHex, pubKeyHex, address: addressStr };
 
-            const display = document.getElementById("walletAddressDisplay");
+            const display = document.getElementById("wallet-address");
             display.innerText = addressStr.length > 24 ? `${addressStr.slice(0, 12)}...${addressStr.slice(-10)}` : addressStr;
         }
 
@@ -301,6 +301,7 @@
             await saveStoredWallet(privKeyHex);
             await setWalletFromPrivKey(privKeyHex);
         }
+        window.generateNewWallet = connectOrGenerateWallet;
 
         function exportPrivateKey() {
             if (!currentWallet) {
@@ -309,6 +310,7 @@
             }
             prompt("🔑 COPY YOUR PRIVATE KEY (keep secure):", currentWallet.privKeyHex);
         }
+        window.exportPrivateKey = exportPrivateKey;
 
         async function importWalletPrompt() {
             const input = prompt("📥 Paste your 32-byte hex private key:");
@@ -323,17 +325,24 @@
                 }
             }
         }
+        window.importWalletPrompt = importWalletPrompt;
 
         let confirmResolver = null;
         function showConfirmModal(htmlSummary) {
-            document.getElementById("modalSummaryContent").innerHTML = htmlSummary;
-            document.getElementById("confirmModal").style.display = "flex";
+            document.getElementById("confirm-body").innerHTML = htmlSummary;
+            document.getElementById("confirm-modal").style.display = "flex";
             return new Promise((resolve) => { confirmResolver = resolve; });
         }
-        function closeConfirmModal(result) {
-            document.getElementById("confirmModal").style.display = "none";
-            if (confirmResolver) confirmResolver(result);
+        function proceedConfirm() {
+            document.getElementById("confirm-modal").style.display = "none";
+            if (confirmResolver) confirmResolver(true);
         }
+        function cancelConfirm() {
+            document.getElementById("confirm-modal").style.display = "none";
+            if (confirmResolver) confirmResolver(false);
+        }
+        window.proceedConfirm = proceedConfirm;
+        window.cancelConfirm = cancelConfirm;
 
         async function schnorrSignMessageHash(msgHashHex, privKeyHex) {
             if (window.nobleSecp256k1 && window.nobleSecp256k1.schnorr) {
@@ -343,16 +352,16 @@
             throw new Error("@noble/curves library not ready. Please refresh or check connection.");
         }
 
-        async function handleLaunch(event) {
-            event.preventDefault();
+        async function handleDeployToken(event) {
+            if (event) event.preventDefault();
             if (!currentWallet) {
                 await connectOrGenerateWallet();
             }
 
-            const name = document.getElementById('name').value;
-            const symbol = document.getElementById('symbol').value;
-            const supply = parseInt(document.getElementById('supply').value) || 1000000;
-            const slope = parseInt(document.getElementById('slope').value) || 1;
+            const name = document.getElementById('tokenName').value;
+            const symbol = document.getElementById('tokenSymbol').value;
+            const supply = parseInt(document.getElementById('totalSupply').value) || 1000000;
+            const slope = parseInt(document.getElementById('curveSlope').value) || 1;
             const description = document.getElementById('description').value;
             const twitter = document.getElementById('twitter').value;
             const telegram = document.getElementById('telegram').value;
@@ -391,12 +400,12 @@
 
                 const summary = unsignedData.summary;
                 const htmlSummary = `
-                    <p><strong>Token Name:</strong> ${summary.name} (${summary.symbol})</p>
-                    <p><strong>Supply:</strong> ${summary.supply.toLocaleString()}</p>
-                    <p><strong>Slope Multiplier:</strong> ${summary.slope}</p>
-                    <p><strong>Deployer Address:</strong> <code style="word-break: break-all; color: var(--accent-green);">${summary.user_address}</code></p>
-                    <p><strong>Estimated Gas/Fee:</strong> ${summary.fee_zyan} ZYAN</p>
-                    <p><strong>Sighashes to Sign:</strong> ${unsignedData.sighashes.length} input(s)</p>
+                    <p><strong>Token Name:</strong> ${escapeHtml(summary.name)} (${escapeHtml(summary.symbol)})</p>
+                    <p><strong>Supply:</strong> ${escapeHtml(summary.supply.toLocaleString())}</p>
+                    <p><strong>Slope Multiplier:</strong> ${escapeHtml(summary.slope)}</p>
+                    <p><strong>Deployer Address:</strong> <code style="word-break: break-all; color: var(--accent-green);">${escapeHtml(summary.user_address)}</code></p>
+                    <p><strong>Estimated Gas/Fee:</strong> ${escapeHtml(summary.fee_zyan)} ZYAN</p>
+                    <p><strong>Sighashes to Sign:</strong> ${escapeHtml(unsignedData.sighashes.length)} input(s)</p>
                 `;
 
                 const userConfirmed = await showConfirmModal(htmlSummary);
@@ -445,6 +454,7 @@
             }
         }
 
+        window.handleDeployToken = handleDeployToken;
         window.addEventListener('DOMContentLoaded', loadStoredWallet);
     </script>
 </body>
