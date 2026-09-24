@@ -518,7 +518,12 @@ mod address_store_with_cache {
             // to prevent single-subnet or single-provider clustering.
             for (i, address) in filtered_addresses.iter().enumerate() {
                 let divisor_64 = *prefix_counter.get(&address.prefix_bucket()).unwrap() as f64;
-                let divisor_48 = (*prefix_counter_48.get(&address.ip.prefix_bucket_48()).unwrap() as f64).sqrt();
+                let divisor_48 = if address.prefix_bucket().as_u64() == address.ip.prefix_bucket_48().as_u64() {
+                    1.0
+                } else {
+                    let count_48 = *prefix_counter_48.get(&address.ip.prefix_bucket_48()).unwrap() as f64;
+                    (count_48 / divisor_64).max(1.0).sqrt()
+                };
                 *weights.get_mut(i).unwrap() /= divisor_64 * divisor_48;
             }
 

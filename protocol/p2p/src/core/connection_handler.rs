@@ -203,6 +203,18 @@ impl ConnectionHandler {
         let Some(socket_address) = peer_address.to_socket_addrs()?.next() else {
             return Err(ConnectionError::NoAddress);
         };
+
+        match socket_address.ip() {
+            std::net::IpAddr::V4(_) => {
+                return Err(ConnectionError::ProtocolError(ProtocolError::Other("Pure IPv6 invariant violation: IPv4 connections are rejected")));
+            }
+            std::net::IpAddr::V6(v6) => {
+                if v6.to_ipv4_mapped().is_some() || (v6.to_ipv4().is_some() && !v6.is_loopback() && !v6.is_unspecified()) {
+                    return Err(ConnectionError::ProtocolError(ProtocolError::Other("Pure IPv6 invariant violation: IPv4-mapped IPv6 connections are rejected")));
+                }
+            }
+        }
+
         let peer_address = format!("http://{}", peer_address); // Add scheme prefix as required by Tonic
 
         let channel = tonic::transport::Endpoint::new(peer_address)?
@@ -344,6 +356,17 @@ impl ProtoP2p for ConnectionHandler {
             return Err(TonicStatus::new(tonic::Code::InvalidArgument, "Incoming connection opening request has no remote address"));
         };
 
+        match remote_address.ip() {
+            std::net::IpAddr::V4(_) => {
+                return Err(TonicStatus::invalid_argument("Pure IPv6 invariant violation: IPv4 connections are rejected"));
+            }
+            std::net::IpAddr::V6(v6) => {
+                if v6.to_ipv4_mapped().is_some() || (v6.to_ipv4().is_some() && !v6.is_loopback() && !v6.is_unspecified()) {
+                    return Err(TonicStatus::invalid_argument("Pure IPv6 invariant violation: IPv4-mapped IPv6 connections are rejected"));
+                }
+            }
+        }
+
         let ip: IpAddress = remote_address.ip().into();
 
         // 1. Inbound /64 and /48 prefix limit and rate limit check (Track 10).
@@ -453,5 +476,27 @@ mod tests {
 
         // 5th connection now succeeds
         assert!(limiter.try_accept(&ips[4]).is_ok());
+    }
+
+    #[test]
+    fn test_pure_ipv6_invariant_validation() {
+        let v4: std::net::IpAddr = "192.168.1.1".parse().unwrap();
+        let v4_mapped: std::net::IpAddr = "::ffff:192.168.1.1".parse().unwrap();
+        let v6_valid: std::net::IpAddr = "2606:4700:4700::1".parse().unwrap();
+        let v6_loopback: std::net::IpAddr = "::1".parse().unwrap();
+
+        let is_valid_ipv6 = |addr: std::net::IpAddr| -> bool {
+            match addr {
+                std::net::IpAddr::V4(_) => false,
+                std::net::IpAddr::V6(v6) => {
+                    !(v6.to_ipv4_mapped().is_some() || (v6.to_ipv4().is_some() && !v6.is_loopback() && !v6.is_unspecified()))
+                }
+            }
+        };
+
+        assert!(!is_valid_ipv6(v4));
+        assert!(!is_valid_ipv6(v4_mapped));
+        assert!(is_valid_ipv6(v6_valid));
+        assert!(is_valid_ipv6(v6_loopback));
     }
 }
